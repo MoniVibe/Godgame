@@ -150,14 +150,23 @@ Player Input → [Activation] → Miracle trigger
 
 ## Activation Methods
 
-**✅ DECIDED: Black & White 2 style dispensation (button/menu based)**
+**✅ DISPENSATION METHODS**
 
-### Primary Method: Button/Menu (Black & White 2 Style)
-- UI button for each miracle
-- Click button → select parameters (intensity, mode) → click target location
-- **Pros:** 
-  - Familiar from Black & White 2
-  - Simple, precise
+### 1. Sustained Cast (Hold-to-channel)
+- Player selects miracle and **holds the cast button** while dragging the hand cursor.  
+- Effect persists while held, draining prayer/mana/focus per second.  
+- Release ends the sustain, starting cooldown. Works for Rain (guiding clouds), Heal (sweeps), Time (bubble).  
+- Gestural inputs (circles, lines) may modify mode but core mechanic is “hold to sustain”.
+
+### 2. Throw Cast (Projectile delivery)
+- Player grabs a miracle charge (orb) and **throws it** using divine hand throw modes.  
+- Two throw sub-modes:
+  - **Slingshot**: Charge an arc, release to lob the miracle; good for precise placement, longer airtime. Refer to `Docs/Concepts/Interaction/Slingshot_Throw.md` for aim rules.
+  - **Velocity Throw**: Quick flick that launches immediately with velocity proportional to cursor speed; shorter prep, less control.  
+- Throw miracles explode on impact (Water Burst, Firestorm seed, Lightning orb, Time bomb).  
+- UI toggles between slingshot vs velocity (matching hand TODO doc: `Docs/TODO/Hand.md`).
+
+Button/menu selection still picks the miracle, but dispensation method is chosen per cast (hold vs throw). Designers can lock certain miracles to one method if needed.
   - Works with existing UI systems
 - **Cons:** 
   - Less "gestural" than original Black & White

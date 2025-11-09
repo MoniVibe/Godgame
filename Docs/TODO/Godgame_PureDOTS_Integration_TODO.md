@@ -27,7 +27,8 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 ## Telemetry & Metrics
 
 - [ ] Emit telemetry events (villager lifecycle, storehouse inventory, band morale, miracle usage) via the PureDOTS instrumentation buffers so the shared debug HUD reflects Godgame data.
-- [ ] Wire metrics counters into the bridge so per-domain stats (population, resource throughput, pending miracles) flow into the neutral dashboards.
+  - [ ] Wire metrics counters into the bridge so per-domain stats (population, resource throughput, pending miracles) flow into the neutral dashboards.
+  - Godgame registry telemetry now emits miracle counts/energy/cooldown data directly from `GodgameRegistryBridgeSystem` so HUD/debug dashboards show the miracle pipeline alongside villagers/storehouses.
 
 ## Scenes, Prefabs & Assets
 
@@ -53,6 +54,7 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
   - [ ] Add `HandTelemetrySystem` metrics for siphon/dump/throw.
 - [ ] Implement aggregate resource piles and storehouse inventory loop (`Aggregate_Resources.md`, `Storehouse_API.md`). Deliverables: ECS components + baker authoring for `AggregatePile` and `GodgameStorehouse`, pooled prefab with size curve visual updates, Storehouse API surface (`Add/Remove/Space`), telemetry hooks for registry sync, and regression tests for overflow/merge/capacity scenarios.
   - [ ] Runtime `AggregatePileSystem` (merge/split, pooling, hit metadata) + authoring for pile prefabs.
+  - Initial ECS scaffolding is in place (`AggregatePileComponents`, `AggregatePileSystem`, config authoring + tests) covering add/take commands, merge/split, and size curve scaling; next step is wiring the hand/storehouse flows into the new command buffers.
   - [ ] Storehouse intake authoring (intake collider, capacities) and DOTS totals/events system.
   - [ ] Conservation PlayMode tests (pile→hand→storehouse, spillover when full).
   - [ ] Telemetry + registry sync wiring for storehouse totals.

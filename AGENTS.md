@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This Unity DOTS project keeps gameplay code under `Assets/Scripts/Godgame`. Runtime systems live in `Registry/`; authoring components in `Authoring/`; tests in `Tests/`. Scenes and sample SubScenes are in `Assets/Scenes` (start with `SampleScene.unity`). Shared packages and configuration assets sit in `Packages/` and `Assets/Settings/`. Long-running integration work is tracked under `Docs/TODO/`, which should be updated alongside gameplay changes.
+This Unity DOTS project keeps gameplay code under `Assets/Scripts/Godgame`. Runtime systems live in `Registry/`; authoring components in `Authoring/`; tests in `Tests/`. Scenes and sample SubScenes are in `Assets/Scenes` (start with `SampleScene.unity`). Shared packages and configuration assets sit in `Packages/` and `Assets/Settings/`. Long-running integration work is tracked under `Docs/TODO/`, which should be updated alongside gameplay changes. Truth source architecture is documented in `Docs/TruthSources_Inventory.md`, `Docs/TruthSources_Architecture.md`, and `Docs/TruthSources_QuickReference.md`.
 
 ## Build, Test, and Development Commands
 - `Unity -projectPath "$(pwd)" -batchmode -quit -buildWindows64Player Builds/Godgame.exe` builds a Windows player to `Builds/`.
@@ -19,4 +19,6 @@ Tests live under `Assets/Scripts/Godgame/Tests` and rely on NUnit plus the Unity
 Use imperative, subsystem-prefixed commit subjects such as `Registry: extend villager metrics`. Include a short body listing key systems touched and any follow-up TODOs. Pull requests should link the relevant item in `Docs/TODO`, describe gameplay impact, and attach a screenshot or brief clip when modifying authoring assets. Mention how you validated the change (commands above or editor walkthrough) so reviewers can reproduce quickly.
 
 ## Agent Workflow Notes
-Document open questions or pipeline friction in `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` after each session. When adding registries or telemetry, cross-reference shared package APIs so future agents know which PureDOTS touchpoints are stable.
+Document open questions or pipeline friction in `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` after each session. When adding registries or telemetry, cross-reference shared package APIs so future agents know which PureDOTS touchpoints are stable. Before implementing new gameplay domains, consult `Docs/TruthSources_Inventory.md` to see which truth sources are defined and which are missing. Follow the data flow pattern documented in `Docs/TruthSources_Architecture.md`: PureDOTS runtime components (truth) → Sync systems → Godgame mirror components → Registry bridge → Shared registries → Telemetry.
+
+When conceptualizing new features, add design documents to `Docs/Concepts/` using the provided templates. Concepts define **what the game should be**, while Truth Sources define **how it's implemented**.
