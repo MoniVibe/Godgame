@@ -2,8 +2,8 @@
   "dependencies": {
     "com.coplaydev.coplay": "https://github.com/CoplayDev/coplay-unity-plugin.git#beta",
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity",
+    "com.moni.bakings.presentation": "file:../../Packages/com.moni.bakings.presentation",
     "com.moni.puredots": "file:../../PureDOTS/Packages/com.moni.puredots",
-    "com.moni.vfxplayground.capture": "file:../../VFXPlayground/Packages/com.moni.vfxplayground.capture",
     "com.unity.ai.navigation": "2.0.9",
     "com.unity.collab-proxy": "2.10.0",
     "com.unity.ide.rider": "3.0.37",

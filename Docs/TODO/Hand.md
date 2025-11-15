@@ -10,6 +10,13 @@ This document specializes the generalized “god hand” capture for our Godgame
 - Physical credibility: held objects follow via PD control; throws are impulses derived from hand velocity.
 - Single source of truth: `Hand` component owns state; other systems react but do not override transitions.
 
+## Current integration snapshot
+
+- `InputSnapshotBridge` + `HandCameraInputRouter` live on the new `InteractionRig` GameObject in `Godgame_VillagerDemo`, feeding `DivineHandInput`, `GodIntent`, and RMB route requests into the PureDOTS hand systems every Simulation tick.
+- Layered colliders (Storehouse/Pile/Draggable/Ground) and the bundled `StorehouseDumpRmbHandler`, `PileSiphonRmbHandler`, and `GroundDripRmbHandler` now keep the router priority stack aligned with `RMBtruthsource.md` while sharing a single `HandCameraInputProfile`.
+- `DivineHandEventBridge` is part of the rig so HUD/debug listeners can subscribe to `HandStateChanged`, `HandTypeChanged`, and `HandCarryingChanged` without bespoke gameplay hooks; telemetry continues flowing through `DivineHandTelemetrySystem`.
+- Owned villages now emit `InfluenceSource` rings (see `VillageInfluence` in the demo scene), and `DivineHandSystem` validates that pickups and throws stay within those rings before allowing the interaction.
+
 ## Black & White 2 baseline beats (carry forward unless scoped out)
 
 - Left-click drags orbit the camera; middle mouse pans; scroll zooms. `CameraRig` drives orbit around influence center.

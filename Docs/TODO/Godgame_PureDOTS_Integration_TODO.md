@@ -4,10 +4,10 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 
 ## Next Agent Prompt
 
-- Focus: Deliver the initial Godgame bridge into the shared registries.
-- Starting point: expand `GodgameRegistryBridgeSystem` to register villager/storehouse buffers with the neutral registries and emit at least one telemetry sample to the PureDOTS HUD.
-- Deliverables: minimal DOTS components representing villagers or storehouses, baker/authoring glue for a sample prefab/SubScene, and a PlayMode/DOTS test verifying the registry tells.
-- Constraints: keep gameplay-specific code under `Godgame/Assets/Scripts/Godgame`; escalate only genuine engine-level gaps to PureDOTS and document them here.
+- **Focus**: finish wiring presentation-time systems (COZY profiles, Beautify LUTs, final biome vegetation) so the new scene wizard produces a fully arted loop.
+- **Starting point**: use the generated scene from `Tools/Godgame/Create Demo Scene…`, move the authored content into the SubScene, and assign real assets to `WeatherRigAuthoring`, `EnvironmentTimeController`, `BiomeTerrainAgent`, and `FaunaAmbientAuthoring` (see `Docs/PresentationREADME.md`).
+- **Deliverables**: placeholder COZY Weather profiles swapped for project assets, Beautify component/lut assigned, at least one biome profile updated with production vegetation/props, and a short note describing any remaining asset gaps.
+- **Constraints**: keep gameplay scripts inside `Godgame/Assets/Scripts/Godgame`, record any missing asset references in this TODO so designers know what to import next.
 
 ## Registry Alignment
 
@@ -20,19 +20,31 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 
 ## Spatial & Continuity Services
 
-- [ ] Connect Godgame spatial grid usage to the PureDOTS spatial service (cell config, provider selection, rebuild cadence).
+- [x] Connect Godgame spatial grid usage to the PureDOTS spatial service (cell config, provider selection, rebuild cadence).
+  - `GodgameSpatialProfile.asset` + `SpatialPartitionAuthoring` now seed the shared spatial grid at load so registry systems inherit the proper world bounds/cell sizing.
 - [ ] Ensure continuity/rewind components from PureDOTS are hooked into Godgame determinism flows (time state, rewind state, continuity buffers).
 - [ ] Validate Burst compilation for the bridge systems after spatial bindings are in place (fix any hybrid fallbacks).
 
 ## Telemetry & Metrics
 
-- [ ] Emit telemetry events (villager lifecycle, storehouse inventory, band morale, miracle usage) via the PureDOTS instrumentation buffers so the shared debug HUD reflects Godgame data.
-  - [ ] Wire metrics counters into the bridge so per-domain stats (population, resource throughput, pending miracles) flow into the neutral dashboards.
+- [x] Emit telemetry events (villager lifecycle, storehouse inventory, band morale, miracle usage) via the PureDOTS instrumentation buffers so the shared debug HUD reflects Godgame data.
+  - [x] Wire metrics counters into the bridge so per-domain stats (population, resource throughput, pending miracles) flow into the neutral dashboards.
   - Godgame registry telemetry now emits miracle counts/energy/cooldown data directly from `GodgameRegistryBridgeSystem` so HUD/debug dashboards show the miracle pipeline alongside villagers/storehouses.
+
+## Weather & Phenomena
+
+- [x] Hook PureDOTS `ClimateState` + biome moisture grids into a presentation-ready Weather Controller (`WeatherBootstrapSystem`, `WeatherControllerSystem`, `WeatherPresentationSystem`) feeding the new `WeatherRigAuthoring` so COZY Weather, VFX Graph prefabs, and ambient loops react to DOTS state + time-of-day events.
+  - Miracles now call into the shared `WeatherRequest` queue to trigger rain/storm FX payloads (`miracle.rain`, `miracle.storm`) instead of duplicating presentation logic.
+- [ ] Author and assign actual COZY WeatherProfile assets, ambient loops, and special-FX prefabs per biome once those packs live under `Godgame/Assets`.
 
 ## Scenes, Prefabs & Assets
 
-- [ ] Review existing scenes/prefabs and add the necessary MonoBehaviour or baker adapters that translate Godgame authoring assets into PureDOTS-friendly data.
+- [x] Review existing scenes/prefabs and add the necessary MonoBehaviour or baker adapters that translate Godgame authoring assets into PureDOTS-friendly data.
+  - `GodgamePresentationRegistry.asset` + DOTS presentation adapter systems replace the placeholder adapters, and the `Godgame_VillagerDemo` scene now ships with the `InteractionRig`/hand authoring stack wired up for live demos.
+- [x] Scene wizard (`Tools ▸ Godgame ▸ Create Demo Scene…`) now populates the demo scene with villagers, buildings, ground tiles, biome/time/weather/fauna controllers. Remember to move `GodgameDemoContent` into the `_Authoring` SubScene after the wizard runs.
+- [ ] Demo settlement bootstrap spawns basic buildings/resource nodes; swap in art-ready prefabs (and update the wizard defaults) once final housing/storehouse/worship meshes and resource props are checked in so the loop no longer depends on the placeholder geometry baked into `Assets/Prefabs/Buildings`.
+- [ ] (2025-11-14) Verify that all scenes, SubScenes, and prefabs still resolve their dependencies after relocating third-party packs to `Assets/ThirdParty/AssetStore`; update the wizard defaults and presentation docs with any new paths.
+  - Space4x legacy prefabs/data are archived in `Archive/Space4xLegacy` so they stop polluting the active project. Only restore the pieces that are still required for Godgame Authoring flows.
 - [ ] Replace legacy service locators in gameplay scripts with registry lookups via the PureDOTS APIs.
 - [ ] Update any ScriptableObjects catalogues so they now reference the shared registries instead of local enums or IDs.
 
@@ -46,12 +58,17 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 ## Foundational Gameplay Systems
 
 - [ ] Stand up the Divine Hand right-click pipeline per TruthSource (`Hand_StateMachine.md`, `RMBtruthsource.md`, `Slingshot_Contract.md`). Deliverables: DOTS-friendly `RightClickRouterSystem` + `DivineHandStateSystem`, handler components for pile siphon/storehouse dump/slingshot aim under `Assets/Scripts/Godgame/Interaction`, HUD events (`OnHandTypeChanged`, `OnHandAmountChanged`, `OnStateChanged`), and PlayMode tests covering priority resolution and frame-rate independence (30 vs 120 FPS).
-  - [ ] Implement the `PlayerInput` bridge that writes `InputState` and finish `CameraOrbitSystem` grounding.
-  - [ ] Build right-click affordance detectors (storehouse intake, pile surface, valid ground) reusable by router/hand systems.
+  - [x] Implement the `PlayerInput` bridge that writes `InputState` and finish `CameraOrbitSystem` grounding.
+    - `InputSnapshotBridge` + `HandCameraInputRouter` now copy the Hand/Camera action map straight into DOTS (`GodIntent`, `HandInputEdge`, etc.) and feed the PureDOTS hand systems.
+  - [x] Build right-click affordance detectors (storehouse intake, pile surface, valid ground) reusable by router/hand systems.
+    - Storehouses/resources/villagers now expose trigger colliders on dedicated layers so the bundled RMB handlers can resolve Dump/Siphon/GroundDrip priorities without warning spam.
+  - [x] Define the village influence ring and gate pickups/throws.
+    - `InfluenceSourceAuthoring` + `InfluenceSource` components carve out the owned-village radius, and `DivineHandSystem` now checks those sources before allowing grabs or throws.
   - [ ] Create `HandCarrySystem` PD follow + villager interrupt flow and associated jitter/GC tests.
   - [ ] Author slingshot impulse calculation, cooldown handling, and a throw test fixture.
-  - [ ] Wire HUD + cursor hint listeners for `HandStateChanged`/`HandCarryingChanged`.
-  - [ ] Add `HandTelemetrySystem` metrics for siphon/dump/throw.
+  - [x] Wire HUD + cursor hint listeners for `HandStateChanged`/`HandCarryingChanged`.
+    - `DivineHandEventBridge` is live in scene so HUD/debug tooling can bind without bespoke gameplay hooks.
+  - [x] Add `HandTelemetrySystem` metrics for siphon/dump/throw.
 - [ ] Implement aggregate resource piles and storehouse inventory loop (`Aggregate_Resources.md`, `Storehouse_API.md`). Deliverables: ECS components + baker authoring for `AggregatePile` and `GodgameStorehouse`, pooled prefab with size curve visual updates, Storehouse API surface (`Add/Remove/Space`), telemetry hooks for registry sync, and regression tests for overflow/merge/capacity scenarios.
   - [ ] Runtime `AggregatePileSystem` (merge/split, pooling, hit metadata) + authoring for pile prefabs.
   - Initial ECS scaffolding is in place (`AggregatePileComponents`, `AggregatePileSystem`, config authoring + tests) covering add/take commands, merge/split, and size curve scaling; next step is wiring the hand/storehouse flows into the new command buffers.
