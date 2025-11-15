@@ -13,6 +13,7 @@ Build/
 *.stacktrace
 
 # Asset pipeline artifacts
+Assets/
 MemoryCaptures/
 *.pidb
 *.pdb.meta
