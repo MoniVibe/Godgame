@@ -25,4 +25,6 @@ Single place to track current goals, lanes, and session notes. Append new entrie
 - Alt B: modules/degradation — module slot/refit system, degradation/repair flows, crew skills influencing refit/repair/combat.
 
 ## Rolling session log (append new entries at top)
+- 2025-11-22 — Agent C wrap (modules/degradation): module host/definition bakers, maintainer aggregation, damage handling, resource-cost gating, refit/repair telemetry, and expanded ModuleMaintenanceTests; outstanding: hook module systems into gameplay damage/resource loops and surface module metrics in HUD/registries. Tests not run locally.
+- 2025-11-22 — Started Agent C (modules/degradation): surveying existing skill/crew systems and PureDOTS package to design module slot/refit/repair scaffolding.
 - YYYY-MM-DD — Created progress hub, archived legacy/sample docs, added Truth Source quick refs.
