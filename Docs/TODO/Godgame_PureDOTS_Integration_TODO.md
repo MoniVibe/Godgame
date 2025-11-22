@@ -52,6 +52,7 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 
 - [ ] Stand up PlayMode/DOTS integration tests under `Godgame.Gameplay` that exercise registry registration, data sync, and telemetry emission.
   - `GodgameRegistryBridgeSystemTests` now drives the villager/storehouse sync systems, verifies continuity metadata (including miracle registry baseline), and asserts telemetry keys remain Burst-friendly.
+  - Added `JobsiteConstructionTests` to cover jobsite ghost placement → completion while asserting `ConstructionRegistry` entries, effect requests, and telemetry counters.
 - [ ] Add validation tests for common flows (villager spawning, band assignment, storehouse transactions, miracle dispatch) proving they interact with the shared registries.
 - [ ] Create test utilities/mocks to simulate PureDOTS registries when running focused Godgame tests.
 
@@ -93,6 +94,11 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 
 ### Session Notes – current agent sweep
 
+- Jobsite ghost loop now runs headless: `JobsitePlacementHotkey/Placement/Build/Completion` systems spawn ECS construction sites, route `PlayEffectRequest` entries through the shared `PresentationCommandQueue`, and bump `TelemetryStream` metrics keyed off the Construction registry metadata; placement config/state now live on the `ConstructionRegistry` entity for continuity-aware ids/positions.
+- Registry bridge systems now live under `Assets/Scripts/Godgame/Registry/Registry/` (villager/storehouse/band/miracle/spawner/logistics) and feed the shared registries; the edit-mode `GodgameRegistryBridgeTests` fixture verifies metadata seeding via the PureDOTS directory. Scene/SubScene authoring still needs to provide real entities so these paths exercise authored data instead of mirrors.
+- Miracle sync now sanitizes miracle definitions/runtime state via `GodgameMiracleSyncSystem` before `MiracleRegistrySystem` builds entries (clamps costs, radii, charge percent, and target positions).
+- Time demo bootstrap/motion/history systems now live under `Godgame.Time`: a rewindable demo actor (with placeholder visual) records snapshots via `TimeStreamHistory`, consumes `TimeControlCommand` log output from the shared spine, and a determinism test drives the rewind → catch-up → resume path to assert the state matches byte-for-byte after a ~3s rewind. HUD bindings and pause/speed-step coverage are still outstanding.
+- Registry SubScene wizard added (`Tools ▸ Godgame ▸ Create Registry SubScene…`, see `Assets/Scripts/Godgame/Editor/GodgameRegistrySubSceneWizard.cs`) to generate `Assets/Scenes/GodgameRegistrySubScene.unity` with PureDOTS runtime config, spatial profile, and `GodgameSampleRegistryAuthoring`; run in-editor to create the actual SubScene asset since no scenes are currently tracked in the repo.
 - PureDOTS gameplay code lives under `Packages/com.moni.puredots/Runtime/` with domain folders (`Runtime`, `Systems`, `Authoring`). Registries, telemetry, and time/rewind singletons are all defined there; consumer projects should reference those assemblies rather than duplicating structs.
 - Core bootstrap (`PureDOTS.Systems.CoreSingletonBootstrapSystem`) seeds `TimeState`, `RewindState`, registry entities, telemetry, and registry health instrumentation. Godgame bridge systems must assume these singletons already exist (or call `EnsureSingletons` in tests) before attempting registry writes.
 - Registry contracts of interest:
@@ -109,3 +115,8 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 - New runtime sync systems (`GodgameVillagerSyncSystem`, `GodgameStorehouseSyncSystem`) keep mirror components Burst-safe and free of allocations; they sanitize resource summaries and leverage the persistent resource catalog blob for index lookups.
 - Registry bridge telemetry now caches metric keys and runs entirely via `TelemetryMetric` value writes, preserving Miracle registry consumers from managed allocations; tests lock this in by checking the metadata continuity snapshot.
 - Godgame hand components now live directly under the `Godgame.Interaction` namespace (rather than `Godgame.Interaction.Hand`) to match Entities codegen expectations, and the gameplay asmdef references `Unity.Burst` so Burst attributes resolve during compile.
+- Move & Act bootstrap now seeds headless camera/hand input, pointer-world fallback, and registry-backed band spawns; Q triggers the Miracle Ping effect id via a placeholder presentation binding. A PlayMode test drives input → band registry entry → effect request to lock the path.
+- Stubbed registry bridge systems (villager/storehouse/band/miracle/spawner/logistics + orchestrator) landed under `Assets/Scripts/Godgame/Registry/` with an EditMode test ensuring they instantiate and registry metadata is seeded; functional sync/mirroring still TODO.
+- Registry bridge test also asserts RegistryDirectory handles exist for core registries (villager/storehouse/band/miracle/spawner/logistics/construction); still need scenes/SubScenes with authored registry data and real sync implementations.
+- Logistics sync clamps/timestamps requests and registry bridge metadata now covers logistics; new `GodgameLogisticsRegistryTests` proves requests flow through `LogisticsRequestRegistrySystem`. Still need authored logistics data and spatial continuity validation.
+- Phase2 demo remains largely open: only the `JobsitePlacement/Build/Completion` loop (triggered by `KeyCode.J` and using local defaults) plus an EditMode test exist; there is no band spawn/input bridge or time/rewind snapshot stack yet, so the acceptance checkboxes in `Docs/TODO/Phase2_Demo_TODO.md` are still unchecked.

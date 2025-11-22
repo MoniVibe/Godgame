@@ -19,29 +19,29 @@ PureDOTS defines the following registry kinds (from `RegistryUtilities.cs`):
 
 ### Godgame Side Status
 
-**Missing:** No registry bridge systems exist in Godgame yet. The TODO mentions `GodgameVillagerSyncSystem` and `GodgameStorehouseSyncSystem` but they don't exist.
+**Status:** Registry bridge systems live under `Assets/Scripts/Godgame/Registry/Registry/` (`GodgameRegistryBridgeSystem` orchestrator plus villager/storehouse/band/miracle/spawner/logistics sync systems). They normalise component data and feed the shared PureDOTS registries; scene authoring still needs to supply real authored entities.
 
 **Required Bridge Systems:**
-1. `GodgameVillagerSyncSystem` - Sync Godgame villager entities → `VillagerRegistryEntry`
-2. `GodgameStorehouseSyncSystem` - Sync Godgame storehouse entities → `StorehouseRegistryEntry`
-3. `GodgameBandSyncSystem` - Sync Godgame band entities → `BandRegistryEntry` (STUB NEEDED)
-4. `GodgameMiracleSyncSystem` - Sync Godgame miracle entities → `MiracleRegistryEntry` (STUB NEEDED)
-5. `GodgameSpawnerSyncSystem` - Sync Godgame spawner entities → `SpawnerRegistryEntry` (STUB NEEDED)
-6. `GodgameLogisticsSyncSystem` - Sync Godgame logistics → `LogisticsRequestRegistryEntry` (STUB NEEDED)
-7. `GodgameRegistryBridgeSystem` - Orchestrates all sync systems and registers with PureDOTS directory
+1. `GodgameVillagerSyncSystem` - Sync Godgame villager entities → `VillagerRegistryEntry` (implemented; uses mirror component)
+2. `GodgameStorehouseSyncSystem` - Sync Godgame storehouse entities → `StorehouseRegistryEntry` (implemented; aggregates reservations/inventory)
+3. `GodgameBandSyncSystem` - Sync Godgame band entities → `BandRegistryEntry` (implemented; mirrors formation/flags)
+4. `GodgameMiracleSyncSystem` - Sync Godgame miracle entities → `MiracleRegistryEntry` (implemented; normalizes cost/state/targets before registry)
+5. `GodgameSpawnerSyncSystem` - Sync Godgame spawner entities → `SpawnerRegistryEntry` (implemented; mirrors cooldown/state)
+6. `GodgameLogisticsSyncSystem` - Sync Godgame logistics → `LogisticsRequestRegistryEntry` (implemented; clamps resource indices/positions)
+7. `GodgameRegistryBridgeSystem` - Orchestrates all sync systems and registers with PureDOTS directory (implemented; builds registry buffers)
 
 ## Concrete Deliverables
 
 ### Phase 1: Core Bridge Infrastructure (Immediate)
 
 1. **Create `Godgame/Assets/Scripts/Godgame/Registry/` directory structure**
-   - `GodgameRegistryBridgeSystem.cs` - Main orchestrator
-   - `GodgameVillagerSyncSystem.cs` - Villager sync (STUB)
-   - `GodgameStorehouseSyncSystem.cs` - Storehouse sync (STUB)
-   - `GodgameBandSyncSystem.cs` - Band sync (STUB)
-   - `GodgameMiracleSyncSystem.cs` - Miracle sync (STUB)
-   - `GodgameSpawnerSyncSystem.cs` - Spawner sync (STUB)
-   - `GodgameLogisticsSyncSystem.cs` - Logistics sync (STUB)
+   - `GodgameRegistryBridgeSystem.cs` - Main orchestrator ✅ (stub only)
+   - `GodgameVillagerSyncSystem.cs` - Villager sync (STUB) ✅
+   - `GodgameStorehouseSyncSystem.cs` - Storehouse sync (STUB) ✅
+   - `GodgameBandSyncSystem.cs` - Band sync (STUB) ✅
+   - `GodgameMiracleSyncSystem.cs` - Miracle sync (STUB) ✅
+   - `GodgameSpawnerSyncSystem.cs` - Spawner sync (STUB) ✅
+   - `GodgameLogisticsSyncSystem.cs` - Logistics sync (STUB) ✅
 
 2. **Authoring Components**
    - `Godgame/Assets/Scripts/Godgame/Registry/Authoring/RegistryAuthoring.cs` - Base authoring for registry-tagged entities
@@ -68,12 +68,22 @@ PureDOTS defines the following registry kinds (from `RegistryUtilities.cs`):
 ### Phase 3: Test & Scene Integration
 
 1. **Tests**
-   - `Godgame/Assets/Scripts/Godgame/Tests/GodgameRegistryBridgeTests.cs` - Verify bridge systems exist
+   - `Godgame/Assets/Scripts/Godgame/Tests/GodgameRegistryBridgeTests.cs` - Verify bridge systems exist ✅ (stub coverage)
    - `PureDOTS/Assets/Tests/VillagerAIScaffoldTests.cs` - Verify AI scaffolding compiles
 
 2. **Scene Updates**
    - Update sample SubScenes to include registry authoring components
    - Ensure entities are tagged for spatial grid participation
+
+### Phase 3: Test & Scene Integration (current sweep)
+
+1. **Tests**
+   - `Assets/Scripts/Godgame/Tests/GodgameRegistryBridgeTests.cs` ensures bridge/sync systems instantiate, registries expose metadata/buffers, RegistryDirectory handles exist (Villager/Storehouse/Band/Miracle/Spawner/Logistics/Construction), and a sample logistics request flows through sync → registry buffer. Still needs authored-scene coverage for villagers/storehouses/bands/miracles/spawners.
+2. **Scene Updates**
+   - TODO: Add registry authoring and spatial tags to sample SubScenes so bridge tests can ingest authored data.
+   - Added `Tools ▸ Godgame ▸ Create Registry SubScene…` editor wizard (`Assets/Scripts/Godgame/Editor/GodgameRegistrySubSceneWizard.cs`) that will generate `Assets/Scenes/GodgameRegistrySubScene.unity` with PureDOTS runtime config, spatial profile, and sample registry authoring; needs to be run in-editor to produce the actual SubScene asset.
+   - Tracked `Assets/Scenes/GodgameBootstrapSubScene.unity` (copied from the template) as a ready-made registry/spatial SubScene for tests; contains `PureDotsConfigAuthoring`, `GodgameSampleRegistryAuthoring`, and spatial tagging.
+   - Logistics sync now implemented (`GodgameLogisticsSyncSystem`), but no authored logistics requests exist yet; bridge/tests still need real request sources once gameplay produces them.
 
 ## Implementation Notes
 

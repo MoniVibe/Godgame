@@ -2,8 +2,11 @@
   "dependencies": {
     "com.coplaydev.coplay": "https://github.com/CoplayDev/coplay-unity-plugin.git#beta",
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity",
-    "com.moni.bakings.presentation": "file:../../Packages/com.moni.bakings.presentation",
+    "com.moni.bakings.presentation": "file:Packages/com.moni.bakings.presentation",
     "com.moni.puredots": "file:../../PureDOTS/Packages/com.moni.puredots",
+    "com.unity.entities": "1.4.2",
+    "com.unity.entities.graphics": "1.4.15",
+    "com.unity.physics": "1.0.16",
     "com.unity.ai.navigation": "2.0.9",
     "com.unity.collab-proxy": "2.10.0",
     "com.unity.ide.rider": "3.0.37",

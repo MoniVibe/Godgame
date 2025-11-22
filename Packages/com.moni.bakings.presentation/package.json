@@ -1,0 +1,11 @@
+{
+  "name": "com.moni.bakings.presentation",
+  "displayName": "Moni Bakings Presentation (Placeholder)",
+  "version": "0.0.1",
+  "unity": "2022.3",
+  "description": "Placeholder package to unblock import; no runtime code.",
+  "dependencies": {
+    "com.unity.entities": "1.4.x",
+    "com.unity.entities.graphics": "1.4.x"
+  }
+}
