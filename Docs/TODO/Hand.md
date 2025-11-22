@@ -1,5 +1,7 @@
 # Godgame Divine Hand Plan
 
+> Archived: interaction backlog is now tracked under `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` and `prompts.md`. Keep this for historical reference on the hand design.
+
 This document specializes the generalized “god hand” capture for our Godgame build. It anchors to the TruthSources (`Hand_StateMachine.md`, `RMBtruthsource.md`, `Slingshot_Contract.md`, `Aggregate_Resources.md`, `Storehouse_API.md`) and to the Black & White 2 reference. Use this as the authoritative backlog for Interaction assembly work; keep it in sync with `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` and session notes.
 
 ## Goals & principles

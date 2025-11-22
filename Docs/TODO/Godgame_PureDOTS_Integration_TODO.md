@@ -2,12 +2,18 @@
 
 Tracking the work required for Godgame gameplay to consume the shared `com.moni.puredots` package. Keep this file updated as bridges land.
 
+## Agent lanes (single source of truth)
+
+- **Agent A (recommended)**: Phase 2 demo closure — time/rewind determinism + mining/haul registry continuity. When starting, log the lane in `Docs/Progress.md` and update this TODO with findings/tests.
+- **Agent B**: Alignment/compliance — alignment data on crew/fleet/colony, `CrewAggregationSystem`, `DoctrineAuthoring`, mutiny/desertion demo; keep `Docs/Progress.md` + this TODO in sync.
+- **Agent C**: Modules/degradation — module slot/refit system, degradation/repair, crew skills into refit/repair/combat; log progress in `Docs/Progress.md` and update here.
+
 ## Next Agent Prompt
 
-- **Focus**: finish wiring presentation-time systems (COZY profiles, Beautify LUTs, final biome vegetation) so the new scene wizard produces a fully arted loop.
-- **Starting point**: use the generated scene from `Tools/Godgame/Create Demo Scene…`, move the authored content into the SubScene, and assign real assets to `WeatherRigAuthoring`, `EnvironmentTimeController`, `BiomeTerrainAgent`, and `FaunaAmbientAuthoring` (see `Docs/PresentationREADME.md`).
-- **Deliverables**: placeholder COZY Weather profiles swapped for project assets, Beautify component/lut assigned, at least one biome profile updated with production vegetation/props, and a short note describing any remaining asset gaps.
-- **Constraints**: keep gameplay scripts inside `Godgame/Assets/Scripts/Godgame`, record any missing asset references in this TODO so designers know what to import next.
+- **Priority**: close Phase 2 by validating time/rewind determinism and registry continuity for mining/haul entities (see `prompts.md` Agent 1, recommended).
+- **Focus**: exercise the time spine snapshot/command log, assert resource counts/state match after rewind/resim, and ensure mining/haul registries keep continuity snapshots in sync.
+- **Deliverables**: PlayMode tests under `Assets/Scripts/Godgame/Tests` proving rewind determinism and continuity, updates to `Docs/TODO/Phase2_Demo_TODO.md` + `Logs/*.xml`, and notes on any missing hooks in the time spine.
+- **Alternates**: kick off Phase 3 Agent A (alignment/compliance: alignment data on crew/fleet/colony, `CrewAggregationSystem`, `DoctrineAuthoring` baker, mutiny/desertion demo) or continue Agent B (modules/refit/degradation/repair with crew skills wired into refit/combat); update this TODO with findings either way.
 
 ## Registry Alignment
 
@@ -94,6 +100,7 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 
 ### Session Notes – current agent sweep
 
+- Latest guidance: crew growth systems, mining w/ telemetry, and fleet intercept are done; time/rewind validation for Phase 2 remains open. Recommended next step is Agent 1 (Phase 2 demo closure: rewind determinism + mining/haul registry continuity); alternates are Agent A (alignment/compliance with `CrewAggregationSystem` + `DoctrineAuthoring`) and Agent B (modules/refit/degradation wired to crew skills).
 - Jobsite ghost loop now runs headless: `JobsitePlacementHotkey/Placement/Build/Completion` systems spawn ECS construction sites, route `PlayEffectRequest` entries through the shared `PresentationCommandQueue`, and bump `TelemetryStream` metrics keyed off the Construction registry metadata; placement config/state now live on the `ConstructionRegistry` entity for continuity-aware ids/positions.
 - Registry bridge systems now live under `Assets/Scripts/Godgame/Registry/Registry/` (villager/storehouse/band/miracle/spawner/logistics) and feed the shared registries; the edit-mode `GodgameRegistryBridgeTests` fixture verifies metadata seeding via the PureDOTS directory. Scene/SubScene authoring still needs to provide real entities so these paths exercise authored data instead of mirrors.
 - Miracle sync now sanitizes miracle definitions/runtime state via `GodgameMiracleSyncSystem` before `MiracleRegistrySystem` builds entries (clamps costs, radii, charge percent, and target positions).
@@ -120,3 +127,4 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 - Registry bridge test also asserts RegistryDirectory handles exist for core registries (villager/storehouse/band/miracle/spawner/logistics/construction); still need scenes/SubScenes with authored registry data and real sync implementations.
 - Logistics sync clamps/timestamps requests and registry bridge metadata now covers logistics; new `GodgameLogisticsRegistryTests` proves requests flow through `LogisticsRequestRegistrySystem`. Still need authored logistics data and spatial continuity validation.
 - Phase2 demo remains largely open: only the `JobsitePlacement/Build/Completion` loop (triggered by `KeyCode.J` and using local defaults) plus an EditMode test exist; there is no band spawn/input bridge or time/rewind snapshot stack yet, so the acceptance checkboxes in `Docs/TODO/Phase2_Demo_TODO.md` are still unchecked.
+- Alignment/compliance: `DoctrineAuthoring` now sanitizes ids and warns on duplicates, `CrewAggregationSystem` seeds compliance/samples/alerts queries without per-entity adds and treats empty buffers as missing data, and new `CrewComplianceTests` cover warning/alert/missing-data flows; still need Godgame-side alignment data on crew/fleet/colony and a mutiny/desertion demo scene.

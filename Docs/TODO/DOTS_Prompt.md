@@ -1,5 +1,7 @@
 # DOTS Agent Prompt: Divine Hand Review & Fixes
 
+> Archived: use `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` and `prompts.md` for current agent focus. This prompt is kept only for the legacy Divine Hand review context.
+
 ## Context
 
 - Feature slice: Godgame Divine Hand MVP (see `Docs/TODO/Hand.md` and TruthSources `Hand_StateMachine.md`, `RMBtruthsource.md`, `Slingshot_Contract.md`, `Aggregate_Resources.md`, `Storehouse_API.md`).

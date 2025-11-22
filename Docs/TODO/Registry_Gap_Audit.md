@@ -1,5 +1,7 @@
 # Registry Gap Audit - Godgame ↔ PureDOTS Integration
 
+> Archived: superseded by `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` and `prompts.md`. Keep for historical context only.
+
 **Date:** 2025-01-XX  
 **Purpose:** Document missing registry bridge implementations and concrete deliverables for AI integration kickoff.
 
