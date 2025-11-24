@@ -1,26 +1,39 @@
 # Environment Systems (Biomes, Vegetation, Climate, Moisture)
 
-**Status:** Draft - <WIP: All environmental systems empty>  
+**Status:** Tier-1 Implementation Complete  
 **Category:** System - World Simulation  
 **Scope:** Global environmental simulation  
 **Created:** 2025-10-31  
-**Last Updated:** 2025-10-31
+**Last Updated:** 2025-01-XX
 
-**⚠️ CURRENT STATE:**
-- ❌ `VegetationGrowthSystem.cs` exists but **EMPTY**
-- ❌ `ClimateSystem.cs` exists but **EMPTY**
-- ❌ `MoistureGridSystem.cs` exists but **EMPTY**
-- ❌ `WindSystem.cs` exists but **EMPTY**
-- ❌ No biome system
-- ❌ No terrain types
-- ❌ Complete greenfield design
+**✅ TIER-1 SCOPE (Implementation Complete):**
+- ✅ Biome system with 3 biomes (Temperate, Grasslands, Mountains)
+- ✅ Climate state singleton with temperature/moisture oscillation
+- ✅ Moisture grid (1×1 global, expandable to spatial)
+- ✅ Biome resolution system (best-match scoring)
+- ✅ Weather state hooks (Rain/Fire miracles affect moisture)
+- ✅ Resource seeding bias by biome
+- ✅ Villager stamina/disease modifiers by biome
+- ✅ Placeholder presentation tokens (swappable visuals)
+- ✅ Prefab Maker Biomes tab
+- ✅ EditMode test coverage (idempotency, resolver, binding parity)
 
-**⚠️ SCOPE DECISIONS NEEDED:**
-1. **Is environment simulation in scope?** Or static terrain only?
-2. **Dynamic vegetation?** Or fixed trees/plants?
-3. **Weather system?** Rain, snow, storms?
-4. **Biome variety?** Multiple climate zones or single biome?
-5. **Player interaction?** Can god affect weather/growth?
+**✅ VEGETATION SYSTEM (Implementation Complete):**
+- ✅ Plant specifications with preferences, growth stages, yields, hazards
+- ✅ Stand/patch specifications for clustering
+- ✅ VariantOf inheritance support
+- ✅ VegetationGrowthSystem (stage transitions, stress, reproduction)
+- ✅ StandSpawnerSystem (deterministic clustering)
+- ✅ VegetationHarvestSystem (yield calculation)
+- ✅ Vegetation presentation bindings (Minimal/Fancy token sets)
+- ✅ Prefab Maker Vegetation tab (authoring, validation, dry-run)
+- ✅ EditMode/PlayMode test coverage (idempotency, validation, growth determinism)
+
+**⚠️ DEFERRED TO FUTURE TIERS:**
+- ❌ Dynamic vegetation growth (v3.0+)
+- ❌ Seasonal cycles (v3.0+)
+- ❌ Wind system (v3.0+)
+- ❌ Full spatial biome grid (currently 1×1 global)
 
 ---
 
@@ -135,13 +148,17 @@ Villagers
 
 ## Vegetation System
 
-**<NEEDS DESIGN: How do plants work?>**
+**Status:** Tier-1 Implementation Complete
 
 ### Current State
-- ✅ Resource nodes exist (`GodgameResourceNode` - wood, ore)
-- ❌ No growth mechanics
-- ❌ No dynamic spawning
-- ❌ No seasons/lifecycle
+- ✅ Plant specifications (PlantSpec) with preferences, growth stages, yields, hazards
+- ✅ Stand specifications (StandSpec) for clustering and biome-based spawning
+- ✅ VegetationGrowthSystem: stage transitions, stress from drought/fire, reproduction
+- ✅ StandSpawnerSystem: deterministic stand spawning with clustering
+- ✅ VegetationHarvestSystem: yield calculation respecting hazards
+- ✅ Presentation bindings: (PlantId, GrowthStage) → placeholder tokens
+- ✅ Prefab Maker Vegetation tab: authoring, validation, dry-run
+- ✅ VariantOf inheritance: plant variants inherit base specs with deltas
 
 ### Option A: Static Vegetation (Simple)
 - Trees/plants placed in editor
@@ -778,7 +795,28 @@ WindState : IComponentData (singleton) {
 
 ## Scale & Scope
 
-### Minimal Environment (MVP - Recommended)
+### Tier-1 Environment (Current Implementation)
+- ✅ Three biomes (Temperate, Grasslands, Mountains)
+- ✅ Simple climate oscillation (temperature/moisture)
+- ✅ Basic moisture grid (1×1 global, expandable)
+- ✅ Weather state hooks (Rain/Fire miracles)
+- ✅ Biome-driven resource seeding
+- ✅ Biome modifiers for villagers
+- ✅ Placeholder presentation tokens
+
+**Adds:**
+- Biome variety without full simulation overhead
+- Rain/Fire miracles affect moisture/biome selection
+- Resource distribution varies by biome
+- Villager stamina/disease modifiers by biome
+- Foundation for future expansion
+
+**Pros:** Strategic diversity, future-proof architecture, data-first design  
+**Cons:** Still single global biome (1×1 grid), no dynamic growth
+
+---
+
+### Minimal Environment (MVP - Skipped)
 - ❌ No biomes (single temperate terrain)
 - ❌ No seasons (always summer)
 - ❌ No dynamic vegetation (static trees)
@@ -786,28 +824,14 @@ WindState : IComponentData (singleton) {
 - ❌ No moisture grid (plants just exist)
 - ✅ Static resource nodes only
 
-**Pros:** Focus on core gameplay (god hand, villagers, resources)  
-**Cons:** World feels static
-
----
-
-### Simple Environment (v2.0)
-- Single biome (temperate)
-- Simple weather (rain/clear cycles)
-- Basic moisture (affects growth)
-- Static vegetation but moisture-dependent respawn
-
-**Adds:**
-- Rain miracle has visible effect
-- Drought creates resource scarcity
-- Strategic resource management
+**Note:** Skipped in favor of Tier-1 to establish biome infrastructure early.
 
 ---
 
 ### Full Environment (v3.0+)
-- Multiple biomes (3-5 types)
+- Multiple biomes (3-5 types) - ✅ Tier-1 provides foundation
 - Dynamic vegetation (growth, death, lifecycle)
-- Full moisture simulation
+- Full moisture simulation (spatial grid)
 - Seasonal cycles
 - Weather variety (rain, storm, drought, snow)
 

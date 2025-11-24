@@ -1,198 +1,316 @@
 # AI Integration Kickoff - Implementation Summary
 
-**Date:** 2025-01-XX  
-**Status:** Complete - All stubs and scaffolding in place
+**Date:** 2025-01-24  
+**Status:** Updated - Villager AI Expansion Plan  
+**Last Updated:** 2025-01-24
 
 ## Overview
 
-This document summarizes the AI integration kickoff work that establishes concrete stubs and scaffolding for both PureDOTS core AI and Godgame bridge systems. All components compile and provide a foundation for future implementation.
+This document summarizes the AI integration work and provides an implementation plan for expanding villager AI behaviors to support a fully functional demo.
 
-## Completed Work
+---
 
-### 1. Registry Gap Audit ✅
+## Current State Assessment
 
-**File:** `Godgame/Docs/TODO/Registry_Gap_Audit.md`
+### Implemented Systems
 
-- Documented all PureDOTS registry contracts (Villager, Storehouse, Band, Miracle, Spawner, Logistics)
-- Identified missing Godgame bridge systems
-- Created concrete deliverables list for implementation phases
+1. **Basic Job Loop** (`VillagerJobSystem.cs`)
+   - State machine: Idle → NavigateToNode → Gather → NavigateToStorehouse → Deliver
+   - Resource node selection (nearest, matching type)
+   - Resource node depletion tracking
+   - Storehouse delivery via `StorehouseApi`
+   - Burst-compiled, parallel `IJobEntity` execution
 
-### 2. Godgame Registry Bridge Stubs ✅
+2. **Personality System** (`VillagerPersonalitySystem.cs`)
+   - Grudge generation/decay
+   - Patriotism drift
+   - Combat stance modifiers
+   - Initiative boosts from grudges
 
-**Location:** `Godgame/Assets/Scripts/Godgame/Registry/`
+3. **Utility Scheduler** (`VillagerUtilityScheduler.cs`)
+   - Initiative calculation (band + personality modifiers)
+   - Base utility calculation functions (stubs)
+   - Autonomous action selection (stub implementation)
 
-Created stub systems:
-- `GodgameRegistryBridgeSystem.cs` - Main orchestrator
-- `GodgameVillagerSyncSystem.cs` - Villager sync stub
-- `GodgameStorehouseSyncSystem.cs` - Storehouse sync stub
-- `GodgameBandSyncSystem.cs` - Band sync stub
-- `GodgameMiracleSyncSystem.cs` - Miracle sync stub
-- `GodgameSpawnerSyncSystem.cs` - Spawner sync stub
-- `GodgameLogisticsSyncSystem.cs` - Logistics sync stub
+4. **Registry Sync** (`GodgameVillagerSyncSystem.cs`)
+   - Mirrors villager data to `VillagerRegistry`
+   - Spatial continuity support
+   - Telemetry emission
 
-**Authoring:**
-- `Godgame/Assets/Scripts/Godgame/Registry/Authoring/RegistryAuthoring.cs` - Base authoring component for registry-tagged entities
+---
 
-All systems log warnings when called but don't crash, allowing compilation and basic system verification.
+## Required Upgrades
 
-### 3. PureDOTS Villager AI Scaffolding ✅
+### 1. Interrupt Handling System
 
-**Location:** `PureDOTS/Packages/com.moni.puredots/Runtime/`
+**Purpose:** Handle interruptions to villager jobs (hand pickup, path blocked, urgent needs)
 
-**Archetype System:**
-- `Runtime/Config/VillagerArchetypeCatalog.cs` - Blob data structure for archetype definitions
-- `Runtime/Authoring/VillagerArchetypeCatalog.cs` - ScriptableObject asset for designer configuration
-- `Runtime/Authoring/VillagerArchetypeCatalogBaker.cs` - Baker converting SO to blob asset
+**Components to Add:**
+```csharp
+// Assets/Scripts/Godgame/Villagers/VillagerInterruptComponents.cs
+public struct VillagerInterrupt : IComponentData
+{
+    public InterruptType Type;
+    public Entity SourceEntity;
+    public float Priority;
+    public uint TriggerTick;
+}
 
-**Utility Scheduler:**
-- `Runtime/Runtime/Villagers/VillagerUtilityScheduler.cs` - Utility-based need/job priority system (stub methods)
+public enum InterruptType : byte
+{
+    None = 0,
+    HandPickup = 1,
+    PathBlocked = 2,
+    UrgentNeed = 3,
+    CombatThreat = 4,
+    VillageCommand = 5
+}
 
-**Job Execution:**
-- `Runtime/Runtime/Villagers/VillagerJobExecutionInterface.cs` - Modular job behavior interface with placeholder implementations (Gather, Build, Craft, Combat)
+public struct VillagerJobStateSnapshot : IBufferElementData
+{
+    public JobType Type;
+    public JobPhase Phase;
+    public Entity Target;
+    public float3 LastPosition;
+    public float CarryCount;
+}
+```
 
-### 4. Combat Baseline Types ✅
+**System to Create:**
+- `VillagerInterruptSystem.cs`: Detects interrupts, saves job state, handles resume
+- Integration with `VillagerJobSystem`: Check interrupts before job execution, save state on interrupt
 
-**Location:** `PureDOTS/Packages/com.moni.puredots/Runtime/Runtime/Combat/`
+**Files to Touch:**
+- New: `Assets/Scripts/Godgame/Villagers/VillagerInterruptComponents.cs`
+- New: `Assets/Scripts/Godgame/Villagers/VillagerInterruptSystem.cs`
+- Modify: `Assets/Scripts/Godgame/Villagers/VillagerJobSystem.cs` (add interrupt checks)
+- New: `Assets/Scripts/Godgame/Tests/VillagerInterruptTests.cs`
 
-**Components:**
-- `CombatStats.cs` - Complete combat component definitions:
-  - `BaseAttributes` - Strength, Finesse, Will, Intelligence
-  - `CombatStats` - Derived stats (Attack, Defense, Morale, etc.)
-  - `Weapon` - Weapon component with type, damage, bonuses
-  - `Armor` - Armor component with type, value, effectiveness
-  - `ActiveCombat` - Ongoing fight tracking
-  - `Injury` - Permanent injury buffer
-  - `DeathSavingThrow` - Survival mechanics
-  - `CombatAI` - AI behavior configuration
+---
 
-**System:**
-- `Systems/Combat/CombatResolutionSystem.cs` - Placeholder resolver that validates data and logs warnings
+### 2. Needs Tracking System
 
-### 5. Aggregate (Band/Guild) Data Skeletons ✅
+**Purpose:** Track villager needs (hunger, fatigue, hygiene, mood) and trigger autonomous actions
 
-**Location:** `PureDOTS/Packages/com.moni.puredots/Runtime/Runtime/Aggregates/`
+**Components to Add:**
+```csharp
+// Assets/Scripts/Godgame/Villagers/VillagerNeedsComponents.cs
+public struct VillagerNeeds : IComponentData
+{
+    public byte HungerPercent;      // 0-100, 0 = starving
+    public byte FatiguePercent;     // 0-100, 0 = exhausted
+    public byte HygienePercent;      // 0-100, 0 = filthy
+    public sbyte MoodPercent;        // -100 to +100, negative = unhappy
+    public uint LastMealTick;
+    public uint LastRestTick;
+    public uint LastBathTick;
+}
 
-**Band Components:**
-- `BandComponents.cs` - Complete band data structures:
-  - `Band` - Core band entity component
-  - `BandMember` - Membership buffer
-  - `BandMembership` - Individual entity reference
-  - `SharedExperience` - Relation-building buffer
-  - `BandFormationCandidate` - Formation detection
-  - `BandJoinRequest` - Recruitment mechanics
-  - `BandGoal` - Current objective tracking
-  - `BandEvolutionState` - Transformation tracking
+public struct VillagerNeedCurves : IComponentData
+{
+    public float HungerDecayRate;      // Per tick
+    public float FatigueDecayRate;     // Per tick
+    public float HygieneDecayRate;     // Per tick
+    public float MoodDecayRate;        // Per tick
+    public byte HungerThreshold;       // Below this = urgent
+    public byte FatigueThreshold;      // Below this = urgent
+    public byte HygieneThreshold;      // Below this = urgent
+    public sbyte MoodThreshold;        // Below this = urgent
+}
+```
 
-**Guild Components:**
-- `GuildComponents.cs` - Complete guild data structures:
-  - `Guild` - Core guild entity component
-  - `GuildMember` - Membership roster
-  - `GuildAlignment` - Aggregate alignment/outlooks
-  - `GuildLeadership` - Governance and officers
-  - `GuildVote` - Democratic voting buffer
-  - `GuildEmbassy` - Cross-village presence
-  - `GuildRelation` - Inter-guild diplomacy
-  - `GuildKnowledge` - Specialized bonuses
-  - `GuildTreasury` - Resources and loot
-  - `GuildMission` - Active objectives
-  - `GuildWarState` - Warfare tracking
+**System to Create:**
+- `VillagerNeedsSystem.cs`: Updates needs over time, triggers urgent need interrupts
+- Integration with `VillagerUtilityScheduler`: Use needs in utility calculations
 
-**Systems:**
-- `Systems/Aggregates/BandFormationSystem.cs` - Band formation detection and processing (stubs)
-- `Systems/Aggregates/GuildFormationSystem.cs` - Guild creation (stub)
+**Files to Touch:**
+- New: `Assets/Scripts/Godgame/Villagers/VillagerNeedsComponents.cs`
+- New: `Assets/Scripts/Godgame/Villagers/VillagerNeedsSystem.cs`
+- Modify: `Assets/Scripts/Godgame/Villagers/VillagerUtilityScheduler.cs` (wire needs into utility)
+- New: `Assets/Scripts/Godgame/Tests/VillagerNeedsTests.cs`
 
-### 6. Tests & Scene Integration ✅
+**PureDOTS Integration:**
+- PureDOTS has `VillagerNeedsHot` component structure
+- Wire Godgame needs to PureDOTS utility calculations via `VillagerUtilityScheduler.CalculateNeedUtility`
 
-**Godgame Tests:**
-- `Godgame/Assets/Scripts/Godgame/Tests/GodgameRegistryBridgeTests.cs` - Verifies all bridge systems exist and can initialize
+---
 
-**PureDOTS Tests:**
-- `PureDOTS/Assets/Tests/VillagerAIScaffoldTests.cs` - Verifies archetype catalog, utility scheduler, and job behaviors compile
-- `PureDOTS/Assets/Tests/CombatBaselineTests.cs` - Verifies combat components can be instantiated
-- `PureDOTS/Assets/Tests/AggregateDataSkeletonTests.cs` - Verifies band/guild components can be instantiated
+### 3. Job Scheduler System
 
-All tests ensure compile-time coverage and prevent regressions as implementations are fleshed out.
+**Purpose:** Assign jobs to villagers based on priorities, capacity, and GOAP goals
 
-## Next Steps
+**Components to Add:**
+```csharp
+// Assets/Scripts/Godgame/Villagers/VillagerJobSchedulerComponents.cs
+public struct JobAssignment : IBufferElementData
+{
+    public Entity VillagerEntity;
+    public JobType Type;
+    public Entity TargetEntity;
+    public ushort ResourceTypeIndex;
+    public float Priority;
+    public uint AssignmentTick;
+}
 
-### Immediate Follow-ups
+public struct JobOffer : IComponentData
+{
+    public JobType Type;
+    public Entity TargetEntity;
+    public ushort ResourceTypeIndex;
+    public float BasePriority;
+    public int RequiredWorkers;
+    public int AssignedWorkers;
+    public uint ExpirationTick;
+}
+```
 
-1. **Implement Godgame Entity Mapping**
-   - Map Godgame villager components to `VillagerRegistryEntry`
-   - Map Godgame storehouse components to `StorehouseRegistryEntry`
-   - Wire sync systems to actually populate registries
+**System to Create:**
+- `VillagerJobSchedulerSystem.cs`: Creates job offers, assigns jobs to villagers, manages job queue
+- Integration with `VillagerJobSystem`: Consume job assignments instead of autonomous selection
 
-2. **Flesh Out Utility Scheduler**
-   - Implement need utility calculations
-   - Implement job utility calculations
-   - Wire into villager AI decision-making
+**Files to Touch:**
+- New: `Assets/Scripts/Godgame/Villagers/VillagerJobSchedulerComponents.cs`
+- New: `Assets/Scripts/Godgame/Villagers/VillagerJobSchedulerSystem.cs`
+- Modify: `Assets/Scripts/Godgame/Villagers/VillagerJobSystem.cs` (consume assignments)
+- New: `Assets/Scripts/Godgame/Tests/VillagerJobSchedulerTests.cs`
 
-3. **Implement Combat Resolution**
-   - Calculate hit chance (Attack vs Defense)
-   - Roll damage with armor reduction
-   - Handle morale checks and yield behavior
-   - Process injuries and death saving throws
+**GOAP Hooks:**
+- Future: Add GOAP goal system that generates job offers based on village needs
+- Future: Add goal planning system that breaks down high-level goals into job sequences
 
-4. **Implement Band Formation Logic**
-   - Detection algorithm for compatible entities
-   - Probability calculation (alignment, relations, initiative)
-   - Leader election based on outlook
+---
 
-5. **Implement Guild Formation Logic**
-   - Village tech tier checks
-   - Threat detection
-   - Guild type selection based on village alignment
-   - Initial member recruitment
+### 4. Improved Storehouse Selection
 
-### Design Decisions Needed
+**Purpose:** Select storehouses based on capacity, priority, and reservation status
 
-- Band formation probability modifiers (see `Band_Formation_And_Dynamics.md` open questions)
-- Combat tuning values (crit rates, injury chances, HP scaling)
-- Guild member limits and embassy costs
-- Flow field pathfinding parameters (grid resolution, rebuild cadence)
+**Enhancements to `VillagerJobSystem`:**
+- Check storehouse capacity before selecting
+- Prefer storehouses with available capacity
+- Support reservation system for incoming deliveries
+- Consider storehouse priority/type (food vs construction materials)
 
-## Files Created
+**Files to Touch:**
+- Modify: `Assets/Scripts/Godgame/Villagers/VillagerJobSystem.cs` (improve storehouse selection)
+- Modify: `Assets/Scripts/Godgame/Resources/StorehouseApi.cs` (add reservation methods)
+- Modify: `Assets/Scripts/Godgame/Tests/Conservation_VillagerGatherDeliver_Playmode.cs` (test improved selection)
 
-### Godgame Side
-- `Godgame/Docs/TODO/Registry_Gap_Audit.md`
-- `Godgame/Assets/Scripts/Godgame/Registry/GodgameRegistryBridgeSystem.cs`
-- `Godgame/Assets/Scripts/Godgame/Registry/GodgameVillagerSyncSystem.cs`
-- `Godgame/Assets/Scripts/Godgame/Registry/GodgameStorehouseSyncSystem.cs`
-- `Godgame/Assets/Scripts/Godgame/Registry/GodgameBandSyncSystem.cs`
-- `Godgame/Assets/Scripts/Godgame/Registry/GodgameMiracleSyncSystem.cs`
-- `Godgame/Assets/Scripts/Godgame/Registry/GodgameSpawnerSyncSystem.cs`
-- `Godgame/Assets/Scripts/Godgame/Registry/GodgameLogisticsSyncSystem.cs`
-- `Godgame/Assets/Scripts/Godgame/Registry/Authoring/RegistryAuthoring.cs`
-- `Godgame/Assets/Scripts/Godgame/Tests/GodgameRegistryBridgeTests.cs`
+---
 
-### PureDOTS Side
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Config/VillagerArchetypeCatalog.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Authoring/VillagerArchetypeCatalog.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Authoring/VillagerArchetypeCatalogBaker.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Runtime/Villagers/VillagerUtilityScheduler.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Runtime/Villagers/VillagerJobExecutionInterface.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Runtime/Combat/CombatStats.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Systems/Combat/CombatResolutionSystem.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Runtime/Aggregates/BandComponents.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Runtime/Aggregates/GuildComponents.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Systems/Aggregates/BandFormationSystem.cs`
-- `PureDOTS/Packages/com.moni.puredots/Runtime/Systems/Aggregates/GuildFormationSystem.cs`
-- `PureDOTS/Assets/Tests/VillagerAIScaffoldTests.cs`
-- `PureDOTS/Assets/Tests/CombatBaselineTests.cs`
-- `PureDOTS/Assets/Tests/AggregateDataSkeletonTests.cs`
+### 5. Autonomous Action System
 
-## Verification
+**Purpose:** Execute autonomous actions (family formation, business ventures, adventure seeking)
 
-All files compile without errors. Stub systems log warnings but don't crash, allowing:
-- Compile-time verification of system existence
-- Basic integration testing
-- Progressive implementation without breaking existing code
-- Clear TODO markers for future work
+**Components to Add:**
+```csharp
+// Assets/Scripts/Godgame/Villagers/VillagerAutonomousActionComponents.cs
+public struct AutonomousActionRequest : IBufferElementData
+{
+    public byte ActionType;
+    public Entity TargetEntity;
+    public float Utility;
+    public uint RequestTick;
+}
 
-## Notes
+public enum AutonomousActionType : byte
+{
+    None = 0,
+    StartFamily = 1,
+    OpenBusiness = 2,
+    JoinBand = 3,
+    Migrate = 4,
+    Revenge = 5,
+    Adventure = 6
+}
+```
 
-- All stub systems use `#if UNITY_EDITOR` guards for warning logs to avoid runtime overhead
-- Components follow PureDOTS SoA patterns (byte/ushort where possible, Burst-compatible)
-- Systems are properly grouped (`SimulationSystemGroup`, `CombatSystemGroup`, etc.)
-- Tests use NUnit and Unity.Entities.Tests for consistency with existing test infrastructure
+**System to Create:**
+- `VillagerAutonomousActionSystem.cs`: Evaluates autonomous actions, executes when initiative threshold met
+- Integration with `VillagerUtilityScheduler`: Use `SelectAutonomousAction` to choose actions
 
+**Files to Touch:**
+- New: `Assets/Scripts/Godgame/Villagers/VillagerAutonomousActionComponents.cs`
+- New: `Assets/Scripts/Godgame/Villagers/VillagerAutonomousActionSystem.cs`
+- Modify: `Assets/Scripts/Godgame/Villagers/VillagerUtilityScheduler.cs` (wire action selection)
+- New: `Assets/Scripts/Godgame/Tests/VillagerAutonomousActionTests.cs`
+
+---
+
+## Implementation Order
+
+### Phase 1: Core Interrupts & Needs (High Priority)
+1. Implement interrupt handling system
+2. Implement needs tracking system
+3. Wire needs into utility calculations
+4. Add tests for interrupts and needs
+
+### Phase 2: Job Scheduling (Medium Priority)
+1. Implement job scheduler system
+2. Improve storehouse selection
+3. Wire job scheduler into job system
+4. Add tests for job scheduling
+
+### Phase 3: Autonomous Actions (Low Priority)
+1. Implement autonomous action system
+2. Wire autonomous actions into utility scheduler
+3. Add tests for autonomous actions
+
+---
+
+## Testing Strategy
+
+### Unit Tests
+- `VillagerInterruptTests.cs`: Test interrupt detection, state saving, resume logic
+- `VillagerNeedsTests.cs`: Test needs decay, threshold detection, urgent need triggers
+- `VillagerJobSchedulerTests.cs`: Test job assignment, priority calculation, capacity checks
+- `VillagerAutonomousActionTests.cs`: Test action selection, execution, utility calculation
+
+### Integration Tests
+- `VillagerNeedsToJobIntegrationTests.cs`: Test needs triggering job changes
+- `VillagerInterruptToResumeIntegrationTests.cs`: Test interrupt → resume flow
+- `VillagerJobSchedulerToJobIntegrationTests.cs`: Test scheduler → job execution flow
+
+### PlayMode Tests
+- `VillagerAI_FullLoop_Playmode.cs`: Test complete villager AI loop with interrupts, needs, scheduling
+- `VillagerAI_AutonomousActions_Playmode.cs`: Test autonomous actions triggering and executing
+
+---
+
+## Files Summary
+
+### New Files to Create
+- `Assets/Scripts/Godgame/Villagers/VillagerInterruptComponents.cs`
+- `Assets/Scripts/Godgame/Villagers/VillagerInterruptSystem.cs`
+- `Assets/Scripts/Godgame/Villagers/VillagerNeedsComponents.cs`
+- `Assets/Scripts/Godgame/Villagers/VillagerNeedsSystem.cs`
+- `Assets/Scripts/Godgame/Villagers/VillagerJobSchedulerComponents.cs`
+- `Assets/Scripts/Godgame/Villagers/VillagerJobSchedulerSystem.cs`
+- `Assets/Scripts/Godgame/Villagers/VillagerAutonomousActionComponents.cs`
+- `Assets/Scripts/Godgame/Villagers/VillagerAutonomousActionSystem.cs`
+- `Assets/Scripts/Godgame/Tests/VillagerInterruptTests.cs`
+- `Assets/Scripts/Godgame/Tests/VillagerNeedsTests.cs`
+- `Assets/Scripts/Godgame/Tests/VillagerJobSchedulerTests.cs`
+- `Assets/Scripts/Godgame/Tests/VillagerAutonomousActionTests.cs`
+
+### Files to Modify
+- `Assets/Scripts/Godgame/Villagers/VillagerJobSystem.cs` (add interrupt checks, consume assignments)
+- `Assets/Scripts/Godgame/Villagers/VillagerUtilityScheduler.cs` (wire needs, wire autonomous actions)
+- `Assets/Scripts/Godgame/Resources/StorehouseApi.cs` (add reservation methods)
+- `Assets/Scripts/Godgame/Tests/Conservation_VillagerGatherDeliver_Playmode.cs` (test improved selection)
+
+---
+
+## PureDOTS Integration Points
+
+1. **Utility Calculations**: Use PureDOTS `VillagerUtilityScheduler.CalculateNeedUtility` and `CalculateJobUtility`
+2. **Needs Components**: Align with PureDOTS `VillagerNeedsHot` structure
+3. **Behavior Profiles**: Future integration with PureDOTS `VillagerBehaviorConfig` and `AggregateBehaviorProfile`
+
+---
+
+## Related Documentation
+
+- `Docs/DemoReadiness_GapAnalysis.md` - Gap analysis
+- `Docs/Concepts/Villagers/Villager_Behavioral_Personality.md` - Personality system design
+- `Docs/Concepts/Core/Sandbox_Autonomous_Villages.md` - Autonomous village behaviors
+- `Docs/Guides/Godgame_PureDOTS_Entity_Mapping.md` - Entity mapping guide

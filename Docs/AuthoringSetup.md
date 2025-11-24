@@ -65,6 +65,26 @@ All authoring components are in `PureDOTS.Authoring` namespace and auto-bake to 
   - Fields: Species type, lifecycle stage, health, production
   - Creates: Full vegetation component set with lifecycle tracking
 
+#### Abilities (Spells & Skills)
+- **SpellSpecCatalog** - Spell specification catalog
+  - Fields: Array of spell definitions (ID, shape, range, cost, effects, etc.)
+  - Creates: `SpellSpecCatalogBlobRef` component with blob asset reference
+  - Usage: Create via `Create → Godgame → Spell Spec Catalog`, define spells, bake runs automatically
+
+- **SkillSpecCatalog** - Skill specification catalog
+  - Fields: Array of skill definitions (ID, passive/active, stat mods, prerequisites, tier)
+  - Creates: `SkillSpecCatalogBlobRef` component with blob asset reference
+  - Usage: Create via `Create → Godgame → Skill Spec Catalog`, define skills, validate prerequisites
+
+- **StatusSpecCatalog** - Status effect specification catalog
+  - Fields: Array of status definitions (ID, duration, period, stacks, dispel tags)
+  - Creates: `StatusSpecCatalogBlobRef` component with blob asset reference
+  - Usage: Create via `Create → Godgame → Status Spec Catalog`, define statuses
+
+- **SpellBindingSet** - Presentation binding set (Minimal/Fancy)
+  - Fields: Array of spell presentation bindings (FX refs, icon tokens, style tokens, sockets)
+  - Usage: Create via `Create → Godgame → Spell Binding Set`, assign FX/icon references per spell
+
 ## Bootstrap Profile
 
 The default PureDOTS bootstrap profile (`SystemRegistry.BuiltinProfiles.Default`) includes all required system groups:
@@ -120,6 +140,87 @@ Godgame/Assets/Prefabs/
 3. [ ] Ensure all entities have appropriate authoring components
 4. [ ] Verify spatial indexing is enabled (automatically added by bakers)
 5. [ ] Test baking and verify entities appear in ECS world
+
+## Spells & Skills Workflow
+
+### Overview
+Spells, skills, and status effects are defined as data (ScriptableObject catalogs) and baked into DOTS blob assets. The Prefab Maker tool provides a unified interface for managing these specs, validating them, and baking blobs.
+
+### Workflow
+
+1. **Create Spec Catalogs**
+   - Create `SpellSpecCatalog`, `SkillSpecCatalog`, and `StatusSpecCatalog` assets
+   - Define spells/skills/statuses in the inspector
+
+2. **Use Prefab Maker "Spells & Skills" Tab**
+   - Open `Godgame → Prefab Editor`
+   - Select the "Spells & Skills" tab
+   - Assign your catalogs and binding sets
+
+3. **Validate**
+   - Click "Validate All" to check for:
+     - Cooldown ≥ 0, GCD groups valid
+     - Skill prerequisite DAG is acyclic
+     - Status periods are valid (period ≤ duration)
+     - Binding references exist for showcased spells
+
+4. **Dry-Run**
+   - Click "Dry-Run (Preview)" to see what would be generated without writing assets
+   - Review the summary report
+
+5. **Bake Blobs**
+   - Click "Bake Blobs" to trigger Unity's baker system
+   - Blobs are created automatically when catalogs are baked
+   - Runtime systems read spell/skill/status data by ID from blob assets
+
+### Validation Rules
+
+**Spells:**
+- Cooldown ≥ 0
+- Cast time ≥ 0
+- Range ≥ 0
+- Area spells must have radius > 0
+- Effects must have valid magnitudes and durations
+
+**Skills:**
+- Prerequisites must exist in catalog
+- Prerequisite graph must be acyclic (no cycles)
+- Duplicate IDs are invalid
+
+**Statuses:**
+- Duration ≥ 0
+- Period ≥ 0
+- If Period > 0, Duration must be > Period
+- MaxStacks ≥ 1
+
+**Bindings:**
+- Spell IDs must exist in spell catalog
+- Showcased spells should have bindings (warning if missing)
+
+### Presentation Bindings
+
+Spell presentation bindings map spell IDs to visual assets:
+- **StartFX**: Prefab for cast start effect
+- **LoopFX**: Prefab for channeled spell loop
+- **ImpactFX**: Prefab for impact effect
+- **SFX**: Audio clip for sound effect
+- **IconToken**: Prefab for UI icon (optional)
+- **StyleTokens**: String array for visual theming
+- **Sockets**: String array for attachment points (e.g., "Socket_Hand_R")
+
+Binding sets come in two flavors:
+- **Minimal**: Placeholder tokens for rapid iteration
+- **Fancy**: Full FX assets for final presentation
+
+Runtime can swap binding sets without changing gameplay (spell specs remain unchanged).
+
+### Testing
+
+Required test suites:
+- `Spells_Idempotent_BlobHashes`: Verifies deterministic blob generation
+- `Skills_Tree_Acyclic_And_Prereqs_Resolved`: Validates skill tree structure
+- `Statuses_NoCycles_PeriodicValid`: Checks status effect validity
+- `Bindings_MinimalVsFancy_Swap_NoGameplayChange`: Ensures binding swaps don't affect gameplay
 
 ## Next Steps
 

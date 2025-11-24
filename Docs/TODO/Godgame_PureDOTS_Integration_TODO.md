@@ -41,6 +41,8 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 
 - [x] Hook PureDOTS `ClimateState` + biome moisture grids into a presentation-ready Weather Controller (`WeatherBootstrapSystem`, `WeatherControllerSystem`, `WeatherPresentationSystem`) feeding the new `WeatherRigAuthoring` so COZY Weather, VFX Graph prefabs, and ambient loops react to DOTS state + time-of-day events.
   - Miracles now call into the shared `WeatherRequest` queue to trigger rain/storm FX payloads (`miracle.rain`, `miracle.storm`) instead of duplicating presentation logic.
+- [x] Tier-1 Biome System: Implemented biome definition blobs, climate/moisture systems, biome resolution, and placeholder presentation tokens. Three biomes (Temperate, Grasslands, Mountains) with resource seeding bias and villager modifiers.
+- [x] Vegetation System: Implemented plant/stand specifications, growth/spawn/harvest systems, presentation bindings, and Prefab Maker Vegetation tab. Plants are data-driven specs with growth stages, yields, hazards, and biome preferences. Stands spawn deterministically with clustering. All visuals are token-based and swappable.
 - [ ] Author and assign actual COZY WeatherProfile assets, ambient loops, and special-FX prefabs per biome once those packs live under `Godgame/Assets`.
 
 ## Scenes, Prefabs & Assets
@@ -82,15 +84,19 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
   - [x] Storehouse intake authoring (intake collider, capacities) and DOTS totals/events system (`StorehouseIntakeAuthoring` + telemetry systems for totals/per-resource breakdown).
   - [ ] Conservation PlayMode tests (pile→hand→storehouse, spillover when full).
   - [x] Telemetry + registry sync wiring for storehouse totals (StorehouseTelemetrySystem + per-resource telemetry).
-- [ ] Establish villager job/state graph aligned with `VillagerTruth.md`, `Villagers_Jobs.md`, `VillagerState.md`. Deliverables: job assignment buffers, state machine system (`Idle/Navigate/Gather/Carry/Deliver/Interrupted`), storehouse handoff via API events, interrupt/resume rules, and integration tests proving Gather→Deliver→Idle with storehouse totals reconciled.
-  - [ ] Job scheduler / assignment buffer with GOAP hooks described in TruthSources.
-  - [ ] State machine system with guards (`HasPath`, `HasCapacity`, `HasResource`) and events.
-  - [ ] Interrupt handling tests (hand pickup, path blocked) and storehouse reconciliation.
-- [ ] Bring up the rewindable time engine stack (`TimeTruth.md`, `TimeEngine_Contract.md`, `Timeline_DataModel.md`, `Input_TimeControls.md`). Deliverables: `TimeEngine` singleton with snapshot/command log, rewind GC policy, input bindings routed through Interaction, TimeHUD feedback (tick, speed, branch id), and EditMode tests for pause/rewind/step-back determinism and memory budget guards.
-  - [ ] Command stream + snapshot storage implementation with GC tests.
-  - [ ] Input routing for time controls, including UI priority overrides.
-  - [ ] TimeHUD binding (tick, speed, branch).
-  - [ ] Determinism tests for pause, rewind hold, step back, speed multipliers.
+- [x] Establish villager job/state graph aligned with `VillagerTruth.md`, `Villagers_Jobs.md`, `VillagerState.md`. Deliverables: job assignment buffers, state machine system (`Idle/Navigate/Gather/Carry/Deliver/Interrupted`), storehouse handoff via API events, interrupt/resume rules, and integration tests proving Gather→Deliver→Idle with storehouse totals reconciled.
+  - [x] State machine system (`VillagerJobSystem`) with `Idle→NavigateToNode→Gather→NavigateToStorehouse→Deliver` phases.
+  - [x] Storehouse API integration (`StorehouseApi.TryDeposit/Withdraw`) for resource handoff.
+  - [x] Integration tests (`Conservation_VillagerGatherDeliver_Playmode`, `Jobs_GatherDeliver_StateGraph_Playmode`).
+  - [ ] Job scheduler / assignment buffer with GOAP hooks described in TruthSources (future enhancement).
+  - [ ] Interrupt handling tests (hand pickup, path blocked) and storehouse reconciliation (future enhancement).
+- [x] Bring up the rewindable time engine stack (`TimeTruth.md`, `TimeEngine_Contract.md`, `Timeline_DataModel.md`, `Input_TimeControls.md`). Deliverables: `TimeEngine` singleton with snapshot/command log, rewind GC policy, input bindings routed through Interaction, TimeHUD feedback (tick, speed, branch id), and EditMode tests for pause/rewind/step-back determinism and memory budget guards.
+  - [x] Time control system (`TimeControlSystem`) with pause/speed/step/rewind support.
+  - [x] HUD event buffer (`HudEvent`) for time state feedback.
+  - [x] Determinism test (`Time_RewindDeterminism_Playmode`) for rewind/resim validation.
+  - [x] `TimeDemoHistorySystem` for snapshot/command log (existing).
+  - [ ] Input routing for time controls via Interaction system (future enhancement - currently uses `TimeControlInput` singleton).
+  - [ ] Rewind GC policy and memory budget guards (future enhancement).
 
 ## Documentation & Follow-Up
 
@@ -99,7 +105,7 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 - [ ] Capture open questions or blockers in this file to steer future agent prompts.
 
 ### Session Notes – current agent sweep
-
+- 2025-11-22 — Code sweep (Agent A planning): confirmed registry bridge covers villagers/storehouses/resources/spawners/bands/miracles/logistics with telemetry snapshots, module degradation/refit loops have Burst-friendly systems + NUnit coverage, aggregate pile + storehouse overflow logic is live, and the rewindable time demo records/catches up via `TimeStreamHistory`. Next focus: finish construction ghost → completion telemetry tests, bring villager job graph/storehouse API online, wire time controls & HUD to the spine, and expand placeholder presentation bindings beyond the current miracle ping effect.
 - Modules/degradation: added maintainer aggregation (host refs + crew skills), module host/definition authoring bakers, explicit damage handling, offline/repair telemetry, and expanded `ModuleMaintenanceTests`. Next: wire authoring into scenes/prefabs and surface module metrics in HUD/registries.
 - Module costs: refit/repair work now supports optional resource wallets and cost-per-work gating; tests cover resource insufficiency and subsequent progress once funded.
 - Latest guidance: crew growth systems, mining w/ telemetry, and fleet intercept are done; time/rewind validation for Phase 2 remains open. Recommended next step is Agent 1 (Phase 2 demo closure: rewind determinism + mining/haul registry continuity); alternates are Agent A (alignment/compliance with `CrewAggregationSystem` + `DoctrineAuthoring`) and Agent B (modules/refit/degradation wired to crew skills).
