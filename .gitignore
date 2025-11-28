@@ -69,3 +69,7 @@ SourceAssetDB/
 
 Packages/Coplay/Editor/Checkpoints/
 Assets/Editor/MCP/
+
+# Archived third-party Asset Store packages (large, not versioned)
+Archive/ThirdParty.disabled/AssetStore/
+Archive/ThirdParty.disabled/AssetStore.meta

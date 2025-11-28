@@ -2,6 +2,14 @@
 
 Use this file as the jump-off for active DOTS tasks. Detailed scopes live in per-agent TODOs.
 
+## Request Documents (for PureDOTS team)
+
+- **CRITICAL** Burst BC1016 Fixes: `Docs/TODO/PureDOTS_Burst_BC1016_Fix_Request.md`
+- Focus System Migration: `Docs/TODO/PureDOTS_FocusSystem_Request.md`
+- Stats Foundation: `Docs/PureDOTS_Stats_Foundation_Request.md`
+
+## Integration Tracking
+
 - Integration backlog and bridge status: `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md`
 - Phase 2 rewind demo slices: `Docs/TODO/Phase2_Demo_TODO.md`
 - Divine Hand/pile/storehouse context: `Docs/TODO/DOTSRequest.md`

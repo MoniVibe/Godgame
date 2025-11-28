@@ -61,6 +61,7 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 - [ ] Stand up PlayMode/DOTS integration tests under `Godgame.Gameplay` that exercise registry registration, data sync, and telemetry emission.
   - `GodgameRegistryBridgeSystemTests` now drives the villager/storehouse sync systems, verifies continuity metadata (including miracle registry baseline), and asserts telemetry keys remain Burst-friendly.
   - Added `JobsiteConstructionTests` to cover jobsite ghost placement → completion while asserting `ConstructionRegistry` entries, effect requests, and telemetry counters.
+  - Added `TimeRewindDeterminismPlayModeTests` to cover time spine rewind gating and logistics registry continuity after rewind/catch-up.
 - [ ] Add validation tests for common flows (villager spawning, band assignment, storehouse transactions, miracle dispatch) proving they interact with the shared registries.
 - [ ] Create test utilities/mocks to simulate PureDOTS registries when running focused Godgame tests.
 
@@ -98,13 +99,128 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
   - [ ] Input routing for time controls via Interaction system (future enhancement - currently uses `TimeControlInput` singleton).
   - [ ] Rewind GC policy and memory budget guards (future enhancement).
 
+## PureDOTS Feature Requests (Game-Agnostic Systems)
+
+The following systems were prototyped in Godgame but are **game-agnostic** and should be moved to `com.moni.puredots` for consumption by both Space4X and Godgame.
+
+### Focus System (Combat Resource) — REQUEST PENDING
+
+**Reference Implementation:** `Assets/Scripts/Godgame/Combat/`
+
+**Core Components to move to PureDOTS:**
+- `EntityFocus` — Focus pool with capacity, regen rate, exhaustion tracking, coma state
+- `CombatStats` — Physique/Finesse/Intelligence/Will/Wisdom (ability unlock gating)
+- `FocusAbilityType` — Enum for Finesse/Physique/Arcane abilities (24+ types)
+- `ActiveFocusAbility` — Buffer for tracking active abilities with drain/duration
+- `FocusConfig` — Singleton for global exhaustion/regen/coma parameters
+- `FocusComaTag`, `FocusBreakdownRiskTag` — State tags
+
+**Systems to move:**
+- `FocusRegenSystem` — Regenerates focus over time (faster when resting)
+- `FocusAbilitySystem` — Activates abilities, drains focus, manages durations
+- `FocusExhaustionSystem` — Tracks exhaustion, triggers breakdown/coma
+- `FocusAbilityDefinitions` — Static ability cost/effect/unlock data
+
+**Helper utilities to move:**
+- `FocusEffectHelpers` — Query active abilities for combat modifiers (attack speed, dodge, crit, spell power)
+- `FocusExhaustionHelpers` — Query exhaustion state for effectiveness/cost multipliers
+- `ProfessionFocusHelpers` — Tradeoff calculations, quality/speed/waste formulas
+- `ProfessionFocusIntegration` — Static helpers for job systems (crafting, gathering, healing, teaching, refining)
+
+**Profession Focus Components to move:**
+- `ProfessionType` enum — 35+ profession types (Blacksmith, Miner, Healer, Scholar, Smelter, etc.)
+- `ProfessionSkills` — Skill levels per archetype (Crafting/Gathering/Healing/Teaching/Refining)
+- `ProfessionFocusModifiers` — Quality/Speed/Waste/TargetCount/BonusChance multipliers
+- `ProfessionFocusConfig` — Global profession settings
+
+**40+ Profession Abilities (all game-agnostic):**
+- **Crafting (70-89)**: MassProduction, MasterworkFocus, BatchCrafting, PrecisionWork, Reinforce, EfficientCrafting, Inspiration, StudiedCrafting
+- **Gathering (90-109)**: SpeedGather, EfficientGather, GatherOverdrive, ResourceSense, DeepExtraction, LuckyFind, SustainableHarvest, Multitasking
+- **Healing (110-129)**: MassHeal, LifeClutch, PurifyingFocus, RegenerationAura, IntensiveCare, MiracleHealing, LifeTransfer, Triage
+- **Teaching (130-149)**: IntensiveLessons, DeepTeaching, GroupInstruction, InspiringPresence, HandsOnTraining, TalentDiscovery, MindLink, Eureka
+- **Refining (150-169)**: RapidRefine, PureExtraction, BatchRefine, QualityControl, Reclamation, Transmutation, Synthesis, GentleProcessing
+
+**Usage Examples (Godgame-specific, stay local):**
+- `FocusAuthoring`, `CombatArchetypeAuthoring` — Presets for Warrior/Rogue/Mage/etc.
+
+**Related game-agnostic combat utilities needed in PureDOTS:**
+- [ ] Target selection system (priority queues, threat assessment)
+- [ ] Range check utilities (melee/ranged/AOE distance queries)
+- [ ] Hit calculation system (accuracy, dodge, armor, damage rolls)
+- [ ] Projectile/AOE resolution (burst vs sustained effects)
+- [ ] Combat state machine (engaged/fleeing/stunned/recovering)
+
+**Blocking:** None — can be used from Godgame now, move to PureDOTS when prioritized.
+
+---
+
+## Burst BC1016 Error Batch (2025-11-27) — PureDOTS
+
+**Critical:** These errors block Burst compilation and cause repeated compilation failures that can freeze the Editor. All are in the **PureDOTS** package (`C:\Users\Moni\Documents\claudeprojects\unity\PureDOTS\Packages\com.moni.puredots\`).
+
+### Root Cause
+Using managed `System.String` operations inside Burst-compiled code:
+- `new FixedString32Bytes(string)` / `new FixedString64Bytes(string)` — calls `CopyFromTruncated` which uses `String.get_Length`
+- `FixedString*.ToString()` — managed function not supported in Burst
+
+### Affected Files & Lines
+
+| File | Line | Issue | Fix |
+|------|------|-------|-----|
+| `Runtime/Runtime/Registry/Aggregates/AggregateHelpers.cs` | 227 | `new FixedString32Bytes(string)` | Cache string as static `FixedString32Bytes` field |
+| `Runtime/Systems/Combat/HazardEmitFromDamageSystem.cs` | 128 | `FixedString32Bytes.ToString()` | Remove `.ToString()` or move to non-Burst context |
+| `Runtime/Systems/Ships/LifeBoatEjectorSystem.cs` | 85 | `FixedString32Bytes.ToString()` | Remove `.ToString()` or move to non-Burst context |
+| `Runtime/Systems/Spells/SchoolFoundingSystem.cs` | 148 | `new FixedString64Bytes(string)` | Cache string as static `FixedString64Bytes` field |
+
+### Fix Pattern
+
+**Before (breaks Burst):**
+```csharp
+// In Burst job or [BurstCompile] method
+var name = new FixedString32Bytes("some_string");
+Debug.Log(fixedString.ToString()); // Also breaks
+```
+
+**After (Burst-safe):**
+```csharp
+// At class level, outside Burst context
+private static readonly FixedString32Bytes s_SomeString = new FixedString32Bytes("some_string");
+
+// In Burst job
+var name = s_SomeString;
+// Avoid ToString() in Burst - if needed for logging, do it outside job
+```
+
+### Systems Affected (from compile log)
+These systems are failing to compile due to the above errors:
+- `PseudoHistorySystem`, `SatisfyNeedSystem`, `RelationInteractionSystem`, `TelemetryTrendSystem`
+- `CompressionSystem`, `MoraleBandSystem`, `BalanceAnalysisSystem`, `AggregateRegistrySystem`
+- `HazardEmitFromDamageSystem`, `LifeBoatEjectorSystem`, `SchoolFoundingSystem`
+- `SpellEffectExecutionSystem`, `HybridizationSystem`, `SpellLearningSystem`, `SpellPracticeSystem`
+- ~60+ other systems in the compile graph
+
+### Action Required
+Fix the 4 files above in PureDOTS, then rebuild to clear the Burst compilation errors.
+
+---
+
 ## Documentation & Follow-Up
 
 - [ ] Document adapter surfaces and required authoring assets in `Docs/Guides/Godgame` (create folder as needed) and cross-link to PureDOTS truth sources.
 - [ ] Update `PureDOTS_TODO.md` and relevant TruthSources when Godgame-specific needs reveal engine-level gaps.
+- [ ] Verify PureDOTS CreateAssetMenu warnings are cleared after removing attributes on CultureStoryCatalogAuthoring, LessonCatalogAuthoring, SpellCatalogAuthoring, ItemPartCatalogAuthoring, and EnlightenmentProfileAuthoring (Agent 5); rerun a domain reload when the PureDOTS Editor pass resumes.
+- [ ] **Fix Burst BC1016 errors** in PureDOTS (see batch above) — 4 files need string→FixedString caching.
 - [ ] Capture open questions or blockers in this file to steer future agent prompts.
 
 ### Session Notes – current agent sweep
+- 2025-11-27 — Captured new Burst BC1016 error batch from Unity console: 4 files in PureDOTS (`AggregateHelpers.cs:227`, `HazardEmitFromDamageSystem.cs:128`, `LifeBoatEjectorSystem.cs:85`, `SchoolFoundingSystem.cs:148`) use `new FixedString*(string)` or `.ToString()` inside Burst context; added fix table above. Also disabled orphaned `Space4X.Editor.asmdef` in Godgame that was causing assembly resolution failures, and rate-limited `EntityMeetingSystem` O(n²) algorithm to prevent play-mode freezes.
+- 2025-11-27 — Agent 1 (BC1016 fixes): moved Burst-facing BandFormationSystem goal descriptions and BandFormationProcessingSystem goal/name checks to cached FixedString constants; SpellEffectExecutionSystem shield default already cached. Unity domain reload/tests not run yet; rerun PureDOTS with Burst enabled to confirm BC1016 clears.
+- 2025-11-27 — Agent 6 (CreateAssetMenu warning cleanup): removed CreateAssetMenu attributes from PureDOTS authoring MonoBehaviours (BuffCatalogAuthoring, SchoolComplexityCatalogAuthoring, QualityFormulaAuthoring, SpellSignatureCatalogAuthoring, QualityCurveAuthoring) to stop ignored attribute warnings; Unity domain reload/tests not run.
+- 2025-11-27 — Agent 2 (BC1016 fixes): Verified `TimelineBranchSystem.WhatIfSimulationSystem` uses a cached branch name constant and moved attribute ID comparisons in `LessonAcquisitionSystem.CheckAttributeRequirement` to static readonly FixedString fields to avoid Burst string constructors; Unity domain reload/tests not run this pass.
+- 2025-11-27 — Agent 3 (stale presentation references check): re-verified `SwappablePresentationBindingEditor` resolves `SwappablePresentationBindingAuthoring`/`PresentationRegistry` via `Godgame.Presentation` + Editor asmdef reference; no additional code changes required, Unity tests not run this pass.
+- 2025-11-27 — Agent 4 (scene tools prompt refresh): verified `GodgameDevSceneSetup` and `GodgameDemoSceneWizard` already use `FindObjectsByType`/`FindFirstObjectByType` APIs and target `GodgameDevToolsRig`/`GodgameDemoBootstrapAuthoring`; no additional changes needed, Unity tests not run this pass.
+- 2025-11-27 — Agent 3 (presentation editor fixes): added `Godgame.Presentation` runtime asmdef and pointed `Godgame.Presentation.Editor` to it so `SwappablePresentationBindingEditor` can see `PresentationRegistry`/`SwappablePresentationBindingAuthoring`; ensure new asmdef/meta under `Assets/Scripts/Godgame/Presentation` are tracked despite Assets being gitignored.
+- 2025-11-27 — Agent 6 (Phase 2 demo closure): Local `com.moni.puredots` file dependency is missing (manifest expects `../../PureDOTS/Packages/com.moni.puredots`), so shared types like `TimeState`/`RewindState` are unresolved; added an Editor checker to surface the missing path. Need the PureDOTS repo or updated package path before running determinism/registry tests.
 - 2025-11-22 — Code sweep (Agent A planning): confirmed registry bridge covers villagers/storehouses/resources/spawners/bands/miracles/logistics with telemetry snapshots, module degradation/refit loops have Burst-friendly systems + NUnit coverage, aggregate pile + storehouse overflow logic is live, and the rewindable time demo records/catches up via `TimeStreamHistory`. Next focus: finish construction ghost → completion telemetry tests, bring villager job graph/storehouse API online, wire time controls & HUD to the spine, and expand placeholder presentation bindings beyond the current miracle ping effect.
 - Modules/degradation: added maintainer aggregation (host refs + crew skills), module host/definition authoring bakers, explicit damage handling, offline/repair telemetry, and expanded `ModuleMaintenanceTests`. Next: wire authoring into scenes/prefabs and surface module metrics in HUD/registries.
 - Module costs: refit/repair work now supports optional resource wallets and cost-per-work gating; tests cover resource insufficiency and subsequent progress once funded.
