@@ -29,6 +29,7 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 - [x] Connect Godgame spatial grid usage to the PureDOTS spatial service (cell config, provider selection, rebuild cadence).
   - `GodgameSpatialProfile.asset` + `SpatialPartitionAuthoring` now seed the shared spatial grid at load so registry systems inherit the proper world bounds/cell sizing.
 - [ ] Ensure continuity/rewind components from PureDOTS are hooked into Godgame determinism flows (time state, rewind state, continuity buffers).
+  - Demo hotkeys/HUD now ride the Input System and fall back to `Time.timeScale` for pause/step/speed; wire these into `TimeControlInput`/command log once the PureDOTS time spine lands so rewind determinism covers the demo UI again.
 - [ ] Validate Burst compilation for the bridge systems after spatial bindings are in place (fix any hybrid fallbacks).
 
 ## Telemetry & Metrics
@@ -43,6 +44,9 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
   - Miracles now call into the shared `WeatherRequest` queue to trigger rain/storm FX payloads (`miracle.rain`, `miracle.storm`) instead of duplicating presentation logic.
 - [x] Tier-1 Biome System: Implemented biome definition blobs, climate/moisture systems, biome resolution, and placeholder presentation tokens. Three biomes (Temperate, Grasslands, Mountains) with resource seeding bias and villager modifiers.
 - [x] Vegetation System: Implemented plant/stand specifications, growth/spawn/harvest systems, presentation bindings, and Prefab Maker Vegetation tab. Plants are data-driven specs with growth stages, yields, hazards, and biome preferences. Stands spawn deterministically with clustering. All visuals are token-based and swappable.
+- [x] Rebuilt miracle casting data (`MiracleCasterState`, `MiracleSlotDefinition`, `RainMiracleCommand`, `MiracleReleaseEvent`) and a bootstrap that seeds release/rain command buffers so `GodgameMiracleInputSystem`/`GodgameMiracleReleaseSystem` can run again; added `MiracleSystemsTests` to cover system creation. Follow-up: extend `DivineHandInput` with miracle-specific fields (slot selection, edge triggers) and rerun EditMode tests once Unity CLI is available (currently `Unity` binary missing on host).
+- [ ] Domain reload pending (after Agent C namespace restore) to confirm stubbed `PureDOTS.Environment` types (`BiomeType`, climate grids, `EnvironmentGridConfig`) compile cleanly and that `BiomeTerrainProfile`/`GodgameEnvironmentGridConfig` assets load without missing scripts.
+- [x] Resolved biome/ground namespace ambiguity: biome terrain/ground tile/weather/fauna/miracle presentation systems now target `PureDOTS.Environment` types, and `GroundBiome` stores a byte for blittable/Burst-safe sampling. Follow-up: rerun domain reload to confirm no remaining duplicate type errors.
 - [ ] Author and assign actual COZY WeatherProfile assets, ambient loops, and special-FX prefabs per biome once those packs live under `Godgame/Assets`.
 
 ## Scenes, Prefabs & Assets
@@ -53,6 +57,7 @@ Tracking the work required for Godgame gameplay to consume the shared `com.moni.
 - [ ] Demo settlement bootstrap spawns basic buildings/resource nodes; swap in art-ready prefabs (and update the wizard defaults) once final housing/storehouse/worship meshes and resource props are checked in so the loop no longer depends on the placeholder geometry baked into `Assets/Prefabs/Buildings`.
 - [ ] (2025-11-14) Verify that all scenes, SubScenes, and prefabs still resolve their dependencies after relocating third-party packs to `Assets/ThirdParty/AssetStore`; update the wizard defaults and presentation docs with any new paths.
   - Space4x legacy prefabs/data are archived in `Archive/Space4xLegacy` so they stop polluting the active project. Only restore the pieces that are still required for Godgame Authoring flows.
+- [ ] Presentation binding assets now live under `Assets/Resources/Bindings`; `PresentationBindingBootstrapSystem` seeds a Minimal binding reference and logs if the asset is missing. Wire the binding reference into the presentation bridge once the registry/FX stack is online.
 - [ ] Replace legacy service locators in gameplay scripts with registry lookups via the PureDOTS APIs.
 - [ ] Update any ScriptableObjects catalogues so they now reference the shared registries instead of local enums or IDs.
 

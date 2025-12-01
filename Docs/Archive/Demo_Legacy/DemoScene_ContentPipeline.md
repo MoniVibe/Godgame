@@ -12,7 +12,7 @@
 
 **Implemented:**
 - `GodgameBootstrapSubScene.unity`: Bootstrap scene (exists but minimal content)
-- `GodgameRegistrySubScene.unity`: Registry SubScene (created by wizard)
+- `GodgameRegistrySubScene.unity`: Registry SubScene (wizard creates it)
 - `GodgameRegistrySubSceneWizard.cs`: Editor wizard for creating registry SubScene
 
 **Gaps:**
