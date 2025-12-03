@@ -1,11 +1,5 @@
 # Aggregate Entities & Individual Dynamics
 
-**Status:** Concept - Core Design Philosophy
-**Category:** Core - Social Systems
-**Complexity:** Complex
-**Created:** 2025-12-02
-**Last Updated:** 2025-12-02
-
 ---
 
 ## Overview
@@ -436,41 +430,43 @@ public struct GroupCompositionChange : IBufferElementData
 }
 ```
 
-### Performance Considerations
-- Aggregate recalculation on every member change could be expensive for large groups
+## Technical Implementation
+
+### Component Schemas
+
+See component definitions above for `AggregateStats`, `AmbientGroupConditions`, and `GroupCompositionChange`.
+
+### System Design
+
+- Aggregate recalculation systems run on composition change events (not every frame)
 - Cache averages, mark dirty on composition change, recalculate in batch
-- Ambient conditions don't need frame-by-frame updates (daily/weekly is sufficient)
-- Cascade effects should be event-driven (triggered by significant composition changes, not continuous polling)
+- Ambient conditions update daily/weekly (not frame-by-frame)
+- Cascade effects are event-driven (triggered by significant composition changes)
 
 ---
 
-## Open Questions
+## Shareability Assessment
 
-1. **Outlier Threshold:** How far from group average can individual diverge before facing consequences?
-   - **Option A:** Fixed tolerance (±20 from average)
-   - **Option B:** Group-dependent (high ToleranceForOutliers groups more accepting)
-   - **Recommendation:** Option B for emergent diversity
+**PureDOTS Candidate:** Yes
 
-2. **Cascade Speed:** How quickly should behavioral shifts propagate?
-   - **Option A:** Immediate (averages change → instant behavior change)
-   - **Option B:** Gradual (weeks/months interpolation)
-   - **Recommendation:** Option B for realistic cultural inertia
+**Rationale:** Core aggregate/individual dynamics are game-agnostic and reusable across any game with group/individual relationships.
 
-3. **Faction Formation:** Should internal disagreements automatically spawn sub-groups?
-   - **Option A:** Manual split (player/leader decides to expel faction)
-   - **Option B:** Automatic (high tension → faction leaves voluntarily)
-   - **Recommendation:** Mix of both (automatic for extreme cases, manual for moderate)
+**Shared Components:**
+- `AggregateStats`: Averaged group statistics
+- `AmbientGroupConditions`: Ambient pressure from group averages
+- `GroupCompositionChange`: Composition change tracking
+- Generic aggregate recalculation systems
 
-4. **Cross-Group Influence:** Can individuals in multiple groups (guild + village) create cultural bridges?
-   - **Option A:** Isolated (each group independent)
-   - **Option B:** Cross-pollination (guild members spread guild culture to home villages)
-   - **Recommendation:** Option B for richer emergent dynamics
+**Game-Specific Adapters:**
+- Godgame: Village/guild/band specific stats and outlooks
+- Space4x: Fleet/colony specific stats and behaviors
 
----
+## Performance Budget
 
-## Version History
-
-- **v0.1 - 2025-12-02:** Initial concept capture, moved from Physical_Resource_Chunks.md
+- **Max Entities:** 1,000 aggregate entities, 50,000 individual members
+- **Update Frequency:** Per tick (aggregate recalculation), daily (ambient conditions)
+- **Burst Compatibility:** Yes - all aggregate calculation systems Burst-compiled
+- **Memory Budget:** ~64 bytes per aggregate entity, ~16 bytes per composition change entry
 
 ---
 
@@ -481,8 +477,3 @@ public struct GroupCompositionChange : IBufferElementData
 - [Bands_Vision.md](../Villagers/Bands_Vision.md) - Band formation and dynamics
 - [Physical_Resource_Chunks.md](../Economy/Physical_Resource_Chunks.md) - Example of individual actions (hauling) affecting aggregates (village strength)
 - [Wealth_And_Social_Dynamics.md](../Villagers/Wealth_And_Social_Dynamics.md) - Economic stratification in groups
-
----
-
-**Last Updated:** 2025-12-02
-**Status:** Concept Captured - Core Design Philosophy

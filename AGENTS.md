@@ -22,3 +22,10 @@ Use imperative, subsystem-prefixed commit subjects such as `Registry: extend vil
 When told to “proceed work”, open `Docs/Progress.md` to see which agent lane (A/B/C) is active and log your start/end entries. Document open questions or pipeline friction in `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` after each session, and append a short entry to `Docs/Progress.md` (date, what changed, tests run, follow-ups). When adding registries or telemetry, cross-reference shared package APIs so future agents know which PureDOTS touchpoints are stable. Before implementing new gameplay domains, consult `Docs/TruthSources_Inventory.md` to see which truth sources are defined and which are missing. Follow the data flow pattern documented in `Docs/TruthSources_Architecture.md`: PureDOTS runtime components (truth) → Sync systems → Godgame mirror components → Registry bridge → Shared registries → Telemetry.
 
 When conceptualizing new features, add design documents to `Docs/Concepts/` using the provided templates. Concepts define **what the game should be**, while Truth Sources define **how it's implemented**.
+
+## Cross-Project Features
+When implementing features that should work across both Godgame and Space4x, follow the **recipe templates** documented in `PureDOTS/Docs/Recipes/`. See the catalog (`PureDOTS/Docs/Recipes/README.md`) for available recipe types and worked examples. This ensures:
+- Shared contracts are defined in `PureDOTS/Docs/Contracts.md` (if needed)
+- Generic spine lives in PureDOTS
+- Game-specific adapters stay in this project under `Assets/Scripts/Godgame/Adapters/`
+- Start from the recipe template, then specialize for your feature type.

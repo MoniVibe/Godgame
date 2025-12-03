@@ -1,10 +1,6 @@
 # Circle Progression System
 
-**Type:** Core Mechanic
-**Status:** `<Draft>` - Core vision captured, implementation pending
-**Version:** Concept v1.0
 **Dependencies:** Individual Progression, Education & Tutoring System, Focus & Status Effects System, Individual Combat System, Guild System
-**Last Updated:** 2025-11-07
 
 ---
 
@@ -2109,6 +2105,32 @@ namespace Godgame.Progression
 
 ---
 
+## Shareability Assessment
+
+**PureDOTS Candidate:** Partial
+
+**Rationale:** Core progression mechanics (skill learning, circle investment, set bonuses) could be shared, but circle definitions and racial bonuses are Godgame-specific.
+
+**Shared Components:**
+- `CircleProgression`: Track circle investments
+- `CircleSkills`: Active skills component
+- `SetBonuses`: Set bonus tracking
+- `CircleLearningProgress`: Lesson absorption tracking
+- Generic skill/lesson system
+
+**Game-Specific Adapters:**
+- Godgame: Elemental circles, racial bonuses, guild specializations
+- Space4x: Would need different circle definitions (tech trees, officer progression)
+
+## Performance Budget
+
+- **Max Entities:** 10,000 entities with circle progression
+- **Update Frequency:** Per tick (when learning/refining)
+- **Burst Compatibility:** Yes - all progression systems Burst-compiled
+- **Memory Budget:** ~32 bytes per CircleProgression component, ~16 bytes per skill slot
+
+---
+
 ## Example Builds
 
 ### 1. Fire Spellblade (Dual-Circle Hybrid)
@@ -2147,13 +2169,13 @@ namespace Godgame.Progression
 - Warriors' Guild (Blade Mastery training)
 - Spellblade Academy (hybrid specialization)
 
-**Age & Progression:**
-- Join Fire Mages' Guild at age 18
-- Learn Fire Circle (age 18-24, 6 years)
-- Join Warriors' Guild at age 22 (parallel training)
-- Learn Blade Mastery (age 22-28, 6 years)
-- Unlock Spellblade specialization at age 28
-- Master Spellblade at age 35 (all bonuses active)
+**Progression Path:**
+- Join Fire Mages' Guild
+- Learn Fire Circle
+- Join Warriors' Guild (parallel training)
+- Learn Blade Mastery
+- Unlock Spellblade specialization
+- Master Spellblade (all bonuses active)
 
 ---
 
@@ -2188,19 +2210,19 @@ namespace Godgame.Progression
 - Wisdom 55 (understand balance)
 
 **Guilds:**
-- Shadow Coven (Shadow Circle training, age 18-23)
-- Light Clergy (Light Circle training, age 24-28, controversial)
-- Twilight Order (invitation at age 29, secretive)
+- Shadow Coven (Shadow Circle training)
+- Light Clergy (Light Circle training, controversial)
+- Twilight Order (invitation, secretive)
 
 **Alignment:**
 - True Neutral (required for Twilight)
-- Started Chaotic Good (age 18), shifted to True Neutral (age 28) via Twilight philosophy
+- Started Chaotic Good, shifted to True Neutral via Twilight philosophy
 
-**Age & Progression:**
-- Learn Shadow Circle (age 18-23, Shadow Coven)
-- Learn Light Circle (age 24-28, defect to Light Clergy)
-- Twilight Order invitation at age 29 (recognized duality)
-- Master Twilight at age 40 (11 years secret training)
+**Progression Path:**
+- Learn Shadow Circle (Shadow Coven)
+- Learn Light Circle (defect to Light Clergy)
+- Twilight Order invitation (recognized duality)
+- Master Twilight (secret training)
 - Hunted by both Light purists AND Shadow cultists (narrative conflict)
 
 ---
@@ -2239,21 +2261,21 @@ namespace Godgame.Progression
 - Wisdom 65 (rare insight required)
 
 **Guilds:**
-- Fire Mages' Guild (age 18-22)
-- Earth Mages' Guild (age 23-27)
-- Water Healers' Circle (age 28-32)
-- Earthblood Conclave (invitation age 33, ultra-rare)
+- Fire Mages' Guild
+- Earth Mages' Guild
+- Water Healers' Circle
+- Earthblood Conclave (invitation, ultra-rare)
 
-**Age & Progression:**
-- Learn Fire Circle (age 18-22, Fire Guild)
-- Learn Earth Circle (age 23-27, Earth Guild, parallel practice Fire)
-- Learn Water Circle (age 28-32, Healers' Circle)
-- Unlock Earthblood specialization at age 33 (rare achievement)
-- Master Earthblood at age 45 (legendary status)
+**Progression Path:**
+- Learn Fire Circle (Fire Guild)
+- Learn Earth Circle (Earth Guild, parallel practice Fire)
+- Learn Water Circle (Healers' Circle)
+- Unlock Earthblood specialization (rare achievement)
+- Master Earthblood (legendary status)
 
 **Rarity:**
 - Only 1-2 Earthblood Mages per generation in a village
-- Requires 15+ years multi-school training
+- Requires extensive multi-school training
 - High stat requirements (Intelligence + Will > 140)
 - Narrative: Revered as elemental sage, sought for counsel
 
@@ -2299,12 +2321,12 @@ namespace Godgame.Progression
 - Chaotic Neutral (pragmatic killer)
 - Contracts: Assassinate corrupt nobles, eliminate threats, espionage
 
-**Age & Progression:**
-- Join Thieves' Guild at age 16 (street urchin background)
-- Master Stealth Circle by age 22
-- Learn Shadow Circle (age 23-28, Shadow Coven)
-- Unlock Shadow Blade specialization at age 29
-- Legendary assassin by age 40 (never caught, feared)
+**Progression Path:**
+- Join Thieves' Guild (street urchin background)
+- Master Stealth Circle
+- Learn Shadow Circle (Shadow Coven)
+- Unlock Shadow Blade specialization
+- Legendary assassin (never caught, feared)
 
 ---
 
@@ -2353,17 +2375,17 @@ namespace Godgame.Progression
 - Finesse: 50 (average, not needed)
 
 **Guilds:**
-- Earth Mages' Guild (age 18-22, accelerated thanks to racial bonus)
-- Fire Mages' Guild (age 23-27, normal pace)
-- Lava Titan Forge (invitation age 28, dwarven-exclusive)
+- Earth Mages' Guild (accelerated thanks to racial bonus)
+- Fire Mages' Guild (normal pace)
+- Lava Titan Forge (invitation, dwarven-exclusive)
 
-**Age & Progression:**
-- Learn Earth Circle (age 18-22, **4 years** instead of 6, racial bonus)
-- Learn Fire Circle (age 23-27, 5 years normal)
-- Unlock Lava Titan specialization at age 28
-- Master Lava Titan at age 35 (all bonuses active)
+**Progression Path:**
+- Learn Earth Circle (accelerated, racial bonus)
+- Learn Fire Circle (normal pace)
+- Unlock Lava Titan specialization
+- Master Lava Titan (all bonuses active)
 
-**Total Training Time: 12 years** (vs 14-16 years for human Lava Titan)
+**Training Efficiency:** Faster than human Lava Titans due to racial bonuses
 
 **Racial Advantages:**
 1. **Faster Earth Mastery:** +40% learning speed = 4 years instead of 6
@@ -2440,17 +2462,17 @@ namespace Godgame.Progression
 - Strength: 45 (average for drow, -5 racial)
 
 **Guilds:**
-- Drow Assassin Academy (age 16-18, accelerated stealth training)
-- Shadow Coven (age 19-21, accelerated shadow magic)
-- Shadow Blade Cult (invitation age 22, drow-dominated)
+- Drow Assassin Academy (accelerated stealth training)
+- Shadow Coven (accelerated shadow magic)
+- Shadow Blade Cult (invitation, drow-dominated)
 
-**Age & Progression:**
-- Learn Stealth Circle (age 16-18, **2 years** instead of 3-4, +30% racial bonus)
-- Learn Shadow Circle (age 19-21, **2.5 years** instead of 4, +35% racial bonus)
-- Unlock Shadow Blade specialization at age 22
-- Master Shadow Blade at age 27 (all bonuses, **+40% effectiveness**)
+**Progression Path:**
+- Learn Stealth Circle (accelerated, +30% racial bonus)
+- Learn Shadow Circle (accelerated, +35% racial bonus)
+- Unlock Shadow Blade specialization
+- Master Shadow Blade (all bonuses, +40% effectiveness)
 
-**Total Training Time: 7.5 years** (vs 12-14 years for human Shadow Blade)
+**Training Efficiency:** Faster than human Shadow Blades due to racial bonuses
 
 **Racial Advantages:**
 1. **Fastest Shadow Mastery:** +35% learning speed = 2.5 years instead of 4
@@ -2527,7 +2549,3 @@ namespace Godgame.Progression
 
 **For Narrative:** Circle progressions create character arcs (naive fire apprentice → legendary Earthblood Mage), factional conflicts (Twilight Order hunted by Light/Shadow purists), racial rivalries (dwarven Lava Titans vs orcish Warlords), cultural identity (drow Shadow Blades feared in underdark, gnome Grenadiers sought as siege specialists), and emergent stories (Shadow Blade assassin kills corrupt noble, sparks civil war; elven archmage achieves triple-school mastery after 200 years).
 
----
-
-**Last Updated:** 2025-11-07
-**Status:** Concept Draft - Core vision captured with racial/cultural inclinations, combination counts (X/Y) TBD

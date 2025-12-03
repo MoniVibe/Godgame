@@ -1,13 +1,5 @@
 # [Mechanic Name]
 
-**Status:** Draft | In Review | Approved | In Development | Implemented  
-**Category:** [Gameplay | Economy | Progression | Combat | Social | Environmental]  
-**Complexity:** Simple | Medium | Complex  
-**Created:** [YYYY-MM-DD]  
-**Last Updated:** [YYYY-MM-DD]
-
----
-
 ## Overview
 
 *What is this mechanic and why does it exist?*
@@ -64,34 +56,27 @@
 
 ---
 
-## Example
+## Player Interaction
 
-**Given:** [Starting conditions]  
-**When:** [Action/trigger]  
-**Then:** [Expected result]
+### Player Decisions
+*What choices does this mechanic give players?*
 
----
-
-## Player Feedback
-
+### Feedback to Player
 - **Visual:** [Animation, VFX, UI]
 - **Audio:** [Sound effects]
 - **UI:** [Numbers, bars, icons]
 
 ---
 
-## Balance
+## Balance Considerations
 
-- **Early:** [Impact]
-- **Mid:** [Impact]
-- **Late:** [Impact]
-
-### Exploits
-- [Description] → [Mitigation]
+- **Balance Goals:** [What this mechanic should achieve]
+- **Tuning Knobs:** [What can be adjusted]
+- **Known Issues:** [Current balance problems or exploits]
 
 ---
 
-## Interaction Matrix
+## Integration Points
 
 *How this mechanic interacts with others*
 
@@ -103,32 +88,54 @@
 
 ---
 
-## Technical
+## Shareability Assessment
 
-- **Max entities:** [Count]
-- **Update freq:** [Per frame/second]
-- **Data needs:** [High-level structures]
+**PureDOTS Candidate:** [Yes/No/Partial]
 
----
+**Rationale:** [Why this can/cannot be shared between games]
 
-## Tests
+**Shared Components:** [List components that could be PureDOTS]
+- Component A: [description]
+- Component B: [description]
 
-- [ ] [Functional test]
-- [ ] [Balance test]
-- [ ] [Edge case test]
-
----
-
-## Open Questions
-
-1. [Question about unclear aspect]
-2. [Question requiring playtesting]
+**Game-Specific Adapters:** [What games would need to implement]
+- Godgame: [specific adapters needed]
+- Space4x: [specific adapters needed]
 
 ---
 
-## Version History
+## Technical Implementation
 
-- **v0.1 - [Date]:** Initial draft
+*Component schemas, system design*
+
+```csharp
+// Example component structure
+public struct MyComponent : IComponentData
+{
+    // Fields
+}
+```
+
+**System Design:**
+- [System name]: [What it does]
+- [Integration points]: [How it connects]
+
+---
+
+## Performance Budget
+
+- **Max Entities:** [count]
+- **Update Frequency:** [per frame/tick]
+- **Burst Compatibility:** [Yes/No - constraints]
+- **Memory Budget:** [per entity/component]
+
+---
+
+## Examples
+
+**Given:** [Starting conditions]  
+**When:** [Action/trigger]  
+**Then:** [Expected result]
 
 ---
 
@@ -140,4 +147,3 @@
 ---
 
 **Implementation:** See `Docs/TruthSources_Inventory.md` for component/system design
-

@@ -3,7 +3,7 @@
     "com.coplaydev.coplay": "https://github.com/CoplayDev/coplay-unity-plugin.git#beta",
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity",
     "com.moni.bakings.presentation": "file:Packages/com.moni.bakings.presentation",
-    "com.moni.puredots": "file:C:/Users/Moni/Documents/claudeprojects/unity/PureDOTS/Packages/com.moni.puredots",
+    "com.moni.puredots": "file:../../PureDOTS/Packages/com.moni.puredots",
     "com.unity.ai.navigation": "2.0.9",
     "com.unity.collab-proxy": "2.10.2",
     "com.unity.entities": "1.4.3",
