@@ -1,0 +1,25 @@
+{
+    "name": "Godgame.Gameplay",
+    "rootNamespace": "Godgame",
+    "references": [
+        "Unity.Collections",
+        "Unity.Entities",
+        "Unity.Mathematics",
+        "Unity.Transforms",
+        "Unity.Burst",
+        "Unity.Physics",
+        "PureDOTS.Runtime",
+        "PureDOTS.Systems",
+        "PureDOTS.Input",
+        "PureDOTS.Camera"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Godgame.Authoring",
+  "rootNamespace": "Godgame.Authoring",
+  "references": [
+    "Godgame.Gameplay",
+    "GUID:22425877c6208af4d856e5e5f04bfef1",
+    "PureDOTS.Runtime",
+    "PureDOTS.Input",
+    "PureDOTS.Camera",
+    "Unity.Entities",
+    "Unity.Entities.Hybrid",
+    "Unity.Mathematics",
+    "Unity.Transforms",
+    "Unity.Collections"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

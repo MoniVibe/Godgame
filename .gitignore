@@ -17,6 +17,13 @@ Build/
 Assets/StreamingAssets/aa/
 Assets/Editor/MCP/
 MemoryCaptures/
+
+# Large binary assets (add specific large files/directories here as needed)
+# Keep scripts, scenes, prefabs tracked, but ignore large media files if needed
+# Examples (uncomment if needed):
+# Assets/Models/LargeModels/
+# Assets/Audio/LargeFiles/
+# Assets/Textures/4K+/
 *.pidb
 *.pdb.meta
 *.mdb
@@ -73,5 +80,5 @@ Packages/Coplay/Editor/Checkpoints/
 Assets/Editor/MCP/
 
 # Archived third-party Asset Store packages (large, not versioned)
-Archive/ThirdParty.disabled/AssetStore/
-Archive/ThirdParty.disabled/AssetStore.meta
+# Ignore entire Archive folder to avoid Windows path length issues
+Archive/

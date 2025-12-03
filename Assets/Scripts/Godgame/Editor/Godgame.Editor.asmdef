@@ -1,0 +1,20 @@
+{
+  "name": "Godgame.Editor",
+  "rootNamespace": "Godgame.Editor",
+  "references": [
+    "Godgame.Authoring",
+    "Godgame.Gameplay",
+    "PureDOTS.Authoring",
+    "PureDOTS.Config",
+    "Unity.Collections",
+    "Unity.Entities",
+    "Unity.Scenes",
+    "Unity.Transforms",
+    "UnityEngine.UI"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "autoReferenced": true,
+  "noEngineReferences": false
+}
