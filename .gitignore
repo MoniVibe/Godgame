@@ -13,7 +13,9 @@ Build/
 *.stacktrace
 
 # Asset pipeline artifacts
-Assets/
+# Ignore specific generated/cache directories in Assets, but allow source code
+Assets/StreamingAssets/aa/
+Assets/Editor/MCP/
 MemoryCaptures/
 *.pidb
 *.pdb.meta
