@@ -286,6 +286,9 @@ Skirmish (ranged)
 - **Total War:** Formation bonuses and morale system
 - **Age of Empires:** Unit grouping and control
 - Legacy spec: `generaltruth.md` - "squad-level BT, flow fields for massed units"
+- **PureDOTS Groups**: `PureDOTS.Runtime.Groups` - Generic group system supporting GroundBand, StrikeWing, MiningWing
+- **Group Behavior**: `GroupIntentResolutionSystem` - Blends group orders with individual traits
+- **Focus System**: `PureDOTS.Runtime.Focus` - Mental bandwidth for multitasking and command
 
 ---
 

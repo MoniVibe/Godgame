@@ -1,31 +1,46 @@
-# Repository Guidelines
-
-## Project Structure & Module Organization
-This Unity DOTS project keeps gameplay code under `Assets/Scripts/Godgame`. Runtime systems live in `Registry/`; authoring components in `Authoring/`; tests in `Tests/`. Scenes and sample SubScenes are in `Assets/Scenes` (start with `SampleScene.unity`). Shared packages and configuration assets sit in `Packages/` and `Assets/Settings/`. Long-running integration work is tracked under `Docs/TODO/`, which should be updated alongside gameplay changes. Truth source architecture is documented in `Docs/TruthSources_Inventory.md`, `Docs/TruthSources_Architecture.md`, and `Docs/TruthSources_QuickReference.md`.
-
-## Build, Test, and Development Commands
-- `Unity -projectPath "$(pwd)" -batchmode -quit -buildWindows64Player Builds/Godgame.exe` builds a Windows player to `Builds/`.
-- `Unity -projectPath "$(pwd)" -batchmode -quit -runTests -testPlatform editmode -testResults Logs/editmode-tests.xml -testFilter GodgameRegistryBridgeSystemTests` runs the registry bridge EditMode suite headlessly.
-- `Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod UnityEditor.TestTools.TestRunner.CommandLineTest.RunAllTests` runs every registered test when filters are not needed.
-When iterating in the Editor, keep the `Game` and `DOTS Hierarchy` inspectors visible to verify that registries populate as expected.
-
-## Coding Style & Naming Conventions
-C# files use 4-space indentation, `namespace Godgame.*`, and PascalCase for types/methods with camelCase locals. Prefer explicit struct layouts for DOTS components and annotate baker intent with short XML documentation (`///`). Runtime code should stay Burst-friendly: avoid managed allocations inside `ISystem.OnUpdate`, cache entity queries, and use `math.*` helpers. Keep authoring MonoBehaviours in `Authoring/`; runtime-only code should be `partial struct` systems. Validate new strings fit existing `FixedString64Bytes` usages.
-
-## Testing Guidelines
-Tests live under `Assets/Scripts/Godgame/Tests` and rely on NUnit plus the Unity Entities test runner. Start new fixture names with the system under test (e.g., `GodgameRegistry*Tests`) and group helper methods locally. Add at least one PlayMode or EditMode test per feature that exercises the PureDOTS registries; assert both component data and telemetry buffers. Update `Logs/*.xml` artifacts after new tests to keep CI diagnostics actionable.
-
-## Commit & Pull Request Guidelines
-Use imperative, subsystem-prefixed commit subjects such as `Registry: extend villager metrics`. Include a short body listing key systems touched and any follow-up TODOs. Pull requests should link the relevant item in `Docs/TODO`, describe gameplay impact, and attach a screenshot or brief clip when modifying authoring assets. Mention how you validated the change (commands above or editor walkthrough) so reviewers can reproduce quickly.
-
-## Agent Workflow Notes
-When told to “proceed work”, open `Docs/Progress.md` to see which agent lane (A/B/C) is active and log your start/end entries. Document open questions or pipeline friction in `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` after each session, and append a short entry to `Docs/Progress.md` (date, what changed, tests run, follow-ups). When adding registries or telemetry, cross-reference shared package APIs so future agents know which PureDOTS touchpoints are stable. Before implementing new gameplay domains, consult `Docs/TruthSources_Inventory.md` to see which truth sources are defined and which are missing. Follow the data flow pattern documented in `Docs/TruthSources_Architecture.md`: PureDOTS runtime components (truth) → Sync systems → Godgame mirror components → Registry bridge → Shared registries → Telemetry.
-
-When conceptualizing new features, add design documents to `Docs/Concepts/` using the provided templates. Concepts define **what the game should be**, while Truth Sources define **how it's implemented**.
-
-## Cross-Project Features
-When implementing features that should work across both Godgame and Space4x, follow the **recipe templates** documented in `PureDOTS/Docs/Recipes/`. See the catalog (`PureDOTS/Docs/Recipes/README.md`) for available recipe types and worked examples. This ensures:
-- Shared contracts are defined in `PureDOTS/Docs/Contracts.md` (if needed)
-- Generic spine lives in PureDOTS
-- Game-specific adapters stay in this project under `Assets/Scripts/Godgame/Adapters/`
-- Start from the recipe template, then specialize for your feature type.
+# Agents – DOTS 1.4 Guidelines Scope & Project LayoutThis repo has three main pieces:
+`PureDOTS/` → shared engine-level DOTS package (`Packages/com.moni.puredots`).
+`Godgame/` → game project using PureDOTS.
+`Space4x/` → game project using PureDOTS.
+Treat `Foundation1/` and `Project1/` as read-only references unless the user explicitly says otherwise.
+Put engine / generic systems in `PureDOTS/Packages/com.moni.puredots/Runtime/<Module>/`.
+Put game-specific glue or behavior in:
+`Godgame/Assets/Scripts/Godgame/...`
+`Space4x/Assets/Scripts/Space4x/...`Do not suggest filesystem layout or CI commands unless the user asks. Answer Style (Token-Efficient Defaults)Default to concise, high-signal answers:
+Start directly with the solution; no long preamble.
+Prefer bullet points and short paragraphs.
+For code:
+Prefer small, focused snippets or the smallest compilable unit needed.
+Only show full files when the user clearly wants a full file or asks for “full source”.
+When editing, prefer minimal diffs or the changed method over re-dumping the entire file.
+Don’t restate repo structure, this document, or previous messages unless the user asks for a recap.
+Avoid generic disclaimers and repeated explanations; assume a power user who understands Unity, C#, and DOTS.If the user explicitly asks for deep explanations, architecture breakdowns, or teaching-style answers, it’s fine to be verbose for that request. DOTS 1.4 & Burst StyleAssume Unity Entities 1.4+, C# 9, and Burst as the default.When writing DOTS code:Use `ISystem` and `SystemAPI`:
+No `ComponentSystem`, `SystemBase`, `IJobForEach` or other deprecated patterns.
+Use `IComponentData` / `IBufferElementData` with Burst-safe fields only:
+No managed references, no `string`, no `class` fields inside components.
+Use:
+`RefRO<T>` / `RefRW<T>` for component access.
+`DynamicBuffer<T>` with `[InternalBufferCapacity]` where helpful.
+Avoid:
+`Linq`, reflection, exceptions in hot code paths, allocations inside `OnUpdate`.
+`foreach` on native containers in jobs (use index loops).
+For systems:
+Organize under `PureDOTS.Runtime.<ModuleName>.Systems`.
+Use `[BurstCompile]` on systems and performance-critical static helpers.
+Respect determinism / rewind if the user mentions those systems.If you’re unsure between two APIs, prefer the newest Entities 1.4 idiom. Game vs Engine SeparationEngine-level logic (reusable across Godgame & Space4x) goes in PureDOTS:
+Environment (wind, climate, grids)
+Motivation & goals
+Miracles core, construction decisions, stellar/solar systems, etc.
+Game-specific logic goes in each game:
+Concrete building/ship lists
+Specific miracles, VFX hookups
+UI, input, scene wiringWhen in doubt:  
+> If it could reasonably be reused in another game, put it in PureDOTS and keep the API clean. Testing & ToolingThe user usually runs tests and CI commands manually.
+Do not auto-suggest shell/CI commands unless the user explicitly asks for them.
+When writing tests:
+Assume NUnit via Unity Test Runner.
+Keep examples short and focused on the system under discussion. Git / PR / DocsOnly suggest commit messages, PR descriptions, or doc sections if requested.
+When asked:
+Use short, descriptive commit messages (optionally with `feat:`, `chore:` prefixes).
+Summarize gameplay/engine impact in a few bullet points. When You’re UnsureIf a detail is ambiguous but not critical, make a reasonable assumption and state it briefly.
+If a detail is critical (API choice, breaking change), ask the user once rather than inventing a complex scheme.Remember: this user is a heavy power user; they prefer practical code and minimal fluff over long essays.

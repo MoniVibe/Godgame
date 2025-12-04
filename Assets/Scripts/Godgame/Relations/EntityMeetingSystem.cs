@@ -144,29 +144,12 @@ namespace Godgame.Relations
             MeetingContext context,
             uint tick)
         {
-            // Get behavior components if available
-            float vengeful1 = 0f, bold1 = 0f, vengeful2 = 0f, bold2 = 0f;
-
-            if (SystemAPI.HasComponent<VillagerBehavior>(entity1))
-            {
-                var behavior = SystemAPI.GetComponent<VillagerBehavior>(entity1);
-                vengeful1 = behavior.VengefulScore;
-                bold1 = behavior.BoldScore;
-            }
-
-            if (SystemAPI.HasComponent<VillagerBehavior>(entity2))
-            {
-                var behavior = SystemAPI.GetComponent<VillagerBehavior>(entity2);
-                vengeful2 = behavior.VengefulScore;
-                bold2 = behavior.BoldScore;
-            }
-
-            // Calculate initial relation
+            // Calculate initial relation using new four-layer identity system
+            // Falls back to legacy if new components not available
             uint seed = (uint)(entity1.Index * 31337 + entity2.Index * 17 + tick);
             sbyte initialRelation = RelationCalculator.CalculateInitialRelation(
-                align1.MoralAxis, align1.OrderAxis, align1.PurityAxis,
-                align2.MoralAxis, align2.OrderAxis, align2.PurityAxis,
-                vengeful1, bold1, vengeful2, bold2,
+                entity1, entity2,
+                state.EntityManager,
                 context,
                 KinshipType.None,
                 seed);

@@ -133,6 +133,12 @@ namespace Godgame.Authoring
 
                 // Add spatial indexing
                 AddComponent<SpatialIndexedTag>(entity);
+                
+                // Add RewindImportance for rewind tier classification
+                AddComponent(entity, new RewindImportance
+                {
+                    Tier = RewindTier.SnapshotLite
+                });
             }
         }
     }

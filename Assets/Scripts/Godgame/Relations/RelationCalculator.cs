@@ -1,4 +1,6 @@
 using Godgame.Villagers;
+using PureDOTS.Runtime.Identity;
+using Unity.Entities;
 using Unity.Mathematics;
 
 namespace Godgame.Relations
@@ -6,13 +8,111 @@ namespace Godgame.Relations
     /// <summary>
     /// Calculator for initial relation values based on alignment, personality, and context.
     /// Implements formulas from Entity_Relations_And_Interactions.md
+    /// Now uses four-layer identity system when available, falls back to legacy for backward compatibility.
     /// </summary>
     public static class RelationCalculator
     {
         /// <summary>
-        /// Calculate initial relation between two entities.
+        /// Calculate initial relation between two entities using new four-layer identity system.
         /// </summary>
         public static sbyte CalculateInitialRelation(
+            Entity entity1, Entity entity2,
+            EntityManager entityManager,
+            MeetingContext context,
+            KinshipType kinship,
+            uint randomSeed)
+        {
+            // Try to use new identity components
+            if (entityManager.HasComponent<EntityAlignment>(entity1) &&
+                entityManager.HasComponent<EntityAlignment>(entity2) &&
+                entityManager.HasComponent<EntityOutlook>(entity1) &&
+                entityManager.HasComponent<EntityOutlook>(entity2) &&
+                entityManager.HasComponent<PersonalityAxes>(entity1) &&
+                entityManager.HasComponent<PersonalityAxes>(entity2) &&
+                entityManager.HasComponent<MightMagicAffinity>(entity1) &&
+                entityManager.HasComponent<MightMagicAffinity>(entity2))
+            {
+                var align1 = entityManager.GetComponentData<EntityAlignment>(entity1);
+                var align2 = entityManager.GetComponentData<EntityAlignment>(entity2);
+                var outlook1 = entityManager.GetComponentData<EntityOutlook>(entity1);
+                var outlook2 = entityManager.GetComponentData<EntityOutlook>(entity2);
+                var personality1 = entityManager.GetComponentData<PersonalityAxes>(entity1);
+                var personality2 = entityManager.GetComponentData<PersonalityAxes>(entity2);
+                var affinity1 = entityManager.GetComponentData<MightMagicAffinity>(entity1);
+                var affinity2 = entityManager.GetComponentData<MightMagicAffinity>(entity2);
+
+                float total = 0f;
+
+                // 1. Context offset
+                total += EntityRelation.GetContextOffset(context);
+
+                // 2. Kinship bonus (overrides most other factors)
+                if (kinship != KinshipType.None)
+                {
+                    total += EntityRelation.GetKinshipBonus(kinship);
+                }
+
+                // 3. Full four-layer compatibility
+                total += IdentityCompatibility.CalculateCompatibility(
+                    align1, outlook1, personality1, affinity1,
+                    align2, outlook2, personality2, affinity2);
+
+                // 4. Random factor
+                var rng = new Random(randomSeed);
+                bool eitherChaotic = align1.Order < -30f || align2.Order < -30f;
+                float randomRange = eitherChaotic ? 20f : 10f;
+                total += rng.NextFloat(-randomRange, randomRange);
+
+                // Clamp to valid range
+                return (sbyte)math.clamp(math.round(total), -100, 100);
+            }
+
+            // Fallback to legacy calculation for backward compatibility
+            sbyte moral1 = 0, order1 = 0, purity1 = 0;
+            sbyte moral2 = 0, order2 = 0, purity2 = 0;
+            float vengeful1 = 0f, bold1 = 0f, vengeful2 = 0f, bold2 = 0f;
+
+            if (entityManager.HasComponent<VillagerAlignment>(entity1))
+            {
+                var align = entityManager.GetComponentData<VillagerAlignment>(entity1);
+                moral1 = align.MoralAxis;
+                order1 = align.OrderAxis;
+                purity1 = align.PurityAxis;
+            }
+
+            if (entityManager.HasComponent<VillagerAlignment>(entity2))
+            {
+                var align = entityManager.GetComponentData<VillagerAlignment>(entity2);
+                moral2 = align.MoralAxis;
+                order2 = align.OrderAxis;
+                purity2 = align.PurityAxis;
+            }
+
+            if (entityManager.HasComponent<VillagerBehavior>(entity1))
+            {
+                var behavior = entityManager.GetComponentData<VillagerBehavior>(entity1);
+                vengeful1 = behavior.VengefulScore;
+                bold1 = behavior.BoldScore;
+            }
+
+            if (entityManager.HasComponent<VillagerBehavior>(entity2))
+            {
+                var behavior = entityManager.GetComponentData<VillagerBehavior>(entity2);
+                vengeful2 = behavior.VengefulScore;
+                bold2 = behavior.BoldScore;
+            }
+
+            return CalculateInitialRelationLegacy(
+                moral1, order1, purity1,
+                moral2, order2, purity2,
+                vengeful1, bold1, vengeful2, bold2,
+                context, kinship, randomSeed);
+        }
+
+        /// <summary>
+        /// Legacy calculation method for backward compatibility.
+        /// </summary>
+        public static sbyte CalculateInitialRelationLegacy(
             sbyte moralAxis1, sbyte orderAxis1, sbyte purityAxis1,
             sbyte moralAxis2, sbyte orderAxis2, sbyte purityAxis2,
             float vengeful1, float bold1,
