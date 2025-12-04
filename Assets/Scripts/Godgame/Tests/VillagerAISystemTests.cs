@@ -115,21 +115,21 @@ namespace Godgame.Tests
         [Test]
         public void PersonalitySystem_GenerateGrudge_CreatesValidGrudge()
         {
-            var personality = new VillagerPersonality
+            var behavior = new VillagerBehavior
             {
-                VengefulScore = -80
+                VengefulScore = -80f
             };
             var targetEntity = Entity.Null;
 
             VillagerPersonalitySystem.GenerateGrudge(
-                ref personality,
-                80f, // High harm severity
-                ref targetEntity,
+                in targetEntity,
+                GrudgeOffenseType.Assault,
                 100u,
+                in behavior,
                 out var grudge);
 
             Assert.Greater(grudge.Intensity, 0);
-            Assert.Less(grudge.DecayRate, 0.3f); // Vengeful = slower decay
+            Assert.IsFalse(grudge.IsResolved);
         }
 
         [Test]

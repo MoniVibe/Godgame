@@ -42,6 +42,11 @@ namespace Godgame.Villagers
         /// Energy level (0-100, for compatibility with PureDOTS VillagerNeeds structure).
         /// </summary>
         public float Energy;
+
+        /// <summary>
+        /// Current morale (0-100, for compatibility with PureDOTS VillagerNeeds structure).
+        /// </summary>
+        public float Morale;
     }
 
     /// <summary>

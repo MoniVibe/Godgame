@@ -1,4 +1,5 @@
 using Godgame.Resources;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -81,6 +82,7 @@ namespace Godgame.Systems.Resources
 
                 var delta = math.min(available, remaining);
                 pile.Amount += delta;
+                pile.UpdateVisualSize();
                 remaining -= delta;
                 state.EntityManager.SetComponentData(entity, pile);
             }
@@ -96,9 +98,13 @@ namespace Godgame.Systems.Resources
 
                 state.EntityManager.SetComponentData(pileEntity, new AggregatePile
                 {
-                    ResourceType = cmd.ResourceType,
+                    ResourceTypeId = default, // Will be set by spawn system if needed
+                    ResourceTypeIndex = cmd.ResourceType,
                     Amount = toAssign,
-                    Capacity = targetCap
+                    MaxCapacity = targetCap,
+                    State = PileState.Stable,
+                    LastModifiedTick = 0,
+                    VisualSize = PileVisualSize.Tiny
                 });
 
                 state.EntityManager.SetComponentData(pileEntity, LocalTransform.FromPosition(cmd.Position));
@@ -163,6 +169,8 @@ namespace Godgame.Systems.Resources
                     var transfer = math.min(available, pileB.Amount);
                     pileA.Amount += transfer;
                     pileB.Amount -= transfer;
+                    pileA.UpdateVisualSize();
+                    pileB.UpdateVisualSize();
 
                     if (pileB.Amount <= config.ConservationEpsilon)
                     {
@@ -189,12 +197,10 @@ namespace Godgame.Systems.Resources
                         var toAssign = math.min(pileA.Capacity, overflow);
                         overflow -= toAssign;
                         var splitEntity = state.EntityManager.CreateEntity(typeof(AggregatePile), typeof(LocalTransform));
-                        state.EntityManager.SetComponentData(splitEntity, new AggregatePile
-                        {
-                            ResourceType = pileA.ResourceType,
-                            Amount = toAssign,
-                            Capacity = pileA.Capacity
-                        });
+                        var splitPile = pileA;
+                        splitPile.Amount = toAssign;
+                        splitPile.UpdateVisualSize();
+                        state.EntityManager.SetComponentData(splitEntity, splitPile);
 
                         state.EntityManager.SetComponentData(splitEntity, LocalTransform.FromPosition(transformA.Position));
                         runtime.ActivePiles++;

@@ -129,15 +129,15 @@ namespace Godgame.MoveAct
                 cameraEntity = entityManager.CreateEntity(
                     typeof(PureDOTS.Systems.Input.CameraTag),
                     typeof(CameraInputState),
-                    typeof(CameraConfig),
-                    typeof(CameraState),
+                    typeof(PureDOTS.Runtime.Camera.CameraConfig),
+                    typeof(PureDOTS.Runtime.Camera.CameraState),
                     typeof(GodIntent));
 
                 var pivot = float3.zero;
                 var targetPosition = new float3(0f, 14f, -18f);
                 var forward = math.normalizesafe(pivot - targetPosition, new float3(0f, 0f, 1f));
 
-                entityManager.SetComponentData(cameraEntity, new CameraConfig
+                entityManager.SetComponentData(cameraEntity, new PureDOTS.Runtime.Camera.CameraConfig
                 {
                     OrbitYawSensitivity = 1f,
                     OrbitPitchSensitivity = 1f,
@@ -153,7 +153,7 @@ namespace Godgame.MoveAct
                     SmoothingDamping = 0f
                 });
 
-                entityManager.SetComponentData(cameraEntity, new CameraState
+                entityManager.SetComponentData(cameraEntity, new PureDOTS.Runtime.Camera.CameraState
                 {
                     LastUpdateTick = 0,
                     PlayerId = 0,

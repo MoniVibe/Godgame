@@ -38,7 +38,7 @@ namespace Godgame.Tests
             var entity = _entityManager.CreateEntity();
             _entityManager.AddComponentData(entity, new Village
             {
-                VillageId = 1,
+                VillageId = new FixedString64Bytes("1"),
                 VillageName = new FixedString64Bytes("TestVillage")
             });
 

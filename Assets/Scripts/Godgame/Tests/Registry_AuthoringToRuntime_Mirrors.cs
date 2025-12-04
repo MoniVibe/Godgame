@@ -72,7 +72,7 @@ namespace Godgame.Tests.Registry
             });
             _entityManager.SetComponentData(band2, LocalTransform.FromPosition(new float3(10f, 0f, 10f)));
 
-            UpdateSystem(_world.GetOrCreateSystem<GodgameRegistryBridgeSystem>());
+            UpdateSystem(_world.GetOrCreateSystem<GodgameRegistryCoordinatorSystem>());
 
             var registryEntity = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<BandRegistry>())
                 .GetSingletonEntity();
@@ -147,7 +147,7 @@ namespace Godgame.Tests.Registry
 
             UpdateSystem(_world.GetOrCreateSystem<GodgameLogisticsSyncSystem>());
             UpdateSystem(_world.GetOrCreateSystem<LogisticsRequestRegistrySystem>());
-            UpdateSystem(_world.GetOrCreateSystem<GodgameRegistryBridgeSystem>());
+            UpdateSystem(_world.GetOrCreateSystem<GodgameRegistryCoordinatorSystem>());
 
             var registryEntity = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<LogisticsRequestRegistry>())
                 .GetSingletonEntity();
@@ -226,7 +226,7 @@ namespace Godgame.Tests.Registry
 
             UpdateSystem(_world.GetOrCreateSystem<GodgameLogisticsSyncSystem>());
             UpdateSystem(_world.GetOrCreateSystem<LogisticsRequestRegistrySystem>());
-            UpdateSystem(_world.GetOrCreateSystem<GodgameRegistryBridgeSystem>());
+            UpdateSystem(_world.GetOrCreateSystem<GodgameRegistryCoordinatorSystem>());
 
             var bandRegistryEntity = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<BandRegistry>())
                 .GetSingletonEntity();

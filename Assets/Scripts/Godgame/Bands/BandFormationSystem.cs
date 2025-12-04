@@ -97,31 +97,13 @@ namespace Godgame.Bands
 
             private static float CalculateFormationProbability(BandFormationCandidate candidate)
             {
-                // Base probability from alignment compatibility
-                var alignmentCompat = CalculateAlignmentCompatibility(candidate);
+                // Base probability from member count and acceptance status
+                var baseProbability = candidate.AllProspectsAccepted ? 0.7f : 0.3f;
                 
-                // Outlook compatibility
-                var outlookCompat = CalculateOutlookCompatibility(candidate);
-                
-                // Initiative modifier
-                var initiativeModifier = candidate.AverageInitiative * 0.3f;
+                // Member count modifier (more members = higher probability)
+                var memberModifier = math.clamp(candidate.ProspectiveMemberCount / 10f, 0f, 0.3f);
 
-                return math.clamp(alignmentCompat + outlookCompat + initiativeModifier, 0f, 1f);
-            }
-
-            private static float CalculateAlignmentCompatibility(BandFormationCandidate candidate)
-            {
-                // Matching alignments increase compatibility
-                // Simplified - would compare actual alignment values
-                return 0.5f; // Default
-            }
-
-            private static float CalculateOutlookCompatibility(BandFormationCandidate candidate)
-            {
-                // Matching outlooks increase compatibility
-                // Warlike + Warlike = high compatibility
-                // Warlike + Peaceful = low compatibility
-                return 0.5f; // Default
+                return math.clamp(baseProbability + memberModifier, 0f, 1f);
             }
 
             private static void CreateBand(
@@ -136,17 +118,20 @@ namespace Godgame.Bands
                 ecb.AddComponent(ciq, bandEntity, new Band
                 {
                     BandName = default,
-                    Purpose = candidate.Purpose,
-                    LeaderEntity = Entity.Null,
-                    FormationTick = tick,
-                    MemberCount = 0
-                });
-
-                ecb.AddComponent(ciq, bandEntity, new BandId
-                {
-                    Value = candidate.BandId,
+                    Purpose = candidate.ProposedPurpose,
+                    Leader = candidate.InitiatorEntity,
+                    FormationTick = candidate.ProposedTick != 0 ? candidate.ProposedTick : tick,
+                    Id = 0, // Will be assigned by system
                     FactionId = 0,
-                    Leader = Entity.Null
+                    Morale = 0.5f,
+                    Cohesion = 0.5f,
+                    Fatigue = 0f,
+                    Status = BandStatus.Forming,
+                    LastUpdateTick = tick,
+                    MinSize = 3,
+                    MaxSize = 10,
+                    RecruitmentBuilding = Entity.Null,
+                    Experience = 0f
                 });
 
                 // Add members
@@ -156,18 +141,6 @@ namespace Godgame.Bands
                 ecb.RemoveComponent<BandFormationCandidate>(ciq, candidateEntity);
             }
         }
-    }
-
-    /// <summary>
-    /// Band formation candidate component (temporary, removed after processing).
-    /// </summary>
-    public struct BandFormationCandidate : IComponentData
-    {
-        public int BandId;
-        public BandPurpose Purpose;
-        public float AverageInitiative;
-        public float AlignmentCompatibility;
-        public float OutlookCompatibility;
     }
 }
 

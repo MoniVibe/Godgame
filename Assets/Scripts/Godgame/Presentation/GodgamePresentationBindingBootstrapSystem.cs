@@ -25,12 +25,12 @@ namespace Godgame.Presentation
             var entityManager = state.EntityManager;
             Entity bindingEntity;
 
-            if (!SystemAPI.TryGetSingletonEntity<PresentationBindingReference>(out bindingEntity))
+            if (!SystemAPI.TryGetSingletonEntity<PureDOTS.Runtime.Components.PresentationBindingReference>(out bindingEntity))
             {
-                bindingEntity = entityManager.CreateEntity(typeof(PresentationBindingReference));
+                bindingEntity = entityManager.CreateEntity(typeof(PureDOTS.Runtime.Components.PresentationBindingReference));
             }
 
-            var bindingRef = entityManager.GetComponentData<PresentationBindingReference>(bindingEntity);
+            var bindingRef = entityManager.GetComponentData<PureDOTS.Runtime.Components.PresentationBindingReference>(bindingEntity);
             if (bindingRef.Binding.IsCreated && 
                 HasEffect(bindingRef.Binding, GodgamePresentationIds.MiraclePingEffectId) &&
                 HasEffect(bindingRef.Binding, GodgamePresentationIds.JobsiteGhostEffectId) &&
@@ -55,7 +55,7 @@ namespace Godgame.Presentation
 
         public void OnDestroy(ref SystemState state)
         {
-            if (SystemAPI.TryGetSingleton(out PresentationBindingReference binding) && binding.Binding.IsCreated)
+            if (SystemAPI.TryGetSingleton(out PureDOTS.Runtime.Components.PresentationBindingReference binding) && binding.Binding.IsCreated)
             {
                 binding.Binding.Dispose();
             }

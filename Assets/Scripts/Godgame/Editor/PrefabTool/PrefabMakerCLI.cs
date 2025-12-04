@@ -35,7 +35,7 @@ namespace Godgame.Editor.PrefabTool
             string outputPath = "Logs/prefab_maker_report.json";
             
             // Parse command line arguments
-            string[] args = Environment.GetCommandLineArgs();
+            string[] args = System.Environment.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--set" && i + 1 < args.Length)

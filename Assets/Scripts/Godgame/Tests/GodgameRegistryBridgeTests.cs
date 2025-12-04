@@ -47,17 +47,17 @@ namespace Godgame.Tests.Registry
             Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameStorehouseSyncSystem>());
             Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameResourceNodeSyncSystem>());
             Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameSpawnerSyncSystem>());
-            Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameBandSyncSystem>());
-            Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameLogisticsSyncSystem>());
-            Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameRegistryBridgeSystem>());
+            Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameBandRegistryMirrorSystem>());
+            Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameLogisticsRegistryMirrorSystem>());
+            Assert.IsTrue(UnsafeUtility.IsUnmanaged<GodgameRegistryCoordinatorSystem>());
 
             var villagerSync = _world.GetOrCreateSystem<GodgameVillagerSyncSystem>();
             var storehouseSync = _world.GetOrCreateSystem<GodgameStorehouseSyncSystem>();
             var resourceSync = _world.GetOrCreateSystem<GodgameResourceNodeSyncSystem>();
             var spawnerSync = _world.GetOrCreateSystem<GodgameSpawnerSyncSystem>();
-            var bandSync = _world.GetOrCreateSystem<GodgameBandSyncSystem>();
-            var logisticsSync = _world.GetOrCreateSystem<GodgameLogisticsSyncSystem>();
-            var bridge = _world.GetOrCreateSystem<GodgameRegistryBridgeSystem>();
+            var bandSync = _world.GetOrCreateSystem<GodgameBandRegistryMirrorSystem>();
+            var logisticsSync = _world.GetOrCreateSystem<GodgameLogisticsRegistryMirrorSystem>();
+            var bridge = _world.GetOrCreateSystem<GodgameRegistryCoordinatorSystem>();
             var directory = _world.GetOrCreateSystem<RegistryDirectorySystem>();
 
             UpdateSystem(villagerSync);
@@ -125,9 +125,9 @@ namespace Godgame.Tests.Registry
                 LastAssignmentTick = timeState.Tick
             });
 
-            UpdateSystem(_world.GetOrCreateSystem<GodgameLogisticsSyncSystem>());
+            UpdateSystem(_world.GetOrCreateSystem<GodgameLogisticsRegistryMirrorSystem>());
             UpdateSystem(_world.GetOrCreateSystem<LogisticsRequestRegistrySystem>());
-            UpdateSystem(_world.GetOrCreateSystem<GodgameRegistryBridgeSystem>());
+            UpdateSystem(_world.GetOrCreateSystem<GodgameRegistryCoordinatorSystem>());
 
             var registryEntity = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<LogisticsRequestRegistry>())
                 .GetSingletonEntity();

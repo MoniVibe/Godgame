@@ -51,33 +51,28 @@ namespace Godgame.Villagers
                 ref VillagerInitiativeState initiative,
                 ref VillagerPatriotism patriotism,
                 ref VillagerAlignment alignment,
-                in VillagerGrudge grudge)
+                in DynamicBuffer<VillagerGrudge> grudges)
             {
-                // Process grudge decay
-                if (grudge.Intensity > 0)
-                {
-                    ProcessGrudgeDecay(ref personality, grudge, DeltaTime);
-                }
-
                 // Update patriotism drift
                 UpdatePatriotism(ref patriotism, DeltaTime);
 
-                // Apply grudge boost to initiative if active
-                if (grudge.Intensity > 0)
+                // Apply grudge boost to initiative if any active grudges exist
+                float totalGrudgeIntensity = 0f;
+                for (int i = 0; i < grudges.Length; i++)
                 {
-                    var grudgeBoost = grudge.Intensity * 0.002f; // +0.2 at max intensity
+                    var grudge = grudges[i];
+                    if (!grudge.IsResolved && grudge.Intensity > 0f)
+                    {
+                        totalGrudgeIntensity += grudge.Intensity;
+                    }
+                }
+
+                if (totalGrudgeIntensity > 0f)
+                {
+                    // Boost initiative based on total grudge intensity (max +0.2 at 100 intensity)
+                    var grudgeBoost = math.min(0.2f, totalGrudgeIntensity * 0.002f);
                     initiative.CurrentInitiative = math.min(1f, initiative.CurrentInitiative + grudgeBoost);
                 }
-            }
-            
-            private static void ProcessGrudgeDecay(ref VillagerPersonality personality, VillagerGrudge grudge, float deltaTime)
-            {
-                // Grudge decay rate depends on vengeful score
-                // More vengeful = slower decay
-                var decayMultiplier = 1f - (math.abs(personality.VengefulScore) / 100f) * 0.5f;
-                var actualDecayRate = grudge.DecayRate * decayMultiplier * deltaTime;
-
-                // Decay is handled by separate grudge system - this is just for personality effects
             }
 
             private static void UpdatePatriotism(ref VillagerPatriotism patriotism, float deltaTime)
@@ -115,30 +110,19 @@ namespace Godgame.Villagers
 
         /// <summary>
         /// Generate a grudge when villager is wronged.
+        /// Note: This creates a grudge element that should be added to the DynamicBuffer.
+        /// The actual buffer addition should be done by the caller using an EntityCommandBuffer.
         /// </summary>
         [BurstCompile]
         public static void GenerateGrudge(
-            ref VillagerPersonality personality,
-            float harmSeverity,
-            ref Entity targetEntity,
+            in Entity targetEntity,
+            GrudgeOffenseType offenseType,
             uint currentTick,
+            in VillagerBehavior behavior,
             out VillagerGrudge grudge)
         {
-            var vengefulMagnitude = math.abs(personality.VengefulScore);
-            var intensity = (byte)math.clamp(harmSeverity * (vengefulMagnitude / 100f), 0f, 100f);
-
-            // Decay rate: more vengeful = slower decay
-            var baseDecayRate = 0.3f; // per day
-            var vengefulModifier = 1f - (vengefulMagnitude / 100f) * 0.7f; // 0.3x to 1.0x
-            var decayRate = baseDecayRate * vengefulModifier;
-
-            grudge = new VillagerGrudge
-            {
-                Intensity = intensity,
-                TargetEntity = targetEntity,
-                DecayRate = decayRate,
-                GeneratedTick = currentTick
-            };
+            // Use the factory method from VillagerGrudge which handles intensity calculation
+            grudge = VillagerGrudge.Create(in targetEntity, offenseType, currentTick, in behavior);
         }
 
         /// <summary>

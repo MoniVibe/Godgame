@@ -16,7 +16,7 @@ namespace Godgame.Registry
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(GameplaySystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
-    public partial struct GodgameMiracleSyncSystem : ISystem
+    public partial struct GodgameMiracleRegistryMirrorSystem : ISystem
     {
         private ComponentLookup<MiracleTarget> _targetLookup;
 

@@ -4,6 +4,7 @@ using PureDOTS.Runtime.Components;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using Godgame.Physics;
 
 namespace Godgame.Authoring
 {
@@ -120,9 +121,9 @@ namespace Godgame.Authoring
                     TimeSinceIssued = 0f
                 });
 
-                AddComponent(entity, new DivineHandHighlight
+                AddComponent(entity, new Godgame.Runtime.DivineHandHighlight
                 {
-                    Type = HandHighlightType.None,
+                    Type = Godgame.Runtime.HandHighlightType.None,
                     TargetEntity = Entity.Null,
                     Position = cursor,
                     Normal = new float3(0f, 1f, 0f)
@@ -131,7 +132,7 @@ namespace Godgame.Authoring
                 AddBuffer<DivineHandEvent>(entity);
                 AddBuffer<HandInputRouteRequest>(entity);
                 AddComponent(entity, HandInputRouteResult.None);
-                AddBuffer<HandQueuedThrowElement>(entity);
+                AddBuffer<Godgame.Runtime.HandQueuedThrowElement>(entity);
                 AddBuffer<MiracleReleaseEvent>(entity);
                 AddBuffer<MiracleSlotDefinition>(entity);
 

@@ -47,17 +47,17 @@ namespace Godgame.MoveAct
                 var value = cameraInput.ValueRW;
                 value.SampleTick = tick;
                 value.AppHasFocus = (byte)(appFocused ? 1 : 0);
-                value.PointerPosition = new float2(Input.mousePosition.x, Input.mousePosition.y);
+                value.PointerPosition = new float2(UnityEngine.Input.mousePosition.x, UnityEngine.Input.mousePosition.y);
                 value.PointerOverUI = 0;
                 value.OrbitDelta = float2.zero;
                 value.PanDelta = float2.zero;
-                value.ZoomDelta = Input.mouseScrollDelta.y;
+                value.ZoomDelta = UnityEngine.Input.mouseScrollDelta.y;
 
                 float2 move = float2.zero;
-                if (Input.GetKey(KeyCode.W)) move.y += 1f;
-                if (Input.GetKey(KeyCode.S)) move.y -= 1f;
-                if (Input.GetKey(KeyCode.D)) move.x += 1f;
-                if (Input.GetKey(KeyCode.A)) move.x -= 1f;
+                if (UnityEngine.Input.GetKey(KeyCode.W)) move.y += 1f;
+                if (UnityEngine.Input.GetKey(KeyCode.S)) move.y -= 1f;
+                if (UnityEngine.Input.GetKey(KeyCode.D)) move.x += 1f;
+                if (UnityEngine.Input.GetKey(KeyCode.A)) move.x -= 1f;
                 value.MoveInput = move;
 
                 value.VerticalMove = 0f;
@@ -80,15 +80,15 @@ namespace Godgame.MoveAct
                 var value = handInput.ValueRW;
                 value.SampleTick = tick;
                 value.AppHasFocus = (byte)(appFocused ? 1 : 0);
-                value.PointerPosition = new float2(Input.mousePosition.x, Input.mousePosition.y);
+                value.PointerPosition = new float2(UnityEngine.Input.mousePosition.x, UnityEngine.Input.mousePosition.y);
                 value.PointerDelta = float2.zero;
-                value.PrimaryHeld = (byte)(Input.GetMouseButton(0) ? 1 : 0);
+                value.PrimaryHeld = (byte)(UnityEngine.Input.GetMouseButton(0) ? 1 : 0);
 
                 float3 cursor = fallbackSpawn;
                 var camera = UnityEngine.Camera.main;
                 if (camera != null)
                 {
-                    var ray = camera.ScreenPointToRay(Input.mousePosition);
+                    var ray = camera.ScreenPointToRay(UnityEngine.Input.mousePosition);
                     var ground = new Plane(Vector3.up, Vector3.zero);
                     if (ground.Raycast(ray, out var enter))
                     {
@@ -101,7 +101,7 @@ namespace Godgame.MoveAct
                 handInput.ValueRW = value;
 
                 handEdges.Clear();
-                if (Input.GetMouseButtonDown(0))
+                if (UnityEngine.Input.GetMouseButtonDown(0))
                 {
                     handEdges.Add(new HandInputEdge
                     {
@@ -112,7 +112,7 @@ namespace Godgame.MoveAct
                     });
                 }
 
-                if (Input.GetMouseButtonUp(0))
+                if (UnityEngine.Input.GetMouseButtonUp(0))
                 {
                     handEdges.Add(new HandInputEdge
                     {
@@ -127,7 +127,7 @@ namespace Godgame.MoveAct
             if (SystemAPI.TryGetSingletonRW<BandActionHotkeyState>(out var hotkey))
             {
                 var value = hotkey.ValueRO;
-                if (Input.GetKeyDown(KeyCode.Q))
+                if (UnityEngine.Input.GetKeyDown(KeyCode.Q))
                 {
                     value.PlayPingRequested = 1;
                 }

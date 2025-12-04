@@ -65,54 +65,6 @@ namespace Godgame.Villagers
     }
 
     /// <summary>
-    /// Active grudge tracking for vengeful villagers.
-    /// </summary>
-    public struct VillagerGrudge : IComponentData
-    {
-        /// <summary>
-        /// Grudge intensity (0-100)
-        /// </summary>
-        public byte Intensity;
-
-        /// <summary>
-        /// Target entity (villager, village, band) that wronged this villager
-        /// </summary>
-        public Entity TargetEntity;
-
-        /// <summary>
-        /// Decay rate per day
-        /// </summary>
-        public float DecayRate;
-
-        /// <summary>
-        /// Tick when grudge was generated
-        /// </summary>
-        public uint GeneratedTick;
-    }
-
-    /// <summary>
-    /// Alignment values for individual villagers (tri-axis: Moral, Order, Purity).
-    /// Each axis ranges from -100 to +100.
-    /// </summary>
-    public struct VillagerAlignment : IComponentData
-    {
-        /// <summary>
-        /// Moral axis: Good (+100) ↔ Neutral (0) ↔ Evil (-100)
-        /// </summary>
-        public sbyte MoralAxis;
-
-        /// <summary>
-        /// Order axis: Lawful (+100) ↔ Neutral (0) ↔ Chaotic (-100)
-        /// </summary>
-        public sbyte OrderAxis;
-
-        /// <summary>
-        /// Purity axis: Pure (+100) ↔ Neutral (0) ↔ Corrupt (-100)
-        /// </summary>
-        public sbyte PurityAxis;
-    }
-
-    /// <summary>
     /// Outlook slots for villagers (up to 3 regular or 2 fanatic).
     /// </summary>
     public struct VillagerOutlook : IComponentData

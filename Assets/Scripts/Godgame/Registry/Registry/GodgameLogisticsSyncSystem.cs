@@ -15,7 +15,7 @@ namespace Godgame.Registry
     [BurstCompile]
     [UpdateInGroup(typeof(TransportPhaseGroup))]
     [UpdateBefore(typeof(LogisticsRequestRegistrySystem))]
-    public partial struct GodgameLogisticsSyncSystem : ISystem
+    public partial struct GodgameLogisticsRegistryMirrorSystem : ISystem
     {
         [BurstCompile]
         public void OnCreate(ref SystemState state)

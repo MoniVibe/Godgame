@@ -3,8 +3,10 @@
   "rootNamespace": "Godgame.Authoring",
   "references": [
     "Godgame.Gameplay",
+    "Godgame.Runtime",
     "GUID:22425877c6208af4d856e5e5f04bfef1",
     "PureDOTS.Runtime",
+    "PureDOTS.Systems",
     "PureDOTS.Input",
     "PureDOTS.Camera",
     "Unity.Entities",

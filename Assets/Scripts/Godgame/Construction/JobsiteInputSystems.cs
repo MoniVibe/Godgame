@@ -37,7 +37,7 @@ namespace Godgame.Construction
 
             bool placeRequested = hotkey.PlaceRequested != 0;
 #if !UNITY_DOTSRUNTIME && ENABLE_LEGACY_INPUT_MANAGER
-            if (!placeRequested && Input.GetKeyDown(KeyCode.J))
+            if (!placeRequested && UnityEngine.Input.GetKeyDown(KeyCode.J))
             {
                 placeRequested = true;
             }

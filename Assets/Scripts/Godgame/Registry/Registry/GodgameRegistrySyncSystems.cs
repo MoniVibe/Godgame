@@ -16,7 +16,7 @@ namespace Godgame.Registry
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
-    public partial struct GodgameVillagerSyncSystem : ISystem
+    public partial struct GodgameVillagerRegistryMirrorSystem : ISystem
     {
         private ComponentLookup<GodgameVillager> _villagerMirrorLookup;
         private ComponentLookup<VillagerAvailability> _availabilityLookup;
@@ -189,7 +189,7 @@ namespace Godgame.Registry
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
-    public partial struct GodgameStorehouseSyncSystem : ISystem
+    public partial struct GodgameStorehouseRegistryMirrorSystem : ISystem
     {
         private ComponentLookup<GodgameStorehouse> _storehouseMirrorLookup;
         private ComponentLookup<StorehouseJobReservation> _reservationLookup;
@@ -514,7 +514,7 @@ namespace Godgame.Registry
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
-    public partial struct GodgameSpawnerSyncSystem : ISystem
+    public partial struct GodgameSpawnerRegistryMirrorSystem : ISystem
     {
         private static readonly FixedString64Bytes VillagerSpawnerTypeId = new FixedString64Bytes("godgame.villager");
 
@@ -597,7 +597,7 @@ namespace Godgame.Registry
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
-    public partial struct GodgameBandSyncSystem : ISystem
+    public partial struct GodgameBandRegistryMirrorSystem : ISystem
     {
         private ComponentLookup<GodgameBand> _bandMirrorLookup;
         private ComponentLookup<BandFormation> _formationLookup;

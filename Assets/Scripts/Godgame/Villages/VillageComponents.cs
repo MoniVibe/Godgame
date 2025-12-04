@@ -5,12 +5,30 @@ using Unity.Mathematics;
 namespace Godgame.Villages
 {
     /// <summary>
+    /// Village phase enum for tracking village lifecycle state.
+    /// </summary>
+    public enum VillagePhase : byte
+    {
+        Forming = 0,
+        Growing = 1,
+        Stable = 2,
+        Expanding = 3,
+        Crisis = 4,
+        Declining = 5
+    }
+
+    /// <summary>
     /// Core village entity component.
     /// </summary>
     public struct Village : IComponentData
     {
-        public int VillageId;
+        public FixedString64Bytes VillageId;
         public FixedString64Bytes VillageName;
+        public VillagePhase Phase;
+        public float3 CenterPosition;
+        public float InfluenceRadius;
+        public int MemberCount;
+        public uint LastUpdateTick;
     }
 
     /// <summary>
@@ -87,6 +105,22 @@ namespace Godgame.Villages
     }
 
     /// <summary>
+    /// Village resource buffer element tracking resource quantities by type.
+    /// </summary>
+    public struct VillageResource : IBufferElementData
+    {
+        /// <summary>
+        /// Resource type index (maps to ResourceTypeIndex catalog).
+        /// </summary>
+        public ushort ResourceTypeIndex;
+
+        /// <summary>
+        /// Quantity of this resource type stored in the village.
+        /// </summary>
+        public int Quantity;
+    }
+
+    /// <summary>
     /// Village event buffer for deterministic event history.
     /// </summary>
     public struct VillageEvent : IBufferElementData
@@ -106,6 +140,30 @@ namespace Godgame.Villages
         Crisis = 2,
         Miracle = 3,
         Threat = 4
+    }
+
+    /// <summary>
+    /// Village AI decision component tracking current village-level decisions.
+    /// </summary>
+    public struct VillageAIDecision : IComponentData
+    {
+        public byte CurrentPriority;
+        public byte DecisionType; // 0=None, 1=Build, 2=Expand, 3=Defend, 4=Gather
+        public Entity TargetEntity;
+        public float3 TargetPosition;
+        public uint DecisionTick;
+        public float DecisionDuration;
+    }
+
+    /// <summary>
+    /// Village expansion request buffer element.
+    /// </summary>
+    public struct VillageExpansionRequest : IBufferElementData
+    {
+        public byte BuildingType;
+        public float3 Position;
+        public byte Priority;
+        public uint RequestTick;
     }
 }
 
