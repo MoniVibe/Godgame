@@ -1,0 +1,1 @@
+{"success":true,"message":"Retrieved active tool information.","error":null,"data":{"activeTool":"Move","isCustom":false,"pivotMode":"Center","pivotRotation":"Local","handleRotation":{"x":0.0,"y":0.0,"z":0.0},"handlePosition":{"x":null,"y":null,"z":null}}}

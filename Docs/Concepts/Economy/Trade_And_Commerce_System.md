@@ -3,8 +3,15 @@
 **Type:** Core Mechanic
 **Status:** `<Draft>` - Concept Design
 **Version:** Concept v1.0
-**Dependencies:** Resource Production & Crafting, Business & Assets, Entity Relations, Alignment Framework, Wealth & Social Dynamics, Village Stats
+**Dependencies:** Economy Spine & Principles (Chunk 0), Resource Production & Crafting, Business & Assets, Entity Relations, Alignment Framework, Wealth & Social Dynamics, Village Stats
 **Last Updated:** 2025-11-07
+
+> **Foundation:** This system (Chunk 4 - Trade & Logistics, Chunk 5 - Markets & Prices, Chunk 6 - Policies & Macro) must comply with the principles defined in [`Economy_Spine_And_Principles.md`](Economy_Spine_And_Principles.md). All trade operations must use explicit transactions, inventories, and respect layer boundaries.  
+> **Specifications:** See [`Trade_And_Logistics_Chunk4.md`](Trade_And_Logistics_Chunk4.md) for Chunk 4 (transport layer), [`Markets_And_Prices_Chunk5.md`](Markets_And_Prices_Chunk5.md) for Chunk 5 (pricing layer), and [`Policies_And_Macro_Chunk6.md`](Policies_And_Macro_Chunk6.md) for Chunk 6 (policy layer) design specifications and "done" checklists.  
+> **Resource Integration:** Trade caravans and ships use the inventory and capacity patterns defined in [`Resources_And_Mass_Chunk2.md`](Resources_And_Mass_Chunk2.md). All trade moves items between inventories using mass calculations.  
+> **Production Integration:** Trade moves products produced by [`Businesses_And_Production_Chunk3.md`](Businesses_And_Production_Chunk3.md) between settlements.  
+> **Market Integration:** Markets use pricing from [`Markets_And_Prices_Chunk5.md`](Markets_And_Prices_Chunk5.md) to determine trade profitability and arbitrage opportunities.  
+> **Policy Integration:** Policies from [`Policies_And_Macro_Chunk6.md`](Policies_And_Macro_Chunk6.md) apply tariffs, embargoes, and sanctions to trade routes and market transactions.
 
 ---
 

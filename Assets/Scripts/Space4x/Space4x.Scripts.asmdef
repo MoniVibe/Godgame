@@ -1,0 +1,16 @@
+{
+    "name": "Space4x.Scripts",
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "SPACE4X"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

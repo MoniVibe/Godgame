@@ -1,0 +1,151 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e429a9ec48e68b64da7f9b52d2b0898b, type: 3}
+  m_Name: GodgameDemoSpawnProfile
+  m_EditorClassIdentifier: 
+  seed: 12345
+  entries:
+  - category: 0
+    prefab: {fileID: 0, guid: 2ce797cb7f2f4e7aa20b3d9d37cf8b23, type: 3}
+    count: 6
+    placement: 1
+    rotation: 1
+    localOffset: {x: 0, y: 0, z: 0}
+    radius: 12
+    innerRadius: 0
+    gridDimensions:
+      x: 3
+      y: 2
+    gridSpacing: {x: 3, y: 3}
+    heightRange: {x: 0, y: 0}
+    fixedYawDegrees: 0
+    randomizeSeedOffset: 1
+    explicitSeedOffset: 0
+    customPoints: []
+    payloadId: villager.basic
+    payloadValue: 0
+    spawnPresentation: 1
+    presentationDescriptorKey: godgame.villager.default
+    presentationOffset: {x: 0, y: 0, z: 0}
+    presentationEulerOffset: {x: 0, y: 0, z: 0}
+    presentationScaleMultiplier: 1
+    presentationTint: {r: 0, g: 0, b: 0, a: 0}
+    presentationVariantSeed: 0
+    presentationFlags: 1
+  - category: 5
+    prefab: {fileID: 0, guid: 67e79de7356d4545a0e5d5d69a0449dc, type: 3}
+    count: 1
+    placement: 0
+    rotation: 0
+    localOffset: {x: 0, y: 0, z: 0}
+    radius: 0
+    innerRadius: 0
+    gridDimensions:
+      x: 1
+      y: 1
+    gridSpacing: {x: 1, y: 1}
+    heightRange: {x: 0, y: 0}
+    fixedYawDegrees: 0
+    randomizeSeedOffset: 0
+    explicitSeedOffset: 0
+    customPoints: []
+    payloadId: village.center
+    payloadValue: 0
+    spawnPresentation: 0
+    presentationDescriptorKey: godgame.structure.villagecenter
+    presentationOffset: {x: 0, y: 0, z: 0}
+    presentationEulerOffset: {x: 0, y: 0, z: 0}
+    presentationScaleMultiplier: 1
+    presentationTint: {r: 0, g: 0, b: 0, a: 0}
+    presentationVariantSeed: 0
+    presentationFlags: 1
+  - category: 5
+    prefab: {fileID: 0, guid: 9ea39a6816534c12b08e093b37f5c56d, type: 3}
+    count: 1
+    placement: 0
+    rotation: 0
+    localOffset: {x: 8, y: 0, z: 4}
+    radius: 0
+    innerRadius: 0
+    gridDimensions:
+      x: 1
+      y: 1
+    gridSpacing: {x: 1, y: 1}
+    heightRange: {x: 0, y: 0}
+    fixedYawDegrees: 0
+    randomizeSeedOffset: 0
+    explicitSeedOffset: 0
+    customPoints: []
+    payloadId: structure.storehouse
+    payloadValue: 0
+    spawnPresentation: 0
+    presentationDescriptorKey: godgame.structure.storehouse
+    presentationOffset: {x: 0, y: 0, z: 0}
+    presentationEulerOffset: {x: 0, y: 0, z: 0}
+    presentationScaleMultiplier: 1
+    presentationTint: {r: 0, g: 0, b: 0, a: 0}
+    presentationVariantSeed: 0
+    presentationFlags: 1
+  - category: 5
+    prefab: {fileID: 0, guid: 417aa4980cef40abacd8b545767c30ad, type: 3}
+    count: 2
+    placement: 3
+    rotation: 1
+    localOffset: {x: -6, y: 0, z: 6}
+    radius: 6
+    innerRadius: 0
+    gridDimensions:
+      x: 1
+      y: 2
+    gridSpacing: {x: 6, y: 4}
+    heightRange: {x: 0, y: 0}
+    fixedYawDegrees: 0
+    randomizeSeedOffset: 1
+    explicitSeedOffset: 0
+    customPoints: []
+    payloadId: structure.housing
+    payloadValue: 0
+    spawnPresentation: 0
+    presentationDescriptorKey: godgame.structure.housing
+    presentationOffset: {x: 0, y: 0, z: 0}
+    presentationEulerOffset: {x: 0, y: 0, z: 0}
+    presentationScaleMultiplier: 1
+    presentationTint: {r: 0, g: 0, b: 0, a: 0}
+    presentationVariantSeed: 0
+    presentationFlags: 1
+  - category: 5
+    prefab: {fileID: 0, guid: 4db03c1874a8424babb466e69ff04e89, type: 3}
+    count: 1
+    placement: 0
+    rotation: 0
+    localOffset: {x: -10, y: 0, z: -6}
+    radius: 0
+    innerRadius: 0
+    gridDimensions:
+      x: 1
+      y: 1
+    gridSpacing: {x: 1, y: 1}
+    heightRange: {x: 0, y: 0}
+    fixedYawDegrees: 0
+    randomizeSeedOffset: 0
+    explicitSeedOffset: 0
+    customPoints: []
+    payloadId: structure.worship
+    payloadValue: 0
+    spawnPresentation: 0
+    presentationDescriptorKey: godgame.structure.worship
+    presentationOffset: {x: 0, y: 0, z: 0}
+    presentationEulerOffset: {x: 0, y: 0, z: 0}
+    presentationScaleMultiplier: 1
+    presentationTint: {r: 0, g: 0, b: 0, a: 0}
+    presentationVariantSeed: 0
+    presentationFlags: 1

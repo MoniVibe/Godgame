@@ -3,8 +3,12 @@
 **Type:** Core Mechanic
 **Status:** `<Draft>` - Core vision captured, implementation pending
 **Version:** Concept v1.0
-**Dependencies:** Business & Assets, Individual Progression (Expertise, Lessons), Education & Tutoring, Guild System, Circle Progression (Enchanting, Runesmith)
-**Last Updated:** 2025-11-07
+**Dependencies:** Economy Spine & Principles (Chunk 0), Business & Assets, Individual Progression (Expertise, Lessons), Education & Tutoring, Guild System, Circle Progression (Enchanting, Runesmith)
+**Last Updated:** 2025-01-27
+
+> **Foundation:** This system (Chunk 3 - Businesses & Production) must comply with the principles defined in [`Economy_Spine_And_Principles.md`](Economy_Spine_And_Principles.md). All resources must exist in inventories, and production must operate by moving/transforming inventory entries.  
+> **Specification:** See [`Businesses_And_Production_Chunk3.md`](Businesses_And_Production_Chunk3.md) for the complete Chunk 3 design specification and "done" checklist.  
+> **Resource Layer:** Production systems use the inventory and ItemSpec patterns defined in [`Resources_And_Mass_Chunk2.md`](Resources_And_Mass_Chunk2.md). All production consumes inputs from and produces outputs to inventories.
 
 ---
 

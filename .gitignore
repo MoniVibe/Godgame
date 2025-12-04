@@ -82,3 +82,10 @@ Assets/Editor/MCP/
 # Archived third-party Asset Store packages (large, not versioned)
 # Ignore entire Archive folder to avoid Windows path length issues
 Archive/
+
+# Large test data and texture files (exceed GitHub 100MB limit)
+Assets/test.data
+Assets/test.data.meta
+Assets/Textures/BakingsGround/terrain ground_Base_Color.png
+Assets/Textures/BakingsGround/terrain ground_MET.tga
+Assets/Textures/BakingsGround/terrain ground_Normal_OpenGL.png

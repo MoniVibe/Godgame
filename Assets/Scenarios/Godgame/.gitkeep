@@ -1,0 +1,6 @@
+# Scenarios Directory
+
+This directory contains scenario JSON files for Godgame demos.
+
+See `Docs/Demo/Scenarios_Spec.md` for scenario format and known-good scenarios.
+

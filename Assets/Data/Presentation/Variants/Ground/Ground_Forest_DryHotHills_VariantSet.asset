@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 052037cd6b874f4cb526232127a02eaa, type: 3}
+  m_Name: Ground_Forest_DryHotHills_VariantSet
+  m_EditorClassIdentifier: 
+  m_Registry: {fileID: 11400000, guid: 9888dfcfec1f407487f492024164751a, type: 2}
+  m_DescriptorKey: godgame.ground.forest.dry.hot.hills
+  m_Variants:
+  - id: forest_moist_default
+    prefabAddress: 
+    prefab: {fileID: 100000, guid: d86f28daad164186acd299f48a7c5383, type: 3}
+    materialAddress: 
+    materialOverride: {fileID: 2100000, guid: 142740fd74e74009b50a5acc0c779b40, type: 2}
+    vfxGraphId: 
+    requiredTags: []
+    forbiddenTags: []
+    weight: 1

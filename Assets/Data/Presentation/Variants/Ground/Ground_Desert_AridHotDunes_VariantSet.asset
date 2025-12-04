@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 052037cd6b874f4cb526232127a02eaa, type: 3}
+  m_Name: Ground_Desert_AridHotDunes_VariantSet
+  m_EditorClassIdentifier: 
+  m_Registry: {fileID: 11400000, guid: 9888dfcfec1f407487f492024164751a, type: 2}
+  m_DescriptorKey: godgame.ground.desert.arid.hot.dunes
+  m_Variants:
+  - id: forest_moist_default
+    prefabAddress: 
+    prefab: {fileID: 100000, guid: 1395dd4bf2034627bd21b4a4d83af3d3, type: 3}
+    materialAddress: 
+    materialOverride: {fileID: 2100000, guid: 061a7973a7a54782aa6cafab5c3e44dc, type: 2}
+    vfxGraphId: 
+    requiredTags: []
+    forbiddenTags: []
+    weight: 1

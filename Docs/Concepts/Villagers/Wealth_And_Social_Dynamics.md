@@ -4,7 +4,10 @@
 **Category:** Social Hierarchy & Economic Dynamics
 **Scope:** Individual, Family, and Dynasty Aggregate Entities
 **Created:** 2025-11-06
-**Last Updated:** 2025-11-06
+**Last Updated:** 2025-01-27
+
+> **Foundation:** This system (Chunk 1 - Wealth & Ledgers) must comply with the principles defined in [`Economy_Spine_And_Principles.md`](../Economy/Economy_Spine_And_Principles.md). All wealth must exist in explicit components with transaction records, never as ghost money.  
+> **Specification:** See [`Wealth_And_Ledgers_Chunk1.md`](../Economy/Wealth_And_Ledgers_Chunk1.md) for the complete Chunk 1 design specification and "done" checklist.
 
 ---
 

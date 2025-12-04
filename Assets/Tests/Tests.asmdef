@@ -1,0 +1,16 @@
+{
+    "name": "Tests.Excluded",
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "INCLUDE_EXTERNAL_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 055293f9c68b4e6088a042d90e382d89, type: 3}
+  m_Name: BiomeTerrainProfile_Grassland_MoistTemperate
+  m_EditorClassIdentifier: 
+  displayName: Grassland / Moist Temperate
+  biome: 3
+  moistureRange:
+    min: 35
+    max: 70
+  temperatureRange:
+    min: 4
+    max: 25
+  descriptorKey: godgame.ground.grassland.moist.temperate.flat
+  descriptorHash: 0
+  ground:
+    surfaceMode: 0
+    proceduralPrefab: {fileID: 100000, guid: 23a9a6c9d9864424817cb601442c4e7b, type: 3}
+    spawnOffset: {x: 0, y: 0, z: 0}
+    spawnRotationEuler: {x: 0, y: 0, z: 0}
+    spawnScale: {x: 1, y: 1, z: 1}
+    microSplatMaterial: {fileID: 0}
+    microSplatProfileKeyword: 
+    fallbackMaterial: {fileID: 2100000, guid: 7bd06beabaef49359be77c750020dac0, type: 2}
+    allowRuntimeHeightBlending: 1
+  vegetationClusters:
+  - label: Wildflowers
+    clusterPrefab: {fileID: 100000, guid: e140fdffc17b48debae083f01666c5cc, type: 3}
+    heightRange:
+      min: -2
+      max: 4
+    slopeRange:
+      min: 0
+      max: 12
+    moistureRange:
+      min: 25
+      max: 80
+    baseDensity: 5
+    densityByMoisture:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.3
+        inSlope: 0
+        outSlope: 0.5
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.95
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    noiseScale: 20
+    densityMultiplier: 1
+    alignToNormal: 1
+  ambientProps:
+  - label: Meadow Logs
+    propPrefab: {fileID: 100000, guid: cef0def474ec48ea8aed4c616cf2cbd0, type: 3}
+    spawnerPrefab: {fileID: 0}
+    probability: 0.25
+    countRange:
+      x: 0
+      y: 2
+    scaleRange: {x: 0.7, y: 1.1}
+    heightRange:
+      min: -1
+      max: 4
+    slopeRange:
+      min: 0
+      max: 15
+    alignToNormal: 1
+  vfxBindings: []

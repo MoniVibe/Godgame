@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 055293f9c68b4e6088a042d90e382d89, type: 3}
+  m_Name: BiomeTerrainProfile_Swamp_LushWarm
+  m_EditorClassIdentifier: 
+  displayName: Swamp / Lush Warm Flats
+  biome: 8
+  moistureRange:
+    min: 70
+    max: 100
+  temperatureRange:
+    min: 18
+    max: 35
+  descriptorKey: godgame.ground.swamp.lush.warm.flat
+  descriptorHash: 0
+  ground:
+    surfaceMode: 0
+    proceduralPrefab: {fileID: 100000, guid: f05d28b575e546fea2e9b6b3e3f4d64a, type: 3}
+    spawnOffset: {x: 0, y: 0, z: 0}
+    spawnRotationEuler: {x: 0, y: 0, z: 0}
+    spawnScale: {x: 1, y: 1, z: 1}
+    microSplatMaterial: {fileID: 0}
+    microSplatProfileKeyword: 
+    fallbackMaterial: {fileID: 2100000, guid: f8aead52eb7f44689eaa861651578628, type: 2}
+    allowRuntimeHeightBlending: 1
+  vegetationClusters:
+  - label: Reeds & Lilies
+    clusterPrefab: {fileID: 100000, guid: 5e2b5e2f784d438ca17c707a003bde43, type: 3}
+    heightRange:
+      min: -3
+      max: 3
+    slopeRange:
+      min: 0
+      max: 8
+    moistureRange:
+      min: 60
+      max: 100
+    baseDensity: 5
+    densityByMoisture:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.2
+        inSlope: 0
+        outSlope: 0.6
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    noiseScale: 14
+    densityMultiplier: 1
+    alignToNormal: 1
+  ambientProps:
+  - label: Flooded Logs
+    propPrefab: {fileID: 100000, guid: cef0def474ec48ea8aed4c616cf2cbd0, type: 3}
+    spawnerPrefab: {fileID: 0}
+    probability: 0.55
+    countRange:
+      x: 1
+      y: 3
+    scaleRange: {x: 0.8, y: 1.4}
+    heightRange:
+      min: -2
+      max: 2
+    slopeRange:
+      min: 0
+      max: 8
+    alignToNormal: 1
+  vfxBindings: []

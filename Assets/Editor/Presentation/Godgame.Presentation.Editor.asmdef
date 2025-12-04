@@ -1,0 +1,21 @@
+{
+  "name": "Godgame.Presentation.Editor",
+  "references": [
+    "Godgame.Runtime",
+    "Godgame.Gameplay",
+    "Unity.Entities",
+    "Unity.Entities.Hybrid",
+    "Unity.Mathematics",
+    "Unity.Collections"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "autoReferenced": false,
+  "overrideReferences": true,
+  "precompiledReferences": [],
+  "defineConstraints": [],
+  "noEngineReferences": false
+}

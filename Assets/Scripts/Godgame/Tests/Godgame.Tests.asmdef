@@ -1,0 +1,28 @@
+{
+  "name": "Godgame.Tests",
+  "rootNamespace": "Godgame.Tests",
+  "references": [
+    "Godgame.Runtime",
+    "Unity.Entities",
+    "Unity.Entities.Hybrid",
+    "Unity.Collections",
+    "Unity.Mathematics",
+    "Unity.Transforms",
+    "Unity.Burst",
+    "PureDOTS.Runtime",
+    "PureDOTS.Authoring"
+  ],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": ["GODGAME_TESTS"],
+  "versionDefines": [],
+  "noEngineReferences": false,
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "testAssemblies": true
+}

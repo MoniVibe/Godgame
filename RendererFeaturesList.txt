@@ -1,0 +1,7 @@
+Available Renderer Features:
+- DecalRendererFeature (UnityEngine.Rendering.Universal.DecalRendererFeature)
+- FullScreenPassRendererFeature (UnityEngine.Rendering.Universal.FullScreenPassRendererFeature)
+- FullScreenPassRendererFeature_OldGUID (FullScreenPassRendererFeature_OldGUID)
+- RenderObjects (UnityEngine.Rendering.Universal.RenderObjects)
+- ScreenSpaceAmbientOcclusion (UnityEngine.Rendering.Universal.ScreenSpaceAmbientOcclusion)
+- ScreenSpaceShadows (UnityEngine.Rendering.Universal.ScreenSpaceShadows)

@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 055293f9c68b4e6088a042d90e382d89, type: 3}
+  m_Name: BiomeTerrainProfile_Tundra_DryCold
+  m_EditorClassIdentifier: 
+  displayName: Tundra / Dry Cold Flat
+  biome: 1
+  moistureRange:
+    min: 5
+    max: 40
+  temperatureRange:
+    min: -40
+    max: 5
+  descriptorKey: godgame.ground.tundra.dry.cold.flat
+  descriptorHash: 0
+  ground:
+    surfaceMode: 0
+    proceduralPrefab: {fileID: 100000, guid: 9c200c3fdf4a41b293b9686ecba029be, type: 3}
+    spawnOffset: {x: 0, y: 0, z: 0}
+    spawnRotationEuler: {x: 0, y: 0, z: 0}
+    spawnScale: {x: 1, y: 1, z: 1}
+    microSplatMaterial: {fileID: 0}
+    microSplatProfileKeyword: 
+    fallbackMaterial: {fileID: 2100000, guid: bc4e017563e74d53aa8c6d5b2df8ba76, type: 2}
+    allowRuntimeHeightBlending: 1
+  vegetationClusters:
+  - label: Lichen Patch
+    clusterPrefab: {fileID: 100000, guid: c0a3aedf474645618efbc697040dd71c, type: 3}
+    heightRange:
+      min: -4
+      max: 3
+    slopeRange:
+      min: 0
+      max: 12
+    moistureRange:
+      min: 0
+      max: 60
+    baseDensity: 3
+    densityByMoisture:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.5
+        inSlope: 0
+        outSlope: -0.2
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.2
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    noiseScale: 30
+    densityMultiplier: 1
+    alignToNormal: 1
+  ambientProps:
+  - label: Frost Shard
+    propPrefab: {fileID: 100000, guid: 5f2eec277baa419c9baedf19eb45712f, type: 3}
+    spawnerPrefab: {fileID: 0}
+    probability: 0.4
+    countRange:
+      x: 1
+      y: 3
+    scaleRange: {x: 0.8, y: 1.3}
+    heightRange:
+      min: -4
+      max: 3
+    slopeRange:
+      min: 0
+      max: 10
+    alignToNormal: 1
+  vfxBindings: []

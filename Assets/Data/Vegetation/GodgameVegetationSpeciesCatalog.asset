@@ -1,0 +1,114 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 213f0145e5206344db26dac4d9c2a921, type: 3}
+  m_Name: GodgameVegetationSpeciesCatalog
+  m_EditorClassIdentifier: 
+  globalHealthRecoveryScale: 1
+  globalDamageScale: 1
+  defaultSpawnDensity: 1
+  species:
+  - speciesId: Tree
+    icon: {fileID: 0}
+    seedlingDuration: 45
+    growingDuration: 180
+    matureDuration: 120
+    floweringDuration: 45
+    fruitingDuration: 210
+    dyingDuration: 60
+    respawnDelay: 360
+    baseGrowthRate: 0.5
+    stageMultipliers:
+    - 0.6
+    - 0.8
+    - 1
+    - 1.1
+    - 0.8
+    - 0.5
+    seasonalMultipliers:
+    - 1
+    - 1.2
+    - 0.9
+    - 0.6
+    maxHealth: 150
+    baselineRegen: 1.2
+    damagePerDeficit: 10
+    droughtToleranceSeconds: 90
+    frostToleranceSeconds: 45
+    maxYieldPerCycle: 12
+    harvestCooldown: 45
+    resourceTypeId: wood
+    partialHarvestPenalty: 0.5
+    desiredMinWater: 30
+    desiredMaxWater: 100
+    desiredMinLight: 40
+    desiredMaxLight: 100
+    desiredMinSoilQuality: 40
+    desiredMaxSoilQuality: 100
+    pollutionTolerance: 0.5
+    windTolerance: 0.5
+    reproductionCooldown: 300
+    seedsPerEvent: 4
+    spreadRadius: 6
+    offspringCapPerParent: 5
+    maturityRequirement: 0.8
+    gridCellPadding: 1
+    growthSeed: 12345
+    reproductionSeed: 67890
+    lootSeed: 54321
+  - speciesId: Crop
+    icon: {fileID: 0}
+    seedlingDuration: 15
+    growingDuration: 60
+    matureDuration: 40
+    floweringDuration: 20
+    fruitingDuration: 60
+    dyingDuration: 30
+    respawnDelay: 120
+    baseGrowthRate: 0.9
+    stageMultipliers:
+    - 0.8
+    - 1
+    - 1.2
+    - 1
+    - 0.8
+    - 0.5
+    seasonalMultipliers:
+    - 1
+    - 1.15
+    - 0.95
+    - 0.7
+    maxHealth: 80
+    baselineRegen: 1.5
+    damagePerDeficit: 8
+    droughtToleranceSeconds: 45
+    frostToleranceSeconds: 20
+    maxYieldPerCycle: 6
+    harvestCooldown: 30
+    resourceTypeId: food
+    partialHarvestPenalty: 0.25
+    desiredMinWater: 40
+    desiredMaxWater: 100
+    desiredMinLight: 50
+    desiredMaxLight: 100
+    desiredMinSoilQuality: 50
+    desiredMaxSoilQuality: 100
+    pollutionTolerance: 0.3
+    windTolerance: 0.4
+    reproductionCooldown: 120
+    seedsPerEvent: 6
+    spreadRadius: 3
+    offspringCapPerParent: 8
+    maturityRequirement: 0.7
+    gridCellPadding: 1
+    growthSeed: 22222
+    reproductionSeed: 33333
+    lootSeed: 44444

@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19903bf4fe51480485c29e6d74c8b232, type: 3}
+  m_Name: GodgamePresentationRuntimeConfig
+  m_EditorClassIdentifier: 
+  m_Registry: {fileID: 11400000, guid: 9888dfcfec1f407487f492024164751a, type: 2}
+  m_DefaultTheme: {fileID: 11400000, guid: 2014c2d4ccfe4078ab5f8b30901cdc91, type: 2}
+  m_VariantSets:
+  - {fileID: 11400000, guid: 64da56cbac10411fb0e2e94f0c1c1d6b, type: 2}
+  - {fileID: 11400000, guid: f5717dba512a4d098d5f29f3336cbfd1, type: 2}
+  - {fileID: 11400000, guid: eee1057093c6426c9667d953f5f9e277, type: 2}
+  - {fileID: 11400000, guid: 3718654c08914ece86be18de8a3b7f6f, type: 2}
+  - {fileID: 11400000, guid: f659971bb8b1431e825357256a16a595, type: 2}
+  - {fileID: 11400000, guid: 34e3e9111099413ba64bba7cbd2eb819, type: 2}

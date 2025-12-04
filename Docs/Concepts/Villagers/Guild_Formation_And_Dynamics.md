@@ -4,7 +4,9 @@
 **Category:** System - Aggregate Entities
 **Scope:** Bottom-up guild formation, multi-membership, guild actions
 **Created:** 2025-11-08
-**Last Updated:** 2025-11-08
+**Last Updated:** 2025-01-27
+
+> **Wealth Integration:** Guild treasuries must use the wallet and transaction patterns defined in [`Wealth_And_Ledgers_Chunk1.md`](../Economy/Wealth_And_Ledgers_Chunk1.md). All guild wealth changes must go through transactions.
 
 ---
 

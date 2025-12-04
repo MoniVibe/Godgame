@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab4aa12d70ad09a4d99a2c8f2c0d7ae0, type: 3}
+  m_Name: FaunaAmbientProfile_Default
+  m_EditorClassIdentifier: 
+  m_Rules:
+  - id: forest_hounds
+    descriptorKey: godgame.fauna.hound
+    miracleDescriptorKey: godgame.miracle.fauna.glow
+    fallbackPrefab: {fileID: 100000, guid: f56bad1b4dcaf3849a2a9fdf56336b57, type: 3}
+    ambientClip: {fileID: 0}
+    spawnRadius: 10
+    wanderRadius: 6
+    baseIdleDuration: 4
+    moveSpeed: 2.5
+    spawnCount:
+      x: 1
+      y: 3
+    useEmeraldAi: 0
+    allowedBiomes: 8
+    activityWindow:
+      mode: 1
+      startHour: 6
+      endHour: 18
+    nocturnal: 0
+    ambientSoundInterval: 14

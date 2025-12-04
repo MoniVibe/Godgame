@@ -4,7 +4,12 @@
 **Category:** System - Economic & Social
 **Scope:** Global (affects villages, families, individuals)
 **Created:** 2025-11-06
-**Last Updated:** 2025-11-06
+**Last Updated:** 2025-01-27
+
+> **Foundation:** This system (Chunk 3 - Businesses & Production) must comply with the principles defined in [`Economy_Spine_And_Principles.md`](Economy_Spine_And_Principles.md). All business operations must use explicit wealth components, inventories, and respect layer boundaries.  
+> **Specification:** See [`Businesses_And_Production_Chunk3.md`](Businesses_And_Production_Chunk3.md) for the complete Chunk 3 design specification and "done" checklist.  
+> **Wealth Integration:** Business wealth must use the wallet and transaction patterns defined in [`Wealth_And_Ledgers_Chunk1.md`](Wealth_And_Ledgers_Chunk1.md). All business profit/loss flows must go through transactions.  
+> **Resource Integration:** Business inventories must use the inventory and ItemSpec patterns defined in [`Resources_And_Mass_Chunk2.md`](Resources_And_Mass_Chunk2.md). All production consumes inputs from and produces outputs to inventories.
 
 ---
 
