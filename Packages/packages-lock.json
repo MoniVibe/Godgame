@@ -17,7 +17,7 @@
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "3.0.2"
       },
-      "hash": "0d6c274e3c1836a68584a43bef98be9610d5935b"
+      "hash": "2c65c76ea38ea20c5e01f5302b706655845e49c9"
     },
     "com.moni.bakings.presentation": {
       "version": "file:com.moni.bakings.presentation",

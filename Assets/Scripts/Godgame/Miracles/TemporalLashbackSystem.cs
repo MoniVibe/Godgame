@@ -5,6 +5,7 @@ using PureDOTS.Runtime.Time;
 using PureDOTS.Systems;
 using Unity.Burst;
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace Godgame.Miracles
 {
@@ -83,4 +84,6 @@ namespace Godgame.Miracles
         }
     }
 }
+
+
 

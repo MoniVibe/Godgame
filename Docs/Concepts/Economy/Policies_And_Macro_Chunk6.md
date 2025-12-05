@@ -958,3 +958,7 @@ Examples in this document use Godgame terminology (villages, grain, caravans), b
 - **5:** Prices
 - **6:** Rules & Power
 
+
+
+
+

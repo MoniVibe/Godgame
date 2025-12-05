@@ -28,7 +28,7 @@ namespace Godgame.Narrative
             }
 
             // Check for 'N' key press
-            if (!Input.GetKeyDown(KeyCode.N))
+            if (!UnityEngine.Input.GetKeyDown(KeyCode.N))
             {
                 return;
             }
