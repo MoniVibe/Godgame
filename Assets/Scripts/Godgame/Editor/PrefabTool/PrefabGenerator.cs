@@ -75,11 +75,32 @@ namespace Godgame.Editor.PrefabTool
                     storehouse.SetPrivateField("totalCapacity", template.storageCapacity);
                     break;
 
-                // Add other building types as authoring components are created
-                // case BuildingTemplate.BuildingType.Residence:
-                //     var housing = go.AddComponent<HousingAuthoring>();
-                //     housing.SetPrivateField("maxResidents", template.maxResidents);
-                //     break;
+                case BuildingTemplate.BuildingType.Residence:
+                    var housing = go.AddComponent<HousingAuthoring>();
+                    housing.SetPrivateField("maxResidents", template.maxResidents);
+                    housing.SetPrivateField("comfortLevel", template.comfortLevel);
+                    housing.SetPrivateField("restorationRate", template.restorationRate);
+                    break;
+
+                case BuildingTemplate.BuildingType.Workplace:
+                    var workplace = go.AddComponent<WorkplaceAuthoring>();
+                    workplace.SetPrivateField("workCapacity", template.workCapacity);
+                    // Efficiency multiplier not in template yet, default to 1
+                    workplace.SetPrivateField("efficiencyMultiplier", 1f);
+                    break;
+
+                case BuildingTemplate.BuildingType.Worship:
+                    var worship = go.AddComponent<WorshipAuthoring>();
+                    worship.SetPrivateField("manaGenerationRate", template.manaGenerationRate);
+                    worship.SetPrivateField("worshipperCapacity", template.worshipperCapacity);
+                    break;
+
+                case BuildingTemplate.BuildingType.Utility:
+                    var utility = go.AddComponent<UtilityAuthoring>();
+                    utility.SetPrivateField("areaBonusRange", template.areaBonusRange);
+                    utility.SetPrivateField("bonusValue", template.bonusValue);
+                    utility.SetPrivateField("bonusType", template.bonusType);
+                    break;
             }
 
             // Add visual presentation
@@ -196,8 +217,25 @@ namespace Godgame.Editor.PrefabTool
             template.stats.calculatedArmor = StatCalculation.CalculateEquipmentArmor(template);
             template.stats.weight = StatCalculation.CalculateEquipmentWeight(template);
             
-            // Equipment would use ModuleDefinitionAuthoring or similar
-            // For now, just create the GameObject
+            // Add ModuleDefinitionAuthoring
+            var module = go.AddComponent<ModuleDefinitionAuthoring>();
+            module.SetPrivateField("moduleId", template.name); // Use name as ID for now
+            
+            // Map SlotKind to slot string
+            string slotType = "slot.hands.main";
+            switch (template.slotKind)
+            {
+                case SlotKind.Hand: slotType = "slot.hands.main"; break;
+                case SlotKind.Body: slotType = "slot.torso.armor"; break;
+                case SlotKind.Head: slotType = "slot.head.helmet"; break;
+                case SlotKind.Feet: slotType = "slot.feet.boots"; break;
+                case SlotKind.Accessory: slotType = "slot.accessory.ring"; break;
+            }
+            module.SetPrivateField("slotType", slotType);
+            
+            module.SetPrivateField("maxCondition", template.calculatedDurability);
+            module.SetPrivateField("startingCondition", template.calculatedDurability);
+            module.SetPrivateField("degradationPerSecond", 0.1f); // Default
             
             AddVisualPresentation(go, template, template.equipmentType);
             AddVFXPresentation(go, template);
@@ -489,4 +527,3 @@ namespace Godgame.Editor.PrefabTool
         }
     }
 }
-

@@ -410,6 +410,51 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 351577524}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &365019089
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 365019090}
+  - component: {fileID: 365019091}
+  m_Layer: 0
+  m_Name: GodgameRenderCatalog
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &365019090
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 365019089}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &365019091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 365019089}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a3e7dadcaba03744c94f501f4e33141a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Godgame.Gameplay::Godgame.Rendering.RenderCatalogAuthoring
+  CatalogDefinition: {fileID: 11400000, guid: adbc3bf635dc62840a71d37074a449d3, type: 2}
 --- !u!1 &516612627
 GameObject:
   m_ObjectHideFlags: 0
@@ -900,6 +945,43 @@ MonoBehaviour:
     x: 0
     y: 0
     z: 0
+  vengefulScore: 0
+  boldScore: 0
+  isUndead: 0
+  isSummoned: 0
+  physique: 50
+  finesse: 50
+  will: 50
+  wisdom: 50
+  strength: 50
+  agility: 50
+  intelligence: 50
+  fame: 0
+  wealth: 0
+  reputation: 0
+  glory: 0
+  renown: 0
+  baseAttack: 0
+  baseDefense: 0
+  baseHealthOverride: 0
+  baseHealth: 100
+  baseStamina: 10
+  baseMana: 0
+  food: 100
+  rest: 100
+  sleep: 100
+  generalHealth: 100
+  physicalResistance: 0
+  fireResistance: 0
+  coldResistance: 0
+  poisonResistance: 0
+  magicResistance: 0
+  lightningResistance: 0
+  holyResistance: 0
+  darkResistance: 0
+  healBonus: 1
+  spellDurationModifier: 1
+  spellIntensityModifier: 1
 --- !u!4 &1324521642
 Transform:
   m_ObjectHideFlags: 0
@@ -1278,6 +1360,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1995688169
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1995688170}
+  - component: {fileID: 1995688171}
+  m_Layer: 0
+  m_Name: RewindConfig
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1995688170
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1995688169}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1995688171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1995688169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b8d9d36550e6264e96704e3989bb3c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PureDOTS.Authoring::PureDOTS.Runtime.Time.RewindConfigAuthoring
+  TickDuration: 0.01666667
+  MaxHistoryTicks: 7200
+  InitialMode: 0
 --- !u!1 &2001274862
 GameObject:
   m_ObjectHideFlags: 0
@@ -1577,3 +1706,5 @@ SceneRoots:
   - {fileID: 1984513604}
   - {fileID: 525522845}
   - {fileID: 630207207}
+  - {fileID: 365019090}
+  - {fileID: 1995688170}

@@ -106,6 +106,16 @@ namespace Godgame.Editor.PrefabTool
                     allReports["Tools"] = DryRunGenerator.GenerateDryRunTools(
                         toolTemplates, materialTemplates);
                 }
+
+                if (miracleTemplates.Count > 0)
+                {
+                    allReports["Miracles"] = DryRunGenerator.GenerateDryRunMiracles(
+                        miracleTemplates);
+                }
+
+                // Resource Nodes and Containers are not yet exposed in PrefabEditorWindow public API
+                // Assuming they will be added or we can access them via reflection if needed
+                // For now, we'll skip them in CLI until window API is updated
                 
                 // Combine reports
                 var combinedReport = CombineReports(allReports);

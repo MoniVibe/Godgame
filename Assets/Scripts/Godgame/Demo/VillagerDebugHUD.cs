@@ -1,8 +1,9 @@
+#if GODGAME_DEMO && GODGAME_DEMO_DEPS
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UI;
-using PureDOTS.Demo.Village;
+// using PureDOTS.Demo.Village; // legacy demo dependency
 
 namespace Godgame.Demo
 {
@@ -103,5 +104,4 @@ namespace Godgame.Demo
         }
     }
 }
-
-
+#endif

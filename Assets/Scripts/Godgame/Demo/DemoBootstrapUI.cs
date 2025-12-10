@@ -8,6 +8,7 @@ using UnityEngine.Profiling;
 using UnityEngine.UI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Registry;
+using PureDOTS.Runtime.Transport;
 
 namespace Godgame.Demo
 {
@@ -176,9 +177,18 @@ namespace Godgame.Demo
                 SetText(tickStats, $"Tick: {UnityEngine.Time.frameCount}");
             }
 
-            if (rewindStateQuery != null && rewindStateQuery.TryGetSingleton(out RewindState rewindState))
+            if (rewindStateQuery != null)
             {
-                SetText(snapshotStats, $"Rewind: {rewindState.Mode} @ {rewindState.PlaybackTick}");
+                var count = rewindStateQuery.CalculateEntityCount();
+                if (count == 1)
+                {
+                    var rewindState = rewindStateQuery.GetSingleton<RewindState>();
+                    SetText(snapshotStats, $"Rewind: {rewindState.Mode} @ {rewindState.PlaybackTick}");
+                }
+                else
+                {
+                    SetText(snapshotStats, "Rewind: unavailable");
+                }
             }
             else
             {

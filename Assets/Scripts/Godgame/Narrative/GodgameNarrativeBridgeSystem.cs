@@ -3,6 +3,7 @@ using PureDOTS.Runtime.Narrative;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
 namespace Godgame.Narrative
 {
@@ -17,13 +18,21 @@ namespace Godgame.Narrative
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
+            state.RequireForUpdate<RewindState>();
+            state.RequireForUpdate<NarrativeSignalBufferElement>();
+            state.RequireForUpdate<NarrativeRewardSignal>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var timeState = SystemAPI.GetSingleton<TimeState>();
-            var rewindState = SystemAPI.GetSingleton<RewindState>();
+            if (!Application.isPlaying)
+                return;
+
+            if (!SystemAPI.TryGetSingleton<TimeState>(out var timeState))
+                return;
+            if (!SystemAPI.TryGetSingleton<RewindState>(out var rewindState))
+                return;
             
             if (timeState.IsPaused || rewindState.Mode != RewindMode.Record)
             {

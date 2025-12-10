@@ -49,6 +49,9 @@ namespace Godgame.Demo
                 });
             }
 
+            // RewindState is now provided by RewindConfigAuthoring in the GodgameRegistrySubScene.
+            // Creating it here causes duplication when the SubScene loads.
+            /*
             if (!SystemAPI.TryGetSingleton<RewindState>(out _))
             {
                 var r = em.CreateEntity(typeof(RewindState));
@@ -58,6 +61,7 @@ namespace Godgame.Demo
                     PlaybackTick = 0
                 });
             }
+            */
         }
     }
 }

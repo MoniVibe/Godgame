@@ -1,8 +1,9 @@
+#if GODGAME_DEMO && GODGAME_DEMO_DEPS
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Godgame.Demo;
-using PureDOTS.Demo.Village;
+// using PureDOTS.Demo.Village; // legacy demo dependency
 
 namespace Godgame.Villages
 {
@@ -46,3 +47,4 @@ namespace Godgame.Villages
         }
     }
 }
+#endif

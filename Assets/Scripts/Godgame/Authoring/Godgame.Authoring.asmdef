@@ -9,6 +9,7 @@
     "PureDOTS.Systems",
     "PureDOTS.Input",
     "PureDOTS.Camera",
+    "PureDOTS.Rendering",
     "Unity.Entities",
     "Unity.Entities.Hybrid",
     "Unity.Mathematics",

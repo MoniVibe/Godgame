@@ -95,28 +95,28 @@ namespace Godgame.Authoring
                     ? $"Storehouse-{authoring.storehouseId}"
                     : authoring.label;
 
-                var summaries = default(FixedList32Bytes<GodgameStorehouseResourceSummary>);
-                
+                var summaries = default(FixedList64Bytes<GodgameStorehouseResourceSummary>);
+
                 if (authoring.woodCapacity > 0f)
                 {
-                    summaries.Add(new GodgameStorehouseResourceSummary
+                    TryAddSummary(ref summaries, new GodgameStorehouseResourceSummary
                     {
                         ResourceTypeIndex = 1, // Wood
                         Capacity = authoring.woodCapacity,
                         Stored = 0f,
                         Reserved = 0f
-                    });
+                    }, authoring.name);
                 }
 
                 if (authoring.oreCapacity > 0f)
                 {
-                    summaries.Add(new GodgameStorehouseResourceSummary
+                    TryAddSummary(ref summaries, new GodgameStorehouseResourceSummary
                     {
                         ResourceTypeIndex = 2, // Ore
                         Capacity = authoring.oreCapacity,
                         Stored = 0f,
                         Reserved = 0f
-                    });
+                    }, authoring.name);
                 }
 
                 AddComponent(entity, new GodgameStorehouse
@@ -139,6 +139,16 @@ namespace Godgame.Authoring
                 {
                     Tier = RewindTier.SnapshotLite
                 });
+                static void TryAddSummary(ref FixedList64Bytes<GodgameStorehouseResourceSummary> summaries, in GodgameStorehouseResourceSummary summary, string authoringName)
+                {
+                    if (summaries.Length >= summaries.Capacity)
+                    {
+                        Debug.LogWarning($"[StorehouseAuthoring] Storehouse '{authoringName}' provides more resource summaries than FixedList capacity; excess ignored.");
+                        return;
+                    }
+
+                    summaries.Add(summary);
+                }
             }
         }
     }

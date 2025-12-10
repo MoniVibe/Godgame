@@ -97,7 +97,7 @@ namespace Godgame.Presentation
         private void ToggleMetrics()
         {
             // Toggle PresentationMetricsDisplay
-            var metricsDisplay = FindObjectOfType<PresentationMetricsDisplay>();
+            var metricsDisplay = Object.FindFirstObjectByType<PresentationMetricsDisplay>();
             if (metricsDisplay != null)
             {
                 metricsDisplay.enabled = !metricsDisplay.enabled;

@@ -9,7 +9,7 @@ namespace Godgame.Registry
     public struct GodgameResourceNode : IComponentData
     {
         /// <summary>
-        /// Resource type index mapping to ResourceType enum (Wood=1, Ore=2, etc.)
+        /// Resource type index mapping to Godgame.Economy.ResourceType enum.
         /// </summary>
         public ushort ResourceTypeIndex;
 

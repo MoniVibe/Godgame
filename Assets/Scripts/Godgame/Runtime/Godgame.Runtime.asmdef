@@ -20,6 +20,7 @@
         "PureDOTS.Authoring",
         "PureDOTS.Input",
         "PureDOTS.Config",
+        "PureDOTS.Rendering",
         "Moni.Bakings.Presentation",
         "Unity.RenderPipelines.Universal.Runtime"
     ],

@@ -1,4 +1,4 @@
-using Godgame.Interaction;
+using Godgame.Economy;
 using Godgame.Registry;
 using Godgame.Resources;
 using PureDOTS.Runtime.Spatial;
@@ -17,7 +17,7 @@ namespace Godgame.Authoring
     public sealed class ResourceNodeAuthoring : MonoBehaviour
     {
         [SerializeField]
-        private ResourceType resourceType = ResourceType.Wood;
+        private ResourceType resourceType = ResourceType.None;
 
         [SerializeField]
         [Tooltip("Initial amount of resource available")]
@@ -37,7 +37,7 @@ namespace Godgame.Authoring
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.Renderable);
 
-                // Convert ResourceType enum to index (Wood=1, Ore=2, etc.)
+                // Convert ResourceType enum to index for runtime components.
                 ushort resourceTypeIndex = (ushort)authoring.resourceType;
 
                 // Add resource node component

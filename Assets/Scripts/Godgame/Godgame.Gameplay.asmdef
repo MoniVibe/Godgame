@@ -22,6 +22,7 @@
         "PureDOTS.Input",
         "PureDOTS.Config",
         "PureDOTS.Camera",
+        "PureDOTS.Rendering",
         "Godgame.Runtime"
     ],
     "includePlatforms": [],

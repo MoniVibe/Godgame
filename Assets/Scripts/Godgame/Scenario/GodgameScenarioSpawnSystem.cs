@@ -1,5 +1,6 @@
 using Godgame.Demo;
 using Godgame.Economy;
+using Godgame.Rendering;
 using PureDOTS.Runtime.Components;
 using Unity.Burst;
 using Unity.Collections;
@@ -95,6 +96,17 @@ namespace Godgame.Scenario
                             IsAvailable = 1,
                             LastChangeTick = 0
                         });
+                        ecb.AddComponent(villager, new PureDOTS.Rendering.RenderKey
+                        {
+                            ArchetypeId = GodgameRenderKeys.Villager,
+                            LOD = 0
+                        });
+                        ecb.AddComponent(villager, new PureDOTS.Rendering.RenderFlags
+                        {
+                            Visible = 1,
+                            ShadowCaster = 1,
+                            HighlightMask = 0
+                        });
                     }
                 }
 
@@ -111,6 +123,17 @@ namespace Godgame.Scenario
                             math.sin(angle) * configValue.SpawnRadius * 0.5f);
 
                         ecb.SetComponent(storehouse, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, 1f));
+                        ecb.AddComponent(storehouse, new PureDOTS.Rendering.RenderKey
+                        {
+                            ArchetypeId = GodgameRenderKeys.Storehouse,
+                            LOD = 0
+                        });
+                        ecb.AddComponent(storehouse, new PureDOTS.Rendering.RenderFlags
+                        {
+                            Visible = 1,
+                            ShadowCaster = 1,
+                            HighlightMask = 0
+                        });
                     }
                 }
 
@@ -132,6 +155,17 @@ namespace Godgame.Scenario
                             Position = pos,
                             ResourceType = ResourceType.IronOre,
                             Capacity = 100
+                        });
+                        ecb.AddComponent(nodeEntity, new PureDOTS.Rendering.RenderKey
+                        {
+                            ArchetypeId = GodgameRenderKeys.ResourceNode,
+                            LOD = 0
+                        });
+                        ecb.AddComponent(nodeEntity, new PureDOTS.Rendering.RenderFlags
+                        {
+                            Visible = 1,
+                            ShadowCaster = 1,
+                            HighlightMask = 0
                         });
                     }
                 }

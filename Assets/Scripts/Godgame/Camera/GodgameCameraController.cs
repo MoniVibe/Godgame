@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Mathematics;
 using Unity.Entities;
-using Moni.Godgame.CameraSystems;
 using Godgame.Input;
 using PureDOTS.Runtime.Camera;
 
@@ -100,15 +99,10 @@ namespace Godgame
         private void Update()
         {
             // Guard against BW2StyleCameraController taking over
-            // Use Type.GetType with assembly-qualified name to resolve ambiguity
-            var bw2ControllerType = Type.GetType("PureDOTS.Runtime.Camera.BW2StyleCameraController, PureDOTS.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
-            if (bw2ControllerType != null)
+            // Direct call now that duplicates are unified - no reflection needed
+            if (BW2StyleCameraController.HasActiveRig)
             {
-                var hasActiveRigProperty = bw2ControllerType.GetProperty("HasActiveRig", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                if (hasActiveRigProperty != null && (bool)hasActiveRigProperty.GetValue(null))
-                {
-                    return;
-                }
+                return;
             }
 
             // Read input from ECS
@@ -216,17 +210,8 @@ namespace Godgame
                 RigType = CameraRigType.Godgame
             };
 
-            // Note: CameraRigService exists in both PureDOTS.Camera and PureDOTS.Runtime
-            // Using reflection to resolve ambiguity - this is a workaround for duplicate type definitions
-            var cameraRigServiceType = Type.GetType("PureDOTS.Runtime.Camera.CameraRigService, PureDOTS.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
-            if (cameraRigServiceType != null)
-            {
-                var publishMethod = cameraRigServiceType.GetMethod("Publish", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                if (publishMethod != null)
-                {
-                    publishMethod.Invoke(null, new object[] { state });
-                }
-            }
+            // Direct call to CameraRigService - no reflection needed now that duplicates are unified
+            CameraRigService.Publish(state);
         }
 
         /// <summary>
@@ -422,3 +407,4 @@ namespace Godgame
         }
     }
 }
+

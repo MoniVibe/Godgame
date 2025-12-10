@@ -647,6 +647,229 @@ namespace Godgame.Editor.PrefabTool
         }
 
         /// <summary>
+        /// Generate a dry-run report for miracles.
+        /// </summary>
+        public static DryRunReport GenerateDryRunMiracles(
+            List<MiracleTemplate> templates)
+        {
+            var report = new DryRunReport();
+
+            foreach (var template in templates)
+            {
+                var result = new DryRunResult
+                {
+                    prefabName = template.displayName ?? template.name,
+                    prefabPath = $"Assets/Prefabs/Miracles/{template.name}.prefab",
+                    isValid = true
+                };
+
+                // Validate
+                var validation = PrefabValidator.ValidateMiracle(template);
+                result.isValid = validation.IsValid;
+                result.validationErrors.AddRange(validation.Errors);
+                result.validationWarnings.AddRange(validation.Warnings);
+
+                // Check if prefab exists
+                var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(result.prefabPath);
+                if (existingPrefab != null)
+                {
+                    result.wouldCreate = false;
+                    report.wouldSkip++;
+                }
+                else
+                {
+                    result.wouldCreate = true;
+                    report.wouldCreate++;
+                }
+
+                // Collect properties
+                result.properties["manaCost"] = template.manaCost;
+                result.properties["cooldown"] = template.cooldown;
+                result.properties["range"] = template.range;
+                result.properties["effectCount"] = template.effectBlocks?.Count ?? 0;
+
+                result.tags.Add("Miracle");
+
+                // Calculate hashes
+                result.inputHash = CalculateInputHash(new List<MiracleTemplate> { template });
+                result.contentHash = CalculateResultHash(result);
+
+                report.results.Add(result);
+            }
+
+            report.totalPrefabs = templates.Count;
+            report.errors = report.results.Count(r => !r.isValid);
+            report.warnings = report.results.Sum(r => r.validationWarnings.Count);
+            report.categoryCounts["Miracles"] = templates.Count;
+            
+            // Calculate input config hash
+            report.inputConfigHash = CalculateInputHash(templates);
+            
+            // Calculate report hash
+            report.reportHash = CalculateReportHash(report);
+            
+            // Calculate coverage stats
+            report.coverageStats["Miracles"] = new CoverageStats
+            {
+                totalCatalogIds = templates.Count,
+                generatedPrefabs = report.results.Count(r => r.wouldCreate),
+                validPrefabs = report.results.Count(r => r.isValid),
+                invalidPrefabs = report.results.Count(r => !r.isValid),
+                coveragePercent = templates.Count > 0 ? (report.results.Count(r => r.wouldCreate) / (float)templates.Count) * 100f : 0f
+            };
+
+            return report;
+        }
+
+        /// <summary>
+        /// Generate a dry-run report for resource nodes.
+        /// </summary>
+        public static DryRunReport GenerateDryRunResourceNodes(
+            List<ResourceNodeTemplate> templates)
+        {
+            var report = new DryRunReport();
+
+            foreach (var template in templates)
+            {
+                var result = new DryRunResult
+                {
+                    prefabName = template.displayName ?? template.name,
+                    prefabPath = $"Assets/Prefabs/ResourceNodes/{template.name}.prefab",
+                    isValid = true
+                };
+
+                // Validate
+                var validation = PrefabValidator.ValidateResourceNode(template);
+                result.isValid = validation.IsValid;
+                result.validationErrors.AddRange(validation.Errors);
+                result.validationWarnings.AddRange(validation.Warnings);
+
+                // Check if prefab exists
+                var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(result.prefabPath);
+                if (existingPrefab != null)
+                {
+                    result.wouldCreate = false;
+                    report.wouldSkip++;
+                }
+                else
+                {
+                    result.wouldCreate = true;
+                    report.wouldCreate++;
+                }
+
+                // Collect properties
+                result.properties["capacity"] = template.capacity;
+                result.properties["regrowthRate"] = template.regrowthRate;
+                result.properties["resourceTypeIndex"] = template.resourceTypeIndex;
+
+                result.tags.Add("ResourceNode");
+
+                // Calculate hashes
+                result.inputHash = CalculateInputHash(new List<ResourceNodeTemplate> { template });
+                result.contentHash = CalculateResultHash(result);
+
+                report.results.Add(result);
+            }
+
+            report.totalPrefabs = templates.Count;
+            report.errors = report.results.Count(r => !r.isValid);
+            report.warnings = report.results.Sum(r => r.validationWarnings.Count);
+            report.categoryCounts["ResourceNodes"] = templates.Count;
+            
+            // Calculate input config hash
+            report.inputConfigHash = CalculateInputHash(templates);
+            
+            // Calculate report hash
+            report.reportHash = CalculateReportHash(report);
+            
+            // Calculate coverage stats
+            report.coverageStats["ResourceNodes"] = new CoverageStats
+            {
+                totalCatalogIds = templates.Count,
+                generatedPrefabs = report.results.Count(r => r.wouldCreate),
+                validPrefabs = report.results.Count(r => r.isValid),
+                invalidPrefabs = report.results.Count(r => !r.isValid),
+                coveragePercent = templates.Count > 0 ? (report.results.Count(r => r.wouldCreate) / (float)templates.Count) * 100f : 0f
+            };
+
+            return report;
+        }
+
+        /// <summary>
+        /// Generate a dry-run report for containers.
+        /// </summary>
+        public static DryRunReport GenerateDryRunContainers(
+            List<ContainerTemplate> templates)
+        {
+            var report = new DryRunReport();
+
+            foreach (var template in templates)
+            {
+                var result = new DryRunResult
+                {
+                    prefabName = template.displayName ?? template.name,
+                    prefabPath = $"Assets/Prefabs/Containers/{template.name}.prefab",
+                    isValid = true
+                };
+
+                // Validate
+                var validation = PrefabValidator.ValidateContainer(template);
+                result.isValid = validation.IsValid;
+                result.validationErrors.AddRange(validation.Errors);
+                result.validationWarnings.AddRange(validation.Warnings);
+
+                // Check if prefab exists
+                var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(result.prefabPath);
+                if (existingPrefab != null)
+                {
+                    result.wouldCreate = false;
+                    report.wouldSkip++;
+                }
+                else
+                {
+                    result.wouldCreate = true;
+                    report.wouldCreate++;
+                }
+
+                // Collect properties
+                result.properties["capacityUnits"] = template.capacityUnits;
+                result.properties["throughputRate"] = template.throughputRate;
+                result.properties["acceptedPackageClasses"] = string.Join(",", template.acceptedPackageClasses);
+
+                result.tags.Add("Container");
+
+                // Calculate hashes
+                result.inputHash = CalculateInputHash(new List<ContainerTemplate> { template });
+                result.contentHash = CalculateResultHash(result);
+
+                report.results.Add(result);
+            }
+
+            report.totalPrefabs = templates.Count;
+            report.errors = report.results.Count(r => !r.isValid);
+            report.warnings = report.results.Sum(r => r.validationWarnings.Count);
+            report.categoryCounts["Containers"] = templates.Count;
+            
+            // Calculate input config hash
+            report.inputConfigHash = CalculateInputHash(templates);
+            
+            // Calculate report hash
+            report.reportHash = CalculateReportHash(report);
+            
+            // Calculate coverage stats
+            report.coverageStats["Containers"] = new CoverageStats
+            {
+                totalCatalogIds = templates.Count,
+                generatedPrefabs = report.results.Count(r => r.wouldCreate),
+                validPrefabs = report.results.Count(r => r.isValid),
+                invalidPrefabs = report.results.Count(r => !r.isValid),
+                coveragePercent = templates.Count > 0 ? (report.results.Count(r => r.wouldCreate) / (float)templates.Count) * 100f : 0f
+            };
+
+            return report;
+        }
+
+        /// <summary>
         /// Generate a diff summary (what would change).
         /// </summary>
         public static string GenerateDiffSummary(DryRunReport report)

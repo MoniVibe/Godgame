@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26030a407ca68ee4a923e52ff29f1b1b, type: 3}
+  m_Name: GodgameRenderCatalog
+  m_EditorClassIdentifier: Godgame.Gameplay::Godgame.Rendering.Catalog.GodgameRenderCatalogDefinition
+  Entries:
+  - Key: 100
+    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: 31b4cf04eb720dc4f86b7cb6bc71b302, type: 2}
+    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+  - Key: 110
+    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: 6680a21ebabfd0642a0fa258c7101ae8, type: 2}
+    BoundsCenter: {x: 0, y: 0, z: 0}
+    BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
+  - Key: 120
+    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: 31b4cf04eb720dc4f86b7cb6bc71b302, type: 2}
+    BoundsCenter: {x: 0, y: 0, z: 0}
+    BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
+  - Key: 130
+    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: 6680a21ebabfd0642a0fa258c7101ae8, type: 2}
+    BoundsCenter: {x: 0, y: 0, z: 0}
+    BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
+  - Key: 140
+    Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: 6680a21ebabfd0642a0fa258c7101ae8, type: 2}
+    BoundsCenter: {x: 0, y: 0, z: 0}
+    BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
+  - Key: 150
+    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: 31b4cf04eb720dc4f86b7cb6bc71b302, type: 2}
+    BoundsCenter: {x: 0, y: 0, z: 0}
+    BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}

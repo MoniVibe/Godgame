@@ -1,35 +1,27 @@
 #if UNITY_EDITOR
-using Unity.Entities;
+using System;
+using Godgame.Economy;
+using Godgame.Runtime;
+using Godgame.Runtime.Interaction;
 
-// Temporary editor-only placeholders to unblock authoring assembly compilation.
-namespace Godgame.Camera
+// Editor-only helpers that expose real runtime enums to authoring/inspector code.
+// No stub enums or duplicate definitions -- keeps serialization consistent.
+namespace Godgame.Authoring
 {
-    public enum CameraMode
+    public static class ResourceTypeAuthoring
     {
-        Default = 0
+        public static ResourceType[] All => (ResourceType[])Enum.GetValues(typeof(ResourceType));
     }
-}
 
-namespace Godgame.Interaction
-{
-    public struct InteractionTag : IComponentData {}
-
-    public enum HandState : byte
+    public static class HandStateAuthoring
     {
-        Empty = 0,
-        Carrying = 1,
-        Charging = 2,
-        Cooldown = 3
+        public static HandState[] All => (HandState[])Enum.GetValues(typeof(HandState));
     }
-}
 
-namespace Godgame.Resources
-{
-    public enum ResourceType : ushort
+    public static class InteractionTagAuthoring
     {
-        None = 0,
-        Wood = 1,
-        Ore = 2
+        public static InteractionTag Tag => default;
     }
+
 }
 #endif

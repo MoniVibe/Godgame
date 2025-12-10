@@ -618,6 +618,59 @@ namespace Godgame.Editor.PrefabTool
             }
         }
 
+        /// <summary>
+        /// Validates a resource node template.
+        /// </summary>
+        public static ValidationResult ValidateResourceNode(ResourceNodeTemplate template)
+        {
+            var result = new ValidationResult { IsValid = true };
+
+            if (string.IsNullOrEmpty(template.name))
+                result.AddError("Resource node template name is required");
+
+            if (template.id <= 0)
+                result.AddError($"Resource node '{template.name}' has invalid ID: {template.id}");
+
+            if (template.capacity <= 0)
+                result.AddWarning($"Resource node '{template.name}' has zero or negative capacity");
+
+            if (template.regrowthRate < 0)
+                result.AddError($"Resource node '{template.name}' has negative regrowth rate");
+
+            if (template.requiredToolUsage == MaterialUsage.None)
+                result.AddWarning($"Resource node '{template.name}' has no required tool usage");
+
+            return result;
+        }
+
+        /// <summary>
+        /// Validates a container template.
+        /// </summary>
+        public static ValidationResult ValidateContainer(ContainerTemplate template)
+        {
+            var result = new ValidationResult { IsValid = true };
+
+            if (string.IsNullOrEmpty(template.name))
+                result.AddError("Container template name is required");
+
+            if (template.id <= 0)
+                result.AddError($"Container '{template.name}' has invalid ID: {template.id}");
+
+            if (template.capacityUnits <= 0)
+                result.AddWarning($"Container '{template.name}' has zero or negative capacity");
+
+            if (template.acceptedPackageClasses == null || template.acceptedPackageClasses.Count == 0)
+                result.AddWarning($"Container '{template.name}' accepts no package classes");
+
+            if (template.throughputRate <= 0)
+                result.AddWarning($"Container '{template.name}' has zero or negative throughput rate");
+
+            if (template.appliesSpoilage && template.spoilageMultiplier < 0)
+                result.AddError($"Container '{template.name}' has negative spoilage multiplier");
+
+            return result;
+        }
+
 
         /// <summary>
         /// Validates that a prefab asset exists and has required components.

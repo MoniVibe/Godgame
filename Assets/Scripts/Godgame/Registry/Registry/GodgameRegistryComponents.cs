@@ -45,7 +45,7 @@ namespace Godgame.Registry
         public float TotalReserved;
         public ushort PrimaryResourceTypeIndex;
         public uint LastMutationTick;
-        public FixedList32Bytes<GodgameStorehouseResourceSummary> ResourceSummaries;
+        public FixedList64Bytes<GodgameStorehouseResourceSummary> ResourceSummaries;
     }
 
     /// <summary>

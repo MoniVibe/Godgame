@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace Godgame.Presentation
 {
+    /// <summary>
+    /// ScriptableObject registry mapping presentation descriptor keys to prefabs/tints.
+    /// </summary>
     [CreateAssetMenu(fileName = "PresentationRegistry", menuName = "Godgame/Presentation Registry")]
     public sealed class PresentationRegistry : ScriptableObject
     {
@@ -26,8 +29,8 @@ namespace Godgame.Presentation
             public string description;
         }
 
-        [SerializeField] List<Descriptor> descriptors = new();
-        [SerializeField] List<SwappableEntry> m_Entries = new();
+        [SerializeField] private List<Descriptor> descriptors = new();
+        [SerializeField] private List<SwappableEntry> m_Entries = new();
 
         public IEnumerable<string> Keys => descriptors.Select(d => d.descriptorKey)
             .Concat(m_Entries.Select(e => e.key))
@@ -51,3 +54,10 @@ namespace Godgame.Presentation
         }
     }
 }
+
+
+
+
+
+
+

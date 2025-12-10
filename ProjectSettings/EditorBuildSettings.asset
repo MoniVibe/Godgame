@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Godgame_RockTest.unity
     guid: 70e5c9d6d259b964c94b9614001f0778
+  - enabled: 1
+    path: Assets/Scenes/RenderKeyTestSubScene.unity
+    guid: adcc5b151afa11f4c8619ab144fcec60
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

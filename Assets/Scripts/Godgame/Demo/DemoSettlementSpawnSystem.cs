@@ -1,5 +1,6 @@
 using Godgame.Demo;
 using Godgame.Presentation;
+using Godgame.Rendering;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -75,6 +76,21 @@ namespace Godgame.Demo
                 runtimeValue.HousingInstance = InstantiatePrefab(ref ecb, configValue.HousingPrefab, center + OffsetOnCircle(math.PI * 2f / 3f, configValue.BuildingRingRadius));
                 runtimeValue.WorshipInstance = InstantiatePrefab(ref ecb, configValue.WorshipPrefab, center + OffsetOnCircle(math.PI * 4f / 3f, configValue.BuildingRingRadius));
 
+                if (runtimeValue.VillageCenterInstance != Entity.Null)
+                {
+                    ecb.AddComponent(runtimeValue.VillageCenterInstance, new PureDOTS.Rendering.RenderKey
+                    {
+                        ArchetypeId = GodgameRenderKeys.VillageCenter,
+                        LOD = 0
+                    });
+                    ecb.AddComponent(runtimeValue.VillageCenterInstance, new PureDOTS.Rendering.RenderFlags
+                    {
+                        Visible = 1,
+                        ShadowCaster = 1,
+                        HighlightMask = 0
+                    });
+                }
+
                 resources.Clear();
                 var resourceCount = math.max(3, math.min(6, configValue.InitialVillagers));
                 var angleStep = math.PI * 2f / math.max(1, resourceCount);
@@ -95,6 +111,17 @@ namespace Godgame.Demo
                         Settlement = entity,
                         Position = nodePos,
                         Label = label
+                    });
+                    ecb.AddComponent(nodeEntity, new PureDOTS.Rendering.RenderKey
+                    {
+                        ArchetypeId = GodgameRenderKeys.ResourceNode,
+                        LOD = 0
+                    });
+                    ecb.AddComponent(nodeEntity, new PureDOTS.Rendering.RenderFlags
+                    {
+                        Visible = 1,
+                        ShadowCaster = 1,
+                        HighlightMask = 0
                     });
                     resources.Add(new DemoSettlementResource { Node = nodeEntity });
                 }
@@ -145,6 +172,17 @@ namespace Godgame.Demo
                         TaskIconIndex = 0,
                         AnimationState = 0,
                         EffectIntensity = 0f
+                    });
+                    ecb.AddComponent(villager, new PureDOTS.Rendering.RenderKey
+                    {
+                        ArchetypeId = GodgameRenderKeys.Villager,
+                        LOD = 0
+                    });
+                    ecb.AddComponent(villager, new PureDOTS.Rendering.RenderFlags
+                    {
+                        Visible = 1,
+                        ShadowCaster = 1,
+                        HighlightMask = 0
                     });
                 }
 

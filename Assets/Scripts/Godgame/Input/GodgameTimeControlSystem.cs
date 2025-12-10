@@ -35,9 +35,15 @@ namespace Godgame.Input
             var timeState = SystemAPI.GetSingleton<TimeState>();
             _isPaused = timeState.IsPaused;
 
-            // Get RewindState entity to write commands
+            // Get RewindState entity to write commands (safe guard)
             var rewindEntity = SystemAPI.GetSingletonEntity<RewindState>();
-            var commandBuffer = SystemAPI.GetBuffer<TimeControlCommand>(rewindEntity);
+
+            if (!state.EntityManager.HasBuffer<TimeControlCommand>(rewindEntity))
+            {
+                return;
+            }
+
+            var commandBuffer = state.EntityManager.GetBuffer<TimeControlCommand>(rewindEntity);
 
             // Process input and write commands
             // This would read from InputActions or a TimeControlInput component

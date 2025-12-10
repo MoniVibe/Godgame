@@ -1,5 +1,6 @@
 using Godgame.Economy;
 using Godgame.Presentation;
+using Godgame.Rendering;
 using Godgame.Villages;
 using Godgame.Villagers;
 using PureDOTS.Runtime.Registry;
@@ -170,6 +171,17 @@ namespace Godgame.Demo
                     AnimationState = 0,
                     EffectIntensity = 0f
                 });
+                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderKey
+                {
+                    ArchetypeId = GodgameRenderKeys.Villager,
+                    LOD = 0
+                });
+                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
+                {
+                    Visible = 1,
+                    ShadowCaster = 1,
+                    HighlightMask = 0
+                });
             }
 
             ecb.Playback(state.EntityManager);
@@ -200,6 +212,17 @@ namespace Godgame.Demo
                     PhaseTint = GetPhaseColor(village.ValueRO.Phase),
                     InfluenceRadius = village.ValueRO.InfluenceRadius,
                     Intensity = 1f
+                });
+                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderKey
+                {
+                    ArchetypeId = GodgameRenderKeys.VillageCenter,
+                    LOD = 0
+                });
+                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
+                {
+                    Visible = 1,
+                    ShadowCaster = 1,
+                    HighlightMask = 0
                 });
 
                 // Ensure VillageMember buffer exists
@@ -237,6 +260,17 @@ namespace Godgame.Demo
                     ResourceTypeTint = GetResourceTypeColor(resource.ValueRO.Type),
                     QuantityScale = 0.5f + resource.ValueRO.Quantity * 0.01f,
                     IsCarried = 0
+                });
+                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderKey
+                {
+                    ArchetypeId = GodgameRenderKeys.ResourceChunk,
+                    LOD = 0
+                });
+                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
+                {
+                    Visible = 1,
+                    ShadowCaster = 1,
+                    HighlightMask = 0
                 });
             }
 
