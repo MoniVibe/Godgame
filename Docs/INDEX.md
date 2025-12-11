@@ -1,5 +1,6 @@
 # Documentation Index
 
+- **Master orientation**: `../TRI_PROJECT_BRIEFING.md` (TRI baseline, canonical).
 - **Agent entry point**: `AGENTS.md` (workflow + commands), `prompts.md` (current agent split).
 - **Active TODOs**: `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` (main), `Docs/TODO/Phase2_Demo_TODO.md` (demo checklist).
 - **Truth Sources**: `Docs/TruthSources_Inventory.md`, `Docs/TruthSources_Architecture.md`, `Docs/TruthSources_QuickReference.md`.
