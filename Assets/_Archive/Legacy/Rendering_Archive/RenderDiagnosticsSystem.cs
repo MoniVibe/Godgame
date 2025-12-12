@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 #if LEGACY_RENDERING_ARCHIVE_DISABLED
 using Unity.Burst;
 using Unity.Entities;
@@ -110,4 +111,4 @@ namespace Godgame.Debugging
     }
 }
 #endif
-
+#endif

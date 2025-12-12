@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Rendering.Universal;
@@ -31,3 +32,4 @@ public class AutoFixRendererFeature
         }
     }
 }
+#endif

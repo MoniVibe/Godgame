@@ -2,6 +2,7 @@ Listing all ScriptableRendererFeatures:
 - DecalRendererFeature (UnityEngine.Rendering.Universal.DecalRendererFeature) in Unity.RenderPipelines.Universal.Runtime
 - FullScreenPassRendererFeature (UnityEngine.Rendering.Universal.FullScreenPassRendererFeature) in Unity.RenderPipelines.Universal.Runtime
 - FullScreenPassRendererFeature_OldGUID (FullScreenPassRendererFeature_OldGUID) in Unity.RenderPipelines.Universal.Runtime
+- OnTilePostProcessFeature (OnTilePostProcessFeature) in Unity.RenderPipelines.Universal.Runtime
 - RenderObjects (UnityEngine.Rendering.Universal.RenderObjects) in Unity.RenderPipelines.Universal.Runtime
 - ScreenSpaceAmbientOcclusion (UnityEngine.Rendering.Universal.ScreenSpaceAmbientOcclusion) in Unity.RenderPipelines.Universal.Runtime
 - ScreenSpaceShadows (UnityEngine.Rendering.Universal.ScreenSpaceShadows) in Unity.RenderPipelines.Universal.Runtime

@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using UnityEngine;
 using Unity.Entities;
 using PureDOTS.Runtime.Components;
@@ -197,4 +198,4 @@ namespace Godgame.Presentation
         }
     }
 }
-
+#endif

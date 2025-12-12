@@ -48,11 +48,6 @@ namespace Godgame.Registry.Authoring
                 MinEntryCountForPartialRebuild = authoring.profile.MinEntryCountForPartialRebuild
             };
 
-            if (TryPatchExistingSingleton(config, state, thresholds))
-            {
-                return;
-            }
-
             AddComponent(entity, config);
             AddComponent(entity, state);
             AddComponent(entity, thresholds);
@@ -75,59 +70,7 @@ namespace Godgame.Registry.Authoring
             AddComponent(entity, authoring.environmentConfig.ToComponent());
         }
 
-        private static bool TryPatchExistingSingleton(SpatialGridConfig config, SpatialGridState state, SpatialRebuildThresholds thresholds)
-        {
-            var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null || !world.IsCreated)
-            {
-                return false;
-            }
-
-            var entityManager = world.EntityManager;
-            using var query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<SpatialGridConfig>());
-            if (query.IsEmptyIgnoreFilter)
-            {
-                return false;
-            }
-
-            var gridEntity = query.GetSingletonEntity();
-            entityManager.SetComponentData(gridEntity, config);
-
-            if (entityManager.HasComponent<SpatialGridState>(gridEntity))
-            {
-                entityManager.SetComponentData(gridEntity, state);
-            }
-            else
-            {
-                entityManager.AddComponentData(gridEntity, state);
-            }
-
-            EnsureBuffer<SpatialGridCellRange>(entityManager, gridEntity);
-            EnsureBuffer<SpatialGridEntry>(entityManager, gridEntity);
-            EnsureBuffer<SpatialGridStagingEntry>(entityManager, gridEntity);
-            EnsureBuffer<SpatialGridStagingCellRange>(entityManager, gridEntity);
-            EnsureBuffer<SpatialGridEntryLookup>(entityManager, gridEntity);
-            EnsureBuffer<SpatialGridDirtyOp>(entityManager, gridEntity);
-
-            if (entityManager.HasComponent<SpatialRebuildThresholds>(gridEntity))
-            {
-                entityManager.SetComponentData(gridEntity, thresholds);
-            }
-            else
-            {
-                entityManager.AddComponentData(gridEntity, thresholds);
-            }
-
-            return true;
-        }
-
-        private static void EnsureBuffer<T>(EntityManager entityManager, Entity entity) where T : unmanaged, IBufferElementData
-        {
-            if (!entityManager.HasBuffer<T>(entity))
-            {
-                entityManager.AddBuffer<T>(entity);
-            }
-        }
+        // Removed TryPatchExistingSingleton and EnsureBuffer to avoid accessing World.DefaultGameObjectInjectionWorld from Baker.
 
         private static SpatialGridState CreateDefaultState()
         {

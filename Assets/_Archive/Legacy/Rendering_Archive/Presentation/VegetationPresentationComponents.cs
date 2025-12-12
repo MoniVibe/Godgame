@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using PureDOTS.Environment;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -44,3 +45,4 @@ namespace Godgame.Presentation
         public float4 BiomeTint;
     }
 }
+#endif

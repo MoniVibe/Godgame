@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Environment.Vegetation;
 using Godgame.Presentation.Bindings;
 using PureDOTS.Systems;
@@ -98,4 +99,4 @@ namespace Godgame.Presentation.Bindings
         }
     }
 }
-
+#endif

@@ -22,7 +22,7 @@ namespace Godgame.Systems.Interaction
     /// Implements state machine: Empty → AboutToPick → Holding
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(PhysicsPostEventSystemGroup))]
+    // Removed invalid UpdateAfter: PhysicsPostEventSystemGroup lives in FixedStep; cross-group ordering handled by adapter systems.
     public partial struct GodgamePickupSystem : ISystem
     {
         private ComponentLookup<Pickable> _pickableLookup;
@@ -284,4 +284,3 @@ namespace Godgame.Systems.Interaction
         }
     }
 }
-

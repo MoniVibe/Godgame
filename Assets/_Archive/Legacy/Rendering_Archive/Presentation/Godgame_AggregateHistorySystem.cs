@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Economy;
 using Godgame.Villages;
 using PureDOTS.Runtime.Components;
@@ -137,4 +138,4 @@ namespace Godgame.Presentation
         }
     }
 }
-
+#endif

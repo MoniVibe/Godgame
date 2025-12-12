@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,3 +15,4 @@ namespace Godgame.Presentation
         public IReadOnlyList<string> ActiveTags => m_ActiveTags;
     }
 }
+#endif

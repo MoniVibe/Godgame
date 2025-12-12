@@ -14,7 +14,7 @@ namespace Godgame.Modules
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(CoreSingletonBootstrapSystem))]
+    // Removed invalid UpdateAfter: CoreSingletonBootstrapSystem runs in TimeSystemGroup; cross-group ordering isn't supported.
     public partial struct ModuleDegradationSystem : ISystem
     {
         private EntityQuery _moduleQuery;

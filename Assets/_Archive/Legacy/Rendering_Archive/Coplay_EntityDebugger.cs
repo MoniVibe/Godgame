@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
@@ -79,3 +80,4 @@ namespace Godgame.Debugging
         }
     }
 }
+#endif

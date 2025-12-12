@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 namespace Godgame.Presentation
 {
     /// <summary>
@@ -28,4 +29,4 @@ namespace Godgame.Presentation
         Prosperous,
     }
 }
-
+#endif

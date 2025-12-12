@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -15,4 +16,5 @@ static class RenderDiagEarly
         Debug.Log($"[RenderDiagEarly] SRP:{name} API:{SystemInfo.graphicsDeviceType} Compute:{SystemInfo.supportsComputeShaders}");
     }
 }
+#endif
 #endif

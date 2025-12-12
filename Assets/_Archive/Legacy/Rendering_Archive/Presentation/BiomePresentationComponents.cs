@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using PureDOTS.Environment;
 using Unity.Entities;
 
@@ -18,4 +19,4 @@ namespace Godgame.Presentation
         public float AverageMoisture;
     }
 }
-
+#endif

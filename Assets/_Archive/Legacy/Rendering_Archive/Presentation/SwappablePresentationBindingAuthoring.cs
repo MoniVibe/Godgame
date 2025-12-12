@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Miracles.Presentation;
 using Unity.Collections;
 using Unity.Entities;
@@ -26,3 +27,4 @@ namespace Godgame.Presentation.Authoring
         }
     }
 }
+#endif

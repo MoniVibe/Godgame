@@ -412,7 +412,6 @@ namespace Godgame.Editor.PrefabTool
             {
                 bool hasChannelEffect = false;
                 bool hasImpactEffect = false;
-                bool hasLingeringEffect = false;
 
                 for (int i = 0; i < template.effectBlocks.Count; i++)
                 {
@@ -442,7 +441,6 @@ namespace Godgame.Editor.PrefabTool
                     }
                     else if (block.phase == MiracleEffectPhase.Lingering)
                     {
-                        hasLingeringEffect = true;
                         if (block.duration <= 0)
                         {
                             result.AddWarning($"Miracle '{template.name}': Effect block '{block.effectName}' is Lingering but has zero duration");
@@ -703,4 +701,3 @@ namespace Godgame.Editor.PrefabTool
         }
     }
 }
-

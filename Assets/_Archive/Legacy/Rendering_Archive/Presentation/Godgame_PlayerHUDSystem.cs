@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Demo;
 using Godgame.Villages;
 using Godgame.Villagers;
@@ -84,4 +85,4 @@ namespace Godgame.Presentation
         }
     }
 }
-
+#endif

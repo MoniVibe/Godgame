@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 #if LEGACY_RENDERING_ARCHIVE_DISABLED
 using Godgame.Presentation;
 using PureDOTS.Demo.Rendering;
@@ -84,4 +85,5 @@ namespace Godgame.Demo
         }
     }
 }
+#endif
 #endif

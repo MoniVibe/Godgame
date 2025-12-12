@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Miracles;
 using Godgame.Villages;
 using Unity.Burst;
@@ -142,4 +143,4 @@ namespace Godgame.Presentation
         }
     }
 }
-
+#endif

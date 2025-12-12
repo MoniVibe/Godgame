@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 #if LEGACY_RENDERING_ARCHIVE_DISABLED
 using Unity.Entities;
 using Unity.Rendering;
@@ -106,4 +107,5 @@ namespace Godgame.Demo
         }
     }
 }
+#endif
 #endif

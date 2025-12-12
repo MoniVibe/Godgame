@@ -23,7 +23,9 @@ namespace Godgame.Performance
 
         private int _frameCounter;
         private StreamWriter _writer;
+#if GODGAME_LEGACY_DEBUG && UNITY_EDITOR
         private bool _headerWritten;
+#endif
 
         private void Start()
         {
@@ -43,7 +45,9 @@ namespace Godgame.Performance
 
             // Open file for writing
             _writer = new StreamWriter(OutputPath, append: true);
+#if GODGAME_LEGACY_DEBUG
             _headerWritten = false;
+#endif
             _frameCounter = 0;
 #endif
         }
@@ -76,6 +80,7 @@ namespace Godgame.Performance
             if (!_headerWritten)
             {
                 _writer.WriteLine("Frame,FrameTimeMs,GCAllocKB,DrawCalls,Batches");
+                _writer.Flush();
                 _headerWritten = true;
             }
 
@@ -113,4 +118,3 @@ namespace Godgame.Performance
         }
     }
 }
-

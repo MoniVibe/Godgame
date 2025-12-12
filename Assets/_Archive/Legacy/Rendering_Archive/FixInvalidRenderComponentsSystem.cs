@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Unity.Entities;
 
 namespace Godgame.Demo
@@ -24,3 +25,4 @@ namespace Godgame.Demo
         public void OnDestroy(ref SystemState state) { }
     }
 }
+#endif

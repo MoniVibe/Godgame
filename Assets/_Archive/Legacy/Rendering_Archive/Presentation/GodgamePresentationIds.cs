@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using PureDOTS.Runtime.Components;
 using Unity.Collections;
 
@@ -19,3 +20,4 @@ namespace Godgame.Presentation
         public static readonly PresentationStyleOverride HandAffordanceStyle = default;
     }
 }
+#endif

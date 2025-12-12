@@ -13,8 +13,7 @@ namespace Godgame.Features.Planets
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(PlanetAppealSystem))]
-    [UpdateAfter(typeof(SpeciesPreferenceMatchingSystem))]
+    // Removed invalid UpdateAfter attributes: PlanetAppealSystem and SpeciesPreferenceMatchingSystem run in SpaceSystemGroup, so cross-group ordering is not supported.
     public partial struct GodgamePlanetSystem : ISystem
     {
         [BurstCompile]

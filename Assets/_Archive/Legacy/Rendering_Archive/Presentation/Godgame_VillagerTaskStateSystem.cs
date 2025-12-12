@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.AI;
 using Godgame.Miracles;
 using Godgame.Villagers;
@@ -157,4 +158,4 @@ namespace Godgame.Presentation
         }
     }
 }
-
+#endif

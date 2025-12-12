@@ -164,6 +164,11 @@ namespace Godgame.Runtime
         public int GuildId;
     }
 
+    public struct InterceptState : IComponentData
+    {
+        public byte Active;
+    }
+
     public struct WorkshopRecipeHandle : IComponentData
     {
         public int RecipeId;

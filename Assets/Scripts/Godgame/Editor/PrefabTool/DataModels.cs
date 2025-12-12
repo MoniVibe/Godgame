@@ -1386,7 +1386,6 @@ namespace Godgame.Editor.PrefabTool
         // Quality derivation
         public QualityDerivation qualityDerivation = new QualityDerivation();
         public float baseQuality = 50f;
-        public float calculatedQuality;
         
         // Material attributes (added by skilled craftsmen)
         public List<MaterialAttribute> possibleAttributes = new List<MaterialAttribute>(); // Attributes that can be added
@@ -1415,7 +1414,7 @@ namespace Godgame.Editor.PrefabTool
     public class ReagentTemplate : PrefabTemplate
     {
         public float potency = 50f; // 0-100
-        public float rarity = 0f;
+        public float rarityScore = 0f;
         public Dictionary<string, float> effects = new Dictionary<string, float>();
         
         // Production facilities

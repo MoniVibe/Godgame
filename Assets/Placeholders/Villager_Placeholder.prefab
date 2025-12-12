@@ -91,7 +91,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -113,6 +113,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &2600621119933101877
 MonoBehaviour:
@@ -134,3 +135,40 @@ MonoBehaviour:
     x: 0
     y: 0
     z: 0
+  vengefulScore: 0
+  boldScore: 0
+  isUndead: 0
+  isSummoned: 0
+  physique: 50
+  finesse: 50
+  will: 50
+  wisdom: 50
+  strength: 50
+  agility: 50
+  intelligence: 50
+  fame: 0
+  wealth: 0
+  reputation: 0
+  glory: 0
+  renown: 0
+  baseAttack: 0
+  baseDefense: 0
+  baseHealthOverride: 0
+  baseHealth: 100
+  baseStamina: 10
+  baseMana: 0
+  food: 100
+  rest: 100
+  sleep: 100
+  generalHealth: 100
+  physicalResistance: 0
+  fireResistance: 0
+  coldResistance: 0
+  poisonResistance: 0
+  magicResistance: 0
+  lightningResistance: 0
+  holyResistance: 0
+  darkResistance: 0
+  healBonus: 1
+  spellDurationModifier: 1
+  spellIntensityModifier: 1

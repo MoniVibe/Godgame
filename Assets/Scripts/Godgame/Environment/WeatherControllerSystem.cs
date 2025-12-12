@@ -16,7 +16,7 @@ namespace Godgame.Environment
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(EnvironmentSystemGroup))]
-    [UpdateAfter(typeof(ClimateStateUpdateSystem))]
+    [UpdateAfter(typeof(PureDOTS.Systems.Environment.ClimateStateUpdateSystem))]
     public partial struct WeatherControllerSystem : ISystem
     {
         private EntityQuery _groundQuery;

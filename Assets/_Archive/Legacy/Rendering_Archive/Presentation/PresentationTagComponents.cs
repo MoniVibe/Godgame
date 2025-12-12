@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Unity.Entities;
 
 namespace Godgame.Presentation
@@ -154,3 +155,4 @@ namespace Godgame.Presentation
     }
 
 }
+#endif

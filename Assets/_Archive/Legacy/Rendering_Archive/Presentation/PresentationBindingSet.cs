@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using UnityEngine;
 using System;
 
@@ -18,3 +19,4 @@ namespace Godgame.Presentation
         public ParticleSystem VFX;      // Optional VFX
     }
 }
+#endif

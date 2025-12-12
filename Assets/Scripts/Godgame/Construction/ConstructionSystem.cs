@@ -17,7 +17,7 @@ namespace Godgame.Construction
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [UpdateAfter(typeof(JobsitePlacementSystem))]
+    // Removed invalid UpdateAfter: JobsitePlacementSystem runs in ConstructionSystemGroup; cross-group ordering must be handled via group composition.
     public partial struct ConstructionSystem : ISystem
     {
         private ComponentLookup<StorehouseInventory> _storehouseLookup;

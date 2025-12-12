@@ -20,7 +20,7 @@ namespace Godgame.Miracles
     /// Also handles direct miracle spawning when no DivineHand system is active.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateBefore(typeof(GodgameMiracleInputSystem))]
+    // Removed invalid UpdateBefore: GodgameMiracleInputSystem runs in HandSystemGroup; cross-group ordering must be configured at group level.
     public partial struct Godgame_MiracleInputBridgeSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -346,4 +346,3 @@ namespace Godgame.Miracles
         }
     }
 }
-

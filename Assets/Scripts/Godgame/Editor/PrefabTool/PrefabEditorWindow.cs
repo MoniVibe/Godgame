@@ -30,15 +30,6 @@ namespace Godgame.Editor.PrefabTool
         private PrefabTemplate selectedTemplate = null; // Currently editing template
         private string searchFilter = "";
         
-        // Bulk edit state
-        private bool bulkEditMode = false;
-        private HashSet<int> selectedTemplateIds = new HashSet<int>();
-        
-        // Filter state
-        private Rarity? filterRarity = null; // null = no filter
-        private byte filterTechTier = 255; // 255 = no filter
-        private string filterCategory = "";
-
         [MenuItem("Godgame/Prefab Editor")]
         public static void ShowWindow()
         {
@@ -505,7 +496,7 @@ namespace Godgame.Editor.PrefabTool
 
                 EditorGUILayout.LabelField(template.displayName ?? template.name, GUILayout.Width(200));
                 EditorGUILayout.LabelField($"Potency: {template.potency:F1}", GUILayout.Width(100));
-                EditorGUILayout.LabelField($"Rarity: {template.rarity:F1}", GUILayout.Width(100));
+                EditorGUILayout.LabelField($"Rarity Score: {template.rarityScore:F1}", GUILayout.Width(130));
 
                 if (GUILayout.Button("Edit", GUILayout.Width(60)))
                 {
@@ -1377,7 +1368,7 @@ namespace Godgame.Editor.PrefabTool
             // Reagent properties
             EditorGUILayout.LabelField("Reagent Properties", EditorStyles.boldLabel);
             template.potency = EditorGUILayout.Slider("Potency", template.potency, 0f, 100f);
-            template.rarity = EditorGUILayout.FloatField("Rarity", template.rarity);
+            template.rarityScore = EditorGUILayout.FloatField("Rarity Score", template.rarityScore);
             
             EditorGUILayout.Space();
             
@@ -1984,7 +1975,7 @@ namespace Godgame.Editor.PrefabTool
                 displayName = "Common Herb",
                 id = 5001,
                 potency = 30f,
-                rarity = 10f
+                rarityScore = 10f
             });
 
             // Miracles

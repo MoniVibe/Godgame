@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Environment.Vegetation;
 using Unity.Collections;
 using Unity.Entities;
@@ -47,4 +48,4 @@ namespace Godgame.Presentation.Bindings
         public byte IsDirty;        // Flag to trigger update
     }
 }
-
+#endif

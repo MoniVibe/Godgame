@@ -32,6 +32,7 @@ MonoBehaviour:
     maxTicksPerSecond: 120
     strideScale: 1
   _resourceTypes: {fileID: 11400000, guid: b5784866c4f231642baa96d52e36c724, type: 2}
+  _recipeCatalog: {fileID: 11400000, guid: 9740bba0d05c0984ea86476ccb47e7fa, type: 2}
   _pooling:
     nativeListCapacity: 64
     nativeQueueCapacity: 64

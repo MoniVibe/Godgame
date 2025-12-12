@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 #if LEGACY_RENDERING_ARCHIVE_DISABLED
 using Godgame.Economy;
 using Godgame.Input;
@@ -477,4 +478,5 @@ namespace Godgame.Demo
         }
     }
 }
+#endif
 #endif

@@ -14,7 +14,7 @@ namespace Godgame.Editor
     public static class GodgameRegistrySubSceneWizard
     {
         private const string ScenesFolder = "Assets/Scenes";
-        private const string SettingsFolder = "Assets/Settings";
+        private const string SettingsFolder = "Assets/Godgame/Config";
         private const string ScenePath = ScenesFolder + "/GodgameRegistrySubScene.unity";
 
         [MenuItem("Tools/Godgame/Create Registry SubScene...", priority = 10)]

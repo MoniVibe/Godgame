@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using UnityEngine;
 
 namespace Godgame.Presentation
@@ -14,3 +15,4 @@ namespace Godgame.Presentation
         public PresentationTheme ThemeOverride => themeOverride;
     }
 }
+#endif

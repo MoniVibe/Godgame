@@ -1,13 +1,18 @@
 // [TRI-STUB] This is an ahead-of-time stub. Safe to compile, does nothing at runtime.
+using PureDOTS.Runtime.Behavior;
 using PureDOTS.Runtime.Combat;
 using PureDOTS.Runtime.Diplomacy;
 using PureDOTS.Runtime.Economy;
+using PureDOTS.Runtime.Communication;
+using PureDOTS.Runtime.Trade;
 using PureDOTS.Runtime.Navigation;
 using PureDOTS.Runtime.Telemetry;
 using PureDOTS.Runtime.Narrative;
 using PureDOTS.Runtime.Persistence;
 using PureDOTS.Runtime.Sensors;
 using PureDOTS.Runtime.TimeControl;
+using PureDOTS.Runtime.Motivation;
+using PureDOTS.Runtime.Decision;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -86,6 +91,66 @@ namespace Godgame.Stubs
         public static SnapshotHandle RequestSave(ref SystemState state)
         {
             return SaveLoadServiceStub.RequestSave(ref state);
+        }
+    }
+
+    public static class GodgameBehaviorBridgeStub
+    {
+        public static void ApplyProfile(EntityManager manager, Entity entity, int profileId, float modifier = 0f)
+        {
+            BehaviorService.ApplyProfile(manager, entity, profileId, modifier);
+        }
+
+        public static void RegisterNeed(EntityManager manager, Entity entity, byte needType, float initialSatisfaction = 1f)
+        {
+            BehaviorService.RegisterNeed(manager, entity, needType, initialSatisfaction);
+        }
+
+        public static void ReportNeedDelta(EntityManager manager, Entity entity, float delta)
+        {
+            BehaviorService.ReportSatisfaction(manager, entity, delta);
+        }
+    }
+
+    public static class GodgameDecisionBridgeStub
+    {
+        public static void EnsureTicket(EntityManager manager, Entity entity)
+        {
+            DecisionServiceStub.EnsureTicket(manager, entity);
+        }
+    }
+
+    public static class GodgameAmbitionBridgeStub
+    {
+        public static void RegisterAmbition(EntityManager manager, Entity entity, int ambitionId, byte priority)
+        {
+            AmbitionServiceStub.RegisterAmbition(manager, entity, ambitionId, priority);
+        }
+
+        public static void QueueDesire(EntityManager manager, Entity entity, int desireId, byte priority)
+        {
+            AmbitionServiceStub.QueueDesire(manager, entity, desireId, priority);
+        }
+    }
+
+    public static class GodgameCommunicationBridgeStub
+    {
+        public static void RegisterChannel(EntityManager manager, Entity entity, int channelId, float latencySeconds)
+        {
+            CommunicationServiceStub.RegisterChannel(manager, entity, channelId, latencySeconds);
+        }
+
+        public static void ReportDisruption(EntityManager manager, Entity entity, float severity, float recoveryRate)
+        {
+            CommunicationServiceStub.ReportDisruption(manager, entity, severity, recoveryRate);
+        }
+    }
+
+    public static class GodgameTradeBridgeStub
+    {
+        public static void SetTradeIntent(EntityManager manager, Entity entity, int targetEntityId, byte action)
+        {
+            TradeServiceStub.SetTradeIntent(manager, entity, targetEntityId, action);
         }
     }
 }

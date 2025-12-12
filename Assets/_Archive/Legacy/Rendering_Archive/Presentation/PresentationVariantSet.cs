@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -33,3 +34,4 @@ namespace Godgame.Presentation
         public IReadOnlyList<Variant> Variants => m_Variants;
     }
 }
+#endif

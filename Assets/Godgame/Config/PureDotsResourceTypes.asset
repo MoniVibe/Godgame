@@ -9,18 +9,26 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb942c4632d7412fba32e94bf19667fd, type: 3}
-  m_Name: GodgameResourceTypes
-  m_EditorClassIdentifier: 
+  m_Script: {fileID: 0}
+  m_Name: PureDotsResourceTypes
+  m_EditorClassIdentifier: PureDOTS.Authoring:PureDOTS.Authoring:ResourceTypeCatalog
   _schemaVersion: 1
   entries:
   - id: wood
     displayColor: {r: 0.643, g: 0.404, b: 0.247, a: 1}
+  - id: timber
+    displayColor: {r: 0.74, g: 0.51, b: 0.25, a: 1}
   - id: stone
     displayColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  - id: cut_stone
+    displayColor: {r: 0.62, g: 0.62, b: 0.62, a: 1}
   - id: food
     displayColor: {r: 0.941, g: 0.745, b: 0.196, a: 1}
+  - id: preserved_food
+    displayColor: {r: 0.9, g: 0.52, b: 0.25, a: 1}
   - id: tools
     displayColor: {r: 0.772, g: 0.792, b: 0.82, a: 1}
+  - id: blessed_tools
+    displayColor: {r: 0.95, g: 0.93, b: 0.6, a: 1}
   - id: mana
     displayColor: {r: 0.321, g: 0.537, b: 0.976, a: 1}

@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Presentation;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Presentation;
@@ -123,3 +124,4 @@ namespace Godgame.Presentation
         }
     }
 }
+#endif

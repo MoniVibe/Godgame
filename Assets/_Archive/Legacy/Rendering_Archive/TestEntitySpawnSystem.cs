@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 #if false
 // DISABLED: Depends on DemoRenderUtil which modifies MaterialMeshInfo and can cause batch index -1 errors
 // TODO: Rewrite for URP + Entities Graphics 1.4 with correct APIs
@@ -37,4 +38,5 @@ namespace Godgame.Demo
         }
     }
 }
+#endif
 #endif

@@ -10,7 +10,7 @@ namespace Godgame.Villagers
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(VillagerStatInitializationSystem))]
+    // Removed invalid UpdateAfter: VillagerStatInitializationSystem runs in InitializationSystemGroup; cross-group ordering must be handled at group level.
     public partial struct VillagerStatCalculationSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

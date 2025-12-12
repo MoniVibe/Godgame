@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Demo;
 using PureDOTS.Environment;
 using PureDOTS.Runtime.Camera;
@@ -112,4 +113,4 @@ namespace Godgame.Presentation
         }
     }
 }
-
+#endif

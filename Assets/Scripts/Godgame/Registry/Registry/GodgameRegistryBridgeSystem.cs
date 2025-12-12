@@ -19,7 +19,7 @@ namespace Godgame.Registry
     /// Bridges Godgame authored entities into the shared PureDOTS villager and storehouse registries.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(RegistrySpatialSyncSystem))]
+    // Removed invalid UpdateAfter: RegistrySpatialSyncSystem lives in SpatialSystemGroup, so ordering must be handled at group composition.
     public partial struct GodgameRegistryBridgeSystem : ISystem
     {
         private EntityQuery _villagerQuery;

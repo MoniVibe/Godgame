@@ -1,3 +1,4 @@
+#if LEGACY_PRESENTATION_ARCHIVE_ENABLED
 using Godgame.Economy;
 using Moni.Godgame.CameraSystems;
 using Unity.Burst;
@@ -169,4 +170,4 @@ namespace Godgame.Presentation
         }
     }
 }
-
+#endif

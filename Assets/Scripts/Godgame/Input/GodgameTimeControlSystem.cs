@@ -34,6 +34,7 @@ namespace Godgame.Input
             // Read TimeState for current state
             var timeState = SystemAPI.GetSingleton<TimeState>();
             _isPaused = timeState.IsPaused;
+            _currentSpeed = timeState.CurrentSpeedMultiplier;
 
             // Get RewindState entity to write commands (safe guard)
             var rewindEntity = SystemAPI.GetSingletonEntity<RewindState>();
@@ -56,7 +57,9 @@ namespace Godgame.Input
             // 1. InputActions for time controls (Space, Tab, Shift+Tab, Period)
             // 2. GodgameInputReader extension to read time control inputs
             // 3. Write commands to buffer based on input state
+#if UNITY_EDITOR
+            UnityEngine.Debug.Log($"[GodgameTimeControl] paused={_isPaused} speed={_currentSpeed}");
+#endif
         }
     }
 }
-
