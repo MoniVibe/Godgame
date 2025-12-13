@@ -1,6 +1,7 @@
 using PureDOTS.Runtime;
 using PureDOTS.Runtime.Physics;
 using Unity.Entities;
+using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
@@ -87,6 +88,15 @@ namespace Godgame.Demo
                 CurrentAmount = ResourceAmount,
                 MaxAmount = ResourceAmount,
                 RegenPerSecond = 0f
+            });
+
+            // Add ResourceSourceConfig for ResourceRegistrySystem
+            em.AddComponentData(rockEntity, new Godgame.Resources.ResourceSourceConfig
+            {
+                ResourceTypeId = new FixedString64Bytes("stone"),
+                Amount = ResourceAmount,
+                MaxAmount = ResourceAmount,
+                RegenRate = 0f
             });
 
             // Add MaterialStats (rock defaults)

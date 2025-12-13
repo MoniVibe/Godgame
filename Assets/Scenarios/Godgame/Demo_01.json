@@ -1,0 +1,23 @@
+{
+  "name": "Villager Loop Small",
+  "description": "A small scenario demonstrating the villager gather/deliver loop.",
+  "entities": [
+    {
+      "prefab": "Villager",
+      "count": 5,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 10
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": 0 }
+    },
+    {
+      "prefab": "Tree",
+      "count": 20,
+      "position": { "x": 15, "y": 0, "z": 0 },
+      "radius": 10
+    }
+  ]
+}

@@ -3,6 +3,7 @@ using global::Godgame.Registry;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Spatial;
 using PureDOTS.Runtime.Registry;
+using Godgame.Resources;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;

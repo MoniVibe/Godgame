@@ -1,7 +1,5 @@
 {
   "dependencies": {
-    "com.coplaydev.coplay": "https://github.com/CoplayDev/coplay-unity-plugin.git#beta",
-    "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity",
     "com.moni.bakings.presentation": "file:Packages/com.moni.bakings.presentation",
     "com.moni.puredots": "file:../../PureDOTS/Packages/com.moni.puredots",
     "com.unity.ai.assistant": "1.0.0-pre.12",

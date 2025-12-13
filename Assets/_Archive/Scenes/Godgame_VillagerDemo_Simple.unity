@@ -207,7 +207,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 162019422}
-  - component: {fileID: 162019423}
   - component: {fileID: 162019424}
   m_Layer: 0
   m_Name: CameraRig
@@ -231,28 +230,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &162019423
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 162019421}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1d08a39fdb74e2282f9b2a2c048ef82, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Controls.GodgameCameraInputBehaviour
-  targetCamera: {fileID: 2105859856}
-  inputActions: {fileID: -944628639613478452, guid: 3cb2e11f79d1411c9c2252a87dc3943e, type: 3}
-  actionMapName: HandCamera
-  logInputEachFrame: 0
-  panSpeed: 0.1
-  zoomSpeed: 8
-  minDistance: 4
-  maxDistance: 120
-  defaultFocus: {x: 0, y: 0, z: 0}
-  enableMovement: 0
 --- !u!114 &162019424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -973,6 +950,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &579716744
 MeshFilter:
@@ -1707,9 +1685,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1590053939}
-  - component: {fileID: 1590053940}
-  - component: {fileID: 1590053941}
-  - component: {fileID: 1590053942}
   m_Layer: 0
   m_Name: PureDOTS Bootstrap
   m_TagString: Untagged
@@ -1732,44 +1707,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1590053940
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590053938}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fc159f6db332f24db1435fcd335cecc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::PureDOTS.Authoring.PureDotsConfigAuthoring
-  config: {fileID: 0}
---- !u!114 &1590053941
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590053938}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e7bea503fa180dc4ead1b9350b601dca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::PureDOTS.Authoring.SpatialPartitionAuthoring
-  profile: {fileID: 11400000, guid: 5d3ea190de18d4e4bb65353723dbbd74, type: 2}
---- !u!114 &1590053942
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590053938}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba040dd2650a19342b9f746f53bc6784, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Authoring.GodgameSampleRegistryAuthoring
 --- !u!1 &1695698321
 GameObject:
   m_ObjectHideFlags: 0
@@ -1931,14 +1868,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1723622311}
   m_Enabled: 1
-  serializedVersion: 11
+  serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 0
     m_Resolution: -1

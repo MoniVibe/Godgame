@@ -31,6 +31,7 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
             if (urpShader != null)
             {
                 urpLit = new Material(urpShader);
+                urpLit.enableInstancing = true;
             }
         }
 
@@ -66,6 +67,7 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
                 var prim = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 if (fallbackPrimitive == "Sphere") prim = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 else if (fallbackPrimitive == "Capsule") prim = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                else if (fallbackPrimitive == "Cylinder") prim = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 
                 mesh = prim.GetComponent<MeshFilter>().sharedMesh;
                 if (material == null) material = urpLit != null ? urpLit : prim.GetComponent<MeshRenderer>().sharedMaterial;

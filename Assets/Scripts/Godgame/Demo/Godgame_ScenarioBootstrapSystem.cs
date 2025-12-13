@@ -21,10 +21,14 @@ namespace Godgame.Demo
     public partial struct Godgame_ScenarioBootstrapSystem : ISystem
     {
         private bool _initialized;
+        private EntityQuery _demoConfigQuery;
+        private EntityQuery _presentationConfigQuery;
 
         public void OnCreate(ref SystemState state)
         {
             _initialized = false;
+            _demoConfigQuery = state.GetEntityQuery(ComponentType.ReadOnly<DemoConfigBlobReference>());
+            _presentationConfigQuery = state.GetEntityQuery(ComponentType.ReadOnly<PresentationConfig>());
         }
 
         public void OnUpdate(ref SystemState state)
@@ -58,10 +62,9 @@ namespace Godgame.Demo
 
         private DemoScenarioMode GetScenarioMode(ref SystemState state)
         {
-            var query = state.GetEntityQuery(typeof(DemoConfigBlobReference));
-            if (!query.IsEmpty)
+            if (!_demoConfigQuery.IsEmptyIgnoreFilter)
             {
-                var blobRef = query.GetSingleton<DemoConfigBlobReference>();
+                var blobRef = _demoConfigQuery.GetSingleton<DemoConfigBlobReference>();
                 if (blobRef.Config.IsCreated)
                 {
                     return blobRef.Config.Value.Mode;
@@ -73,8 +76,7 @@ namespace Godgame.Demo
 
         private void EnsurePresentationConfig(ref SystemState state)
         {
-            var query = state.GetEntityQuery(typeof(PresentationConfig));
-            if (!query.IsEmpty)
+            if (!_presentationConfigQuery.IsEmptyIgnoreFilter)
             {
                 return;
             }
@@ -101,14 +103,12 @@ namespace Godgame.Demo
 
         private void AdjustPresentationConfigForScenario(ref SystemState state, DemoScenarioMode mode)
         {
-            var query = state.GetEntityQuery(typeof(PresentationConfig));
-            if (query.IsEmpty)
+            if (_presentationConfigQuery.IsEmptyIgnoreFilter)
             {
                 return;
             }
 
-            var config = query.GetSingleton<PresentationConfig>();
-            ref var configRef = ref query.GetSingletonRW<PresentationConfig>().ValueRW;
+            ref var configRef = ref _presentationConfigQuery.GetSingletonRW<PresentationConfig>().ValueRW;
 
             // Adjust LOD distances and density based on scenario scale
             switch (mode)
@@ -311,4 +311,3 @@ namespace Godgame.Demo
         }
     }
 }
-

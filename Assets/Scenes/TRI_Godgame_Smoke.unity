@@ -207,8 +207,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 162019422}
-  - component: {fileID: 162019424}
-  - component: {fileID: 162019425}
   m_Layer: 0
   m_Name: CameraRig
   m_TagString: Untagged
@@ -231,33 +229,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &162019424
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 162019421}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e0a05601dece2514fb2f8f70898b4a03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.GodgameCameraController
---- !u!114 &162019425
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 162019421}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c733f4bc17cc06d4eba841bae3a48805, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Input.GodgameInputReader
-  inputActions: {fileID: 0}
-  selectedMiracleSlot: 0
-  logInputEachFrame: 1
 --- !u!1 &216913527
 GameObject:
   m_ObjectHideFlags: 0
@@ -923,17 +894,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 688591439}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
+  m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.StandaloneInputModule
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.UI.InputSystemUIInputModule
   m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
+  m_MoveRepeatDelay: 0.5
+  m_MoveRepeatRate: 0.1
+  m_XRTrackingOrigin: {fileID: 0}
+  m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_PointAction: {fileID: -1654692200621890270, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MoveAction: {fileID: -8784545083839296357, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_SubmitAction: {fileID: 392368643174621059, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_CancelAction: {fileID: 7727032971491509709, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_LeftClickAction: {fileID: 3001919216989983466, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MiddleClickAction: {fileID: -2185481485913320682, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_RightClickAction: {fileID: -4090225696740746782, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_ScrollWheelAction: {fileID: 6240969308177333660, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDevicePositionAction: {fileID: 6564999863303420839, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDeviceOrientationAction: {fileID: 7970375526676320489, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_DeselectOnBackgroundClick: 1
+  m_PointerBehavior: 0
+  m_CursorLockBehavior: 0
+  m_ScrollDeltaPerTick: 6
 --- !u!1 &842526786
 GameObject:
   m_ObjectHideFlags: 0
@@ -1062,10 +1044,10 @@ MonoBehaviour:
   AutoLoadScene: 1
   _SceneGUID:
     Value:
-      x: 734773465
-      y: 1168544414
-      z: 42270111
-      w: 1493459349
+      x: 0
+      y: 0
+      z: 0
+      w: 0
 --- !u!1 &1022963610
 GameObject:
   m_ObjectHideFlags: 0
@@ -1199,7 +1181,6 @@ GameObject:
   - component: {fileID: 1177202932}
   - component: {fileID: 1177202931}
   - component: {fileID: 1177202930}
-  - component: {fileID: 1177202934}
   m_Layer: 0
   m_Name: DebugCube
   m_TagString: Untagged
@@ -1254,6 +1235,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &1177202931
 BoxCollider:
@@ -1299,18 +1281,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1177202934
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1177202929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19a1c33dc8895fb429a509aa15f1adf3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Debugging.Coplay_EntityDebugger
 --- !u!1 &1220927006
 GameObject:
   m_ObjectHideFlags: 0
@@ -1399,7 +1369,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1240563578}
-  - component: {fileID: 1240563579}
   m_Layer: 0
   m_Name: DemoBootstrap
   m_TagString: Untagged
@@ -1422,20 +1391,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1240563579
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1240563577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8ad415390d3e6348a0f574abd6fa7f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Demo.DemoBootstrap
-  defaultScenario: villager_loop_small.json
-  useFancyBindings: 0
 --- !u!1 &1353040182
 GameObject:
   m_ObjectHideFlags: 0
@@ -1753,7 +1708,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1590053939}
-  - component: {fileID: 1590053942}
   m_Layer: 0
   m_Name: PureDOTS Bootstrap
   m_TagString: Untagged
@@ -1776,18 +1730,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1590053942
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590053938}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba040dd2650a19342b9f746f53bc6784, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Authoring.GodgameSampleRegistryAuthoring
 --- !u!1 &1695698321
 GameObject:
   m_ObjectHideFlags: 0
@@ -1919,6 +1861,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1723622312}
   - component: {fileID: 1723622313}
+  - component: {fileID: 1723622314}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -1949,14 +1892,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1723622311}
   m_Enabled: 1
-  serializedVersion: 11
+  serializedVersion: 12
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 0
     m_Resolution: -1
@@ -2006,6 +1949,35 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!114 &1723622314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1723622311}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &1812273175
 GameObject:
   m_ObjectHideFlags: 0
@@ -2460,7 +2432,6 @@ GameObject:
   - component: {fileID: 1959488357}
   - component: {fileID: 1959488358}
   - component: {fileID: 1959488359}
-  - component: {fileID: 1959488360}
   m_Layer: 0
   m_Name: DemoUI
   m_TagString: Untagged
@@ -2505,7 +2476,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
+  m_VertexColorAlwaysGammaSpace: 1
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -2551,38 +2522,6 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &1959488360
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1959488355}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a7f66e130916107419a233660d1ea8b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Demo.DemoBootstrapUI
-  bootstrap: {fileID: 1240563579}
-  scenarioDropdown: {fileID: 408962652}
-  loadButton: {fileID: 1942616478}
-  toggleBindingsButton: {fileID: 216913531}
-  pauseButton: {fileID: 1695698325}
-  stepButton: {fileID: 250738110}
-  speed1Button: {fileID: 1958742767}
-  speed2Button: {fileID: 1812273179}
-  speed3Button: {fileID: 1450152508}
-  rewindButton: {fileID: 1022963614}
-  spawnGhostButton: {fileID: 0}
-  villagerStats: {fileID: 0}
-  jobStats: {fileID: 0}
-  storehouseStats: {fileID: 0}
-  buildStats: {fileID: 0}
-  tickStats: {fileID: 0}
-  fpsStats: {fileID: 0}
-  fixedTickStats: {fileID: 0}
-  snapshotStats: {fileID: 0}
-  ecbStats: {fileID: 0}
 --- !u!1 &2021147938
 GameObject:
   m_ObjectHideFlags: 0

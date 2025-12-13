@@ -1,6 +1,7 @@
 using PureDOTS.Runtime;
 using PureDOTS.Runtime.Physics;
 using Unity.Entities;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using Godgame.Physics;
@@ -133,6 +134,22 @@ namespace Godgame.Authoring
                     CurrentAmount = authoring.resourceAmount,
                     MaxAmount = authoring.maxResourceAmount,
                     RegenPerSecond = authoring.regenPerSecond
+                });
+
+                // Add ResourceSourceConfig for ResourceRegistrySystem
+                // Map index to string ID (simplified mapping for now)
+                FixedString64Bytes resourceId = default;
+                if (authoring.resourceTypeId == 0) resourceId = new FixedString64Bytes("stone");
+                else if (authoring.resourceTypeId == 1) resourceId = new FixedString64Bytes("wood");
+                else if (authoring.resourceTypeId == 2) resourceId = new FixedString64Bytes("ore");
+                else resourceId = new FixedString64Bytes("unknown");
+
+                AddComponent(entity, new Godgame.Resources.ResourceSourceConfig
+                {
+                    ResourceTypeId = resourceId,
+                    Amount = authoring.resourceAmount,
+                    MaxAmount = authoring.maxResourceAmount,
+                    RegenRate = authoring.regenPerSecond
                 });
             }
 

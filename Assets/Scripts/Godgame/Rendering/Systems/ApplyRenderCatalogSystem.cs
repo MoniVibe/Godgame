@@ -6,6 +6,7 @@ using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 using PureDOTS.Rendering;
+using PureDOTS.Systems;
 using Godgame.Rendering;
 using Godgame.Rendering.Catalog;
 using Godgame.Rendering.Debug;
@@ -17,7 +18,7 @@ namespace Godgame.Rendering.Systems
     /// Runs in PresentationSystemGroup after catalog is baked.
     /// </summary>
     [BurstCompile]
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateInGroup(typeof(Unity.Entities.PresentationSystemGroup))]
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]
     public partial struct ApplyRenderCatalogSystem : ISystem
     {
@@ -168,7 +169,9 @@ namespace Godgame.Rendering.Systems
                 var worldBounds = new AABB { Center = transform.ValueRO.Position, Extents = entry.BoundsExtents };
 
                 ecb.AddSharedComponentManaged(entity, renderMeshArray);
-                ecb.AddComponent(entity, MaterialMeshInfo.FromRenderMeshArrayIndices(entry.MaterialMeshIndex, entry.MaterialMeshIndex));
+                var meshIndex = (ushort)entry.MaterialMeshIndex;
+                var materialIndex = meshIndex;
+                ecb.AddComponent(entity, MaterialMeshInfo.FromRenderMeshArrayIndices(materialIndex, meshIndex));
                 ecb.AddComponent(entity, new RenderBounds { Value = bounds });
                 ecb.AddComponent(entity, new WorldRenderBounds { Value = worldBounds });
                 ecb.AddComponent(entity, new ChunkWorldRenderBounds { Value = worldBounds });

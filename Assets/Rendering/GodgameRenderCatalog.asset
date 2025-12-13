@@ -25,14 +25,14 @@ MonoBehaviour:
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
   - Key: 120
     Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
+    Material: {fileID: 2100000, guid: b2d3a6928db14cd4ab1495fc754ef0f5, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
   - Key: 130
-    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0, y: 0, z: 0}
-    BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
+    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
   - Key: 140
     Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
     Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}

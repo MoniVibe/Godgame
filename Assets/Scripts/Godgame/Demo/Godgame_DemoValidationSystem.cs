@@ -14,14 +14,19 @@ namespace Godgame.Demo
     /// Editor-only checks (not Burst-compiled).
     /// </summary>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateAfter(typeof(Godgame_ScenarioBootstrapSystem))]
     [UpdateAfter(typeof(Godgame_Demo01_BootstrapSystem))]
     public partial struct Godgame_DemoValidationSystem : ISystem
     {
         private bool _validated;
+        private bool _loggedEmptyDemo;
+        private EntityQuery _demoConfigQuery;
 
         public void OnCreate(ref SystemState state)
         {
             _validated = false;
+            _loggedEmptyDemo = false;
+            _demoConfigQuery = state.GetEntityQuery(ComponentType.ReadOnly<DemoConfigBlobReference>());
         }
 
         public void OnUpdate(ref SystemState state)
@@ -52,6 +57,8 @@ namespace Godgame.Demo
             int villagerErrors = 0;
             int villageErrors = 0;
             int chunkErrors = 0;
+            var scenarioMode = GetScenarioMode(ref state);
+            var modeLabel = scenarioMode.ToString();
 
             // Validate villagers
             foreach (var (_, entity) in SystemAPI.Query<RefRO<VillagerPresentationTag>>().WithEntityAccess())
@@ -130,16 +137,46 @@ namespace Godgame.Demo
             }
 
             // Log summary
+            var totalCount = villagerCount + villageCount + nodeCount + chunkCount;
+            if (scenarioMode == DemoScenarioMode.Demo01 && totalCount == 0)
+            {
+                if (!_loggedEmptyDemo)
+                {
+                    UnityEngine.Debug.LogError("[DemoValidation] Demo_01: No demo entities were spawned. Ensure the demo subscene is loaded, the ScenarioPreset.Mode is set to Demo_01, and spawn gates are enabled.");
+                    _loggedEmptyDemo = true;
+                }
+                return;
+            }
+
+            if (totalCount == 0)
+            {
+                UnityEngine.Debug.LogWarning($"[DemoValidation] {modeLabel}: No demo-tagged entities were found during validation.");
+                return;
+            }
+
             if (villagerErrors == 0 && villageErrors == 0 && chunkErrors == 0)
             {
-                UnityEngine.Debug.Log($"[DemoValidation] Demo_01: {villageCount} villages, {villagerCount} villagers, {nodeCount} nodes, {chunkCount} chunks instantiated. All entities validated successfully.");
+                UnityEngine.Debug.Log($"[DemoValidation] {modeLabel}: {villageCount} villages, {villagerCount} villagers, {nodeCount} nodes, {chunkCount} chunks instantiated. All entities validated successfully.");
             }
             else
             {
-                UnityEngine.Debug.LogWarning($"[DemoValidation] Demo_01: {villageCount} villages ({villageErrors} errors), {villagerCount} villagers ({villagerErrors} errors), {nodeCount} nodes, {chunkCount} chunks ({chunkErrors} errors) instantiated. Some entities have validation errors.");
+                UnityEngine.Debug.LogWarning($"[DemoValidation] {modeLabel}: {villageCount} villages ({villageErrors} errors), {villagerCount} villagers ({villagerErrors} errors), {nodeCount} nodes, {chunkCount} chunks ({chunkErrors} errors) instantiated. Some entities have validation errors.");
             }
+        }
+
+        private DemoScenarioMode GetScenarioMode(ref SystemState state)
+        {
+            if (!_demoConfigQuery.IsEmptyIgnoreFilter)
+            {
+                var blobRef = _demoConfigQuery.GetSingleton<DemoConfigBlobReference>();
+                if (blobRef.Config.IsCreated)
+                {
+                    return blobRef.Config.Value.Mode;
+                }
+            }
+
+            return DemoScenarioMode.Demo01;
         }
 #endif
     }
 }
-

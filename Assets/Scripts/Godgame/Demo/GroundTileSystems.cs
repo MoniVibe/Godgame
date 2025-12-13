@@ -14,7 +14,7 @@ namespace Godgame.Demo
     /// and derives presentation descriptor keys so swappable bindings track biome/moisture changes.
     /// </summary>
     [UpdateInGroup(typeof(EnvironmentSystemGroup))]
-    [UpdateAfter(typeof(BiomeDerivationSystem))]
+    [UpdateAfter(typeof(PureDOTS.Systems.Environment.BiomeDerivationSystem))]
     public partial struct GroundTileDescriptorSystem : ISystem
     {
         private EntityQuery _gridConfigQuery;
