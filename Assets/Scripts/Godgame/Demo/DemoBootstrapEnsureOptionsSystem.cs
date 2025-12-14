@@ -24,6 +24,7 @@ namespace Godgame.Demo
 
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<DemoSceneTag>();
             var em = state.EntityManager;
 
             if (!SystemAPI.TryGetSingleton<DemoOptions>(out _))

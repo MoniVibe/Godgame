@@ -60,15 +60,6 @@ namespace Godgame.Environment
     }
 
     /// <summary>
-    /// Weather state driving FX presentation.
-    /// </summary>
-    public struct WeatherState : IComponentData
-    {
-        public byte WeatherToken;     // Weather type token (0=Clear, 1=Rain, 2=Storm, etc.)
-        public float Intensity01;      // Weather intensity 0-1
-    }
-
-    /// <summary>
     /// Moisture grid (spatial or global).
     /// Starts as 1×1 global grid, expandable to spatial.
     /// </summary>

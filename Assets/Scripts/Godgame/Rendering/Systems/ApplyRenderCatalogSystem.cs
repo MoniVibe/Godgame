@@ -6,6 +6,7 @@ using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 using PureDOTS.Rendering;
+using PureDOTS.Runtime.Core;
 using PureDOTS.Systems;
 using Godgame.Rendering;
 using Godgame.Rendering.Catalog;
@@ -54,6 +55,8 @@ namespace Godgame.Rendering.Systems
         public void OnUpdate(ref SystemState state)
         {
             if (!Application.isPlaying)
+                return;
+            if (RuntimeMode.IsHeadless)
                 return;
 
             if (_renderKeyQuery.IsEmptyIgnoreFilter)

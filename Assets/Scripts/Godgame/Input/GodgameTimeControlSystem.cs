@@ -2,6 +2,7 @@ using PureDOTS.Runtime.Components;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Godgame.Core;
 
 namespace Godgame.Input
 {
@@ -58,8 +59,16 @@ namespace Godgame.Input
             // 2. GodgameInputReader extension to read time control inputs
             // 3. Write commands to buffer based on input state
 #if UNITY_EDITOR
-            UnityEngine.Debug.Log($"[GodgameTimeControl] paused={_isPaused} speed={_currentSpeed}");
+            LogState(_isPaused, _currentSpeed);
 #endif
         }
+
+#if UNITY_EDITOR
+        [BurstDiscard]
+        private static void LogState(bool paused, float speed)
+        {
+            GodgameBurstDebug.Log($"[GodgameTimeControl] paused={paused} speed={speed}");
+        }
+#endif
     }
 }

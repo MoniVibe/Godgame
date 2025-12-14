@@ -25,6 +25,23 @@ namespace Godgame.Construction
             EnsureResourceCatalog(ref state);
         }
 
+        public void OnDestroy(ref SystemState state)
+        {
+            if (!SystemAPI.TryGetSingleton(out ResourceTypeIndex resourceIndex))
+            {
+                return;
+            }
+
+            if (!resourceIndex.Catalog.IsCreated)
+            {
+                return;
+            }
+
+            resourceIndex.Catalog.Dispose();
+            resourceIndex.Catalog = default;
+            SystemAPI.SetSingleton(resourceIndex);
+        }
+
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {

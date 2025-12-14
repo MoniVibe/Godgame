@@ -17,6 +17,7 @@ namespace Godgame.Demo
     {
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<DemoSceneTag>();
             state.RequireForUpdate<VillagerAIState>();
         }
 

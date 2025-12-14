@@ -19,6 +19,7 @@
         "PureDOTS.Runtime.Demo",
         "PureDOTS.Systems",
         "PureDOTS.Authoring",
+        "PureDOTS.Core",
         "PureDOTS.Input",
         "PureDOTS.Config",
         "PureDOTS.Camera",

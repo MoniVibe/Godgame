@@ -96,6 +96,28 @@ namespace Godgame.Environment
             // Disable this system after first run
             state.Enabled = false;
         }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            if (SystemAPI.TryGetSingletonRW<MoistureGrid>(out var moistureGrid))
+            {
+                ref var grid = ref moistureGrid.ValueRW;
+                if (grid.Values.IsCreated)
+                {
+                    grid.Values.Dispose();
+                    grid.Values = default;
+                }
+            }
+
+            if (SystemAPI.TryGetSingletonRW<BiomeGrid>(out var biomeGrid))
+            {
+                ref var grid = ref biomeGrid.ValueRW;
+                if (grid.BiomeIds.IsCreated)
+                {
+                    grid.BiomeIds.Dispose();
+                    grid.BiomeIds = default;
+                }
+            }
+        }
     }
 }
-

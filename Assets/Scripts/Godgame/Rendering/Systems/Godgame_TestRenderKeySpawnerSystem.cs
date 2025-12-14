@@ -4,6 +4,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using PureDOTS.Rendering;
 using Godgame.Rendering.Debug;
+using PureDOTS.Runtime.Core;
 
 namespace Godgame.Rendering.Systems
 {
@@ -16,9 +17,38 @@ namespace Godgame.Rendering.Systems
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct Godgame_TestRenderKeySpawnerSystem : ISystem
     {
+        private bool _spawned;
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
+            _spawned = false;
+            if (RuntimeMode.IsHeadless)
+            {
+                state.Enabled = false;
+                return;
+            }
+            // state.RequireForUpdate<GameWorldTag>();
+        }
+
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            if (RuntimeMode.IsHeadless)
+            {
+                state.Enabled = false;
+                return;
+            }
+            if (_spawned)
+            {
+                state.Enabled = false;
+                return;
+            }
+
+            // Only spawn inside the canonical Game World to avoid DefaultWorld side-effects.
+            if (state.WorldUnmanaged.Name != "Game World")
+                return;
+
             var em = state.EntityManager;
             var e = em.CreateEntity();
 
@@ -40,11 +70,22 @@ namespace Godgame.Rendering.Systems
                 HighlightMask = 0
             });
 
-            Log.Message("[Godgame_TestRenderKeySpawnerSystem] Spawned test RenderKey entity in Default World.");
+#if UNITY_EDITOR
+            LogSpawnMessage();
+#endif
+
+            _spawned = true;
             state.Enabled = false;
         }
 
-        [BurstCompile] public void OnUpdate(ref SystemState state) { }
         public void OnDestroy(ref SystemState state) { }
+
+#if UNITY_EDITOR
+        [BurstDiscard]
+        private static void LogSpawnMessage()
+        {
+            Log.Message("[Godgame_TestRenderKeySpawnerSystem] Spawned test RenderKey entity in Game World.");
+        }
+#endif
     }
 }

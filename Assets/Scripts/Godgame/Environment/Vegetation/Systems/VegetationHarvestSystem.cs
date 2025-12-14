@@ -43,8 +43,8 @@ namespace Godgame.Environment.Vegetation.Systems
         /// </summary>
         [BurstCompile]
         public static void CalculateHarvestYields(
-            PlantSpec plantSpec,
-            PlantState plantState,
+            ref PlantSpec plantSpec,
+            in PlantState plantState,
             ref NativeList<PlantLootEntry> outputYields)
         {
             if (plantState.Stage != GrowthStage.Mature && plantState.Stage != GrowthStage.Sapling)
@@ -52,12 +52,12 @@ namespace Godgame.Environment.Vegetation.Systems
                 return; // Can only harvest mature or sapling plants
             }
 
-            if (!plantSpec.Yields.IsCreated)
+            if (plantSpec.Yields.Length == 0)
             {
                 return;
             }
 
-            ref var yields = ref plantSpec.Yields.Value;
+            ref var yields = ref plantSpec.Yields;
             var random = Unity.Mathematics.Random.CreateFromIndex((uint)plantState.PlantId.GetHashCode());
 
             for (int i = 0; i < yields.Length; i++)
@@ -88,4 +88,3 @@ namespace Godgame.Environment.Vegetation.Systems
         }
     }
 }
-

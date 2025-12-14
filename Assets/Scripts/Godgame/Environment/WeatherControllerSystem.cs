@@ -28,7 +28,7 @@ namespace Godgame.Environment
             state.RequireForUpdate<WeatherForecast>();
             state.RequireForUpdate<WeatherOverrideState>();
             state.RequireForUpdate<WeatherRequestQueueTag>();
-            state.RequireForUpdate<ClimateState>();
+            state.RequireForUpdate<Godgame.Environment.ClimateState>();
             state.RequireForUpdate<TimeState>();
 
             using var builder = new EntityQueryBuilder(Allocator.Temp)
@@ -40,7 +40,7 @@ namespace Godgame.Environment
         {
             var entityManager = state.EntityManager;
             var timeState = SystemAPI.GetSingleton<TimeState>();
-            var climate = SystemAPI.GetSingleton<ClimateState>();
+            var climate = SystemAPI.GetSingleton<Godgame.Environment.ClimateState>();
             var weatherEntity = SystemAPI.GetSingletonEntity<WeatherState>();
 
             var weatherState = entityManager.GetComponentData<WeatherState>(weatherEntity);
@@ -53,9 +53,10 @@ namespace Godgame.Environment
             weatherState.MoisturePercent = stats.AverageMoisture;
             weatherState.DominantBiome = stats.DominantBiome;
             weatherState.DominantBiomeMoisture = stats.DominantBiomeMoisture;
-            weatherState.TemperatureCelsius = climate.GlobalTemperature;
+            weatherState.TemperatureCelsius = climate.TempC;
 
-            var phase = WeatherControllerUtilities.ResolvePhase(climate.TimeOfDayHours);
+            var phase = WeatherControllerUtilities.ResolvePhase(12f); // Placeholder
+
             if (weatherState.ActivePhase != (byte)phase)
             {
                 weatherState.ActivePhase = (byte)phase;
@@ -322,7 +323,7 @@ namespace Godgame.Environment
             return TimeOfDayPhase.Night;
         }
 
-        public static WeatherTarget ComputeTarget(in ClimateState climate, in GroundSamplingStats stats, TimeOfDayPhase phase, ref WeatherState current)
+        public static WeatherTarget ComputeTarget(in Godgame.Environment.ClimateState climate, in GroundSamplingStats stats, TimeOfDayPhase phase, ref WeatherState current)
         {
             WeatherTarget best = new()
             {
@@ -331,9 +332,9 @@ namespace Godgame.Environment
                 TransitionSeconds = math.max(6f, current.LastChangeTick == 0 ? 6f : 8f)
             };
 
-            float humidity = math.clamp(climate.AtmosphericMoisture, 0f, 100f);
-            float cloudCover = math.clamp(climate.CloudCover, 0f, 100f);
-            float wind = math.max(0f, climate.GlobalWindStrength);
+            float humidity = math.clamp(climate.Moisture01 * 100f, 0f, 100f);
+            float cloudCover = 0f; // Placeholder
+            float wind = 0f; // Placeholder
             float avgMoisture = math.clamp(stats.AverageMoisture, 0f, 100f);
             float dryness = 1f - avgMoisture / 100f;
 
@@ -350,9 +351,9 @@ namespace Godgame.Environment
             var fogIntensity = math.saturate((humidity - 35f) / 30f);
             TryPromote(ref best, WeatherType.Fog, fogScore, fogIntensity, 6f);
 
-            if (climate.GlobalTemperature <= 1.5f)
+            if (climate.TempC <= 1.5f)
             {
-                var snowScore = rainScore + (1.5f - climate.GlobalTemperature) * 0.1f;
+                var snowScore = rainScore + (1.5f - climate.TempC) * 0.1f;
                 var snowIntensity = math.saturate(avgMoisture / 60f);
                 TryPromote(ref best, WeatherType.Snow, snowScore, snowIntensity, 12f);
             }

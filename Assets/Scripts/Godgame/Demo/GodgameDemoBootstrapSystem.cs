@@ -9,6 +9,7 @@ namespace Godgame.Demo
     {
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<DemoSceneTag>();
             // Hook for spawning demo entities or loading presets.
         }
 

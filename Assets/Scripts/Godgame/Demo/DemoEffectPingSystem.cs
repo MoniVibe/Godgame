@@ -11,7 +11,10 @@ namespace Godgame.Demo
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct DemoEffectPingSystem : ISystem
     {
-        public void OnCreate(ref SystemState state) {}
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<DemoSceneTag>();
+        }
 
         public void OnDestroy(ref SystemState state) {}
 

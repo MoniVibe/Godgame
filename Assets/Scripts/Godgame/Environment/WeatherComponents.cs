@@ -75,6 +75,8 @@ namespace Godgame.Environment
         public BiomeType DominantBiome;
         public float DominantBiomeMoisture;
         public uint LastChangeTick;
+
+        public byte WeatherToken => (byte)Current;
     }
 
     public struct WeatherForecast : IComponentData

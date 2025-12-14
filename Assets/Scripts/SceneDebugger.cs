@@ -11,16 +11,41 @@ public class SceneDebugger : MonoBehaviour
 
     void Start()
     {
+        if (RuntimeMode.IsHeadless)
+        {
+            enabled = false;
+            return;
+        }
+
         Debug.Log("[SceneDebugger] Starting...");
 
         // 1. Ensure Camera
         mainCamera = Camera.main;
         if (mainCamera == null)
         {
-            Debug.LogWarning("[SceneDebugger] Main Camera not found. Creating one.");
-            var camGo = new GameObject("Main Camera");
-            mainCamera = camGo.AddComponent<Camera>();
-            camGo.tag = "MainCamera";
+            // Check if any camera exists before creating a new one
+            mainCamera = FindFirstObjectByType<Camera>();
+            if (mainCamera != null)
+            {
+                Debug.Log($"[SceneDebugger] Found existing camera '{mainCamera.name}', using it.");
+                if (!mainCamera.CompareTag("MainCamera"))
+                {
+                    if (Godgame.Core.DefaultTagRegistryGuard.TryEnter())
+                    {
+                        mainCamera.tag = "MainCamera";
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[SceneDebugger] Main Camera not found. Creating one.");
+                var camGo = new GameObject("Main Camera");
+                mainCamera = camGo.AddComponent<Camera>();
+                if (Godgame.Core.DefaultTagRegistryGuard.TryEnter())
+                {
+                    camGo.tag = "MainCamera";
+                }
+            }
         }
 
         // 2. Force Camera Position

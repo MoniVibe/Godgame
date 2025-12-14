@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using PureDOTS.Runtime;
 using PureDOTS.Runtime.Physics;
 using Unity.Entities;
@@ -23,6 +24,7 @@ namespace Godgame.Demo
 
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<DemoSceneTag>();
             Debug.Log("[GodgameRockSpawnerSystem] OnCreate");
             state.RequireForUpdate<DemoScenarioState>();
         }
@@ -143,4 +145,4 @@ namespace Godgame.Demo
         }
     }
 }
-
+#endif

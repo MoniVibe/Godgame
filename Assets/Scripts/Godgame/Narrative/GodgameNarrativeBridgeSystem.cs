@@ -4,6 +4,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
+using Godgame.Core;
 
 namespace Godgame.Narrative
 {
@@ -56,7 +57,7 @@ namespace Godgame.Narrative
                 {
                     // Check if tags include Hostage
                     // For now, just log and mark location
-                    UnityEngine.Debug.Log($"[GodgameNarrativeBridge] Situation started: {signal.Id.Value} at entity {signal.Target.Index}");
+                    LogSituationStarted((uint)signal.Id.Value, signal.Target);
 
                     if (signal.Target != Entity.Null && state.EntityManager.Exists(signal.Target))
                     {
@@ -69,11 +70,11 @@ namespace Godgame.Narrative
                 }
                 else if (signal.SignalType == 1) // StepEntered
                 {
-                    UnityEngine.Debug.Log($"[GodgameNarrativeBridge] Situation step entered: {signal.Id.Value}, step {signal.PayloadA}");
+                    LogStepEntered((uint)signal.Id.Value, signal.PayloadA);
                 }
                 else if (signal.SignalType == 2) // EventFired
                 {
-                    UnityEngine.Debug.Log($"[GodgameNarrativeBridge] Event fired: {signal.Id.Value}");
+                    LogEventFired((uint)signal.Id.Value);
                 }
 
                 // Remove processed signal
@@ -91,12 +92,40 @@ namespace Godgame.Narrative
             for (int i = rewardBuffer.Length - 1; i >= 0; i--)
             {
                 var reward = rewardBuffer[i];
-                UnityEngine.Debug.Log($"[GodgameNarrativeBridge] Reward: type={reward.RewardType}, amount={reward.Amount}, target={reward.Target.Index}");
+#if UNITY_EDITOR
+                LogReward((byte)reward.RewardType, reward.Amount, reward.Target);
+#endif
                 
                 // Remove processed reward
                 rewardBuffer.RemoveAt(i);
             }
         }
+        
+#if UNITY_EDITOR
+        [BurstDiscard]
+        static void LogSituationStarted(uint id, Entity target)
+        {
+            GodgameBurstDebug.Log($"[GodgameNarrativeBridge] Situation started: {id} at entity {target.Index}");
+        }
+
+        [BurstDiscard]
+        static void LogStepEntered(uint id, int step)
+        {
+            GodgameBurstDebug.Log($"[GodgameNarrativeBridge] Situation step entered: {id}, step {step}");
+        }
+
+        [BurstDiscard]
+        static void LogEventFired(uint id)
+        {
+            GodgameBurstDebug.Log($"[GodgameNarrativeBridge] Event fired: {id}");
+        }
+
+        [BurstDiscard]
+        static void LogReward(byte rewardType, float amount, Entity target)
+        {
+            GodgameBurstDebug.Log($"[GodgameNarrativeBridge] Reward: type={rewardType}, amount={amount}, target={target.Index}");
+        }
+#endif
     }
 
     /// <summary>
@@ -106,4 +135,3 @@ namespace Godgame.Narrative
     {
     }
 }
-

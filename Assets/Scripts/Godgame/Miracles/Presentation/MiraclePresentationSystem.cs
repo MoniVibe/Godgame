@@ -26,8 +26,8 @@ namespace Godgame.Miracles.Presentation
         {
             _localToWorldLookup.Update(this);
 
-            var hasClimate = SystemAPI.TryGetSingleton(out ClimateState climateState);
-            var hasBiome = SystemAPI.TryGetSingleton(out BiomeGrid biomeGrid);
+            var hasClimate = SystemAPI.TryGetSingleton(out Godgame.Environment.ClimateState climateState);
+            var hasBiome = SystemAPI.TryGetSingleton(out Godgame.Environment.BiomeGrid biomeGrid);
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             foreach (var (bindingRW, swapRW, entity) in SystemAPI
@@ -44,12 +44,13 @@ namespace Godgame.Miracles.Presentation
                 var variantSuffix = string.Empty;
                 var variantIntensity = 1f;
 
-                var timeOfDay = hasClimate ? climateState.TimeOfDayHours : 12f;
+                var timeOfDay = hasClimate ? 12f : 12f; // Placeholder
                 var biome = BiomeType.Unknown;
 
                 if (hasBiome && _localToWorldLookup.HasComponent(entity))
                 {
-                    biome = biomeGrid.SampleNearest(_localToWorldLookup[entity].Position);
+                    // Placeholder for biome sampling
+                    // biome = biomeGrid.SampleNearest(_localToWorldLookup[entity].Position);
                 }
 
                 if (TryPickVariant(profile, biome, timeOfDay, out var variant))

@@ -19,9 +19,9 @@ namespace Godgame.Environment.Vegetation.Systems
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PlantSpecSingleton>();
-            state.RequireForUpdate<ClimateState>();
-            state.RequireForUpdate<MoistureGrid>();
-            state.RequireForUpdate<BiomeGrid>();
+            state.RequireForUpdate<Godgame.Environment.ClimateState>();
+            state.RequireForUpdate<Godgame.Environment.MoistureGrid>();
+            state.RequireForUpdate<Godgame.Environment.BiomeGrid>();
         }
 
         [BurstCompile]
@@ -33,9 +33,9 @@ namespace Godgame.Environment.Vegetation.Systems
                 return;
             }
 
-            var climate = SystemAPI.GetSingleton<ClimateState>();
-            var moistureGrid = SystemAPI.GetSingleton<MoistureGrid>();
-            var biomeGrid = SystemAPI.GetSingleton<BiomeGrid>();
+            var climate = SystemAPI.GetSingleton<Godgame.Environment.ClimateState>();
+            var moistureGrid = SystemAPI.GetSingleton<Godgame.Environment.MoistureGrid>();
+            var biomeGrid = SystemAPI.GetSingleton<Godgame.Environment.BiomeGrid>();
 
             // Get current moisture (1×1 grid for MVP)
             float currentMoisture = moistureGrid.Values.IsCreated && moistureGrid.Width > 0 && moistureGrid.Height > 0
@@ -49,7 +49,7 @@ namespace Godgame.Environment.Vegetation.Systems
 
             var weatherState = SystemAPI.GetSingleton<WeatherState>();
             bool isDrought = weatherState.WeatherToken == 0 && currentMoisture < 0.2f; // Clear weather + low moisture
-            bool isFire = weatherState.WeatherToken == 2; // Fire weather token (if implemented)
+            bool isFire = false; // Fire weather token (if implemented)
 
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
@@ -61,13 +61,13 @@ namespace Godgame.Environment.Vegetation.Systems
                 .WithEntityAccess())
             {
                 var plantId = plantState.ValueRO.PlantId;
-                var spec = FindPlantSpec(plantSpecs.Specs, plantId);
-                if (!spec.HasValue)
+                var specIndex = FindPlantSpecIndex(ref plantSpecs.Specs, plantId);
+                if (specIndex == -1)
                 {
                     continue; // Plant spec not found
                 }
 
-                var specValue = spec.Value;
+                ref var specValue = ref plantSpecs.Specs.Value.Plants[specIndex];
 
                 // Check biome compatibility
                 uint biomeBit = 1u << ((int)currentBiomeId - 1);
@@ -161,11 +161,11 @@ namespace Godgame.Environment.Vegetation.Systems
         }
 
         [BurstCompile]
-        private static PlantSpec? FindPlantSpec(BlobAssetReference<PlantSpecBlob> specs, FixedString64Bytes plantId)
+        private static int FindPlantSpecIndex(ref BlobAssetReference<PlantSpecBlob> specs, in FixedString64Bytes plantId)
         {
             if (!specs.IsCreated)
             {
-                return null;
+                return -1;
             }
 
             ref var plants = ref specs.Value.Plants;
@@ -173,12 +173,11 @@ namespace Godgame.Environment.Vegetation.Systems
             {
                 if (plants[i].Id.Equals(plantId))
                 {
-                    return plants[i];
+                    return i;
                 }
             }
 
-            return null;
+            return -1;
         }
     }
 }
-

@@ -17,6 +17,7 @@ namespace Godgame.Debugging
 
         public void OnUpdate(ref SystemState state)
         {
+#if ENABLE_LEGACY_INPUT_MANAGER
             if (!UnityEngine.Input.GetKeyDown(KeyCode.N)) // N for Nudge
                 return;
 
@@ -29,6 +30,10 @@ namespace Godgame.Debugging
                 float3 dir = math.normalize(new float3(rand.NextFloat(-1,1), 0, rand.NextFloat(-1,1)));
                 vel.ValueRW.Linear += dir * 5f; // tweak strength
             }
+#else
+            // Disable when the legacy input backend is not active to avoid InputSystem warnings.
+            state.Enabled = false;
+#endif
         }
     }
 }

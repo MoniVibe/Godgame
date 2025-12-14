@@ -18,14 +18,14 @@ namespace Godgame.Fauna
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<FaunaAmbientAgent>();
-            _climateQuery = state.GetEntityQuery(ComponentType.ReadOnly<ClimateState>());
+            _climateQuery = state.GetEntityQuery(ComponentType.ReadOnly<Godgame.Environment.ClimateState>());
         }
 
         public void OnUpdate(ref SystemState state)
         {
             var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
-            var hasClimate = _climateQuery.TryGetSingleton(out ClimateState climateState);
-            var timeOfDay = hasClimate ? climateState.TimeOfDayHours : 12f;
+            var hasClimate = _climateQuery.TryGetSingleton(out Godgame.Environment.ClimateState climateState);
+            var timeOfDay = hasClimate ? 12f : 12f; // Placeholder until TimeOfDayHours is available in Godgame.Environment.ClimateState
 
             foreach (var (agentRW, transformRW) in SystemAPI.Query<RefRW<FaunaAmbientAgent>, RefRW<LocalTransform>>())
             {

@@ -30,7 +30,7 @@ namespace Godgame.Environment.Systems
             }
 
             var climate = SystemAPI.GetSingleton<ClimateState>();
-            var biomeGrid = SystemAPI.GetSingletonRW<BiomeGrid>();
+            ref var biomeGrid = ref SystemAPI.GetSingletonRW<BiomeGrid>().ValueRW;
 
             // Find best-matching biome
             uint chosenBiomeId = ChooseBiomeId(
@@ -40,17 +40,30 @@ namespace Godgame.Environment.Systems
                 climate.ElevationMean);
 
             // Update biome grid (1×1 for MVP)
-            if (biomeGrid.ValueRO.Width == 1 && biomeGrid.ValueRO.Height == 1)
+            if (biomeGrid.Width != 1 || biomeGrid.Height != 1)
             {
-                var builder = new BlobBuilder(Allocator.Temp);
-                ref var root = ref builder.ConstructRoot<BlobArray<uint>>();
-                var biomeArray = builder.Allocate(ref root, 1);
-                biomeArray[0] = chosenBiomeId;
-                var newBlob = builder.CreateBlobAssetReference<BlobArray<uint>>(Allocator.Persistent);
-                builder.Dispose();
-
-                biomeGrid.ValueRW.BiomeIds = newBlob;
+                return;
             }
+
+            if (biomeGrid.BiomeIds.IsCreated &&
+                biomeGrid.BiomeIds.Value.Length == 1 &&
+                biomeGrid.BiomeIds.Value[0] == chosenBiomeId)
+            {
+                return;
+            }
+
+            using var builder = new BlobBuilder(Allocator.Temp);
+            ref var root = ref builder.ConstructRoot<BlobArray<uint>>();
+            var biomeArray = builder.Allocate(ref root, 1);
+            biomeArray[0] = chosenBiomeId;
+            var newBlob = builder.CreateBlobAssetReference<BlobArray<uint>>(Allocator.Persistent);
+
+            if (biomeGrid.BiomeIds.IsCreated)
+            {
+                biomeGrid.BiomeIds.Dispose();
+            }
+
+            biomeGrid.BiomeIds = newBlob;
         }
 
         [BurstCompile]

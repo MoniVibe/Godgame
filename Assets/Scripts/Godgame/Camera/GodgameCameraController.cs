@@ -55,6 +55,22 @@ namespace Godgame
             // Assign camera for zoom/drag functionality
             if (_unityCamera == null)
                 _unityCamera = UnityEngine.Camera.main;
+            
+            if (_unityCamera != null && _unityCamera.gameObject.CompareTag("MainCamera"))
+            {
+                // Already registered, do nothing
+            }
+            else if (_unityCamera != null)
+            {
+                // Ensure tag is set if not already
+                if (!_unityCamera.gameObject.CompareTag("MainCamera"))
+                {
+                    if (Godgame.Core.DefaultTagRegistryGuard.TryEnter())
+                    {
+                        _unityCamera.gameObject.tag = "MainCamera";
+                    }
+                }
+            }
 
             // Camera resolution and initialization happens in OnEnable
         }

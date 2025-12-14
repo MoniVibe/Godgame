@@ -198,7 +198,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 63545798}
   m_CullTransparentMesh: 1
---- !u!1 &162019421
+--- !u!1 &184000790
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -206,8 +206,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 162019422}
-  - component: {fileID: 162019424}
+  - component: {fileID: 184000791}
   m_Layer: 0
   m_Name: CameraRig
   m_TagString: Untagged
@@ -215,46 +214,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &162019422
+--- !u!4 &184000791
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 162019421}
+  m_GameObject: {fileID: 184000790}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.38268346, y: 0, z: 0, w: 0.9238795}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 10, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &162019424
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 162019421}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e0a05601dece2514fb2f8f70898b4a03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.GodgameCameraController
-  _moveSpeed: 30
-  _verticalSpeed: 20
-  _panSpeedPerPixel: 0.1
-  _rotationSpeed: 0.2
-  _minPitch: -80
-  _maxPitch: 80
-  _resetToDefaultOnStart: 1
-  _defaultFocus: {x: 0, y: 0, z: 0}
-  _defaultDistance: 30
-  _defaultYawDegrees: 45
-  _defaultPitchDegrees: 45
-  _zoomSpeed: 40
-  _minZoomDistance: 5
 --- !u!1 &216913527
 GameObject:
   m_ObjectHideFlags: 0
@@ -923,8 +897,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -946,11 +918,9 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &579716744
 MeshFilter:
@@ -1868,14 +1838,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1723622311}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 11
   m_Type: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize2D: {x: 10, y: 10}
+  m_CookieSize: 10
   m_Shadows:
     m_Type: 0
     m_Resolution: -1
@@ -2701,6 +2671,7 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
+  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -2708,7 +2679,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
-  m_Version: 2
 --- !u!1 &2130557495
 GameObject:
   m_ObjectHideFlags: 0
@@ -2718,6 +2688,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2130557496}
+  - component: {fileID: 2130557497}
   m_Layer: 0
   m_Name: CameraRig
   m_TagString: Untagged
@@ -2740,6 +2711,31 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2130557497
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2130557495}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31278c13fba0c874dab9747da91c74a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _moveSpeed: 30
+  _verticalSpeed: 20
+  _panSpeedPerPixel: 0.1
+  _rotationSpeed: 0.2
+  _minPitch: -80
+  _maxPitch: 80
+  _resetToDefaultOnStart: 1
+  _defaultFocus: {x: 0, y: 0, z: 0}
+  _defaultDistance: 30
+  _defaultYawDegrees: 45
+  _defaultPitchDegrees: 45
+  _zoomSpeed: 40
+  _minZoomDistance: 5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -2750,6 +2746,6 @@ SceneRoots:
   - {fileID: 688591440}
   - {fileID: 1959488356}
   - {fileID: 2105859855}
-  - {fileID: 162019422}
   - {fileID: 579716745}
   - {fileID: 2130557496}
+  - {fileID: 184000791}

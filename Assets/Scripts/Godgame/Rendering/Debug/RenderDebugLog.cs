@@ -1,4 +1,5 @@
 using UnityEngine;
+using Unity.Burst;
 
 namespace Godgame.Rendering.Debug
 {
@@ -7,10 +8,17 @@ namespace Godgame.Rendering.Debug
     /// </summary>
     public static class Log
     {
-        public static void Message(string message) => UnityEngine.Debug.Log(message);
-        public static void Message(object message) => UnityEngine.Debug.Log(message);
-        public static void Info(string message) => UnityEngine.Debug.Log(message);
-        public static void Info(object message) => UnityEngine.Debug.Log(message);
+#if UNITY_EDITOR
+        [BurstDiscard] public static void Message(string message) => UnityEngine.Debug.Log(message);
+        [BurstDiscard] public static void Message(object message) => UnityEngine.Debug.Log(message);
+        [BurstDiscard] public static void Info(string message) => UnityEngine.Debug.Log(message);
+        [BurstDiscard] public static void Info(object message) => UnityEngine.Debug.Log(message);
+#else
+        public static void Message(string message) { }
+        public static void Message(object message) { }
+        public static void Info(string message) { }
+        public static void Info(object message) { }
+#endif
     }
 
     /// <summary>
@@ -18,10 +26,17 @@ namespace Godgame.Rendering.Debug
     /// </summary>
     public static class LogError
     {
-        public static void Message(string message) => UnityEngine.Debug.LogError(message);
-        public static void Message(object message) => UnityEngine.Debug.LogError(message);
-        public static void Error(string message) => UnityEngine.Debug.LogError(message);
-        public static void Error(object message) => UnityEngine.Debug.LogError(message);
+#if UNITY_EDITOR
+        [BurstDiscard] public static void Message(string message) => UnityEngine.Debug.LogError(message);
+        [BurstDiscard] public static void Message(object message) => UnityEngine.Debug.LogError(message);
+        [BurstDiscard] public static void Error(string message) => UnityEngine.Debug.LogError(message);
+        [BurstDiscard] public static void Error(object message) => UnityEngine.Debug.LogError(message);
+#else
+        public static void Message(string message) { }
+        public static void Message(object message) { }
+        public static void Error(string message) { }
+        public static void Error(object message) { }
+#endif
     }
 
     /// <summary>
@@ -29,11 +44,17 @@ namespace Godgame.Rendering.Debug
     /// </summary>
     public static class LogWarning
     {
-        public static void Message(string message) => UnityEngine.Debug.LogWarning(message);
-        public static void Message(object message) => UnityEngine.Debug.LogWarning(message);
-        public static void Warn(string message) => UnityEngine.Debug.LogWarning(message);
-        public static void Warn(object message) => UnityEngine.Debug.LogWarning(message);
+#if UNITY_EDITOR
+        [BurstDiscard] public static void Message(string message) => UnityEngine.Debug.LogWarning(message);
+        [BurstDiscard] public static void Message(object message) => UnityEngine.Debug.LogWarning(message);
+        [BurstDiscard] public static void Warn(string message) => UnityEngine.Debug.LogWarning(message);
+        [BurstDiscard] public static void Warn(object message) => UnityEngine.Debug.LogWarning(message);
+#else
+        public static void Message(string message) { }
+        public static void Message(object message) { }
+        public static void Warn(string message) { }
+        public static void Warn(object message) { }
+#endif
     }
 }
-
 

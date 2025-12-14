@@ -47,6 +47,7 @@ namespace Godgame.Demo
 
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<DemoSceneTag>();
             state.RequireForUpdate<GroundTile>();
             _dirtyLookup = state.GetComponentLookup<SwappablePresentationDirtyTag>(isReadOnly: true);
             _moistureRuntimeLookup = state.GetBufferLookup<MoistureGridRuntimeCell>(isReadOnly: true);

@@ -25,6 +25,9 @@ namespace Godgame.CameraRig
         {
             if (targetCamera == null)
                 targetCamera = GetComponentInChildren<UnityEngine.Camera>();
+            
+            if (targetCamera == null)
+                targetCamera = UnityEngine.Camera.main;
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)

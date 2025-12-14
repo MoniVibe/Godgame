@@ -1,4 +1,5 @@
 using Godgame.Economy;
+using Godgame.Demo;
 using Godgame.Presentation;
 using Godgame.Villages;
 using Godgame.Villagers;
@@ -27,6 +28,7 @@ namespace Godgame.Demo
             _validated = false;
             _loggedEmptyDemo = false;
             _demoConfigQuery = state.GetEntityQuery(ComponentType.ReadOnly<DemoConfigBlobReference>());
+            state.RequireForUpdate<DemoSceneTag>();
         }
 
         public void OnUpdate(ref SystemState state)
@@ -142,7 +144,7 @@ namespace Godgame.Demo
             {
                 if (!_loggedEmptyDemo)
                 {
-                    UnityEngine.Debug.LogError("[DemoValidation] Demo_01: No demo entities were spawned. Ensure the demo subscene is loaded, the ScenarioPreset.Mode is set to Demo_01, and spawn gates are enabled.");
+                    UnityEngine.Debug.LogWarning("[DemoValidation] Demo_01: No demo entities were spawned. Ensure the demo subscene is loaded, the ScenarioPreset.Mode is set to Demo_01, and spawn gates are enabled.");
                     _loggedEmptyDemo = true;
                 }
                 return;
