@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using Godgame.Biomes;
 using UnityEditor;
 using UnityEditorInternal;
@@ -174,3 +175,4 @@ namespace Godgame.Editor.Biomes
         }
     }
 }
+#endif

@@ -45,54 +45,71 @@ namespace Godgame.Authoring
 
         public StandSpecData[] Stands => stands;
 
-        /// <summary>
-        /// Baker that converts StandSpecCatalogAuthoring to StandSpecBlob.
-        /// </summary>
-        public sealed class Baker : Unity.Entities.Baker<StandSpecCatalogAuthoring>
+        public bool TryBuildBlob(out BlobAssetReference<StandSpecBlob> blobAsset)
         {
-            public override void Bake(StandSpecCatalogAuthoring authoring)
+            blobAsset = default;
+            if (stands == null || stands.Length == 0)
             {
-                if (authoring.stands == null || authoring.stands.Length == 0)
+#if UNITY_EDITOR
+                Debug.LogWarning($"StandSpecCatalogAuthoring '{name}' has no stands defined.");
+#endif
+                return false;
+            }
+
+            var builder = new BlobBuilder(Allocator.Temp);
+            ref var blobRoot = ref builder.ConstructRoot<StandSpecBlob>();
+            var blobStands = builder.Allocate(ref blobRoot.Stands, stands.Length);
+
+            for (int i = 0; i < stands.Length; i++)
+            {
+                var standData = stands[i];
+                ref var stand = ref blobStands[i];
+                stand = new StandSpec
                 {
-                    Debug.LogWarning($"StandSpecCatalogAuthoring '{authoring.name}' has no stands defined.");
+                    Id = standData.id,
+                    PlantId = standData.plantId,
+                    Density = standData.density,
+                    Clustering = standData.clustering,
+                    MinDistance = standData.minDistance,
+                    SpawnRadius = standData.spawnRadius
+                };
+
+                int weightCount = standData.spawnWeightsPerBiome != null ? standData.spawnWeightsPerBiome.Length : 0;
+                var weights = builder.Allocate(ref stand.SpawnWeightsPerBiome, weightCount);
+                for (int j = 0; j < weightCount; j++)
+                {
+                    weights[j] = standData.spawnWeightsPerBiome[j];
+                }
+            }
+
+            blobAsset = builder.CreateBlobAssetReference<StandSpecBlob>(Allocator.Persistent);
+            builder.Dispose();
+            return true;
+        }
+    }
+
+    [DisallowMultipleComponent]
+    public sealed class StandSpecCatalogAuthoringComponent : MonoBehaviour
+    {
+        [SerializeField] private StandSpecCatalogAuthoring catalog;
+
+        public sealed class Baker : Unity.Entities.Baker<StandSpecCatalogAuthoringComponent>
+        {
+            public override void Bake(StandSpecCatalogAuthoringComponent authoringComponent)
+            {
+                if (authoringComponent.catalog == null)
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning("[StandSpecCatalog] No StandSpecCatalogAuthoring asset assigned.");
+#endif
                     return;
                 }
 
-                // Create blob builder
-                var builder = new BlobBuilder(Allocator.Temp);
-                ref var blobRoot = ref builder.ConstructRoot<StandSpecBlob>();
-                var blobStands = builder.Allocate(ref blobRoot.Stands, authoring.stands.Length);
-
-                // Convert stands to blob data
-                for (int i = 0; i < authoring.stands.Length; i++)
+                if (!authoringComponent.catalog.TryBuildBlob(out var blobAsset))
                 {
-                    var standData = authoring.stands[i];
-                    
-                    // Allocate spawn weights array
-                    int weightCount = standData.spawnWeightsPerBiome != null ? standData.spawnWeightsPerBiome.Length : 0;
-                    var weightsBuilder = builder.Allocate(ref blobStands[i].SpawnWeightsPerBiome, weightCount);
-                    for (int j = 0; j < weightCount; j++)
-                    {
-                        weightsBuilder[j] = standData.spawnWeightsPerBiome[j];
-                    }
-
-                    blobStands[i] = new StandSpec
-                    {
-                        Id = standData.id,
-                        PlantId = standData.plantId,
-                        Density = standData.density,
-                        Clustering = standData.clustering,
-                        MinDistance = standData.minDistance,
-                        SpawnRadius = standData.spawnRadius,
-                        SpawnWeightsPerBiome = weightsBuilder
-                    };
+                    return;
                 }
 
-                // Create blob asset reference
-                var blobAsset = builder.CreateBlobAssetReference<StandSpecBlob>(Allocator.Persistent);
-                builder.Dispose();
-
-                // Add singleton component with blob reference
                 var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent(entity, new StandSpecSingleton
                 {
@@ -102,4 +119,3 @@ namespace Godgame.Authoring
         }
     }
 }
-

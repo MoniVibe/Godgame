@@ -100,231 +100,270 @@ namespace Godgame.Authoring
         public PlantSpecData[] Plants => plants;
 
         /// <summary>
-        /// Baker that converts PlantSpecCatalogAuthoring to PlantSpecBlob.
-        /// Handles VariantOf inheritance by applying deltas.
+        /// Builds the PlantSpec blob from the serialized catalog data.
         /// </summary>
-        public sealed class Baker : Unity.Entities.Baker<PlantSpecCatalogAuthoring>
+        private struct PlantSpecBuildData
         {
-            public override void Bake(PlantSpecCatalogAuthoring authoring)
+            public FixedString64Bytes Id;
+            public FixedString64Bytes VariantOf;
+            public uint BiomeMask;
+            public float TempMin;
+            public float TempMax;
+            public float MoistMin;
+            public float MoistMax;
+            public float SunMin;
+            public float SunMax;
+            public float ElevMin;
+            public float ElevMax;
+            public float SlopeMaxDeg;
+            public uint SoilMask;
+            public PlantHazardFlags HazardFlags;
+            public float StageSecSeedling;
+            public float StageSecSapling;
+            public float StageSecMature;
+            public float ReproSeedsPerDay;
+            public float ReproRadius;
+            public uint SeasonMask;
+            public PlantStyleTokens Style;
+            public List<PlantLootEntry> Yields;
+        }
+
+        public bool TryBuildBlob(out BlobAssetReference<PlantSpecBlob> blobAsset)
+        {
+            blobAsset = default;
+            if (plants == null || plants.Length == 0)
             {
-                if (authoring.plants == null || authoring.plants.Length == 0)
+#if UNITY_EDITOR
+                Debug.LogWarning($"PlantSpecCatalogAuthoring '{name}' has no plants defined.");
+#endif
+                return false;
+            }
+
+            var resolvedSpecs = new List<PlantSpecBuildData>();
+            var specLookup = new Dictionary<string, PlantSpecBuildData>();
+
+            for (int i = 0; i < plants.Length; i++)
+            {
+                var plantData = plants[i];
+                if (string.IsNullOrEmpty(plantData.variantOf))
                 {
-                    Debug.LogWarning($"PlantSpecCatalogAuthoring '{authoring.name}' has no plants defined.");
+                    var spec = ConvertToBuildData(plantData);
+                    spec.Yields = BuildYieldList(plantData.yields);
+                    resolvedSpecs.Add(spec);
+                    specLookup[plantData.id] = spec;
+                }
+            }
+
+            for (int i = 0; i < plants.Length; i++)
+            {
+                var plantData = plants[i];
+                if (string.IsNullOrEmpty(plantData.variantOf))
+                    continue;
+
+                if (specLookup.TryGetValue(plantData.variantOf, out var baseSpec))
+                {
+                    var variantSpec = ApplyVariantDelta(baseSpec, plantData);
+                    variantSpec.Yields = BuildYieldList(plantData.yields, baseSpec.Yields);
+                    resolvedSpecs.Add(variantSpec);
+                    specLookup[plantData.id] = variantSpec;
+                }
+                else
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning($"Plant '{plantData.id}' references unknown VariantOf '{plantData.variantOf}'. Creating as base spec.");
+#endif
+                    var spec = ConvertToBuildData(plantData);
+                    spec.Yields = BuildYieldList(plantData.yields);
+                    resolvedSpecs.Add(spec);
+                    specLookup[plantData.id] = spec;
+                }
+            }
+
+            var builder = new BlobBuilder(Allocator.Temp);
+            ref var blobRoot = ref builder.ConstructRoot<PlantSpecBlob>();
+            var blobPlants = builder.Allocate(ref blobRoot.Plants, resolvedSpecs.Count);
+
+            for (int i = 0; i < resolvedSpecs.Count; i++)
+            {
+                var source = resolvedSpecs[i];
+                ref PlantSpec spec = ref blobPlants[i];
+                CopyToPlantSpec(ref spec, source);
+
+                if (source.Yields != null && source.Yields.Count > 0)
+                {
+                    var yieldsArray = builder.Allocate(ref spec.Yields, source.Yields.Count);
+                    for (int j = 0; j < source.Yields.Count; j++)
+                    {
+                        yieldsArray[j] = source.Yields[j];
+                    }
+                }
+                else
+                {
+                    builder.Allocate(ref spec.Yields, 0);
+                }
+            }
+
+            blobAsset = builder.CreateBlobAssetReference<PlantSpecBlob>(Allocator.Persistent);
+            builder.Dispose();
+            return true;
+        }
+
+        private static List<PlantLootEntry> BuildYieldList(PlantLootEntryData[] entries, List<PlantLootEntry> inherit = null)
+        {
+            if (entries != null && entries.Length > 0)
+            {
+                var yields = new List<PlantLootEntry>(entries.Length);
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    yields.Add(new PlantLootEntry
+                    {
+                        MaterialId = entries[i].materialId,
+                        Weight = entries[i].weight,
+                        MinAmount = entries[i].minAmount,
+                        MaxAmount = entries[i].maxAmount
+                    });
+                }
+                return yields;
+            }
+
+            if (inherit != null && inherit.Count > 0)
+            {
+                return new List<PlantLootEntry>(inherit);
+            }
+
+            return null;
+        }
+
+        private static PlantSpecBuildData ConvertToBuildData(PlantSpecData data)
+        {
+            return new PlantSpecBuildData
+            {
+                Id = data.id,
+                VariantOf = data.variantOf,
+                BiomeMask = data.biomeMask,
+                TempMin = data.tempMin,
+                TempMax = data.tempMax,
+                MoistMin = data.moistMin,
+                MoistMax = data.moistMax,
+                SunMin = data.sunMin,
+                SunMax = data.sunMax,
+                ElevMin = data.elevMin,
+                ElevMax = data.elevMax,
+                SlopeMaxDeg = data.slopeMaxDeg,
+                SoilMask = data.soilMask,
+                HazardFlags = data.hazardFlags,
+                StageSecSeedling = data.stageSecSeedling,
+                StageSecSapling = data.stageSecSapling,
+                StageSecMature = data.stageSecMature,
+                ReproSeedsPerDay = data.reproSeedsPerDay,
+                ReproRadius = data.reproRadius,
+                SeasonMask = data.seasonMask,
+                Style = new PlantStyleTokens
+                {
+                    StylePalette = data.style.stylePalette,
+                    StylePattern = data.style.stylePattern,
+                    FamilyToken = data.style.familyToken
+                },
+                Yields = null
+            };
+        }
+
+        private static PlantSpecBuildData ApplyVariantDelta(PlantSpecBuildData baseSpec, PlantSpecData variantData)
+        {
+            var variant = baseSpec;
+            variant.Id = variantData.id;
+            variant.VariantOf = variantData.variantOf;
+
+            if (variantData.biomeMask != 0) variant.BiomeMask = variantData.biomeMask;
+            if (variantData.tempMin != 0 || variantData.tempMax != 0)
+            {
+                variant.TempMin = variantData.tempMin != 0 ? variantData.tempMin : variant.TempMin;
+                variant.TempMax = variantData.tempMax != 0 ? variantData.tempMax : variant.TempMax;
+            }
+            if (variantData.moistMin != 0 || variantData.moistMax != 0)
+            {
+                variant.MoistMin = variantData.moistMin != 0 ? variantData.moistMin : variant.MoistMin;
+                variant.MoistMax = variantData.moistMax != 0 ? variantData.moistMax : variant.MoistMax;
+            }
+            if (variantData.sunMin != 0 || variantData.sunMax != 0)
+            {
+                variant.SunMin = variantData.sunMin != 0 ? variantData.sunMin : variant.SunMin;
+                variant.SunMax = variantData.sunMax != 0 ? variantData.sunMax : variant.SunMax;
+            }
+            if (variantData.elevMin != 0 || variantData.elevMax != 0)
+            {
+                variant.ElevMin = variantData.elevMin != 0 ? variantData.elevMin : variant.ElevMin;
+                variant.ElevMax = variantData.elevMax != 0 ? variantData.elevMax : variant.ElevMax;
+            }
+            if (variantData.slopeMaxDeg != 0) variant.SlopeMaxDeg = variantData.slopeMaxDeg;
+            if (variantData.soilMask != 0) variant.SoilMask = variantData.soilMask;
+            variant.HazardFlags = variantData.hazardFlags;
+            if (variantData.stageSecSeedling != 0) variant.StageSecSeedling = variantData.stageSecSeedling;
+            if (variantData.stageSecSapling != 0) variant.StageSecSapling = variantData.stageSecSapling;
+            if (variantData.stageSecMature != 0) variant.StageSecMature = variantData.stageSecMature;
+            if (variantData.reproSeedsPerDay != 0) variant.ReproSeedsPerDay = variantData.reproSeedsPerDay;
+            if (variantData.reproRadius != 0) variant.ReproRadius = variantData.reproRadius;
+            if (variantData.seasonMask != 0) variant.SeasonMask = variantData.seasonMask;
+            if (variantData.style.stylePalette != 0) variant.Style.StylePalette = variantData.style.stylePalette;
+            if (variantData.style.stylePattern != 0) variant.Style.StylePattern = variantData.style.stylePattern;
+            if (variantData.style.familyToken != 0) variant.Style.FamilyToken = variantData.style.familyToken;
+
+            return variant;
+        }
+
+        private static void CopyToPlantSpec(ref PlantSpec target, in PlantSpecBuildData source)
+        {
+            target.Id = source.Id;
+            target.VariantOf = source.VariantOf;
+            target.BiomeMask = source.BiomeMask;
+            target.TempMin = source.TempMin;
+            target.TempMax = source.TempMax;
+            target.MoistMin = source.MoistMin;
+            target.MoistMax = source.MoistMax;
+            target.SunMin = source.SunMin;
+            target.SunMax = source.SunMax;
+            target.ElevMin = source.ElevMin;
+            target.ElevMax = source.ElevMax;
+            target.SlopeMaxDeg = source.SlopeMaxDeg;
+            target.SoilMask = source.SoilMask;
+            target.HazardFlags = source.HazardFlags;
+            target.StageSecSeedling = source.StageSecSeedling;
+            target.StageSecSapling = source.StageSecSapling;
+            target.StageSecMature = source.StageSecMature;
+            target.ReproSeedsPerDay = source.ReproSeedsPerDay;
+            target.ReproRadius = source.ReproRadius;
+            target.SeasonMask = source.SeasonMask;
+            target.Style = source.Style;
+        }
+    }
+
+    [DisallowMultipleComponent]
+    public sealed class PlantSpecCatalogAuthoringComponent : MonoBehaviour
+    {
+        [SerializeField] private PlantSpecCatalogAuthoring catalog;
+
+        public sealed class Baker : Unity.Entities.Baker<PlantSpecCatalogAuthoringComponent>
+        {
+            public override void Bake(PlantSpecCatalogAuthoringComponent authoringComponent)
+            {
+                if (authoringComponent.catalog == null)
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning("[PlantSpecCatalog] No PlantSpecCatalogAuthoring asset assigned.");
+#endif
                     return;
                 }
 
-                // Store yields separately (keyed by plant ID)
-                var yieldsMap = new Dictionary<string, List<PlantLootEntry>>();
-
-                // First pass: build base specs (non-variants) and collect yields
-                var resolvedSpecs = new List<PlantSpec>();
-                var specLookup = new Dictionary<string, PlantSpec>();
-
-                for (int i = 0; i < authoring.plants.Length; i++)
+                if (!authoringComponent.catalog.TryBuildBlob(out var blobAsset))
                 {
-                    var plantData = authoring.plants[i];
-                    if (string.IsNullOrEmpty(plantData.variantOf))
-                    {
-                        var spec = ConvertToSpec(plantData, i);
-                        resolvedSpecs.Add(spec);
-                        specLookup[plantData.id] = spec;
-
-                        // Store yields
-                        if (plantData.yields != null && plantData.yields.Length > 0)
-                        {
-                            var yields = new List<PlantLootEntry>();
-                            for (int j = 0; j < plantData.yields.Length; j++)
-                            {
-                                yields.Add(new PlantLootEntry
-                                {
-                                    MaterialId = plantData.yields[j].materialId,
-                                    Weight = plantData.yields[j].weight,
-                                    MinAmount = plantData.yields[j].minAmount,
-                                    MaxAmount = plantData.yields[j].maxAmount
-                                });
-                            }
-                            yieldsMap[plantData.id] = yields;
-                        }
-                    }
+                    return;
                 }
 
-                // Second pass: resolve variants
-                for (int i = 0; i < authoring.plants.Length; i++)
-                {
-                    var plantData = authoring.plants[i];
-                    if (!string.IsNullOrEmpty(plantData.variantOf))
-                    {
-                        if (specLookup.TryGetValue(plantData.variantOf, out var baseSpec))
-                        {
-                            var variantSpec = ApplyVariantDelta(baseSpec, plantData, i);
-                            resolvedSpecs.Add(variantSpec);
-                            specLookup[plantData.id] = variantSpec;
-
-                            // Variant yields override base yields if provided
-                            if (plantData.yields != null && plantData.yields.Length > 0)
-                            {
-                                var yields = new List<PlantLootEntry>();
-                                for (int j = 0; j < plantData.yields.Length; j++)
-                                {
-                                    yields.Add(new PlantLootEntry
-                                    {
-                                        MaterialId = plantData.yields[j].materialId,
-                                        Weight = plantData.yields[j].weight,
-                                        MinAmount = plantData.yields[j].minAmount,
-                                        MaxAmount = plantData.yields[j].maxAmount
-                                    });
-                                }
-                                yieldsMap[plantData.id] = yields;
-                            }
-                            else if (yieldsMap.TryGetValue(plantData.variantOf, out var baseYields))
-                            {
-                                // Inherit yields from base
-                                yieldsMap[plantData.id] = new List<PlantLootEntry>(baseYields);
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Plant '{plantData.id}' references unknown VariantOf '{plantData.variantOf}'. Creating as base spec.");
-                            var spec = ConvertToSpec(plantData, i);
-                            resolvedSpecs.Add(spec);
-                            specLookup[plantData.id] = spec;
-
-                            if (plantData.yields != null && plantData.yields.Length > 0)
-                            {
-                                var yields = new List<PlantLootEntry>();
-                                for (int j = 0; j < plantData.yields.Length; j++)
-                                {
-                                    yields.Add(new PlantLootEntry
-                                    {
-                                        MaterialId = plantData.yields[j].materialId,
-                                        Weight = plantData.yields[j].weight,
-                                        MinAmount = plantData.yields[j].minAmount,
-                                        MaxAmount = plantData.yields[j].maxAmount
-                                    });
-                                }
-                                yieldsMap[plantData.id] = yields;
-                            }
-                        }
-                    }
-                }
-
-                // Create blob builder
-                var builder = new BlobBuilder(Allocator.Temp);
-                ref var blobRoot = ref builder.ConstructRoot<PlantSpecBlob>();
-                var blobPlants = builder.Allocate(ref blobRoot.Plants, resolvedSpecs.Count);
-
-                // Copy resolved specs to blob with yields allocated
-                for (int i = 0; i < resolvedSpecs.Count; i++)
-                {
-                    var spec = resolvedSpecs[i];
-                    var plantId = spec.Id.ToString();
-
-                    // Allocate yields array in blob
-                    if (yieldsMap.TryGetValue(plantId, out var yields) && yields.Count > 0)
-                    {
-                        ref var yieldsArray = ref builder.Allocate(ref spec.Yields, yields.Count);
-                        for (int j = 0; j < yields.Count; j++)
-                        {
-                            yieldsArray[j] = yields[j];
-                        }
-                    }
-                    else
-                    {
-                        builder.Allocate(ref spec.Yields, 0);
-                    }
-
-                    blobPlants[i] = spec;
-                }
-
-                // Create blob asset reference
-                var blobAsset = builder.CreateBlobAssetReference<PlantSpecBlob>(Allocator.Persistent);
-                builder.Dispose();
-
-                // Add singleton component with blob reference
                 var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent(entity, new PlantSpecSingleton
                 {
                     Specs = blobAsset
                 });
-            }
-
-            private static PlantSpec ConvertToSpec(PlantSpecData data, int index)
-            {
-                return new PlantSpec
-                {
-                    Id = data.id,
-                    VariantOf = data.variantOf,
-                    BiomeMask = data.biomeMask,
-                    TempMin = data.tempMin,
-                    TempMax = data.tempMax,
-                    MoistMin = data.moistMin,
-                    MoistMax = data.moistMax,
-                    SunMin = data.sunMin,
-                    SunMax = data.sunMax,
-                    ElevMin = data.elevMin,
-                    ElevMax = data.elevMax,
-                    SlopeMaxDeg = data.slopeMaxDeg,
-                    SoilMask = data.soilMask,
-                    HazardFlags = data.hazardFlags,
-                    StageSecSeedling = data.stageSecSeedling,
-                    StageSecSapling = data.stageSecSapling,
-                    StageSecMature = data.stageSecMature,
-                    ReproSeedsPerDay = data.reproSeedsPerDay,
-                    ReproRadius = data.reproRadius,
-                    SeasonMask = data.seasonMask,
-                    Style = new PlantStyleTokens
-                    {
-                        StylePalette = data.style.stylePalette,
-                        StylePattern = data.style.stylePattern,
-                        FamilyToken = data.style.familyToken
-                    }
-                };
-            }
-
-            private static PlantSpec ApplyVariantDelta(PlantSpec baseSpec, PlantSpecData variantData, int index)
-            {
-                // Start with base spec
-                var variant = baseSpec;
-                
-                // Override with variant data (only non-zero/non-empty values override)
-                variant.Id = variantData.id;
-                variant.VariantOf = variantData.variantOf;
-
-                if (variantData.biomeMask != 0) variant.BiomeMask = variantData.biomeMask;
-                if (variantData.tempMin != 0 || variantData.tempMax != 0)
-                {
-                    variant.TempMin = variantData.tempMin != 0 ? variantData.tempMin : variant.TempMin;
-                    variant.TempMax = variantData.tempMax != 0 ? variantData.tempMax : variant.TempMax;
-                }
-                if (variantData.moistMin != 0 || variantData.moistMax != 0)
-                {
-                    variant.MoistMin = variantData.moistMin != 0 ? variantData.moistMin : variant.MoistMin;
-                    variant.MoistMax = variantData.moistMax != 0 ? variantData.moistMax : variant.MoistMax;
-                }
-                if (variantData.sunMin != 0 || variantData.sunMax != 0)
-                {
-                    variant.SunMin = variantData.sunMin != 0 ? variantData.sunMin : variant.SunMin;
-                    variant.SunMax = variantData.sunMax != 0 ? variantData.sunMax : variant.SunMax;
-                }
-                if (variantData.elevMin != 0 || variantData.elevMax != 0)
-                {
-                    variant.ElevMin = variantData.elevMin != 0 ? variantData.elevMin : variant.ElevMin;
-                    variant.ElevMax = variantData.elevMax != 0 ? variantData.elevMax : variant.ElevMax;
-                }
-                if (variantData.slopeMaxDeg != 0) variant.SlopeMaxDeg = variantData.slopeMaxDeg;
-                if (variantData.soilMask != 0) variant.SoilMask = variantData.soilMask;
-                variant.HazardFlags = variantData.hazardFlags; // Flags always override
-                if (variantData.stageSecSeedling != 0) variant.StageSecSeedling = variantData.stageSecSeedling;
-                if (variantData.stageSecSapling != 0) variant.StageSecSapling = variantData.stageSecSapling;
-                if (variantData.stageSecMature != 0) variant.StageSecMature = variantData.stageSecMature;
-                if (variantData.reproSeedsPerDay != 0) variant.ReproSeedsPerDay = variantData.reproSeedsPerDay;
-                if (variantData.reproRadius != 0) variant.ReproRadius = variantData.reproRadius;
-                if (variantData.seasonMask != 0) variant.SeasonMask = variantData.seasonMask;
-                if (variantData.style.stylePalette != 0) variant.Style.StylePalette = variantData.style.stylePalette;
-                if (variantData.style.stylePattern != 0) variant.Style.StylePattern = variantData.style.stylePattern;
-                if (variantData.style.familyToken != 0) variant.Style.FamilyToken = variantData.style.familyToken;
-
-                return variant;
             }
         }
     }

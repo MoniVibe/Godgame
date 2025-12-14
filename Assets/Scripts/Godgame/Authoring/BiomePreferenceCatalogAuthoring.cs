@@ -39,44 +39,62 @@ namespace Godgame.Authoring
 
         public BiomePreferenceData[] Preferences => preferences;
 
-        /// <summary>
-        /// Baker that converts BiomePreferenceCatalogAuthoring to BiomePreferenceBlob.
-        /// </summary>
-        public sealed class Baker : Unity.Entities.Baker<BiomePreferenceCatalogAuthoring>
+        public bool TryBuildBlob(out BlobAssetReference<BiomePreferenceBlob> blobAsset)
         {
-            public override void Bake(BiomePreferenceCatalogAuthoring authoring)
+            blobAsset = default;
+            if (preferences == null || preferences.Length == 0)
             {
-                if (authoring.preferences == null || authoring.preferences.Length == 0)
+#if UNITY_EDITOR
+                Debug.LogWarning($"BiomePreferenceCatalogAuthoring '{name}' has no preferences defined.");
+#endif
+                return false;
+            }
+
+            var builder = new BlobBuilder(Allocator.Temp);
+            ref var blobRoot = ref builder.ConstructRoot<BiomePreferenceBlob>();
+            var blobPreferences = builder.Allocate(ref blobRoot.Preferences, preferences.Length);
+
+            for (int i = 0; i < preferences.Length; i++)
+            {
+                var prefData = preferences[i];
+                blobPreferences[i] = new BiomePreference
                 {
-                    Debug.LogWarning($"BiomePreferenceCatalogAuthoring '{authoring.name}' has no preferences defined.");
+                    RaceOrCultureId = prefData.raceOrCultureId,
+                    PreferredBiomeMask = prefData.preferredBiomeMask,
+                    AvoidedBiomeMask = prefData.avoidedBiomeMask,
+                    PreferenceWeight = prefData.preferenceWeight,
+                    AvoidancePenalty = prefData.avoidancePenalty
+                };
+            }
+
+            blobAsset = builder.CreateBlobAssetReference<BiomePreferenceBlob>(Allocator.Persistent);
+            builder.Dispose();
+            return true;
+        }
+    }
+
+    [DisallowMultipleComponent]
+    public sealed class BiomePreferenceCatalogAuthoringComponent : MonoBehaviour
+    {
+        [SerializeField] private BiomePreferenceCatalogAuthoring catalog;
+
+        public sealed class Baker : Unity.Entities.Baker<BiomePreferenceCatalogAuthoringComponent>
+        {
+            public override void Bake(BiomePreferenceCatalogAuthoringComponent authoringComponent)
+            {
+                if (authoringComponent.catalog == null)
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning("[BiomePreferenceCatalog] No BiomePreferenceCatalogAuthoring asset assigned.");
+#endif
                     return;
                 }
 
-                // Create blob builder
-                var builder = new BlobBuilder(Allocator.Temp);
-                ref var blobRoot = ref builder.ConstructRoot<BiomePreferenceBlob>();
-                var blobPreferences = builder.Allocate(ref blobRoot.Preferences, authoring.preferences.Length);
-
-                // Convert preferences to blob data
-                for (int i = 0; i < authoring.preferences.Length; i++)
+                if (!authoringComponent.catalog.TryBuildBlob(out var blobAsset))
                 {
-                    var prefData = authoring.preferences[i];
-
-                    blobPreferences[i] = new BiomePreference
-                    {
-                        RaceOrCultureId = prefData.raceOrCultureId,
-                        PreferredBiomeMask = prefData.preferredBiomeMask,
-                        AvoidedBiomeMask = prefData.avoidedBiomeMask,
-                        PreferenceWeight = prefData.preferenceWeight,
-                        AvoidancePenalty = prefData.avoidancePenalty
-                    };
+                    return;
                 }
 
-                // Create blob asset reference
-                var blobAsset = builder.CreateBlobAssetReference<BiomePreferenceBlob>(Allocator.Persistent);
-                builder.Dispose();
-
-                // Add singleton component with blob reference
                 var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent(entity, new BiomePreferenceSingleton
                 {
@@ -86,4 +104,3 @@ namespace Godgame.Authoring
         }
     }
 }
-

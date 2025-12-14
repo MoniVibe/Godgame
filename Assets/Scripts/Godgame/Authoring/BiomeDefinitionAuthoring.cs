@@ -67,56 +67,75 @@ namespace Godgame.Authoring
 
         public BiomeProfileData[] Profiles => profiles;
 
-        /// <summary>
-        /// Baker that converts BiomeDefinitionAuthoring to BiomeDefinitionBlob.
-        /// </summary>
-        public sealed class Baker : Unity.Entities.Baker<BiomeDefinitionAuthoring>
+        public bool TryBuildBlob(out BlobAssetReference<BiomeDefinitionBlob> blobAsset)
         {
-            public override void Bake(BiomeDefinitionAuthoring authoring)
+            blobAsset = default;
+            if (profiles == null || profiles.Length == 0)
             {
-                if (authoring.profiles == null || authoring.profiles.Length == 0)
+#if UNITY_EDITOR
+                Debug.LogWarning($"BiomeDefinitionAuthoring '{name}' has no profiles defined.");
+#endif
+                return false;
+            }
+
+            var builder = new BlobBuilder(Allocator.Temp);
+            ref var blobRoot = ref builder.ConstructRoot<BiomeDefinitionBlob>();
+            var blobProfiles = builder.Allocate(ref blobRoot.Profiles, profiles.Length);
+
+            for (int i = 0; i < profiles.Length; i++)
+            {
+                var profileData = profiles[i];
+                uint biomeId32 = (uint)(i + 1);
+
+                blobProfiles[i] = new BiomeProfile
                 {
-                    Debug.LogWarning($"BiomeDefinitionAuthoring '{authoring.name}' has no profiles defined.");
+                    Id = profileData.id,
+                    BiomeId32 = biomeId32,
+                    TempMin = profileData.tempMin,
+                    TempMax = profileData.tempMax,
+                    MoistMin = profileData.moistMin,
+                    MoistMax = profileData.moistMax,
+                    ElevMin = profileData.elevMin,
+                    ElevMax = profileData.elevMax,
+                    SlopeMaxDeg = profileData.slopeMaxDeg,
+                    VillagerStaminaDrainPct = profileData.villagerStaminaDrainPct,
+                    DiseaseRiskPct = profileData.diseaseRiskPct,
+                    ResourceBiasWood = profileData.resourceBiasWood,
+                    ResourceBiasOre = profileData.resourceBiasOre,
+                    MinimapPalette = profileData.minimapPalette,
+                    GroundStyle = profileData.groundStyle,
+                    WeatherProfileToken = profileData.weatherProfileToken
+                };
+            }
+
+            blobAsset = builder.CreateBlobAssetReference<BiomeDefinitionBlob>(Allocator.Persistent);
+            builder.Dispose();
+            return true;
+        }
+    }
+
+    [DisallowMultipleComponent]
+    public sealed class BiomeDefinitionCatalogAuthoringComponent : MonoBehaviour
+    {
+        [SerializeField] private BiomeDefinitionAuthoring biomeDefinition;
+
+        public sealed class Baker : Unity.Entities.Baker<BiomeDefinitionCatalogAuthoringComponent>
+        {
+            public override void Bake(BiomeDefinitionCatalogAuthoringComponent authoring)
+            {
+                if (authoring.biomeDefinition == null)
+                {
+#if UNITY_EDITOR
+                    Debug.LogWarning("[BiomeDefinitionCatalog] No BiomeDefinition asset assigned.");
+#endif
                     return;
                 }
 
-                // Create blob builder
-                var builder = new BlobBuilder(Allocator.Temp);
-                ref var blobRoot = ref builder.ConstructRoot<BiomeDefinitionBlob>();
-                var blobProfiles = builder.Allocate(ref blobRoot.Profiles, authoring.profiles.Length);
-
-                // Convert profiles to blob data
-                for (int i = 0; i < authoring.profiles.Length; i++)
+                if (!authoring.biomeDefinition.TryBuildBlob(out var blobAsset))
                 {
-                    var profileData = authoring.profiles[i];
-                    uint biomeId32 = (uint)(i + 1); // 1-based IDs
-
-                    blobProfiles[i] = new BiomeProfile
-                    {
-                        Id = profileData.id,
-                        BiomeId32 = biomeId32,
-                        TempMin = profileData.tempMin,
-                        TempMax = profileData.tempMax,
-                        MoistMin = profileData.moistMin,
-                        MoistMax = profileData.moistMax,
-                        ElevMin = profileData.elevMin,
-                        ElevMax = profileData.elevMax,
-                        SlopeMaxDeg = profileData.slopeMaxDeg,
-                        VillagerStaminaDrainPct = profileData.villagerStaminaDrainPct,
-                        DiseaseRiskPct = profileData.diseaseRiskPct,
-                        ResourceBiasWood = profileData.resourceBiasWood,
-                        ResourceBiasOre = profileData.resourceBiasOre,
-                        MinimapPalette = profileData.minimapPalette,
-                        GroundStyle = profileData.groundStyle,
-                        WeatherProfileToken = profileData.weatherProfileToken
-                    };
+                    return;
                 }
 
-                // Create blob asset reference
-                var blobAsset = builder.CreateBlobAssetReference<BiomeDefinitionBlob>(Allocator.Persistent);
-                builder.Dispose();
-
-                // Add singleton component with blob reference
                 var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent(entity, new BiomeDefinitionSingleton
                 {
@@ -126,4 +145,3 @@ namespace Godgame.Authoring
         }
     }
 }
-
