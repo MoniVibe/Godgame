@@ -9,24 +9,30 @@ namespace Godgame.Rendering.Debug
     [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
     public partial struct Godgame_RenderKeyPresentationDebugSystem : ISystem
     {
-#if UNITY_EDITOR
         public void OnUpdate(ref SystemState state)
         {
+#if UNITY_EDITOR
             var q = SystemAPI.QueryBuilder()
                 .WithAll<RenderKey>()
                 .Build();
 
             int count = q.CalculateEntityCount();
-
             state.Enabled = false; // log once; remove if continuous logging is desired
-            var worldName = state.WorldUnmanaged.Name;
-            Log.Message($"[Godgame RenderKey PRESENTATION] World '{worldName}' has {count} RenderKey entities.");
-        }
+            LogRenderKeyCount(state.WorldUnmanaged.Name, count);
 #else
-        public void OnUpdate(ref SystemState state) { }
+            state.Enabled = false;
 #endif
+        }
 
         public void OnCreate(ref SystemState state) { }
         public void OnDestroy(ref SystemState state) { }
+
+#if UNITY_EDITOR
+        [BurstDiscard]
+        private static void LogRenderKeyCount(FixedString128Bytes worldName, int count)
+        {
+            Log.Message($"[Godgame RenderKey PRESENTATION] World '{worldName}' has {count} RenderKey entities.");
+        }
+#endif
     }
 }

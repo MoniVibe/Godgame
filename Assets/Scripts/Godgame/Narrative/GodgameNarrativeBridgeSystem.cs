@@ -125,6 +125,11 @@ namespace Godgame.Narrative
         {
             GodgameBurstDebug.Log($"[GodgameNarrativeBridge] Reward: type={rewardType}, amount={amount}, target={target.Index}");
         }
+#else
+        static void LogSituationStarted(uint id, Entity target) {}
+        static void LogStepEntered(uint id, int step) {}
+        static void LogEventFired(uint id) {}
+        static void LogReward(byte rewardType, float amount, Entity target) {}
 #endif
     }
 
