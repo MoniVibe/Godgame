@@ -61,7 +61,7 @@ namespace Godgame.Environment.Vegetation.Systems
                 .WithEntityAccess())
             {
                 var plantId = plantState.ValueRO.PlantId;
-                var specIndex = FindPlantSpecIndex(ref plantSpecs.Specs, plantId);
+                var specIndex = FindPlantSpecIndex(ref plantSpecs.Specs, ref plantId);
                 if (specIndex == -1)
                 {
                     continue; // Plant spec not found
@@ -161,7 +161,7 @@ namespace Godgame.Environment.Vegetation.Systems
         }
 
         [BurstCompile]
-        private static int FindPlantSpecIndex(ref BlobAssetReference<PlantSpecBlob> specs, in FixedString64Bytes plantId)
+        private static int FindPlantSpecIndex(ref BlobAssetReference<PlantSpecBlob> specs, ref FixedString64Bytes plantId)
         {
             if (!specs.IsCreated)
             {

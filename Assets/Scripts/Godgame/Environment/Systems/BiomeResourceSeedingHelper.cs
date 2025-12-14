@@ -21,8 +21,8 @@ namespace Godgame.Environment.Systems
         /// <returns>Bias weight (0-1000), or 500 if biome not found (neutral)</returns>
         [BurstCompile]
         public static ushort GetResourceBias(
-            BiomeDefinitionSingleton biomeDefs,
-            BiomeGrid biomeGrid,
+            in BiomeDefinitionSingleton biomeDefs,
+            in BiomeGrid biomeGrid,
             ushort resourceTypeIndex)
         {
             if (!biomeDefs.Definitions.IsCreated || !biomeGrid.BiomeIds.IsCreated)

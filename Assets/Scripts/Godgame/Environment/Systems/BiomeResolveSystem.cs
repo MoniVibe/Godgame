@@ -34,7 +34,7 @@ namespace Godgame.Environment.Systems
 
             // Find best-matching biome
             uint chosenBiomeId = ChooseBiomeId(
-                biomeDefs.Definitions,
+                in biomeDefs.Definitions,
                 climate.TempC,
                 climate.Moisture01,
                 climate.ElevationMean);
@@ -68,7 +68,7 @@ namespace Godgame.Environment.Systems
 
         [BurstCompile]
         internal static uint ChooseBiomeId(
-            BlobAssetReference<BiomeDefinitionBlob> definitions,
+            in BlobAssetReference<BiomeDefinitionBlob> definitions,
             float tempC,
             float moisture01,
             float elevation)
@@ -94,7 +94,7 @@ namespace Godgame.Environment.Systems
 
                 // Check if conditions are within range
                 bool inTempRange = tempC >= profile.TempMin && tempC <= profile.TempMax;
-                bool inMoistureRange = moisture01 >= profile.MoistureMin && moisture01 <= profile.MoistureMax;
+                bool inMoistureRange = moisture01 >= profile.MoistMin && moisture01 <= profile.MoistMax;
                 bool inElevationRange = elevation >= profile.ElevMin && elevation <= profile.ElevMax;
 
                 // If outside all ranges, skip this biome
@@ -118,8 +118,8 @@ namespace Godgame.Environment.Systems
                 // Moisture match
                 if (inMoistureRange)
                 {
-                    float moistCenter = (profile.MoistureMin + profile.MoistureMax) * 0.5f;
-                    float moistRange = profile.MoistureMax - profile.MoistureMin;
+                    float moistCenter = (profile.MoistMin + profile.MoistMax) * 0.5f;
+                    float moistRange = profile.MoistMax - profile.MoistMin;
                     float moistDistance = math.abs(moisture01 - moistCenter) / math.max(moistRange, 0.01f);
                     score += (1f - math.min(moistDistance, 1f)) * 0.4f; // 40% weight
                 }

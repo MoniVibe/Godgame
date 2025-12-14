@@ -44,7 +44,7 @@ namespace Godgame.Environment.Vegetation.Systems
         [BurstCompile]
         public static void CalculateHarvestYields(
             ref PlantSpec plantSpec,
-            in PlantState plantState,
+            ref PlantState plantState,
             ref NativeList<PlantLootEntry> outputYields)
         {
             if (plantState.Stage != GrowthStage.Mature && plantState.Stage != GrowthStage.Sapling)

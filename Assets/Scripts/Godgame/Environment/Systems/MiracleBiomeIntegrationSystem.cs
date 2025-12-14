@@ -1,12 +1,14 @@
-using Godgame.Miracles;
 using PureDOTS.Environment;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Systems;
+using Unity.Collections;
 using MiracleType = PureDOTS.Runtime.Components.MiracleType;
 using MiracleLifecycleState = PureDOTS.Runtime.Components.MiracleLifecycleState;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using GodgameMiracleToken = Godgame.Miracles.MiracleToken;
 
 namespace Godgame.Environment.Systems
 {
@@ -21,15 +23,17 @@ namespace Godgame.Environment.Systems
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<MiracleToken>();
+            state.RequireForUpdate<GodgameMiracleToken>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var ecb = new EntityCommandBuffer(Unity.Collections.Allocator.TempJob);
+            var ecb = new EntityCommandBuffer(Allocator.TempJob);
 
-            foreach (var (miracleEntity, miracle, transform) in SystemAPI.Query<Entity, RefRO<MiracleToken>, RefRO<LocalTransform>>())
+            foreach (var (miracle, transform, entity) in SystemAPI
+                         .Query<RefRO<GodgameMiracleToken>, RefRO<LocalTransform>>()
+                         .WithEntityAccess())
             {
                 // Only process active miracles
                 if (miracle.ValueRO.Lifecycle != MiracleLifecycleState.Active)
@@ -59,7 +63,7 @@ namespace Godgame.Environment.Systems
                         shouldCreate = true;
                         break;
 
-                    case MiracleType.Fire:
+                    case MiracleType.Fireball:
                         targetClimate = new ClimateVector
                         {
                             Temperature = math.clamp(intensity * 0.5f, 0f, 1f),
@@ -87,8 +91,8 @@ namespace Godgame.Environment.Systems
                 if (shouldCreate && radius > 0f)
                 {
                     // Find or create climate control source for this miracle
-                    Entity? existingSource = null;
-                    foreach (var (sourceEntity, source) in SystemAPI.Query<Entity, RefRO<ClimateControlSource>>())
+                    var existingSource = Entity.Null;
+                    foreach (var (source, sourceEntity) in SystemAPI.Query<RefRO<ClimateControlSource>>().WithEntityAccess())
                     {
                         if (math.distance(source.ValueRO.Center, position) < radius * 0.1f)
                         {
@@ -97,30 +101,24 @@ namespace Godgame.Environment.Systems
                         }
                     }
 
-                    if (existingSource.HasValue)
+                    var newSource = new ClimateControlSource
                     {
-                        // Update existing source
-                        var source = SystemAPI.GetComponent<ClimateControlSource>(existingSource.Value);
-                        source.TargetClimate = targetClimate;
-                        source.Radius = radius;
-                        source.Strength = intensity * 0.1f; // Convert intensity to strength
-                        source.Center = position;
-                        ecb.SetComponent(existingSource.Value, source);
+                        Kind = ClimateControlKind.GodMiracle,
+                        Center = position,
+                        Radius = radius,
+                        TargetClimate = targetClimate,
+                        Strength = intensity * 0.1f
+                    };
+
+                    if (existingSource != Entity.Null)
+                    {
+                        ecb.SetComponent(existingSource, newSource);
                     }
                     else
                     {
-                        // Create new source
                         var newEntity = ecb.CreateEntity();
-                        ecb.AddComponent(newEntity, new ClimateControlSource
-                        {
-                            Kind = ClimateControlKind.GodMiracle,
-                            Center = position,
-                            Radius = radius,
-                            TargetClimate = targetClimate,
-                            Strength = intensity * 0.1f
-                        });
-                        ecb.AddComponent(newEntity, LocalTransform.FromPositionRotationScale(
-                            position, quaternion.identity, 1f));
+                        ecb.AddComponent(newEntity, newSource);
+                        ecb.AddComponent(newEntity, LocalTransform.FromPositionRotationScale(position, quaternion.identity, 1f));
                     }
                 }
             }

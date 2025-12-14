@@ -13,7 +13,6 @@ namespace Godgame.Environment.Vegetation.Systems
     /// Uses deterministic clustering and respects density/min-distance rules.
     /// </summary>
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [BurstCompile]
     public partial struct StandSpawnerSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -23,7 +22,6 @@ namespace Godgame.Environment.Vegetation.Systems
             state.RequireForUpdate<BiomeGrid>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var standSpecs = SystemAPI.GetSingleton<StandSpecSingleton>();
@@ -46,6 +44,7 @@ namespace Godgame.Environment.Vegetation.Systems
             // For MVP: spawn stands based on biome weights
             // Future: use spatial queries to find valid spawn locations
             ref var stands = ref standSpecs.Specs.Value.Stands;
+            ref var plants = ref plantSpecs.Specs.Value.Plants;
             for (int i = 0; i < stands.Length; i++)
             {
                 ref var stand = ref stands[i];
@@ -64,32 +63,30 @@ namespace Godgame.Environment.Vegetation.Systems
                 }
 
                 // Find plant spec
-                var plantSpec = FindPlantSpec(plantSpecs.Specs, stand.PlantId);
-                if (!plantSpec.HasValue)
+                var plantId = stand.PlantId;
+                if (!TryFindPlantSpecIndex(plantSpecs.Specs, ref plantId, out var plantIndex))
                 {
                     continue; // Plant spec not found
                 }
+                ref var plantSpec = ref plants[plantIndex];
 
                 // Check biome compatibility
                 uint biomeBit = 1u << biomeIndex;
-                if ((plantSpec.Value.BiomeMask & biomeBit) == 0)
+                if ((plantSpec.BiomeMask & biomeBit) == 0)
                 {
                     continue; // Plant not compatible with biome
                 }
 
                 // MVP: Simple spawn at origin (0,0,0) with clustering
                 // Future: Use spatial queries and proper terrain sampling
-                SpawnStand(state, ecb, stand, plantSpec.Value, currentBiomeId, float3.zero, stand.SpawnRadius);
+                SpawnStand(ecb, ref stand, ref plantSpec, float3.zero, stand.SpawnRadius);
             }
         }
 
-        [BurstCompile]
         private static void SpawnStand(
-            SystemState state,
             EntityCommandBuffer ecb,
-            StandSpec stand,
-            PlantSpec plantSpec,
-            uint biomeId,
+            ref StandSpec stand,
+            ref PlantSpec plantSpec,
             float3 center,
             float radius)
         {
@@ -145,12 +142,12 @@ namespace Godgame.Environment.Vegetation.Systems
             }
         }
 
-        [BurstCompile]
-        private static PlantSpec? FindPlantSpec(BlobAssetReference<PlantSpecBlob> specs, FixedString64Bytes plantId)
+        private static bool TryFindPlantSpecIndex(BlobAssetReference<PlantSpecBlob> specs, ref FixedString64Bytes plantId, out int index)
         {
+            index = -1;
             if (!specs.IsCreated)
             {
-                return null;
+                return false;
             }
 
             ref var plants = ref specs.Value.Plants;
@@ -158,12 +155,12 @@ namespace Godgame.Environment.Vegetation.Systems
             {
                 if (plants[i].Id.Equals(plantId))
                 {
-                    return plants[i];
+                    index = i;
+                    return true;
                 }
             }
 
-            return null;
+            return false;
         }
     }
 }
-

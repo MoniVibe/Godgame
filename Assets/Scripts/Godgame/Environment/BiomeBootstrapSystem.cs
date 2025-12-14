@@ -1,3 +1,4 @@
+using PureDOTS.Environment;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -42,8 +43,15 @@ namespace Godgame.Environment
                 var weatherEntity = ecb.CreateEntity();
                 ecb.AddComponent(weatherEntity, new WeatherState
                 {
-                    WeatherToken = 0,   // Clear weather
-                    Intensity01 = 0f
+                    Current = WeatherType.Clear,
+                    Target = WeatherType.Clear,
+                    Intensity = 0f,
+                    MoisturePercent = 0.6f,
+                    TemperatureCelsius = 17f,
+                    ActivePhase = (byte)TimeOfDayPhase.Morning,
+                    DominantBiome = BiomeType.Unknown,
+                    DominantBiomeMoisture = 0.6f,
+                    LastChangeTick = 0
                 });
                 ecb.Playback(state.EntityManager);
                 ecb.Dispose();
