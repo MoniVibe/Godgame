@@ -21,13 +21,19 @@ namespace Godgame.Demo
 
         private void Awake()
         {
-            EnsureInputSystemUI();
-            EnsureCamera();
+            if (!RuntimeMode.IsHeadless)
+            {
+                EnsureInputSystemUI();
+                EnsureCamera();
+            }
         }
 
         private void Start()
         {
-            EnsureInputSystemUI();
+            if (!RuntimeMode.IsHeadless)
+            {
+                EnsureInputSystemUI();
+            }
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null) return;
@@ -57,6 +63,8 @@ namespace Godgame.Demo
 
         private void Update()
         {
+            if (RuntimeMode.IsHeadless) return;
+
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
