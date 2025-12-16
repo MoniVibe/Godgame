@@ -72,6 +72,54 @@ namespace Godgame.Rendering.Systems
                     });
                 }
             }
+
+            // Assign RenderKey to Villagers
+            var villagerQuery = SystemAPI.QueryBuilder()
+                .WithAll<Godgame.Villagers.VillagerId>()
+                .WithNone<RenderKey>()
+                .Build();
+
+            using (var villagers = villagerQuery.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var villager in villagers)
+                {
+                    em.AddComponentData(villager, new RenderKey
+                    {
+                        ArchetypeId = GodgameRenderKeys.Villager,
+                        LOD = 0
+                    });
+                    em.AddComponentData(villager, new RenderFlags
+                    {
+                        Visible = 1,
+                        ShadowCaster = 1,
+                        HighlightMask = 0
+                    });
+                }
+            }
+
+            // Assign RenderKey to Rocks (ResourceNodeTag)
+            var rockQuery = SystemAPI.QueryBuilder()
+                .WithAll<Godgame.Demo.RockTag>()
+                .WithNone<RenderKey>()
+                .Build();
+
+            using (var rocks = rockQuery.ToEntityArray(Allocator.Temp))
+            {
+                foreach (var rock in rocks)
+                {
+                    em.AddComponentData(rock, new RenderKey
+                    {
+                        ArchetypeId = GodgameRenderKeys.ResourceNode, // Rocks are ResourceNodes
+                        LOD = 0
+                    });
+                    em.AddComponentData(rock, new RenderFlags
+                    {
+                        Visible = 1,
+                        ShadowCaster = 1,
+                        HighlightMask = 0
+                    });
+                }
+            }
         }
 
         public void OnDestroy(ref SystemState state) { }

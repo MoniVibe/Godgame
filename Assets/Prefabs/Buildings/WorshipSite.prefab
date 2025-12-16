@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 100001}
-  - component: {fileID: 100011}
+  - component: {fileID: 2192086509378120644}
   m_Layer: 0
   m_Name: WorshipSite
   m_TagString: Untagged
@@ -32,7 +32,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &100011
+--- !u!114 &2192086509378120644
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,11 +41,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 100000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b10fde26ebaf40849188be1a79a15ebd, type: 3}
+  m_Script: {fileID: 11500000, guid: 57c8ea730e4fdb846b3dae41baa0d133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  visualPrefab: {fileID: 0}
-  localOffset: {x: 0, y: 0, z: 0}
-  localRotationOffsetEuler: {x: 0, y: 0, z: 0}
-  scaleMultiplier: 1
-  inheritParentScale: 1
+  manaGenerationRate: 1
+  worshipperCapacity: 10

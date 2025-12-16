@@ -89,9 +89,9 @@ namespace Godgame.Debugging
                 }
 
                 // Check if has job
-                if (em.HasComponent<VillagerJob>(entity))
+                if (em.HasComponent<Godgame.Villagers.VillagerJob>(entity))
                 {
-                    var job = em.GetComponentData<VillagerJob>(entity);
+                    var job = em.GetComponentData<Godgame.Villagers.VillagerJob>(entity);
                     summary.Append($"\nJob: {job.Type}, Phase: {job.Phase}");
                 }
 
@@ -172,4 +172,3 @@ namespace Godgame.Debugging
 #endif
     }
 }
-

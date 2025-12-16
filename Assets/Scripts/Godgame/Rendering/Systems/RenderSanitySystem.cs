@@ -14,14 +14,22 @@ namespace Godgame.Rendering.Systems
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]
     public partial struct RenderSanitySystem : ISystem
     {
+        private float _timer;
+        private const float k_CheckDelay = 2.0f;
+
         public void OnCreate(ref SystemState state)
         {
             state.Enabled = true;
+            _timer = 0f;
         }
 
         public void OnUpdate(ref SystemState state)
         {
             if (!Application.isPlaying)
+                return;
+
+            _timer += SystemAPI.Time.DeltaTime;
+            if (_timer < k_CheckDelay)
                 return;
 
             var q = SystemAPI.QueryBuilder()

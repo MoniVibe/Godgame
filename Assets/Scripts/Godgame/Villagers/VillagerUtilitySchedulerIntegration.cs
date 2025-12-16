@@ -88,8 +88,6 @@ namespace Godgame.Villagers
             var energyRequirement = jobType switch
             {
                 VillagerJob.JobType.Gatherer => 0.4f,
-                VillagerJob.JobType.Builder => 0.6f,
-                VillagerJob.JobType.Guard => 0.5f,
                 _ => 0.3f
             };
 

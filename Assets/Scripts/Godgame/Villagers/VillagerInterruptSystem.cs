@@ -69,7 +69,7 @@ namespace Godgame.Villagers
                         {
                             savedState.SavedPhase = job.Phase;
                             savedState.SavedType = job.Type;
-                            savedState.SavedTicketId = job.ActiveTicketId;
+                            savedState.SavedTicketId = (uint)math.max(0, job.ActiveTicketId);
                             if (_ticketLookup.HasComponent(entity))
                             {
                                 savedState.SavedTargetEntity = _ticketLookup[entity].ResourceEntity;
@@ -131,7 +131,7 @@ namespace Godgame.Villagers
                             var job = _jobLookup[entity];
                             job.Phase = savedState.SavedPhase;
                             job.Type = savedState.SavedType;
-                            job.ActiveTicketId = savedState.SavedTicketId;
+                            job.ActiveTicketId = (int)math.min(savedState.SavedTicketId, int.MaxValue);
                             _jobLookup[entity] = job;
                         }
                     }
@@ -157,7 +157,7 @@ namespace Godgame.Villagers
                             var job = _jobLookup[entity];
                             job.Phase = savedState.SavedPhase;
                             job.Type = savedState.SavedType;
-                            job.ActiveTicketId = savedState.SavedTicketId;
+                            job.ActiveTicketId = (int)math.min(savedState.SavedTicketId, int.MaxValue);
                             _jobLookup[entity] = job;
                         }
 

@@ -1,3 +1,4 @@
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using Godgame.Modules;
 using Godgame.Villagers;
@@ -23,10 +24,10 @@ namespace Godgame.Authoring
         private int factionId = 0;
 
         [SerializeField]
-        private VillagerJob.JobType jobType = VillagerJob.JobType.Gatherer;
+        private Godgame.Villagers.VillagerJob.JobType jobType = Godgame.Villagers.VillagerJob.JobType.Gatherer;
 
         [SerializeField]
-        private VillagerAIState.Goal aiGoal = VillagerAIState.Goal.Work;
+        private Godgame.Villagers.VillagerAIState.Goal aiGoal = Godgame.Villagers.VillagerAIState.Goal.Work;
 
         [SerializeField]
         private float3 spawnPosition = float3.zero;
@@ -149,30 +150,61 @@ namespace Godgame.Authoring
         [SerializeField]
         private float spellIntensityModifier = 1.0f;
 
+        [Header("PureDOTS Mind Defaults")]
+        [SerializeField, Range(0.001f, 0.05f)]
+        private float hungerDecayPerTick = 0.01f;
+
+        [SerializeField, Range(0.001f, 0.05f)]
+        private float restDecayPerTick = 0.01f;
+
+        [SerializeField, Range(0.001f, 0.05f)]
+        private float faithDecayPerTick = 0.005f;
+
+        [SerializeField, Range(0.001f, 0.05f)]
+        private float safetyDecayPerTick = 0.008f;
+
+        [SerializeField, Range(0.001f, 0.05f)]
+        private float socialDecayPerTick = 0.006f;
+
+        [SerializeField, Range(0.001f, 0.05f)]
+        private float workPressurePerTick = 0.004f;
+
+        [SerializeField]
+        private float focusMax = 1f;
+
+        [SerializeField]
+        private float focusRegenPerTick = 0.03f;
+
+        [SerializeField]
+        private bool lockFocusAtSpawn = false;
+
+        [SerializeField, Range(1, 20)]
+        private int mindCadenceTicks = 5;
+
         private sealed class Baker : Unity.Entities.Baker<VillagerAuthoring>
         {
             public override void Bake(VillagerAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic | TransformUsageFlags.Renderable);
                 
-                // Add PureDOTS villager components
-                AddComponent(entity, new VillagerId
+                // Add villager components
+                AddComponent(entity, new Godgame.Villagers.VillagerId
                 {
                     Value = authoring.villagerId,
                     FactionId = authoring.factionId
                 });
 
-                AddComponent(entity, new VillagerJob
+                AddComponent(entity, new Godgame.Villagers.VillagerJob
                 {
                     Type = authoring.jobType,
-                    Phase = VillagerJob.JobPhase.Idle,
+                    Phase = Godgame.Villagers.VillagerJob.JobPhase.Idle,
                     ActiveTicketId = 0,
                     Productivity = 1f
                 });
 
-                AddComponent(entity, new VillagerAIState
+                AddComponent(entity, new Godgame.Villagers.VillagerAIState
                 {
-                    CurrentState = VillagerAIState.State.Idle,
+                    CurrentState = Godgame.Villagers.VillagerAIState.State.Idle,
                     CurrentGoal = authoring.aiGoal,
                     TargetEntity = Entity.Null
                 });
@@ -293,6 +325,69 @@ namespace Godgame.Authoring
                         transform.position = authoring.spawnPosition;
                     }
                 }
+
+                // Shared PureDOTS villager needs/intent components
+                AddComponent(entity, new VillagerNeedState
+                {
+                    HungerUrgency = ToUrgency(authoring.food),
+                    RestUrgency = ToUrgency(authoring.rest),
+                    FaithUrgency = ToUrgency(authoring.wisdom),
+                    SafetyUrgency = ToUrgency(authoring.generalHealth),
+                    SocialUrgency = ToUrgency(authoring.glory),
+                    WorkUrgency = ToUrgency(authoring.wealth)
+                });
+
+                AddComponent(entity, new VillagerNeedTuning
+                {
+                    HungerDecayPerTick = authoring.hungerDecayPerTick,
+                    RestDecayPerTick = authoring.restDecayPerTick,
+                    FaithDecayPerTick = authoring.faithDecayPerTick,
+                    SafetyDecayPerTick = authoring.safetyDecayPerTick,
+                    SocialDecayPerTick = authoring.socialDecayPerTick,
+                    WorkPressurePerTick = authoring.workPressurePerTick,
+                    MaxUrgency = 1f
+                });
+
+                AddComponent(entity, new FocusBudget
+                {
+                    Current = math.max(0.01f, authoring.focusMax),
+                    Max = math.max(0.01f, authoring.focusMax),
+                    RegenPerTick = math.max(0f, authoring.focusRegenPerTick),
+                    Reserved = 0f,
+                    IsLocked = (byte)(authoring.lockFocusAtSpawn ? 1 : 0)
+                });
+                AddBuffer<FocusBudgetReservation>(entity);
+
+                AddComponent(entity, new VillagerGoalState
+                {
+                    CurrentGoal = VillagerGoal.Idle,
+                    PreviousGoal = VillagerGoal.Idle,
+                    LastGoalChangeTick = 0,
+                    CurrentGoalUrgency = 0f
+                });
+                AddComponent(entity, new VillagerFleeIntent());
+                AddComponent(entity, new VillagerMindCadence
+                {
+                    CadenceTicks = math.max(1, authoring.mindCadenceTicks),
+                    LastRunTick = 0
+                });
+                AddComponent(entity, new VillagerThreatState
+                {
+                    ThreatEntity = Entity.Null,
+                    ThreatDirection = new float3(0f, 0f, 1f),
+                    Urgency = 0f,
+                    HasLineOfSight = 0
+                });
+            }
+
+            private static float ToUrgency(float statValue)
+            {
+                if (math.abs(statValue) < 1e-3f)
+                {
+                    return 1f;
+                }
+
+                return math.saturate(1f - (statValue / 100f));
             }
         }
     }

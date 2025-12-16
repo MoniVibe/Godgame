@@ -1,8 +1,11 @@
 using Godgame.Registry;
 using Godgame.Resources;
 using Godgame.Villagers;
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Combat;
 using PureDOTS.Runtime.Resource;
+using PureDOTS.Runtime.Telemetry;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -26,17 +29,22 @@ namespace Godgame.Villagers
         private BufferLookup<StorehouseCapacityElement> _capacityLookup;
         private EntityQuery _resourceNodeQuery;
         private EntityQuery _storehouseQuery;
+        private ComponentLookup<VillagerGoalState> _goalLookup;
+        private ComponentLookup<HazardAvoidanceState> _hazardLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerJobState>();
             state.RequireForUpdate<ResourceTypeIndex>();
+            state.RequireForUpdate<BehaviorConfigRegistry>();
             _resourceNodeLookup = state.GetComponentLookup<GodgameResourceNodeMirror>(false);
             _transformLookup = state.GetComponentLookup<LocalTransform>(isReadOnly: true);
             _storehouseLookup = state.GetComponentLookup<GodgameStorehouse>(isReadOnly: true);
             _inventoryLookup = state.GetBufferLookup<StorehouseInventoryItem>(false);
             _capacityLookup = state.GetBufferLookup<StorehouseCapacityElement>(isReadOnly: true);
+            _goalLookup = state.GetComponentLookup<VillagerGoalState>(true);
+            _hazardLookup = state.GetComponentLookup<HazardAvoidanceState>(true);
 
             _resourceNodeQuery = SystemAPI.QueryBuilder()
                 .WithAll<GodgameResourceNodeMirror, LocalTransform>()
@@ -50,17 +58,42 @@ namespace Godgame.Villagers
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            if (SystemAPI.TryGetSingleton<RewindState>(out var rewindState) && rewindState.Mode != RewindMode.Record)
+            {
+                return;
+            }
+
             _resourceNodeLookup.Update(ref state);
             _transformLookup.Update(ref state);
             _storehouseLookup.Update(ref state);
             _inventoryLookup.Update(ref state);
             _capacityLookup.Update(ref state);
+            _goalLookup.Update(ref state);
+            _hazardLookup.Update(ref state);
 
             var catalog = SystemAPI.GetSingleton<ResourceTypeIndex>().Catalog;
             if (!catalog.IsCreated)
             {
                 return;
             }
+
+            var behaviorConfig = SystemAPI.GetSingleton<BehaviorConfigRegistry>();
+            var gatherConfig = behaviorConfig.GatherDeliver;
+            var movementConfig = behaviorConfig.Movement;
+            var gatherRate = gatherConfig.DefaultGatherRatePerSecond > 0f
+                ? gatherConfig.DefaultGatherRatePerSecond
+                : StepJob.DefaultGatherRate;
+            var carryCapacityOverride = gatherConfig.CarryCapacityOverride;
+            var returnThreshold = gatherConfig.ReturnThresholdPercent > 0f
+                ? math.clamp(gatherConfig.ReturnThresholdPercent, 0.1f, 1f)
+                : StepJob.DefaultReturnThreshold;
+            var storehouseRadius = gatherConfig.StorehouseSearchRadius > 0f
+                ? gatherConfig.StorehouseSearchRadius
+                : StepJob.DefaultStorehouseRadius;
+            var dropoffCooldown = math.max(0f, gatherConfig.DropoffCooldownSeconds);
+            var arrivalDistance = movementConfig.ArrivalDistance > 0f
+                ? movementConfig.ArrivalDistance
+                : StepJob.DefaultArrivalDistance;
 
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter();
@@ -89,7 +122,16 @@ namespace Godgame.Villagers
                 ResourceNodeTransforms = resourceNodeTransforms,
                 ResourceNodeMirrors = resourceNodeMirrors,
                 StorehouseEntities = storehouseEntities,
-                StorehouseTransforms = storehouseTransforms
+                StorehouseTransforms = storehouseTransforms,
+                GatherRatePerSecond = gatherRate,
+                CarryCapacityOverride = carryCapacityOverride,
+                ReturnThresholdPercent = returnThreshold,
+                StorehouseSearchRadius = storehouseRadius,
+                DropoffCooldownSeconds = dropoffCooldown,
+                ArrivalDistance = arrivalDistance,
+                MoveSpeed = StepJob.DefaultMoveSpeed,
+                GoalLookup = _goalLookup,
+                HazardLookup = _hazardLookup
             }.ScheduleParallel();
 
             state.Dependency.Complete();
@@ -108,6 +150,14 @@ namespace Godgame.Villagers
         [BurstCompile]
         public partial struct StepJob : IJobEntity
         {
+            public const float DefaultGatherRate = 8f;
+            public const float DefaultCarryCapacity = 50f;
+            public const float DefaultReturnThreshold = 0.95f;
+            public const float DefaultStorehouseRadius = 250f;
+            public const float DefaultArrivalDistance = 2f;
+            public const float DefaultDeliverDistance = 3f;
+            public const float DefaultMoveSpeed = 5f;
+
             public float Delta;
             public EntityCommandBuffer.ParallelWriter Ecb;
             public ComponentLookup<GodgameResourceNodeMirror> ResourceNodeLookup;
@@ -123,18 +173,71 @@ namespace Godgame.Villagers
             [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<Entity> StorehouseEntities;
             [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<LocalTransform> StorehouseTransforms;
 
-            private const float GatherDistance = 2f;
-            private const float DeliverDistance = 3f;
-            private const float MoveSpeed = 5f;
-            private const float GatherRate = 10f; // units per second
+            public float GatherRatePerSecond;
+            public float CarryCapacityOverride;
+            public float ReturnThresholdPercent;
+            public float StorehouseSearchRadius;
+            public float DropoffCooldownSeconds;
+            public float ArrivalDistance;
+            public float MoveSpeed;
+            [ReadOnly] public ComponentLookup<VillagerGoalState> GoalLookup;
+            [ReadOnly] public ComponentLookup<HazardAvoidanceState> HazardLookup;
 
             [BurstCompile]
-            void Execute([ChunkIndexInQuery] int ciq, Entity e, ref VillagerJobState job, ref LocalTransform tx, ref Navigation nav)
+            void Execute([ChunkIndexInQuery] int ciq, Entity e, ref VillagerJobState job, ref LocalTransform tx, ref Navigation nav, ref GatherDeliverTelemetry telemetry)
             {
+                if (GoalLookup.HasComponent(e))
+                {
+                    var goal = GoalLookup[e];
+                    if (goal.CurrentGoal != VillagerGoal.Work)
+                    {
+                        ResetJob(ref job);
+                        return;
+                    }
+                }
+
+                float3 hazardVector = float3.zero;
+                float hazardUrgency = 0f;
+                if (HazardLookup.HasComponent(e))
+                {
+                    var hazard = HazardLookup[e];
+                    hazardVector = hazard.CurrentAdjustment;
+                    hazardUrgency = hazard.AvoidanceUrgency;
+                }
+
+                var gatherRate = GatherRatePerSecond > 0f ? GatherRatePerSecond : DefaultGatherRate;
+                var carryCapacity = job.CarryMax > 0f
+                    ? job.CarryMax
+                    : (CarryCapacityOverride > 0f ? CarryCapacityOverride : DefaultCarryCapacity);
+                if (job.CarryMax <= 0f)
+                {
+                    job.CarryMax = carryCapacity;
+                }
+                carryCapacity = math.max(carryCapacity, 1e-3f);
+                job.CarryCount = math.clamp(job.CarryCount, 0f, carryCapacity);
+
+                var returnThreshold = ReturnThresholdPercent > 0f
+                    ? math.clamp(ReturnThresholdPercent, 0.1f, 1f)
+                    : DefaultReturnThreshold;
+                var storehouseRadiusSq = StorehouseSearchRadius > 0f
+                    ? StorehouseSearchRadius * StorehouseSearchRadius
+                    : float.PositiveInfinity;
+                var arrivalDistance = ArrivalDistance > 0f ? ArrivalDistance : DefaultArrivalDistance;
+                var deliverDistance = math.max(arrivalDistance, DefaultDeliverDistance);
+                var moveSpeed = MoveSpeed > 0f ? MoveSpeed : DefaultMoveSpeed;
+
+                if (job.DropoffCooldown > 0f)
+                {
+                    job.DropoffCooldown = math.max(0f, job.DropoffCooldown - Delta);
+                    if (job.DropoffCooldown > 0f && job.Phase == JobPhase.Idle)
+                    {
+                        return;
+                    }
+                }
+
                 switch (job.Phase)
                 {
                     case JobPhase.Idle:
-                        // Find nearest resource node of matching type
                         Entity nearestNode = Entity.Null;
                         float minDistanceSq = float.MaxValue;
                         for (int i = 0; i < ResourceNodeEntities.Length; i++)
@@ -156,58 +259,59 @@ namespace Godgame.Villagers
                             job.Target = nearestNode;
                             int nodeIndex = ResourceNodeEntities.IndexOf(nearestNode);
                             nav.Destination = ResourceNodeTransforms[nodeIndex].Position;
-                            nav.Speed = MoveSpeed;
+                            nav.Speed = moveSpeed;
                             job.Phase = JobPhase.NavigateToNode;
                             job.ResourceTypeIndex = ResourceNodeMirrors[nodeIndex].ResourceTypeIndex;
                         }
                         break;
 
                     case JobPhase.NavigateToNode:
-                        // Move toward destination
                         var direction = nav.Destination - tx.Position;
                         var distance = math.length(direction);
-                        if (distance > GatherDistance)
+                        if (distance > arrivalDistance)
                         {
-                            var moveDelta = math.normalize(direction) * nav.Speed * Delta;
+                            var moveDir = VillagerSteeringMath.BlendDirection(direction, hazardVector, hazardUrgency);
+                            var moveDelta = moveDir * nav.Speed * Delta;
                             tx.Position += moveDelta;
                         }
                         else
                         {
-                            // Reached node, start gathering
                             job.Phase = JobPhase.Gather;
                         }
                         break;
 
                     case JobPhase.Gather:
-                        // Gather resources from node
                         if (job.Target != Entity.Null && ResourceNodeLookup.HasComponent(job.Target))
                         {
                             var nodeIndex = ResourceNodeEntities.IndexOf(job.Target);
                             if (nodeIndex >= 0)
                             {
                                 var node = ResourceNodeMirrors[nodeIndex];
-                                if (node.RemainingAmount > 0f && job.CarryCount < job.CarryMax)
+                                if (node.RemainingAmount > 0f && job.CarryCount < carryCapacity)
                                 {
-                                    var gatherAmount = math.min(GatherRate * Delta, math.min(node.RemainingAmount, job.CarryMax - job.CarryCount));
-                                    job.CarryCount += gatherAmount;
+                                    var gatherAmount = math.min(gatherRate * Delta, math.min(node.RemainingAmount, carryCapacity - job.CarryCount));
+                                    job.CarryCount = math.min(carryCapacity, job.CarryCount + gatherAmount);
+                                    if (gatherAmount > 0f)
+                                    {
+                                        telemetry.MinedAmountMilliInterval += BehaviorTelemetryMath.ToMilli(gatherAmount);
+                                        telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
+                                    }
                                     node.RemainingAmount = math.max(0f, node.RemainingAmount - gatherAmount);
                                     if (node.RemainingAmount <= 0f)
                                     {
                                         node.IsDepleted = 1;
                                     }
-                                    // Update lookup for later sync
                                     ResourceNodeLookup[job.Target] = node;
                                 }
 
-                                if (job.CarryCount >= job.CarryMax || node.RemainingAmount <= 0f)
+                                if (job.CarryCount >= carryCapacity * returnThreshold || node.RemainingAmount <= 0f)
                                 {
-                                    // Find nearest storehouse
                                     Entity nearestStorehouse = Entity.Null;
                                     float minStorehouseDistSq = float.MaxValue;
                                     for (int i = 0; i < StorehouseEntities.Length; i++)
                                     {
                                         float distSq = math.distancesq(tx.Position, StorehouseTransforms[i].Position);
-                                        if (distSq < minStorehouseDistSq)
+                                        if (distSq <= storehouseRadiusSq && distSq < minStorehouseDistSq)
                                         {
                                             minStorehouseDistSq = distSq;
                                             nearestStorehouse = StorehouseEntities[i];
@@ -219,12 +323,11 @@ namespace Godgame.Villagers
                                         job.Target = nearestStorehouse;
                                         int storehouseIndex = StorehouseEntities.IndexOf(nearestStorehouse);
                                         nav.Destination = StorehouseTransforms[storehouseIndex].Position;
-                                        nav.Speed = MoveSpeed;
+                                        nav.Speed = moveSpeed;
                                         job.Phase = JobPhase.NavigateToStorehouse;
                                     }
                                     else
                                     {
-                                        // No storehouse found, drop resources and reset
                                         job.CarryCount = 0f;
                                         job.Phase = JobPhase.Idle;
                                         job.Target = Entity.Null;
@@ -235,30 +338,27 @@ namespace Godgame.Villagers
                         break;
 
                     case JobPhase.NavigateToStorehouse:
-                        // Move toward storehouse
                         direction = nav.Destination - tx.Position;
                         distance = math.length(direction);
-                        if (distance > DeliverDistance)
+                        if (distance > deliverDistance)
                         {
-                            var moveDelta = math.normalize(direction) * nav.Speed * Delta;
+                            var moveDir = VillagerSteeringMath.BlendDirection(direction, hazardVector, hazardUrgency);
+                            var moveDelta = moveDir * nav.Speed * Delta;
                             tx.Position += moveDelta;
                         }
                         else
                         {
-                            // Reached storehouse, deliver
                             job.Phase = JobPhase.Deliver;
                         }
                         break;
 
                     case JobPhase.Deliver:
-                        // Deposit resources into storehouse
                         if (job.Target != Entity.Null && InventoryLookup.HasBuffer(job.Target) && CapacityLookup.HasBuffer(job.Target))
                         {
                             var inventory = InventoryLookup[job.Target];
                             var capacities = CapacityLookup[job.Target];
-                            
-                            // Find capacity for this resource type
-                            float capacity = 1000f; // Default fallback
+
+                            float capacity = 1000f;
                             var resourceId = Godgame.Resources.StorehouseApi.ResolveResourceId(Catalog, job.ResourceTypeIndex);
                             for (int i = 0; i < capacities.Length; i++)
                             {
@@ -269,24 +369,33 @@ namespace Godgame.Villagers
                                 }
                             }
 
-                            var deposited = Godgame.Resources.StorehouseApi.TryDeposit(ref inventory, Catalog, job.ResourceTypeIndex, job.CarryCount, capacity);
-                            if (deposited)
+                            var depositAmount = job.CarryCount;
+                            var deposited = Godgame.Resources.StorehouseApi.TryDeposit(ref inventory, Catalog, job.ResourceTypeIndex, depositAmount, capacity);
+                            if (deposited && depositAmount > 0f)
                             {
+                                telemetry.DepositedAmountMilliInterval += BehaviorTelemetryMath.ToMilli(depositAmount);
                                 job.CarryCount = 0f;
                             }
                         }
                         else
                         {
-                            // No storehouse found, drop resources
                             job.CarryCount = 0f;
                         }
 
+                        telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
+
                         job.Phase = JobPhase.Idle;
+                        job.DropoffCooldown = DropoffCooldownSeconds > 0f ? DropoffCooldownSeconds : 0f;
                         job.Target = Entity.Null;
                         break;
                 }
             }
+
+            private static void ResetJob(ref VillagerJobState job)
+            {
+                job.Phase = JobPhase.Idle;
+                job.Target = Entity.Null;
+            }
         }
     }
 }
-

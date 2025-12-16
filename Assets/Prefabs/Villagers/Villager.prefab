@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 100011}
   - component: {fileID: 100012}
   - component: {fileID: 100014}
-  - component: {fileID: 100015}
+  - component: {fileID: 5580370554462050076}
   m_Layer: 0
   m_Name: Villager
   m_TagString: Untagged
@@ -63,8 +63,6 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -86,7 +84,6 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -104,7 +101,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   participateInSpatialGrid: 1
---- !u!114 &100015
+--- !u!114 &5580370554462050076
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -113,11 +110,51 @@ MonoBehaviour:
   m_GameObject: {fileID: 100000}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b10fde26ebaf40849188be1a79a15ebd, type: 3}
+  m_Script: {fileID: 11500000, guid: 950008f3c38b40f5bdf25d3d857b6450, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  visualPrefab: {fileID: 0}
-  localOffset: {x: 0, y: 0, z: 0}
-  localRotationOffsetEuler: {x: 0, y: 0, z: 0}
-  scaleMultiplier: 1
-  inheritParentScale: 1
+  villagerId: 1
+  factionId: 0
+  jobType: 3
+  aiGoal: 2
+  spawnPosition:
+    x: 0
+    y: 0
+    z: 0
+  vengefulScore: 0
+  boldScore: 0
+  isUndead: 0
+  isSummoned: 0
+  physique: 50
+  finesse: 50
+  will: 50
+  wisdom: 50
+  strength: 50
+  agility: 50
+  intelligence: 50
+  fame: 0
+  wealth: 0
+  reputation: 0
+  glory: 0
+  renown: 0
+  baseAttack: 0
+  baseDefense: 0
+  baseHealthOverride: 0
+  baseHealth: 100
+  baseStamina: 10
+  baseMana: 0
+  food: 100
+  rest: 100
+  sleep: 100
+  generalHealth: 100
+  physicalResistance: 0
+  fireResistance: 0
+  coldResistance: 0
+  poisonResistance: 0
+  magicResistance: 0
+  lightningResistance: 0
+  holyResistance: 0
+  darkResistance: 0
+  healBonus: 1
+  spellDurationModifier: 1
+  spellIntensityModifier: 1

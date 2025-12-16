@@ -8,6 +8,7 @@ namespace Godgame.Demo
     /// <summary>
     /// Describes which prefabs should be used when standing up the interactive settlement demo.
     /// </summary>
+    // Forced rebake
     [DisallowMultipleComponent]
     public sealed class DemoSettlementAuthoring : MonoBehaviour
     {
@@ -30,8 +31,9 @@ namespace Godgame.Demo
         {
             public override void Bake(DemoSettlementAuthoring authoring)
             {
+                Debug.Log($"[DemoSettlementBaker] Baking {authoring.name} in scene {authoring.gameObject.scene.path}");
                 // Use ConvertAndDestroy so the config lives only in the DOTS world.
-                var entity = GetEntity(authoring, TransformUsageFlags.None);
+                var entity = GetEntity(authoring, TransformUsageFlags.Dynamic);
 
                 var config = new DemoSettlementConfig
                 {
@@ -55,7 +57,35 @@ namespace Godgame.Demo
 
             private Entity ResolvePrefab(GameObject prefab)
             {
-                return prefab != null ? GetEntity(prefab, TransformUsageFlags.Dynamic) : Entity.Null;
+                if (prefab == null)
+                {
+                    Debug.LogWarning($"[DemoSettlementBaker] Prefab is null");
+                    return Entity.Null;
+                }
+
+                try
+                {
+                    var entity = GetEntity(prefab, TransformUsageFlags.Dynamic);
+                    if (entity == Entity.Null)
+                    {
+                        Debug.LogWarning($"[DemoSettlementBaker] GetEntity returned Null for prefab {prefab.name}");
+                    }
+                    else
+                    {
+                        Debug.Log($"[DemoSettlementBaker] Resolved prefab {prefab.name} to entity {entity}");
+                    }
+                    return entity;
+                }
+                catch (MissingReferenceException)
+                {
+                    Debug.LogError($"[DemoSettlementBaker] MissingReferenceException when resolving prefab. The reference exists but points to a missing object.");
+                    return Entity.Null;
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[DemoSettlementBaker] Exception resolving prefab: {e}");
+                    return Entity.Null;
+                }
             }
 
             private static uint ResolveSeed(DemoSettlementAuthoring authoring)

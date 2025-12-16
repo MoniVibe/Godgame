@@ -35,6 +35,27 @@ namespace Godgame.Villagers
         public ushort ResourceTypeIndex;
         public float CarryCount;
         public float CarryMax;
+        public float DropoffCooldown;
+    }
+
+    public struct VillagerJob : IComponentData
+    {
+        public enum JobType : byte
+        {
+            None = 0,
+            Gatherer = 1
+        }
+
+        public enum JobPhase : byte
+        {
+            Idle = 0,
+            Working = 1
+        }
+
+        public JobType Type;
+        public JobPhase Phase;
+        public int ActiveTicketId;
+        public float Productivity;
     }
 
     /// <summary>

@@ -23,6 +23,15 @@ namespace Godgame.Presentation
         [Tooltip("Text element for world health (top-right)")]
         public Text worldHealthText;
 
+        [Tooltip("Text element for displaying the dominant villager goal")]
+        public Text villagerGoalText;
+
+        [Tooltip("Text element for average focus budget")]
+        public Text villagerFocusText;
+
+        [Tooltip("Text element for peak need urgency")]
+        public Text villagerNeedText;
+
         [Tooltip("Button for toggling metrics overlay")]
         public Button metricsButton;
 
@@ -90,6 +99,21 @@ namespace Godgame.Presentation
                     worldHealthText.text = $"World Health: {healthPercent}%";
                     // Color based on health
                     worldHealthText.color = Color.Lerp(Color.red, Color.green, _cachedHUDData.WorldHealth);
+                }
+
+                if (villagerGoalText != null)
+                {
+                    villagerGoalText.text = $"Villager goal: {_cachedHUDData.DominantVillagerGoal.ToString()}";
+                }
+
+                if (villagerFocusText != null)
+                {
+                    villagerFocusText.text = $"Avg Focus: {_cachedHUDData.AverageVillagerFocus:F2}";
+                }
+
+                if (villagerNeedText != null)
+                {
+                    villagerNeedText.text = $"Peak Need: {Mathf.RoundToInt(_cachedHUDData.PeakNeedUrgency * 100f)}%";
                 }
             }
         }

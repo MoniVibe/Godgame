@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using PureDOTS.Runtime.Scenarios;
 using UnityEngine;
+using SystemEnv = System.Environment;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -15,6 +16,8 @@ namespace Godgame.Headless
     {
         private const string ScenarioArg = "--scenario";
         private const string ReportArg = "--report";
+        private const string TelemetryEnvVar = "GODGAME_BEHAVIOR_TELEMETRY_PATH";
+        private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
         private static bool s_executed;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -39,6 +42,8 @@ namespace Godgame.Headless
             }
 
             string reportPath = null;
+            string telemetryPath = null;
+            var scenarioOverridePath = scenarioPath;
             if (TryGetArgument(ReportArg, out var reportArg))
             {
                 reportPath = ResolvePath(reportArg);
@@ -47,11 +52,27 @@ namespace Godgame.Headless
                 {
                     Directory.CreateDirectory(directory);
                 }
+                telemetryPath = DeriveTelemetryPath(reportPath);
+                var telemetryDirectory = Path.GetDirectoryName(telemetryPath);
+                if (!string.IsNullOrEmpty(telemetryDirectory))
+                {
+                    Directory.CreateDirectory(telemetryDirectory);
+                }
             }
 
             try
             {
+                if (!string.IsNullOrEmpty(telemetryPath))
+                {
+                    SystemEnv.SetEnvironmentVariable(TelemetryEnvVar, telemetryPath);
+                }
+                else
+                {
+                    SystemEnv.SetEnvironmentVariable(TelemetryEnvVar, null);
+                }
+
                 Debug.Log($"[GodgameScenarioEntryPoint] Running scenario '{scenarioPath}' (report: {(string.IsNullOrEmpty(reportPath) ? "<none>" : reportPath)})");
+                SystemEnv.SetEnvironmentVariable(ScenarioEnvVar, scenarioOverridePath);
                 var result = ScenarioRunnerExecutor.RunFromFile(scenarioPath, reportPath);
                 Debug.Log($"[GodgameScenarioEntryPoint] Scenario '{result.ScenarioId}' completed successfully (ticks={result.RunTicks} snapshots={result.SnapshotLogCount}).");
                 Quit(0);
@@ -60,6 +81,11 @@ namespace Godgame.Headless
             {
                 Debug.LogError($"[GodgameScenarioEntryPoint] Scenario execution failed: {ex}");
                 Quit(1);
+            }
+            finally
+            {
+                SystemEnv.SetEnvironmentVariable(TelemetryEnvVar, null);
+                SystemEnv.SetEnvironmentVariable(ScenarioEnvVar, null);
             }
         }
 
@@ -101,6 +127,19 @@ namespace Godgame.Headless
 
             var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             return Path.GetFullPath(Path.Combine(projectRoot, path));
+        }
+
+        private static string DeriveTelemetryPath(string reportPath)
+        {
+            if (string.IsNullOrWhiteSpace(reportPath))
+            {
+                return string.Empty;
+            }
+
+            var directory = Path.GetDirectoryName(reportPath);
+            var name = Path.GetFileNameWithoutExtension(reportPath);
+            var telemetryFile = $"{name}_behavior.ndjson";
+            return string.IsNullOrEmpty(directory) ? telemetryFile : Path.Combine(directory, telemetryFile);
         }
 
         private static void Quit(int exitCode)

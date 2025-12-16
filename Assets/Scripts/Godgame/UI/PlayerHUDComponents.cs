@@ -17,6 +17,12 @@ namespace Godgame.Presentation
         public int VillagerCount;
         /// <summary>Global "world health" indicator (0-1, aggregate of village states)</summary>
         public float WorldHealth;
+        /// <summary>Average available focus budget per villager.</summary>
+        public float AverageVillagerFocus;
+        /// <summary>Peak normalized need urgency observed this tick.</summary>
+        public float PeakNeedUrgency;
+        /// <summary>Most common villager goal (string label).</summary>
+        public FixedString64Bytes DominantVillagerGoal;
     }
 
     /// <summary>

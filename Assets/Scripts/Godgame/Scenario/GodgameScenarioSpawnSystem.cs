@@ -61,7 +61,7 @@ namespace Godgame.Scenario
                         ecb.AddComponent<LocalToWorld>(villager);
 
                         // Initialize villager components
-                        ecb.AddComponent(villager, new VillagerNeeds
+                        ecb.AddComponent(villager, new Godgame.Villagers.VillagerNeeds
                         {
                             Health = 100f,
                             MaxHealth = 100f,
@@ -69,33 +69,34 @@ namespace Godgame.Scenario
                             Morale = 700f
                         });
 
-                        ecb.AddComponent(villager, new VillagerJob
+                        ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerJob
                         {
-                            Type = VillagerJob.JobType.Gatherer,
-                            Phase = VillagerJob.JobPhase.Idle,
+                            Type = PureDOTS.Runtime.Components.VillagerJob.JobType.Gatherer,
+                            Phase = PureDOTS.Runtime.Components.VillagerJob.JobPhase.Idle,
                             Productivity = 1f,
                             LastStateChangeTick = 0
                         });
 
-                        ecb.AddComponent(villager, new VillagerAIState
+                        ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerAIState
                         {
-                            CurrentState = VillagerAIState.State.Idle,
-                            CurrentGoal = VillagerAIState.Goal.None,
+                            CurrentState = PureDOTS.Runtime.Components.VillagerAIState.State.Idle,
+                            CurrentGoal = PureDOTS.Runtime.Components.VillagerAIState.Goal.None,
                             StateTimer = 0f,
                             StateStartTick = 0
                         });
 
-                        ecb.AddComponent(villager, new VillagerFlags
+                        ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerFlags
                         {
                             IsIdle = true,
                             IsWorking = false
                         });
 
-                        ecb.AddComponent(villager, new VillagerAvailability
+                        ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerAvailability
                         {
                             IsAvailable = 1,
                             LastChangeTick = 0
                         });
+                        ecb.AddComponent(villager, Godgame.Villagers.VillagerBehavior.Neutral);
                         ecb.AddComponent(villager, new PureDOTS.Rendering.RenderKey
                         {
                             ArchetypeId = GodgameRenderKeys.Villager,

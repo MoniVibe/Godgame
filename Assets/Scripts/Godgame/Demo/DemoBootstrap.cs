@@ -58,6 +58,13 @@ namespace Godgame.Demo
             };
 
             entityManager.SetComponentData(demoOptionsEntity, options);
+            
+            // Ensure DemoSceneTag exists so systems run
+            if (!entityManager.HasComponent<DemoSceneTag>(demoOptionsEntity))
+            {
+                entityManager.AddComponent<DemoSceneTag>(demoOptionsEntity);
+            }
+
             ApplyTimeScale();
         }
 

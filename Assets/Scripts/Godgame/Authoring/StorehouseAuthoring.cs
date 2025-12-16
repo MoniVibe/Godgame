@@ -131,8 +131,8 @@ namespace Godgame.Authoring
                     ResourceSummaries = summaries
                 });
 
-                // Add spatial indexing
-                AddComponent<SpatialIndexedTag>(entity);
+                // Add spatial indexing - Removed to avoid duplicate component error with RegistryAuthoringBaker
+                // AddComponent<SpatialIndexedTag>(entity);
                 
                 // Add RewindImportance for rewind tier classification
                 AddComponent(entity, new RewindImportance
