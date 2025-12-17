@@ -88,22 +88,22 @@ namespace Godgame.Demo
 
                 if (runtimeValue.VillageCenterInstance != Entity.Null)
                 {
-                    AssignRenderComponents(ref ecb, runtimeValue.VillageCenterInstance, GodgameRenderKeys.VillageCenter, centerPresentation);
+                    AssignRenderComponents(ref ecb, runtimeValue.VillageCenterInstance, GodgameSemanticKeys.VillageCenter, centerPresentation);
                 }
 
                 if (runtimeValue.StorehouseInstance != Entity.Null)
                 {
-                    AssignRenderComponents(ref ecb, runtimeValue.StorehouseInstance, GodgameRenderKeys.Storehouse, storePresentation);
+                    AssignRenderComponents(ref ecb, runtimeValue.StorehouseInstance, GodgameSemanticKeys.Storehouse, storePresentation);
                 }
 
                 if (runtimeValue.HousingInstance != Entity.Null)
                 {
-                    AssignRenderComponents(ref ecb, runtimeValue.HousingInstance, GodgameRenderKeys.Housing, housingPresentation);
+                    AssignRenderComponents(ref ecb, runtimeValue.HousingInstance, GodgameSemanticKeys.Housing, housingPresentation);
                 }
 
                 if (runtimeValue.WorshipInstance != Entity.Null)
                 {
-                    AssignRenderComponents(ref ecb, runtimeValue.WorshipInstance, GodgameRenderKeys.Worship, worshipPresentation);
+                    AssignRenderComponents(ref ecb, runtimeValue.WorshipInstance, GodgameSemanticKeys.Worship, worshipPresentation);
                 }
 
                 resources.Clear();
@@ -127,7 +127,7 @@ namespace Godgame.Demo
                         Position = nodePos,
                         Label = label
                     });
-                    AssignRenderComponents(ref ecb, nodeEntity, GodgameRenderKeys.ResourceNode, default);
+                    AssignRenderComponents(ref ecb, nodeEntity, GodgameSemanticKeys.ResourceNode, default);
                     resources.Add(new DemoSettlementResource { Node = nodeEntity });
                 }
 
@@ -140,22 +140,6 @@ namespace Godgame.Demo
                     // Scale up to 5f to be visible
                     ecb.SetComponent(villager, LocalTransform.FromPositionRotationScale(villagerPos, quaternion.identity, 5f));
 
-                    // IMPORTANT: initialize LocalToWorld so the first frame has valid data
-                    ecb.AddComponent(villager, new LocalToWorld
-                    {
-                        Value = float4x4.TRS(villagerPos, quaternion.identity, new float3(5f))
-                    });
-
-                    // Set RenderBounds (your existing size)
-                    ecb.AddComponent(villager, new RenderBounds
-                    {
-                        Value = new AABB
-                        {
-                            Center = float3.zero,
-                            Extents = new float3(0.5f)
-                        }
-                    });
-
                     ecb.AddComponent(villager, new DemoVillagerState
                     {
                         Settlement = entity,
@@ -165,11 +149,6 @@ namespace Godgame.Demo
                     var role = VillagerRenderKeyUtility.GetDefaultRoleForIndex(i);
                     ecb.AddComponent(villager, new VillagerRenderRole { Value = role });
                     var villagerRenderKey = VillagerRenderKeyUtility.GetRenderKeyForRole(role);
-                    if (i == 0)
-                    {
-                        ecb.SetComponent(villager, new RenderThemeOverride { Value = 1 });
-                        ecb.SetComponentEnabled<RenderThemeOverride>(villager, true);
-                    }
 
                     // Add presentation components so they are picked up by the presentation system and debugger
                     ecb.AddComponent<VillagerPresentationTag>(villager);
@@ -187,6 +166,11 @@ namespace Godgame.Demo
                         EffectIntensity = 0f
                     });
                     AssignRenderComponents(ref ecb, villager, villagerRenderKey, villagerPresentation);
+                    if (i == 0)
+                    {
+                        ecb.SetComponent(villager, new RenderThemeOverride { Value = 1 });
+                        ecb.SetComponentEnabled<RenderThemeOverride>(villager, true);
+                    }
                     AddOrSet(ref ecb, villager, new RenderTint { Value = ResolveRoleTint(role) }, villagerPresentation.HasRenderTint);
                 }
 

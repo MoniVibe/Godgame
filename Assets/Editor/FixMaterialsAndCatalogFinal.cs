@@ -1,3 +1,4 @@
+#if false
 using UnityEngine;
 using UnityEditor;
 using Godgame.Rendering.Catalog;
@@ -80,3 +81,4 @@ public class FixMaterialsAndCatalogFinal
         EditorUtility.SetDirty(mat);
     }
 }
+#endif

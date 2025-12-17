@@ -1,3 +1,4 @@
+#if false
 using UnityEditor;
 using UnityEngine;
 using Godgame.Rendering.Catalog;
@@ -64,3 +65,4 @@ public class UpdateGodgameRenderCatalog
         return mesh;
     }
 }
+#endif

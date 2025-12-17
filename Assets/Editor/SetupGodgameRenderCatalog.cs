@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using Godgame.Rendering;
 using Godgame.Rendering.Catalog;
 using PureDOTS.Rendering;
 using System.Collections.Generic;
@@ -109,21 +110,21 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
 
         var semanticConfigs = new List<(ushort Key, string VariantName, string PrefabPath, string Primitive)>
         {
-            (GodgameRenderKeys.VillagerMiner, "VillagerMiner_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameRenderKeys.VillagerFarmer, "VillagerFarmer_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameRenderKeys.VillagerForester, "VillagerForester_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameRenderKeys.VillagerBreeder, "VillagerBreeder_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameRenderKeys.VillagerWorshipper, "VillagerWorshipper_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameRenderKeys.VillagerRefiner, "VillagerRefiner_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameRenderKeys.VillagerPeacekeeper, "VillagerPeacekeeper_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameRenderKeys.VillagerCombatant, "VillagerCombatant_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameRenderKeys.VillageCenter, "VillageCenter_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
-            (GodgameRenderKeys.ResourceChunk, "ResourceChunk_Sphere", "Assets/Godgame/GG_Rock.prefab", "Sphere"),
-            (GodgameRenderKeys.Vegetation, "Vegetation_Cylinder", "Assets/Prefabs/Vegetation/Tree_Placeholder.prefab", "Cylinder"),
-            (GodgameRenderKeys.ResourceNode, "ResourceNode_Cube", "Assets/Placeholders/ResourceNode_Placeholder.prefab", "Cube"),
-            (GodgameRenderKeys.Storehouse, "Storehouse_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
-            (GodgameRenderKeys.Housing, "Housing_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
-            (GodgameRenderKeys.Worship, "Worship_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube")
+            (GodgameSemanticKeys.VillagerMiner, "VillagerMiner_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillagerFarmer, "VillagerFarmer_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillagerForester, "VillagerForester_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillagerBreeder, "VillagerBreeder_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillagerWorshipper, "VillagerWorshipper_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillagerRefiner, "VillagerRefiner_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillagerPeacekeeper, "VillagerPeacekeeper_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillagerCombatant, "VillagerCombatant_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillageCenter, "VillageCenter_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
+            (GodgameSemanticKeys.ResourceChunk, "ResourceChunk_Sphere", "Assets/Godgame/GG_Rock.prefab", "Sphere"),
+            (GodgameSemanticKeys.Vegetation, "Vegetation_Cylinder", "Assets/Prefabs/Vegetation/Tree_Placeholder.prefab", "Cylinder"),
+            (GodgameSemanticKeys.ResourceNode, "ResourceNode_Cube", "Assets/Placeholders/ResourceNode_Placeholder.prefab", "Cube"),
+            (GodgameSemanticKeys.Storehouse, "Storehouse_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
+            (GodgameSemanticKeys.Housing, "Housing_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
+            (GodgameSemanticKeys.Worship, "Worship_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube")
         };
 
         foreach (var config in semanticConfigs)
@@ -133,7 +134,7 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
 
         foreach (var villagerConfig in semanticConfigs)
         {
-            if (villagerConfig.Key < GodgameRenderKeys.VillagerMiner || villagerConfig.Key > GodgameRenderKeys.VillagerCombatant)
+            if (villagerConfig.Key < GodgameSemanticKeys.VillagerMiner || villagerConfig.Key > GodgameSemanticKeys.VillagerCombatant)
                 continue;
             AddVariant($"{villagerConfig.VariantName}_Cylinder", villagerConfig.PrefabPath, "Cylinder");
         }
@@ -146,16 +147,20 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
             baseThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
             {
                 SemanticKey = config.Key,
-                VariantIndex = capsuleIndex
+                Lod0Variant = capsuleIndex,
+                Lod1Variant = 0,
+                Lod2Variant = 0
             });
 
-            var useCylinder = config.Key >= GodgameRenderKeys.VillagerMiner && config.Key <= GodgameRenderKeys.VillagerCombatant;
+            var useCylinder = config.Key >= GodgameSemanticKeys.VillagerMiner && config.Key <= GodgameSemanticKeys.VillagerCombatant;
             var variantName = useCylinder ? $"{config.VariantName}_Cylinder" : config.VariantName;
             var variantIndex = variantLookup[variantName];
             alternateThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
             {
                 SemanticKey = config.Key,
-                VariantIndex = variantIndex
+                Lod0Variant = variantIndex,
+                Lod1Variant = 0,
+                Lod2Variant = 0
             });
         }
 
@@ -164,15 +169,15 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
         {
             new RenderPresentationCatalogDefinition.ThemeDefinition
             {
-                Name = "CapsuleVillagers",
+                Name = "CylinderVillagers",
                 ThemeId = 0,
-                SemanticVariants = baseThemeMappings.ToArray()
+                SemanticVariants = alternateThemeMappings.ToArray()
             },
             new RenderPresentationCatalogDefinition.ThemeDefinition
             {
-                Name = "CylinderVillagers",
+                Name = "CapsuleVillagers",
                 ThemeId = 1,
-                SemanticVariants = alternateThemeMappings.ToArray()
+                SemanticVariants = baseThemeMappings.ToArray()
             }
         };
         EditorUtility.SetDirty(catalogDef);

@@ -53,15 +53,15 @@ namespace Godgame.Rendering
         public static ushort GetRenderKeyForRole(VillagerRenderRoleId role) =>
             role switch
             {
-                VillagerRenderRoleId.Miner => GodgameRenderKeys.VillagerMiner,
-                VillagerRenderRoleId.Farmer => GodgameRenderKeys.VillagerFarmer,
-                VillagerRenderRoleId.Forester => GodgameRenderKeys.VillagerForester,
-                VillagerRenderRoleId.Breeder => GodgameRenderKeys.VillagerBreeder,
-                VillagerRenderRoleId.Worshipper => GodgameRenderKeys.VillagerWorshipper,
-                VillagerRenderRoleId.Refiner => GodgameRenderKeys.VillagerRefiner,
-                VillagerRenderRoleId.Peacekeeper => GodgameRenderKeys.VillagerPeacekeeper,
-                VillagerRenderRoleId.Combatant => GodgameRenderKeys.VillagerCombatant,
-                _ => GodgameRenderKeys.Villager
+                VillagerRenderRoleId.Miner => GodgameSemanticKeys.VillagerMiner,
+                VillagerRenderRoleId.Farmer => GodgameSemanticKeys.VillagerFarmer,
+                VillagerRenderRoleId.Forester => GodgameSemanticKeys.VillagerForester,
+                VillagerRenderRoleId.Breeder => GodgameSemanticKeys.VillagerBreeder,
+                VillagerRenderRoleId.Worshipper => GodgameSemanticKeys.VillagerWorshipper,
+                VillagerRenderRoleId.Refiner => GodgameSemanticKeys.VillagerRefiner,
+                VillagerRenderRoleId.Peacekeeper => GodgameSemanticKeys.VillagerPeacekeeper,
+                VillagerRenderRoleId.Combatant => GodgameSemanticKeys.VillagerCombatant,
+                _ => GodgameSemanticKeys.Villager
             };
 
         public static ushort ResolveVillagerRenderKey(EntityManager entityManager, Entity villager)
@@ -93,7 +93,7 @@ namespace Godgame.Rendering
                 }
             }
 
-            return GodgameRenderKeys.Villager;
+            return GodgameSemanticKeys.Villager;
         }
 
         public static ushort ResolveVillagerRenderKey(
@@ -116,7 +116,7 @@ namespace Godgame.Rendering
                 return key;
             }
 
-            return GodgameRenderKeys.Villager;
+            return GodgameSemanticKeys.Villager;
         }
 
         public static bool TryGetKeyForRole(VillagerRenderRoleId role, out ushort key)
@@ -130,10 +130,10 @@ namespace Godgame.Rendering
             switch (jobType)
             {
                 case LocalVillagerJob.JobType.Gatherer:
-                    key = GodgameRenderKeys.VillagerMiner;
+                    key = GodgameSemanticKeys.VillagerMiner;
                     return true;
                 default:
-                    key = GodgameRenderKeys.Villager;
+                    key = GodgameSemanticKeys.Villager;
                     return false;
             }
         }
@@ -142,15 +142,15 @@ namespace Godgame.Rendering
         {
             key = jobType switch
             {
-                DotsVillagerJob.JobType.Farmer => GodgameRenderKeys.VillagerFarmer,
-                DotsVillagerJob.JobType.Builder => GodgameRenderKeys.VillagerForester,
-                DotsVillagerJob.JobType.Gatherer => GodgameRenderKeys.VillagerMiner,
-                DotsVillagerJob.JobType.Hunter => GodgameRenderKeys.VillagerCombatant,
-                DotsVillagerJob.JobType.Guard => GodgameRenderKeys.VillagerPeacekeeper,
-                DotsVillagerJob.JobType.Priest => GodgameRenderKeys.VillagerWorshipper,
-                DotsVillagerJob.JobType.Merchant => GodgameRenderKeys.VillagerBreeder,
-                DotsVillagerJob.JobType.Crafter => GodgameRenderKeys.VillagerRefiner,
-                _ => GodgameRenderKeys.Villager
+                DotsVillagerJob.JobType.Farmer => GodgameSemanticKeys.VillagerFarmer,
+                DotsVillagerJob.JobType.Builder => GodgameSemanticKeys.VillagerForester,
+                DotsVillagerJob.JobType.Gatherer => GodgameSemanticKeys.VillagerMiner,
+                DotsVillagerJob.JobType.Hunter => GodgameSemanticKeys.VillagerCombatant,
+                DotsVillagerJob.JobType.Guard => GodgameSemanticKeys.VillagerPeacekeeper,
+                DotsVillagerJob.JobType.Priest => GodgameSemanticKeys.VillagerWorshipper,
+                DotsVillagerJob.JobType.Merchant => GodgameSemanticKeys.VillagerBreeder,
+                DotsVillagerJob.JobType.Crafter => GodgameSemanticKeys.VillagerRefiner,
+                _ => GodgameSemanticKeys.Villager
             };
 
             return jobType != DotsVillagerJob.JobType.None;

@@ -123,7 +123,7 @@ namespace Godgame.Scenario
                             math.sin(angle) * configValue.SpawnRadius * 0.5f);
 
                         ecb.SetComponent(storehouse, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, 1f));
-                        AssignRenderComponents(ref ecb, storehouse, GodgameRenderKeys.Storehouse, storePresentation);
+                        AssignRenderComponents(ref ecb, storehouse, GodgameSemanticKeys.Storehouse, storePresentation);
                     }
                 }
 
@@ -146,7 +146,7 @@ namespace Godgame.Scenario
                             ResourceType = ResourceType.IronOre,
                             Capacity = 100
                         });
-                        AssignRenderComponents(ref ecb, nodeEntity, GodgameRenderKeys.ResourceNode, default);
+                        AssignRenderComponents(ref ecb, nodeEntity, GodgameSemanticKeys.ResourceNode, default);
                     }
                 }
 

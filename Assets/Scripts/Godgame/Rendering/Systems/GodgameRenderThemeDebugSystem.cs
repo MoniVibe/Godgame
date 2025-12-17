@@ -1,6 +1,7 @@
+using PureDOTS.Input;
 using PureDOTS.Rendering;
 using Unity.Entities;
-using UnityEngine;
+using UnityDebug = UnityEngine.Debug;
 
 namespace Godgame.Rendering.Systems
 {
@@ -23,11 +24,11 @@ namespace Godgame.Rendering.Systems
             if (!SystemAPI.TryGetSingletonRW<ActiveRenderTheme>(out var theme))
                 return;
 
-            if (Input.GetKeyDown(KeyCode.F6))
+            if (Hotkeys.F6Down())
             {
                 var newTheme = (ushort)(theme.ValueRO.ThemeId == 0 ? 1 : 0);
                 theme.ValueRW = new ActiveRenderTheme { ThemeId = newTheme };
-                Debug.Log($"[GodgameRenderThemeDebugSystem] Swapped render theme to {newTheme}.");
+                UnityDebug.Log($"[GodgameRenderThemeDebugSystem] Swapped render theme to {newTheme}.");
             }
 #endif
         }

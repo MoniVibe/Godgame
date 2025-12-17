@@ -6,10 +6,10 @@ This directory contains the render catalog system that maps Godgame entities to 
 
 The render pipeline works as follows:
 
-1. **RenderCatalogDefinition** (ScriptableObject) - Defines mesh/material mappings
-2. **RenderCatalogAuthoring** (MonoBehaviour) - Bakes catalog into ECS singleton
-3. **RenderKey** component - Added to entities to specify which catalog entry to use
-4. **ApplyRenderCatalogSystem** - Assigns MaterialMeshInfo based on RenderKey
+1. **RenderCatalogDefinition** (ScriptableObject) - Defines mesh/material mappings.
+2. **RenderCatalogAuthoring** (MonoBehaviour) - Bakes the catalog blob + `RenderMeshArray` singleton via the baker.
+3. **RenderSemanticKey / RenderKey / presenters** - Authored on entities (gameplay or authoring scripts) to describe the semantic they need.
+4. **PureDOTS Resolve/Apply stack** – `PureDOTS.Rendering.ResolveRenderVariantSystem` + `ApplyRenderVariantSystem` (plus Sprite/Debug presenters) bind `MaterialMeshInfo`, `RenderBounds`, and `WorldRenderBounds`. No local Godgame `ApplyRenderCatalogSystem` exists; the shared PureDOTS systems own the process.
 
 ## Setup Instructions
 
@@ -24,7 +24,7 @@ The render pipeline works as follows:
 1. Select the `GodgameRenderCatalog.asset` in the Inspector
 2. Set **Size** to the number of entity types you want to render (e.g., 5 for villager, village center, resource chunk, resource node, storehouse)
 3. For each entry, configure:
-   - **Key**: Use values from `GodgameRenderKeys`:
+   - **Key**: Use values from `GodgameSemanticKeys`:
      - `100` = Villager
      - `110` = VillageCenter
      - `120` = ResourceChunk
@@ -45,11 +45,11 @@ The render pipeline works as follows:
 
 ### 4. Verify Setup
 
-After entering Play mode or converting the scene:
+After entering Play Mode or converting the scene:
 
-- Check the Console for errors from `ApplyRenderCatalogSystem`
-- If you see "No RenderKey entities found", ensure spawners are adding `RenderKey` components
-- If you see "Missing RenderCatalogSingleton", ensure the catalog authoring GameObject is in the scene
+- Check the Console for warnings from `PureDOTS.Rendering.ResolveRenderVariantSystem` / `ApplyRenderVariantSystem`. Missing mappings or invalid mesh/material indices are reported there.
+- If you see "No RenderKey entities found", ensure gameplay spawners/authoring scripts add the canonical `PureDOTS.Rendering.RenderKey`, `RenderSemanticKey`, and enable at least one presenter (`MeshPresenter`, `SpritePresenter`, or `DebugPresenter`).
+- If `RenderPresentationCatalog` is missing, ensure the catalog authoring GameObject lives in the scene or subscene so the baker can create the singleton.
 
 ## Example Catalog Entry
 
@@ -64,15 +64,13 @@ Entry 0:
 
 ## Render Keys Reference
 
-See `Godgame/Assets/Scripts/Godgame/Rendering/GodgameRenderKeys.cs` for all available keys.
+See `Godgame/Assets/Scripts/Godgame/Rendering/GodgameSemanticKeys.cs` for all available keys.
 
 ## Troubleshooting
 
-- **No entities render**: Check that spawners add both `RenderKey` and `RenderFlags` (with `Visible=1`)
-- **Catalog not found**: Ensure `RenderCatalogAuthoring` GameObject is in the scene and has the asset assigned
-- **Wrong mesh appears**: Verify the `RenderKey.ArchetypeId` matches the catalog entry `Key` value
-
-
+- **No entities render**: Confirm entities have `PureDOTS.Rendering.RenderKey`, `RenderSemanticKey`, enabled presenters, and `RenderFlags.Visible = 1`. The PureDOTS apply system only touches entities that meet this contract.
+- **Catalog not found**: Ensure the `RenderCatalogAuthoring` GameObject is in the scene/subscene and references the catalog asset so the baker emits `RenderPresentationCatalog`.
+- **Wrong mesh appears**: Verify `RenderSemanticKey`/`RenderKey.ArchetypeId` matches a valid catalog entry and that the catalog blob version increments after edits (see `RenderPresentationCatalog.RenderCatalogVersion`).
 
 
 

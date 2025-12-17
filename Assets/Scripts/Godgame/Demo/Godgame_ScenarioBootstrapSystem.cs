@@ -212,7 +212,7 @@ namespace Godgame.Demo
                     InfluenceRadius = village.ValueRO.InfluenceRadius,
                     Intensity = 1f
                 });
-                ecb.AddComponent(entity, new RenderSemanticKey { Value = GodgameRenderKeys.VillageCenter });
+                ecb.AddComponent(entity, new RenderSemanticKey { Value = GodgameSemanticKeys.VillageCenter });
                 ecb.AddComponent<MeshPresenter>(entity);
                 ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
                 {
@@ -257,7 +257,7 @@ namespace Godgame.Demo
                     QuantityScale = 0.5f + resource.ValueRO.Quantity * 0.01f,
                     IsCarried = 0
                 });
-                ecb.AddComponent(entity, new RenderSemanticKey { Value = GodgameRenderKeys.ResourceChunk });
+                ecb.AddComponent(entity, new RenderSemanticKey { Value = GodgameSemanticKeys.ResourceChunk });
                 ecb.AddComponent<MeshPresenter>(entity);
                 ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
                 {

@@ -84,7 +84,7 @@ namespace Godgame.Demo
                     6f));
             ecb.AddComponent(village, new RenderKey
             {
-                ArchetypeId = GodgameRenderKeys.VillageCenter,
+                ArchetypeId = GodgameSemanticKeys.VillageCenter,
                 LOD = 0
             });
             ecb.AddComponent(village, RenderFlagsVisible());
@@ -148,7 +148,7 @@ namespace Godgame.Demo
                 ecb.AddComponent(villager, RenderFlagsVisible());
                 ecb.AddComponent(villager, new RenderKey
                 {
-                    ArchetypeId = GodgameRenderKeys.Villager,
+                    ArchetypeId = GodgameSemanticKeys.Villager,
                     LOD = 0
                 });
             }
@@ -177,7 +177,7 @@ namespace Godgame.Demo
                 });
                 ecb.AddComponent(node, new RenderKey
                 {
-                    ArchetypeId = GodgameRenderKeys.ResourceNode,
+                    ArchetypeId = GodgameSemanticKeys.ResourceNode,
                     LOD = 0
                 });
                 ecb.AddComponent(node, RenderFlagsVisible());

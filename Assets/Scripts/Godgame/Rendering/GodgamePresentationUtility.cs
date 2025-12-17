@@ -48,7 +48,6 @@ namespace Godgame.Rendering
             ushort semanticKey,
             PrefabPresentationState prefabState)
         {
-            AddOrSet(ref ecb, entity, new RenderKey { ArchetypeId = semanticKey, LOD = 0 }, prefabState.HasRenderKey);
             AddOrSet(ref ecb, entity, new RenderSemanticKey { Value = semanticKey }, prefabState.HasSemanticKey);
             AddOrSet(ref ecb, entity, new RenderVariantKey { Value = 0 }, prefabState.HasRenderVariantKey);
             AddOrSet(ref ecb, entity, new RenderFlags
@@ -77,7 +76,6 @@ namespace Godgame.Rendering
             ushort semanticKey,
             PrefabPresentationState prefabState = default)
         {
-            AddOrSet(entityManager, entity, new RenderKey { ArchetypeId = semanticKey, LOD = 0 }, prefabState.HasRenderKey);
             AddOrSet(entityManager, entity, new RenderSemanticKey { Value = semanticKey }, prefabState.HasSemanticKey);
             AddOrSet(entityManager, entity, new RenderVariantKey { Value = 0 }, prefabState.HasRenderVariantKey);
             AddOrSet(entityManager, entity, new RenderFlags
@@ -114,7 +112,7 @@ namespace Godgame.Rendering
         }
 
         internal static void EnsurePresenter<T>(ref EntityCommandBuffer ecb, Entity entity, bool hasComponent, bool enabled)
-            where T : unmanaged, IEnableableComponent
+            where T : unmanaged, IComponentData, IEnableableComponent
         {
             if (!hasComponent)
             {
@@ -137,7 +135,7 @@ namespace Godgame.Rendering
         }
 
         internal static void EnsurePresenter<T>(EntityManager entityManager, Entity entity, bool hasComponent, bool enabled)
-            where T : unmanaged, IEnableableComponent
+            where T : unmanaged, IComponentData, IEnableableComponent
         {
             if (!hasComponent)
             {

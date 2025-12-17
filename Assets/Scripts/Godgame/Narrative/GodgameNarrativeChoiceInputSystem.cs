@@ -1,7 +1,6 @@
+using PureDOTS.Input;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Narrative;
-using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
@@ -27,8 +26,7 @@ namespace Godgame.Narrative
                 return;
             }
 
-            // Check for 'N' key press
-            if (!UnityEngine.Input.GetKeyDown(KeyCode.N))
+            if (!Hotkeys.KeyDown(KeyCode.N))
             {
                 return;
             }
@@ -72,4 +70,3 @@ namespace Godgame.Narrative
         }
     }
 }
-

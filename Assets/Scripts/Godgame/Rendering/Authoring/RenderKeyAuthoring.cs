@@ -7,7 +7,7 @@ namespace Godgame.Rendering.Authoring
 {
     public class RenderKeyAuthoring : MonoBehaviour
     {
-        public ushort ArchetypeId = 110; // e.g. GodgameRenderKeys.VillageCenter
+        public ushort ArchetypeId = 110; // e.g. GodgameSemanticKeys.VillageCenter
 
         class Baker : Baker<RenderKeyAuthoring>
         {

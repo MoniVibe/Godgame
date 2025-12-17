@@ -17,7 +17,7 @@ namespace Godgame.DebugSystems
 
         protected override void OnCreate()
         {
-            _catalogQuery = GetEntityQuery(ComponentType.ReadOnly<RenderCatalogSingleton>());
+            _catalogQuery = GetEntityQuery(ComponentType.ReadOnly<RenderPresentationCatalog>());
             RequireForUpdate<GameWorldTag>();
             _startTime = double.NaN;
         }
@@ -40,9 +40,9 @@ namespace Godgame.DebugSystems
         {
             var count = _catalogQuery.CalculateEntityCount();
 
-            if (count == 1 && SystemAPI.HasSingleton<RenderCatalogSingleton>())
+            if (count == 1 && SystemAPI.HasSingleton<RenderPresentationCatalog>())
             {
-                var singleton = SystemAPI.GetSingleton<RenderCatalogSingleton>();
+                var singleton = SystemAPI.GetSingleton<RenderPresentationCatalog>();
                 if (singleton.Blob.IsCreated)
                 {
                     ref var blob = ref singleton.Blob.Value;
@@ -68,13 +68,13 @@ namespace Godgame.DebugSystems
 
                 if (!_warnedMissing)
                 {
-                    UnityEngine.Debug.LogWarning("[CheckRenderCatalogSystem] RenderCatalogSingleton NOT found after waiting for streaming to finish.");
+                    UnityEngine.Debug.LogWarning("[CheckRenderCatalogSystem] RenderPresentationCatalog NOT found after waiting for streaming to finish.");
                     _warnedMissing = true;
                 }
             }
             else
             {
-                UnityEngine.Debug.LogWarning($"[CheckRenderCatalogSystem] Expected exactly one RenderCatalogSingleton but found {count}. Remove duplicate catalog authoring objects so we only bake one singleton.");
+                UnityEngine.Debug.LogWarning($"[CheckRenderCatalogSystem] Expected exactly one RenderPresentationCatalog but found {count}. Remove duplicate catalog authoring objects so we only bake one singleton.");
             }
 
             if (_loggedCatalog || _warnedMissing || count > 1)

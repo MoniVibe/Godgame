@@ -26,7 +26,7 @@ Concepts describe intent; Truth Sources define DOTS contracts and runtime system
 
 | Category | Draft | In Review | Approved | Implemented | Total |
 |----------|-------|-----------|----------|-------------|-------|
-| Core | 1 | 0 | 0 | 0 | 1 |
+| Core | 1 | 1 | 0 | 0 | 2 |
 | Villagers | 2 | 0 | 0 | 0 | 2 |
 | Resources | 0 | 0 | 1 | 0 | 1 |
 | Buildings | 1 | 0 | 1 | 0 | 2 |
@@ -37,6 +37,7 @@ Concepts describe intent; Truth Sources define DOTS contracts and runtime system
 | Creature | 0 | 0 | 0 | 0 | 0 |
 | World | 1 | 0 | 0 | 0 | 1 |
 | Progression | 1 | 0 | 0 | 0 | 1 |
+| Politics | 3 | 1 | 0 | 0 | 4 |
 | UI/UX | 0 | 0 | 1 | 0 | 1 |
 | Meta | 2 | 0 | 0 | 0 | 2 |
 
@@ -118,9 +119,9 @@ echo "**Created:** $(date +%Y-%m-%d)" >> Heal_Miracle.md
 
 ---
 
-**Last Updated:** 2025-10-31  
-**Maintainer:** Godgame Development Team  
-**Total Concepts:** 0 (Initialize with your ideas!)
+**Last Updated:** 2025-12-17
+**Maintainer:** Godgame Development Team
+**Total Concepts:** 21 (2 new system specs added)
 
 ---
 

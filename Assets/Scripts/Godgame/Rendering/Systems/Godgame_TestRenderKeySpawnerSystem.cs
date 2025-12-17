@@ -57,7 +57,7 @@ namespace Godgame.Rendering.Systems
                 quaternion.identity,
                 1f));
 
-            em.AddComponentData(e, new RenderSemanticKey { Value = GodgameRenderKeys.VillageCenter });
+            em.AddComponentData(e, new RenderSemanticKey { Value = GodgameSemanticKeys.VillageCenter });
             em.AddComponent<MeshPresenter>(e);
 
             em.AddComponentData(e, new RenderFlags

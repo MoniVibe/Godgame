@@ -1,3 +1,4 @@
+#if false
 using UnityEngine;
 using UnityEditor;
 using Godgame.Rendering.Catalog;
@@ -66,3 +67,4 @@ public class FixRenderCatalogCorrectly
         Debug.Log("Render Catalog Corrected");
     }
 }
+#endif

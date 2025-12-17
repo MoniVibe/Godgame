@@ -1,3 +1,4 @@
+using PureDOTS.Input;
 using UnityEngine;
 using Godgame.Time;
 
@@ -34,33 +35,22 @@ namespace Godgame.TimeDebug
 
         private void Update()
         {
-            // Start preview rewind on R down
-            if (UnityEngine.Input.GetKeyDown(rewindKey) && !_isScrubbing)
+            if (!_isScrubbing && Hotkeys.KeyDown(rewindKey))
             {
                 BeginRewindPreview();
             }
-            
-            // Update scrub speed while holding R (optional - can adjust speed dynamically)
-            if (UnityEngine.Input.GetKey(rewindKey) && _isScrubbing)
-            {
-                // Could add speed adjustment here if needed
-                // For now, just maintain current scrub speed
-            }
-            
-            // End scrub preview on R up
-            if (UnityEngine.Input.GetKeyUp(rewindKey) && _isScrubbing)
+
+            if (_isScrubbing && Hotkeys.KeyUp(rewindKey))
             {
                 EndRewindScrub();
             }
-            
-            // Commit rewind on Space
-            if (UnityEngine.Input.GetKeyDown(commitKey))
+
+            if (Hotkeys.KeyDown(commitKey))
             {
                 CommitRewind();
             }
-            
-            // Cancel rewind on C or Escape
-            if (UnityEngine.Input.GetKeyDown(cancelKey) || UnityEngine.Input.GetKeyDown(KeyCode.Escape))
+
+            if (Hotkeys.KeyDown(cancelKey) || Hotkeys.KeyDown(KeyCode.Escape))
             {
                 CancelRewind();
             }
@@ -114,5 +104,3 @@ namespace Godgame.TimeDebug
         }
     }
 }
-
-
