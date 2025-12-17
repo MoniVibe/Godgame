@@ -171,9 +171,10 @@ namespace Godgame.Demo
                     AnimationState = 0,
                     EffectIntensity = 0f
                 });
+                var resolvedKey = VillagerRenderKeyUtility.ResolveVillagerRenderKey(state.EntityManager, entity);
                 ecb.AddComponent(entity, new PureDOTS.Rendering.RenderKey
                 {
-                    ArchetypeId = GodgameRenderKeys.Villager,
+                    ArchetypeId = resolvedKey,
                     LOD = 0
                 });
                 ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags

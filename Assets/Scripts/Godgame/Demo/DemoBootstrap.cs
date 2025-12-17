@@ -6,6 +6,7 @@ using Unity.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
+using PureDOTS.Runtime.Core;
 
 namespace Godgame.Demo
 {
@@ -63,6 +64,12 @@ namespace Godgame.Demo
             if (!entityManager.HasComponent<DemoSceneTag>(demoOptionsEntity))
             {
                 entityManager.AddComponent<DemoSceneTag>(demoOptionsEntity);
+            }
+
+            // Ensure GameWorldTag exists so catalog systems run
+            if (!entityManager.HasComponent<GameWorldTag>(demoOptionsEntity))
+            {
+                entityManager.AddComponent<GameWorldTag>(demoOptionsEntity);
             }
 
             ApplyTimeScale();

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6712443364510314236}
   - component: {fileID: 8887083325674424576}
   - component: {fileID: 775504403891064271}
+  - component: {fileID: 6001834140503095136}
   m_Layer: 0
   m_Name: Worship
   m_TagString: Untagged
@@ -125,3 +126,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bd757b0da0c4fc7b3180f8bd8c848e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Godgame.Authoring::Godgame.Authoring.BuildingModuleSlotsAuthoring
+--- !u!114 &6001834140503095136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4278972622082774487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 448ff0db2b1d50c48b9f295508d63d52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ArchetypeId: 150
+  Lod: 0

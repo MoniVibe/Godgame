@@ -83,9 +83,10 @@ namespace Godgame.Rendering.Systems
             {
                 foreach (var villager in villagers)
                 {
+                    var resolvedKey = VillagerRenderKeyUtility.ResolveVillagerRenderKey(em, villager);
                     em.AddComponentData(villager, new RenderKey
                     {
-                        ArchetypeId = GodgameRenderKeys.Villager,
+                        ArchetypeId = resolvedKey,
                         LOD = 0
                     });
                     em.AddComponentData(villager, new RenderFlags
@@ -125,7 +126,6 @@ namespace Godgame.Rendering.Systems
         public void OnDestroy(ref SystemState state) { }
     }
 }
-
 
 
 

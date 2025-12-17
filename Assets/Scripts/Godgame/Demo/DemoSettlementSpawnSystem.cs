@@ -72,6 +72,24 @@ namespace Godgame.Demo
                 var random = CreateRandom(configValue.Seed, (uint)entity.Index);
 
                 var runtimeValue = runtime.ValueRO;
+                var entityManager = state.EntityManager;
+                bool centerPrefabHasKey = configValue.VillageCenterPrefab != Entity.Null &&
+                                           entityManager.HasComponent<PureDOTS.Rendering.RenderKey>(configValue.VillageCenterPrefab);
+                bool centerPrefabHasFlags = configValue.VillageCenterPrefab != Entity.Null &&
+                                             entityManager.HasComponent<PureDOTS.Rendering.RenderFlags>(configValue.VillageCenterPrefab);
+                bool storePrefabHasKey = configValue.StorehousePrefab != Entity.Null &&
+                                         entityManager.HasComponent<PureDOTS.Rendering.RenderKey>(configValue.StorehousePrefab);
+                bool storePrefabHasFlags = configValue.StorehousePrefab != Entity.Null &&
+                                           entityManager.HasComponent<PureDOTS.Rendering.RenderFlags>(configValue.StorehousePrefab);
+                bool housingPrefabHasKey = configValue.HousingPrefab != Entity.Null &&
+                                           entityManager.HasComponent<PureDOTS.Rendering.RenderKey>(configValue.HousingPrefab);
+                bool housingPrefabHasFlags = configValue.HousingPrefab != Entity.Null &&
+                                             entityManager.HasComponent<PureDOTS.Rendering.RenderFlags>(configValue.HousingPrefab);
+                bool worshipPrefabHasKey = configValue.WorshipPrefab != Entity.Null &&
+                                           entityManager.HasComponent<PureDOTS.Rendering.RenderKey>(configValue.WorshipPrefab);
+                bool worshipPrefabHasFlags = configValue.WorshipPrefab != Entity.Null &&
+                                             entityManager.HasComponent<PureDOTS.Rendering.RenderFlags>(configValue.WorshipPrefab);
+
                 runtimeValue.VillageCenterInstance = InstantiatePrefab(ref ecb, configValue.VillageCenterPrefab, center);
                 runtimeValue.StorehouseInstance = InstantiatePrefab(ref ecb, configValue.StorehousePrefab, center + OffsetOnCircle(0f, configValue.BuildingRingRadius));
                 runtimeValue.HousingInstance = InstantiatePrefab(ref ecb, configValue.HousingPrefab, center + OffsetOnCircle(math.PI * 2f / 3f, configValue.BuildingRingRadius));
@@ -79,17 +97,22 @@ namespace Godgame.Demo
 
                 if (runtimeValue.VillageCenterInstance != Entity.Null)
                 {
-                    ecb.AddComponent(runtimeValue.VillageCenterInstance, new PureDOTS.Rendering.RenderKey
-                    {
-                        ArchetypeId = GodgameRenderKeys.VillageCenter,
-                        LOD = 0
-                    });
-                    ecb.AddComponent(runtimeValue.VillageCenterInstance, new PureDOTS.Rendering.RenderFlags
-                    {
-                        Visible = 1,
-                        ShadowCaster = 1,
-                        HighlightMask = 0
-                    });
+                    AssignRenderComponents(ref ecb, runtimeValue.VillageCenterInstance, GodgameRenderKeys.VillageCenter, centerPrefabHasKey, centerPrefabHasFlags);
+                }
+
+                if (runtimeValue.StorehouseInstance != Entity.Null)
+                {
+                    AssignRenderComponents(ref ecb, runtimeValue.StorehouseInstance, GodgameRenderKeys.Storehouse, storePrefabHasKey, storePrefabHasFlags);
+                }
+
+                if (runtimeValue.HousingInstance != Entity.Null)
+                {
+                    AssignRenderComponents(ref ecb, runtimeValue.HousingInstance, GodgameRenderKeys.Housing, housingPrefabHasKey, housingPrefabHasFlags);
+                }
+
+                if (runtimeValue.WorshipInstance != Entity.Null)
+                {
+                    AssignRenderComponents(ref ecb, runtimeValue.WorshipInstance, GodgameRenderKeys.Worship, worshipPrefabHasKey, worshipPrefabHasFlags);
                 }
 
                 resources.Clear();
@@ -158,6 +181,9 @@ namespace Godgame.Demo
                         Phase = DemoVillagerPhase.Idle,
                         RandomState = random.NextUInt(1, uint.MaxValue)
                     });
+                    var role = VillagerRenderKeyUtility.GetDefaultRoleForIndex(i);
+                    ecb.AddComponent(villager, new VillagerRenderRole { Value = role });
+                    var villagerRenderKey = VillagerRenderKeyUtility.GetRenderKeyForRole(role);
 
                     // Add presentation components so they are picked up by the presentation system and debugger
                     ecb.AddComponent<VillagerPresentationTag>(villager);
@@ -176,7 +202,7 @@ namespace Godgame.Demo
                     });
                     ecb.AddComponent(villager, new PureDOTS.Rendering.RenderKey
                     {
-                        ArchetypeId = GodgameRenderKeys.Villager,
+                        ArchetypeId = villagerRenderKey,
                         LOD = 0
                     });
                     ecb.AddComponent(villager, new PureDOTS.Rendering.RenderFlags
@@ -194,6 +220,46 @@ namespace Godgame.Demo
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
         }
+
+        private static void AssignRenderComponents(
+            ref EntityCommandBuffer ecb,
+            Entity entity,
+            ushort archetypeId,
+            bool prefabHasRenderKey,
+            bool prefabHasRenderFlags)
+        {
+            var renderKey = new PureDOTS.Rendering.RenderKey
+            {
+                ArchetypeId = archetypeId,
+                LOD = 0
+            };
+
+            if (prefabHasRenderKey)
+            {
+                ecb.SetComponent(entity, renderKey);
+            }
+            else
+            {
+                ecb.AddComponent(entity, renderKey);
+            }
+
+            var renderFlags = new PureDOTS.Rendering.RenderFlags
+            {
+                Visible = 1,
+                ShadowCaster = 1,
+                HighlightMask = 0
+            };
+
+            if (prefabHasRenderFlags)
+            {
+                ecb.SetComponent(entity, renderFlags);
+            }
+            else
+            {
+                ecb.AddComponent(entity, renderFlags);
+            }
+        }
+
 
         private static Unity.Mathematics.Random CreateRandom(uint seed, uint fallbackSalt)
         {

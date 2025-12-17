@@ -1,6 +1,5 @@
 using UnityEngine;
 using Unity.Entities;
-using Unity.Transforms;
 using PureDOTS.Rendering;
 
 namespace Godgame.Rendering.Authoring
@@ -14,14 +13,9 @@ namespace Godgame.Rendering.Authoring
         {
             public override void Bake(RenderKeyAuthoring authoring)
             {
-                // Dynamic → ends up in Default World
-                var entity = GetEntity(TransformUsageFlags.Dynamic);
-
-                AddComponent(entity, LocalTransform.FromPositionRotationScale(
-                    authoring.transform.position,
-                    authoring.transform.rotation,
-                    1f
-                ));
+                // Other bakers (Mesh/Physics/Transform) already request the appropriate
+                // transform usage, so we only need to tag the entity for rendering.
+                var entity = GetEntity(TransformUsageFlags.None);
 
                 AddComponent(entity, new RenderKey
                 {

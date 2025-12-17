@@ -1,10 +1,5 @@
 [
   {
-    "ThreadId": "cpl_thread_79d0b0ba_331b_4080_8d1a_f2bc1685e536",
-    "ScrollPosition": 0.0,
-    "LastUpdated": "2025-12-12T22:32:28.8366306Z"
-  },
-  {
     "ThreadId": "cpl_thread_40154ae9_032c_4640_a63e_bd7e7fee4a9f",
     "ScrollPosition": 6332.8,
     "LastUpdated": "2025-12-13T15:10:46.2405554Z"
@@ -46,7 +41,12 @@
   },
   {
     "ThreadId": "cpl_thread_4ff42fc6_2007_4a93_980b_4850d88009c8",
-    "ScrollPosition": 35579.1953,
-    "LastUpdated": "2025-12-16T00:05:45.0857543Z"
+    "ScrollPosition": 37761.1953,
+    "LastUpdated": "2025-12-16T23:52:19.0645491Z"
+  },
+  {
+    "ThreadId": "cpl_thread_8f8539d9_7ebf_4f46_bdea_81066b51519f",
+    "ScrollPosition": 6531.59961,
+    "LastUpdated": "2025-12-17T01:58:12.2690723Z"
   }
 ]

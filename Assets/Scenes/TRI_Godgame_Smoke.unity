@@ -938,51 +938,6 @@ MonoBehaviour:
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
   m_ScrollDeltaPerTick: 6
---- !u!1 &801842281
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 801842283}
-  - component: {fileID: 801842282}
-  m_Layer: 0
-  m_Name: GodgameRenderCatalog
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &801842282
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 801842281}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a3e7dadcaba03744c94f501f4e33141a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CatalogDefinition: {fileID: 11400000, guid: adbc3bf635dc62840a71d37074a449d3, type: 2}
---- !u!4 &801842283
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 801842281}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &842526786
 GameObject:
   m_ObjectHideFlags: 0
@@ -1129,7 +1084,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1017561298}
   - component: {fileID: 1017561299}
-  - component: {fileID: 1017561300}
   m_Layer: 0
   m_Name: GodgameRegistry
   m_TagString: Untagged
@@ -1173,19 +1127,6 @@ MonoBehaviour:
       y: 1329262878
       z: 3009012899
       w: 3933606909
---- !u!114 &1017561300
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1017561297}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a3e7dadcaba03744c94f501f4e33141a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CatalogDefinition: {fileID: 11400000, guid: adbc3bf635dc62840a71d37074a449d3, type: 2}
 --- !u!1 &1022963610
 GameObject:
   m_ObjectHideFlags: 0
@@ -1518,6 +1459,7 @@ GameObject:
   - component: {fileID: 1240563578}
   - component: {fileID: 1240563579}
   - component: {fileID: 1240563580}
+  - component: {fileID: 1240563581}
   m_Layer: 0
   m_Name: DemoBootstrap
   m_TagString: Untagged
@@ -1567,6 +1509,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fallbackAsset: {fileID: 11400000, guid: a7a6e73aafd7fd046936cb20ea8acfda, type: 2}
+--- !u!114 &1240563581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1240563577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0d3b5f6ecce404a8e0f819784d4b45f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CatalogDefinition: {fileID: 11400000, guid: adbc3bf635dc62840a71d37074a449d3, type: 2}
 --- !u!1 &1353040182
 GameObject:
   m_ObjectHideFlags: 0
@@ -3051,4 +3006,3 @@ SceneRoots:
   - {fileID: 949912500}
   - {fileID: 433080165}
   - {fileID: 1463067833}
-  - {fileID: 801842283}

@@ -31,6 +31,7 @@ namespace Godgame.Rendering.Systems
         private bool _warnedMissingFlags;
         private bool _warnedMissingBlob;
         private bool _warnedMissingRenderArrayEntity;
+        private bool _warnedMultipleCatalogs;
         private NativeParallelHashSet<ushort> _warnedMissingArchetypes;
 
         public void OnCreate(ref SystemState state)
@@ -41,6 +42,7 @@ namespace Godgame.Rendering.Systems
             _renderFlagsQuery = state.GetEntityQuery(ComponentType.ReadOnly<RenderFlags>());
 
             state.RequireForUpdate<RenderCatalogSingleton>();
+            state.RequireForUpdate<GameWorldTag>();
             _warnedMissingArchetypes = new NativeParallelHashSet<ushort>(16, Allocator.Persistent);
         }
 
@@ -81,7 +83,9 @@ namespace Godgame.Rendering.Systems
             }
             _warnedMissingFlags = false;
 
-            if (_catalogQuery.IsEmptyIgnoreFilter)
+            var catalogCount = _catalogQuery.CalculateEntityCount();
+
+            if (catalogCount == 0)
             {
                 if (!_warnedMissingCatalog)
                 {
@@ -91,6 +95,17 @@ namespace Godgame.Rendering.Systems
                 return;
             }
             _warnedMissingCatalog = false;
+
+            if (catalogCount != 1)
+            {
+                if (!_warnedMultipleCatalogs)
+                {
+                    UnityEngine.Debug.LogError($"[ApplyRenderCatalogSystem] Found {catalogCount} RenderCatalogSingleton entities. Ensure only one RenderCatalogAuthoring exists in loaded SubScenes.");
+                    _warnedMultipleCatalogs = true;
+                }
+                return;
+            }
+            _warnedMultipleCatalogs = false;
 
             var catalogSingleton = SystemAPI.GetSingleton<RenderCatalogSingleton>();
             if (!catalogSingleton.Blob.IsCreated)
@@ -132,7 +147,6 @@ namespace Godgame.Rendering.Systems
 
             foreach (var (renderKey, renderFlags, transform, entity) in SystemAPI
                          .Query<RefRO<RenderKey>, RefRO<RenderFlags>, RefRO<LocalTransform>>()
-                         .WithNone<MaterialMeshInfo>()
                          .WithEntityAccess())
             {
                 if (renderFlags.ValueRO.Visible == 0)
@@ -174,10 +188,30 @@ namespace Godgame.Rendering.Systems
                 ecb.AddSharedComponentManaged(entity, renderMeshArray);
                 var meshIndex = (ushort)entry.MaterialMeshIndex;
                 var materialIndex = meshIndex;
-                ecb.AddComponent(entity, MaterialMeshInfo.FromRenderMeshArrayIndices(materialIndex, meshIndex));
-                ecb.AddComponent(entity, new RenderBounds { Value = bounds });
-                ecb.AddComponent(entity, new WorldRenderBounds { Value = worldBounds });
-                ecb.AddComponent(entity, new ChunkWorldRenderBounds { Value = worldBounds });
+
+                var materialMeshInfo = MaterialMeshInfo.FromRenderMeshArrayIndices(materialIndex, meshIndex);
+                if (state.EntityManager.HasComponent<MaterialMeshInfo>(entity))
+                    ecb.SetComponent(entity, materialMeshInfo);
+                else
+                    ecb.AddComponent(entity, materialMeshInfo);
+
+                var renderBounds = new RenderBounds { Value = bounds };
+                if (state.EntityManager.HasComponent<RenderBounds>(entity))
+                    ecb.SetComponent(entity, renderBounds);
+                else
+                    ecb.AddComponent(entity, renderBounds);
+
+                var worldRenderBounds = new WorldRenderBounds { Value = worldBounds };
+                if (state.EntityManager.HasComponent<WorldRenderBounds>(entity))
+                    ecb.SetComponent(entity, worldRenderBounds);
+                else
+                    ecb.AddComponent(entity, worldRenderBounds);
+
+                var chunkBounds = new ChunkWorldRenderBounds { Value = worldBounds };
+                if (state.EntityManager.HasComponent<ChunkWorldRenderBounds>(entity))
+                    ecb.SetComponent(entity, chunkBounds);
+                else
+                    ecb.AddComponent(entity, chunkBounds);
             }
 
             ecb.Playback(state.EntityManager);

@@ -93,8 +93,15 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
             Debug.Log($"Added Entry Key={key} Mesh={mesh?.name} Mat={material?.name}");
         }
 
-        // Villager (100)
-        AddEntry(GodgameRenderKeys.Villager, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        // Villager roles (100-107)
+        AddEntry(GodgameRenderKeys.VillagerMiner, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        AddEntry(GodgameRenderKeys.VillagerFarmer, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        AddEntry(GodgameRenderKeys.VillagerForester, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        AddEntry(GodgameRenderKeys.VillagerBreeder, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        AddEntry(GodgameRenderKeys.VillagerWorshipper, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        AddEntry(GodgameRenderKeys.VillagerRefiner, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        AddEntry(GodgameRenderKeys.VillagerPeacekeeper, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        AddEntry(GodgameRenderKeys.VillagerCombatant, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
 
         // VillageCenter (110)
         AddEntry(GodgameRenderKeys.VillageCenter, "Assets/Placeholders/Building_Placeholder.prefab", "Cube");

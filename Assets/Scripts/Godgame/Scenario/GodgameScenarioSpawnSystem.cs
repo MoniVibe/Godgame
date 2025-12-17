@@ -69,9 +69,14 @@ namespace Godgame.Scenario
                             Morale = 700f
                         });
 
+                        var role = VillagerRenderKeyUtility.GetDefaultRoleForIndex(i);
+                        ecb.AddComponent(villager, new VillagerRenderRole { Value = role });
+                        var renderKeyId = VillagerRenderKeyUtility.GetRenderKeyForRole(role);
+                        var dotsJobType = VillagerRenderKeyUtility.GetDefaultPureDotsJobForRole(role);
+
                         ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerJob
                         {
-                            Type = PureDOTS.Runtime.Components.VillagerJob.JobType.Gatherer,
+                            Type = dotsJobType,
                             Phase = PureDOTS.Runtime.Components.VillagerJob.JobPhase.Idle,
                             Productivity = 1f,
                             LastStateChangeTick = 0
@@ -99,7 +104,7 @@ namespace Godgame.Scenario
                         ecb.AddComponent(villager, Godgame.Villagers.VillagerBehavior.Neutral);
                         ecb.AddComponent(villager, new PureDOTS.Rendering.RenderKey
                         {
-                            ArchetypeId = GodgameRenderKeys.Villager,
+                            ArchetypeId = renderKeyId,
                             LOD = 0
                         });
                         ecb.AddComponent(villager, new PureDOTS.Rendering.RenderFlags
@@ -203,4 +208,3 @@ namespace Godgame.Scenario
         public byte HasSpawned;
     }
 }
-
