@@ -1,14 +1,13 @@
 using UnityEngine;
 using UnityEditor;
 using Godgame.Rendering.Catalog;
-using Godgame.Rendering;
+using PureDOTS.Rendering;
 using System.Collections.Generic;
 
 public class SetupGodgameRenderCatalog : MonoBehaviour
 {
     public static void Execute()
     {
-        // 1. Create the Asset
         var assetPath = "Assets/Rendering/GodgameRenderCatalog.asset";
         var catalogDef = AssetDatabase.LoadAssetAtPath<GodgameRenderCatalogDefinition>(assetPath);
         
@@ -23,106 +22,163 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
             AssetDatabase.CreateAsset(catalogDef, assetPath);
         }
 
-        var entries = new List<GodgameRenderCatalogDefinition.Entry>();
-        var urpLit = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat");
-        if (urpLit == null)
-        {
-            var urpShader = Shader.Find("Universal Render Pipeline/Lit");
-            if (urpShader != null)
-            {
-                urpLit = new Material(urpShader);
-                urpLit.enableInstancing = true;
-            }
-        }
+        var urpLit = LoadLitMaterial();
+        var fallbackMaterial = urpLit != null ? urpLit : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
+        var fallbackMesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
+        catalogDef.FallbackMaterial = fallbackMaterial;
+        catalogDef.FallbackMesh = fallbackMesh;
 
-        // Helper to add entry
-        void AddEntry(ushort key, string prefabPath, string fallbackPrimitive = "Cube")
+        var variants = new List<RenderPresentationCatalogDefinition.VariantDefinition>();
+        var variantLookup = new Dictionary<string, int>();
+
+        int AddVariant(string variantName, string prefabPath, string fallbackPrimitive)
         {
+            if (variantLookup.TryGetValue(variantName, out var existingIndex))
+                return existingIndex;
+
             Mesh mesh = null;
             Material material = null;
             Vector3 boundsCenter = Vector3.zero;
             Vector3 boundsExtents = Vector3.one * 0.5f;
 
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-            if (prefab != null)
+            if (!string.IsNullOrEmpty(prefabPath))
             {
-                var mf = prefab.GetComponentInChildren<MeshFilter>();
-                var mr = prefab.GetComponentInChildren<MeshRenderer>();
-                if (mf != null) mesh = mf.sharedMesh;
-                if (mr != null) material = mr.sharedMaterial;
-                if (material != null && material.shader != null && material.shader.name == "Standard" && urpLit != null)
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                if (prefab != null)
                 {
-                    material = urpLit;
-                }
-                
-                if (mesh != null)
-                {
-                    boundsCenter = mesh.bounds.center;
-                    boundsExtents = mesh.bounds.extents;
+                    var mf = prefab.GetComponentInChildren<MeshFilter>();
+                    var mr = prefab.GetComponentInChildren<MeshRenderer>();
+                    if (mf != null) mesh = mf.sharedMesh;
+                    if (mr != null) material = mr.sharedMaterial;
+                    if (material != null && material.shader != null && material.shader.name == "Standard" && urpLit != null)
+                    {
+                        material = urpLit;
+                    }
+                    if (mesh != null)
+                    {
+                        boundsCenter = mesh.bounds.center;
+                        boundsExtents = mesh.bounds.extents;
+                    }
                 }
             }
 
             if (mesh == null)
             {
-                var prim = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                if (fallbackPrimitive == "Sphere") prim = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                else if (fallbackPrimitive == "Capsule") prim = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-                else if (fallbackPrimitive == "Cylinder") prim = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                
-                mesh = prim.GetComponent<MeshFilter>().sharedMesh;
-                if (material == null) material = urpLit != null ? urpLit : prim.GetComponent<MeshRenderer>().sharedMaterial;
-                GameObject.DestroyImmediate(prim);
-                
+                var primitive = CreatePrimitive(fallbackPrimitive);
+                mesh = primitive.GetComponent<MeshFilter>().sharedMesh;
+                if (material == null)
+                {
+                    var primitiveMaterial = primitive.GetComponent<MeshRenderer>().sharedMaterial;
+                    material = urpLit != null ? urpLit : primitiveMaterial;
+                }
+                GameObject.DestroyImmediate(primitive);
                 boundsCenter = mesh.bounds.center;
                 boundsExtents = mesh.bounds.extents;
             }
-            
-            // If material is still null, use URP Lit (preferred) or final default fallback.
-            if (material == null && urpLit != null) material = urpLit;
-            if (material == null) material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
 
-            entries.Add(new GodgameRenderCatalogDefinition.Entry
+            if (material == null)
             {
-                Key = key,
+                material = fallbackMaterial;
+            }
+
+            variants.Add(new RenderPresentationCatalogDefinition.VariantDefinition
+            {
+                Name = variantName,
                 Mesh = mesh,
                 Material = material,
                 BoundsCenter = boundsCenter,
-                BoundsExtents = boundsExtents
+                BoundsExtents = boundsExtents,
+                PresenterMask = RenderPresenterMask.Mesh
             });
-            
-            Debug.Log($"Added Entry Key={key} Mesh={mesh?.name} Mat={material?.name}");
+            var index = variants.Count - 1;
+            variantLookup[variantName] = index;
+            Debug.Log($"[SetupGodgameRenderCatalog] Added variant '{variantName}' mesh={mesh?.name} material={material?.name}");
+            return index;
         }
 
-        // Villager roles (100-107)
-        AddEntry(GodgameRenderKeys.VillagerMiner, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
-        AddEntry(GodgameRenderKeys.VillagerFarmer, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
-        AddEntry(GodgameRenderKeys.VillagerForester, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
-        AddEntry(GodgameRenderKeys.VillagerBreeder, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
-        AddEntry(GodgameRenderKeys.VillagerWorshipper, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
-        AddEntry(GodgameRenderKeys.VillagerRefiner, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
-        AddEntry(GodgameRenderKeys.VillagerPeacekeeper, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
-        AddEntry(GodgameRenderKeys.VillagerCombatant, "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule");
+        GameObject CreatePrimitive(string primitive)
+        {
+            return primitive switch
+            {
+                "Sphere" => GameObject.CreatePrimitive(PrimitiveType.Sphere),
+                "Capsule" => GameObject.CreatePrimitive(PrimitiveType.Capsule),
+                "Cylinder" => GameObject.CreatePrimitive(PrimitiveType.Cylinder),
+                _ => GameObject.CreatePrimitive(PrimitiveType.Cube)
+            };
+        }
 
-        // VillageCenter (110)
-        AddEntry(GodgameRenderKeys.VillageCenter, "Assets/Placeholders/Building_Placeholder.prefab", "Cube");
+        var semanticConfigs = new List<(ushort Key, string VariantName, string PrefabPath, string Primitive)>
+        {
+            (GodgameRenderKeys.VillagerMiner, "VillagerMiner_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameRenderKeys.VillagerFarmer, "VillagerFarmer_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameRenderKeys.VillagerForester, "VillagerForester_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameRenderKeys.VillagerBreeder, "VillagerBreeder_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameRenderKeys.VillagerWorshipper, "VillagerWorshipper_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameRenderKeys.VillagerRefiner, "VillagerRefiner_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameRenderKeys.VillagerPeacekeeper, "VillagerPeacekeeper_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameRenderKeys.VillagerCombatant, "VillagerCombatant_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameRenderKeys.VillageCenter, "VillageCenter_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
+            (GodgameRenderKeys.ResourceChunk, "ResourceChunk_Sphere", "Assets/Godgame/GG_Rock.prefab", "Sphere"),
+            (GodgameRenderKeys.Vegetation, "Vegetation_Cylinder", "Assets/Prefabs/Vegetation/Tree_Placeholder.prefab", "Cylinder"),
+            (GodgameRenderKeys.ResourceNode, "ResourceNode_Cube", "Assets/Placeholders/ResourceNode_Placeholder.prefab", "Cube"),
+            (GodgameRenderKeys.Storehouse, "Storehouse_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
+            (GodgameRenderKeys.Housing, "Housing_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
+            (GodgameRenderKeys.Worship, "Worship_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube")
+        };
 
-        // ResourceChunk (120)
-        AddEntry(GodgameRenderKeys.ResourceChunk, "Assets/Godgame/GG_Rock.prefab", "Sphere");
-        
-        // Vegetation (130)
-        AddEntry(GodgameRenderKeys.Vegetation, "Assets/Prefabs/Vegetation/Tree_Placeholder.prefab", "Cylinder");
+        foreach (var config in semanticConfigs)
+        {
+            AddVariant(config.VariantName, config.PrefabPath, config.Primitive);
+        }
 
-        // ResourceNode (140)
-        AddEntry(GodgameRenderKeys.ResourceNode, "Assets/Placeholders/ResourceNode_Placeholder.prefab", "Cube");
-        
-        // Storehouse (150)
-        AddEntry(GodgameRenderKeys.Storehouse, "Assets/Placeholders/Building_Placeholder.prefab", "Cube"); // Reuse building for now
+        foreach (var villagerConfig in semanticConfigs)
+        {
+            if (villagerConfig.Key < GodgameRenderKeys.VillagerMiner || villagerConfig.Key > GodgameRenderKeys.VillagerCombatant)
+                continue;
+            AddVariant($"{villagerConfig.VariantName}_Cylinder", villagerConfig.PrefabPath, "Cylinder");
+        }
 
-        catalogDef.Entries = entries.ToArray();
+        var baseThemeMappings = new List<RenderPresentationCatalogDefinition.SemanticVariant>();
+        var alternateThemeMappings = new List<RenderPresentationCatalogDefinition.SemanticVariant>();
+        foreach (var config in semanticConfigs)
+        {
+            var capsuleIndex = variantLookup[config.VariantName];
+            baseThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
+            {
+                SemanticKey = config.Key,
+                VariantIndex = capsuleIndex
+            });
+
+            var useCylinder = config.Key >= GodgameRenderKeys.VillagerMiner && config.Key <= GodgameRenderKeys.VillagerCombatant;
+            var variantName = useCylinder ? $"{config.VariantName}_Cylinder" : config.VariantName;
+            var variantIndex = variantLookup[variantName];
+            alternateThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
+            {
+                SemanticKey = config.Key,
+                VariantIndex = variantIndex
+            });
+        }
+
+        catalogDef.Variants = variants.ToArray();
+        catalogDef.Themes = new[]
+        {
+            new RenderPresentationCatalogDefinition.ThemeDefinition
+            {
+                Name = "CapsuleVillagers",
+                ThemeId = 0,
+                SemanticVariants = baseThemeMappings.ToArray()
+            },
+            new RenderPresentationCatalogDefinition.ThemeDefinition
+            {
+                Name = "CylinderVillagers",
+                ThemeId = 1,
+                SemanticVariants = alternateThemeMappings.ToArray()
+            }
+        };
         EditorUtility.SetDirty(catalogDef);
         AssetDatabase.SaveAssets();
         
-        Debug.Log($"Updated GodgameRenderCatalog asset at {assetPath} with {entries.Count} entries.");
+        Debug.Log($"Updated GodgameRenderCatalog asset at {assetPath} with {catalogDef.Variants.Length} variants across {catalogDef.Themes.Length} themes.");
 
         // 2. Create GameObject in Scene
         var goName = "GodgameRenderCatalog";
@@ -143,5 +199,20 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
         Debug.Log($"Assigned CatalogDefinition to '{goName}'");
         
         EditorUtility.SetDirty(go);
+    }
+
+    private static Material LoadLitMaterial()
+    {
+        var lit = AssetDatabase.LoadAssetAtPath<Material>("Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat");
+        if (lit == null)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader != null)
+            {
+                lit = new Material(shader);
+                lit.enableInstancing = true;
+            }
+        }
+        return lit;
     }
 }

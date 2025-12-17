@@ -27,9 +27,9 @@ public class GodgameSmokeTests
         Assert.IsTrue(hasTime && hasTick && hasRewind, "Missing time/rewind singletons");
 
         var renderQuery = em.CreateEntityQuery(
-            ComponentType.ReadOnly<RenderKey>(),
+            ComponentType.ReadOnly<RenderSemanticKey>(),
             ComponentType.ReadOnly<LocalTransform>());
-        Assert.Greater(renderQuery.CalculateEntityCount(), 0, "No renderable entities with RenderKey + Transform");
+        Assert.Greater(renderQuery.CalculateEntityCount(), 0, "No renderable entities with RenderSemanticKey + Transform");
     }
 
     [UnityTest]
@@ -55,4 +55,3 @@ public class GodgameSmokeTests
         Assert.Greater(endTick, startTick, "TickTimeState did not advance across frames");
     }
 }
-

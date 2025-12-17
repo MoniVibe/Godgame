@@ -1,8 +1,7 @@
 using Unity.Entities;
 using UnityEngine;
-using Godgame.Rendering;
-using Godgame.Rendering.Catalog;
 using PureDOTS.Runtime.Core;
+using PureDOTS.Rendering;
 
 namespace Godgame.DebugSystems
 {
@@ -47,10 +46,10 @@ namespace Godgame.DebugSystems
                 if (singleton.Blob.IsCreated)
                 {
                     ref var blob = ref singleton.Blob.Value;
-                    UnityEngine.Debug.Log($"[CheckRenderCatalogSystem] Catalog found! Entries: {blob.Entries.Length}");
-                    for (int i = 0; i < blob.Entries.Length; i++)
+                    UnityEngine.Debug.Log($"[CheckRenderCatalogSystem] Catalog found! Variants: {blob.Variants.Length} Themes: {blob.Themes.Length}");
+                    for (int i = 0; i < blob.Themes.Length; i++)
                     {
-                        UnityEngine.Debug.Log($"[CheckRenderCatalogSystem] Entry {i}: ArchetypeId={blob.Entries[i].ArchetypeId}, MaterialMeshIndex={blob.Entries[i].MaterialMeshIndex}");
+                        UnityEngine.Debug.Log($"[CheckRenderCatalogSystem] Theme {i}: ThemeId={blob.Themes[i].ThemeId}");
                     }
                 }
                 else

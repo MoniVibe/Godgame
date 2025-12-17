@@ -3,6 +3,7 @@ using Godgame.Presentation;
 using Godgame.Rendering;
 using Godgame.Villages;
 using Godgame.Villagers;
+using PureDOTS.Rendering;
 using PureDOTS.Runtime.Registry;
 using Unity.Burst;
 using Unity.Collections;
@@ -172,11 +173,8 @@ namespace Godgame.Demo
                     EffectIntensity = 0f
                 });
                 var resolvedKey = VillagerRenderKeyUtility.ResolveVillagerRenderKey(state.EntityManager, entity);
-                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderKey
-                {
-                    ArchetypeId = resolvedKey,
-                    LOD = 0
-                });
+                ecb.AddComponent(entity, new RenderSemanticKey { Value = resolvedKey });
+                ecb.AddComponent<MeshPresenter>(entity);
                 ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
                 {
                     Visible = 1,
@@ -214,11 +212,8 @@ namespace Godgame.Demo
                     InfluenceRadius = village.ValueRO.InfluenceRadius,
                     Intensity = 1f
                 });
-                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderKey
-                {
-                    ArchetypeId = GodgameRenderKeys.VillageCenter,
-                    LOD = 0
-                });
+                ecb.AddComponent(entity, new RenderSemanticKey { Value = GodgameRenderKeys.VillageCenter });
+                ecb.AddComponent<MeshPresenter>(entity);
                 ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
                 {
                     Visible = 1,
@@ -262,11 +257,8 @@ namespace Godgame.Demo
                     QuantityScale = 0.5f + resource.ValueRO.Quantity * 0.01f,
                     IsCarried = 0
                 });
-                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderKey
-                {
-                    ArchetypeId = GodgameRenderKeys.ResourceChunk,
-                    LOD = 0
-                });
+                ecb.AddComponent(entity, new RenderSemanticKey { Value = GodgameRenderKeys.ResourceChunk });
+                ecb.AddComponent<MeshPresenter>(entity);
                 ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
                 {
                     Visible = 1,

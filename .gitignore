@@ -1,89 +1,67 @@
-# Unity / DOTS generated content
-Library/
-Temp/
-Obj/
-Logs/
-UserSettings/
-
-# Build directories
-Builds/
-Build/
-
-# Crash reports
-*.stacktrace
-
-# Asset pipeline artifacts
-# Ignore specific generated/cache directories in Assets, but allow source code
+## Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Cc]rashReports/
+[Bb]urstCache/
+[Bb]ee/
 Assets/StreamingAssets/aa/
-Assets/Editor/MCP/
-MemoryCaptures/
+Assets/StreamingAssets/aa.meta
 
-# Large binary assets (add specific large files/directories here as needed)
-# Keep scripts, scenes, prefabs tracked, but ignore large media files if needed
-# Examples (uncomment if needed):
-# Assets/Models/LargeModels/
-# Assets/Audio/LargeFiles/
-# Assets/Textures/4K+/
-*.pidb
-*.pdb.meta
-*.mdb
-*.mdb.meta
-*.mmdb
-*.mmdb.meta
-*.log
-*.log.meta
-
-# Visual Studio / Rider
+## IDE / tooling artifacts
 .vs/
+.vscode/
+.idea/
 *.csproj
 *.sln
 *.suo
 *.user
 *.userprefs
+*.pidb
 *.pidb.meta
-*.sln.dotsettings
+*.mdb
+*.mdb.meta
+*.pdb
+*.pdb.meta
+*.mmdb
+*.mmdb.meta
+*.unityproj
+*.booproj
+*.svd
+*.opendb
+*.VC.db
 
-# Unity auto-generated
-Library.meta
-Temp.meta
-Logs.meta
-UserSettings.meta
-
-# Cache
-.idea/
-.gradle/
-*.swp
+## Logs / crash dumps
+*.log
+*.log.meta
+*.stacktrace
 *.tmp
-.DS_Store
 
-# Burst cache
-BurstCache/
-
-# Bee build cache
-Bee/
-
-# Addressables cache
-Assets/StreamingAssets/aa.meta
-Assets/StreamingAssets/aa/
-
-# Collaborate cache
+## Cache / generated packages
+Packages/Coplay/Editor/Checkpoints/
+Packages/Coplay/Editor/CoplayLogs/
+Assets/Editor/MCP/
 Collab/
-
-# Rider snapshots
-.fleet/
-
-# Scripted importers cache
 ScriptMapper/
 SourceAssetDB/
+.fleet/
 
-Packages/Coplay/Editor/Checkpoints/
-Assets/Editor/MCP/
+## OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+.gradle/
+*.swp
 
-# Archived third-party Asset Store packages (large, not versioned)
-# Ignore entire Archive folder to avoid Windows path length issues
+## Archived assets / large binaries
 Archive/
 
-# Large test data and texture files (exceed GitHub 100MB limit)
+## Project-specific large files to keep local
 Assets/test.data
 Assets/test.data.meta
 Assets/Textures/BakingsGround/terrain ground_Base_Color.png

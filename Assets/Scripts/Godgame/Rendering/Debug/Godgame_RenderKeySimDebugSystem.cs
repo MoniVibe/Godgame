@@ -9,14 +9,17 @@ namespace Godgame.Rendering.Debug
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]
     public partial struct Godgame_RenderKeySimDebugSystem : ISystem
     {
+        private EntityQuery _renderSemanticKeyQuery;
+
+        public void OnCreate(ref SystemState state)
+        {
+            _renderSemanticKeyQuery = state.GetEntityQuery(ComponentType.ReadOnly<RenderSemanticKey>());
+        }
+
         public void OnUpdate(ref SystemState state)
         {
 #if UNITY_EDITOR
-            var q = SystemAPI.QueryBuilder()
-                .WithAll<RenderKey>()
-                .Build();
-
-            int count = q.CalculateEntityCount();
+            int count = _renderSemanticKeyQuery.CalculateEntityCount();
             state.Enabled = false;
             LogRenderKeyCount(state.WorldUnmanaged.Name, count);
 #else
@@ -24,14 +27,13 @@ namespace Godgame.Rendering.Debug
 #endif
         }
 
-        public void OnCreate(ref SystemState state) { }
         public void OnDestroy(ref SystemState state) { }
 
 #if UNITY_EDITOR
         [BurstDiscard]
         private static void LogRenderKeyCount(FixedString128Bytes worldName, int count)
         {
-            Log.Message($"[Godgame RenderKey SIM] World '{worldName}' has {count} RenderKey entities.");
+            Log.Message($"[Godgame Render SIM] World '{worldName}' has {count} RenderSemanticKey entities.");
         }
 #endif
     }

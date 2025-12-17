@@ -29,7 +29,7 @@
       }
     },
     "com.moni.puredots": {
-      "version": "file:../../PureDOTS/Packages/com.moni.puredots",
+      "version": "file:../../puredots/Packages/com.moni.puredots",
       "depth": 0,
       "source": "local",
       "dependencies": {

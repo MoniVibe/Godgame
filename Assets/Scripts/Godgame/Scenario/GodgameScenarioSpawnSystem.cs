@@ -7,6 +7,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using PureDOTS.Rendering;
+using static Godgame.Rendering.GodgamePresentationUtility;
 
 namespace Godgame.Scenario
 {
@@ -40,6 +42,8 @@ namespace Godgame.Scenario
 
                 var configValue = config.ValueRO;
                 var runtimeValue = runtime.ValueRO;
+                var villagerPresentation = GetPrefabPresentationState(state.EntityManager, configValue.VillagerPrefab);
+                var storePresentation = GetPrefabPresentationState(state.EntityManager, configValue.StorehousePrefab);
 
                 var center = float3.zero;
                 var random = new Unity.Mathematics.Random(configValue.Seed != 0 ? configValue.Seed : (uint)entity.Index + 1u);
@@ -102,17 +106,7 @@ namespace Godgame.Scenario
                             LastChangeTick = 0
                         });
                         ecb.AddComponent(villager, Godgame.Villagers.VillagerBehavior.Neutral);
-                        ecb.AddComponent(villager, new PureDOTS.Rendering.RenderKey
-                        {
-                            ArchetypeId = renderKeyId,
-                            LOD = 0
-                        });
-                        ecb.AddComponent(villager, new PureDOTS.Rendering.RenderFlags
-                        {
-                            Visible = 1,
-                            ShadowCaster = 1,
-                            HighlightMask = 0
-                        });
+                        AssignRenderComponents(ref ecb, villager, renderKeyId, villagerPresentation);
                     }
                 }
 
@@ -129,17 +123,7 @@ namespace Godgame.Scenario
                             math.sin(angle) * configValue.SpawnRadius * 0.5f);
 
                         ecb.SetComponent(storehouse, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, 1f));
-                        ecb.AddComponent(storehouse, new PureDOTS.Rendering.RenderKey
-                        {
-                            ArchetypeId = GodgameRenderKeys.Storehouse,
-                            LOD = 0
-                        });
-                        ecb.AddComponent(storehouse, new PureDOTS.Rendering.RenderFlags
-                        {
-                            Visible = 1,
-                            ShadowCaster = 1,
-                            HighlightMask = 0
-                        });
+                        AssignRenderComponents(ref ecb, storehouse, GodgameRenderKeys.Storehouse, storePresentation);
                     }
                 }
 
@@ -162,17 +146,7 @@ namespace Godgame.Scenario
                             ResourceType = ResourceType.IronOre,
                             Capacity = 100
                         });
-                        ecb.AddComponent(nodeEntity, new PureDOTS.Rendering.RenderKey
-                        {
-                            ArchetypeId = GodgameRenderKeys.ResourceNode,
-                            LOD = 0
-                        });
-                        ecb.AddComponent(nodeEntity, new PureDOTS.Rendering.RenderFlags
-                        {
-                            Visible = 1,
-                            ShadowCaster = 1,
-                            HighlightMask = 0
-                        });
+                        AssignRenderComponents(ref ecb, nodeEntity, GodgameRenderKeys.ResourceNode, default);
                     }
                 }
 

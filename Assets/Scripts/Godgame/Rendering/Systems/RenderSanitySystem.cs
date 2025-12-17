@@ -15,12 +15,14 @@ namespace Godgame.Rendering.Systems
     public partial struct RenderSanitySystem : ISystem
     {
         private float _timer;
+        private EntityQuery _renderSemanticKeyQuery;
         private const float k_CheckDelay = 2.0f;
 
         public void OnCreate(ref SystemState state)
         {
             state.Enabled = true;
             _timer = 0f;
+            _renderSemanticKeyQuery = state.GetEntityQuery(ComponentType.ReadOnly<RenderSemanticKey>());
         }
 
         public void OnUpdate(ref SystemState state)
@@ -32,11 +34,7 @@ namespace Godgame.Rendering.Systems
             if (_timer < k_CheckDelay)
                 return;
 
-            var q = SystemAPI.QueryBuilder()
-                .WithAll<RenderKey>()
-                .Build();
-
-            int count = q.CalculateEntityCount();
+            int count = _renderSemanticKeyQuery.CalculateEntityCount();
 
             if (count == 0)
             {
@@ -61,13 +59,13 @@ namespace Godgame.Rendering.Systems
         [BurstDiscard]
         private static void LogOnceMissing(FixedString128Bytes worldName)
         {
-            LogError.Message($"[RenderSanitySystem] No RenderKey entities exist in world '{worldName}'; nothing can render.");
+                LogError.Message($"[RenderSanitySystem] No RenderSemanticKey entities exist in world '{worldName}'; nothing can render.");
         }
 
         [BurstDiscard]
         private static void LogOnceCount(FixedString128Bytes worldName, int count)
         {
-            Log.Message($"[RenderSanitySystem] World '{worldName}' has {count} RenderKey entities.");
+            Log.Message($"[RenderSanitySystem] World '{worldName}' has {count} RenderSemanticKey entities.");
         }
 #endif
     }

@@ -9,8 +9,8 @@ using PureDOTS.Runtime.Core;
 namespace Godgame.Rendering.Systems
 {
     /// <summary>
-    /// Minimal test spawner to validate RenderKey → catalog → mesh pipeline.
-    /// Spawns one RenderKey entity in Default world and disables itself.
+    /// Minimal test spawner to validate RenderSemanticKey → variant pipeline.
+    /// Spawns one renderable entity in Default world and disables itself.
     /// </summary>
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]
@@ -57,11 +57,8 @@ namespace Godgame.Rendering.Systems
                 quaternion.identity,
                 1f));
 
-            em.AddComponentData(e, new RenderKey
-            {
-                ArchetypeId = GodgameRenderKeys.VillageCenter,
-                LOD = 0
-            });
+            em.AddComponentData(e, new RenderSemanticKey { Value = GodgameRenderKeys.VillageCenter });
+            em.AddComponent<MeshPresenter>(e);
 
             em.AddComponentData(e, new RenderFlags
             {
@@ -84,7 +81,7 @@ namespace Godgame.Rendering.Systems
         [BurstDiscard]
         private static void LogSpawnMessage()
         {
-            Log.Message("[Godgame_TestRenderKeySpawnerSystem] Spawned test RenderKey entity in Game World.");
+            Log.Message("[Godgame_TestRenderKeySpawnerSystem] Spawned test RenderSemanticKey entity in Game World.");
         }
 #endif
     }
