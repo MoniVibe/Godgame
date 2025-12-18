@@ -833,7 +833,7 @@ PlayerSettings:
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
     Android: CROSS_PLATFORM_INPUT;MOBILE_INPUT
-    Standalone: CROSS_PLATFORM_INPUT;GODGAME_DEMO;APP_UI_EDITOR_ONLY
+    Standalone: CROSS_PLATFORM_INPUT;GODGAME_SCENARIO;GODGAME_DEVTOOLS;APP_UI_EDITOR_ONLY
     Windows Store Apps: MOBILE_INPUT
     iPhone: CROSS_PLATFORM_INPUT;MOBILE_INPUT
   additionalCompilerArguments: {}

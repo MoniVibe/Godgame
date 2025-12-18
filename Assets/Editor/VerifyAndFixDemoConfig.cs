@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using Godgame.Scenario;
 
 public class VerifyAndFixDemoConfig
 {
@@ -21,10 +22,10 @@ public class VerifyAndFixDemoConfig
         }
 
         // 2. Verify Authoring
-        var authoring = go.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        var authoring = go.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         if (authoring == null)
         {
-            Debug.LogError("DemoSettlementAuthoring missing on DemoConfig");
+            Debug.LogError("SettlementAuthoring missing on DemoConfig");
             return;
         }
 

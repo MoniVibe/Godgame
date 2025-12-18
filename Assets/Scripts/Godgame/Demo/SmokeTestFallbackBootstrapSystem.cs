@@ -7,7 +7,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Spawns a minimal set of gameplay entities when running headless without scene content.

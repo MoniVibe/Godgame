@@ -6,7 +6,7 @@ using Unity.Transforms;
 using PureDOTS.Demo.Orbit;
 using PureDOTS.Demo.Rendering;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Ensures orbit cubes spawned by PureDOTS systems have MaterialMeshInfo and RenderBounds

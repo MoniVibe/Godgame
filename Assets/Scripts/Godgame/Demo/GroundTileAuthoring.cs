@@ -7,7 +7,7 @@ using Unity.Transforms;
 using UnityEngine;
 using AuthoringEnvironmentGridConfig = PureDOTS.Authoring.EnvironmentGridConfig;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Generates ground tile ECS entities that correspond to every environment grid cell so

@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using Godgame.Scenario;
 
 public class FixDemoConfigDirectly
 {
@@ -20,7 +21,7 @@ public class FixDemoConfigDirectly
         }
 
         // 2. Re-assign prefabs
-        var authoring = go.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        var authoring = go.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         if (authoring != null)
         {
             authoring.villagerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Villagers/Villager.prefab");
@@ -34,7 +35,7 @@ public class FixDemoConfigDirectly
         }
         else
         {
-            Debug.LogError("DemoSettlementAuthoring component missing on DemoConfig.");
+            Debug.LogError("SettlementAuthoring component missing on DemoConfig.");
         }
     }
 }

@@ -69,7 +69,7 @@ private static EntityArchetype GetArchetypeForRegistryId(int registryId)
 - New: `Assets/Scripts/Godgame/Tests/ScenarioSpawnTests.cs`
 
 **Integration Points:**
-- Wire to `GodgameDemoBootstrapSystem` for shared spawn logic
+- Wire to `Godgame_ScenarioBootstrapSystem` for shared spawn logic
 - Use `GodgameRegistryBridgeSystem` for registry sync after spawn
 
 ---
@@ -86,7 +86,7 @@ private static EntityArchetype GetArchetypeForRegistryId(int registryId)
 
 **Files to Touch:**
 - New: `Assets/Scripts/Godgame/Scenario/GodgameScenarioBootstrapAdapter.cs`
-- Modify: `Assets/Scripts/Godgame/Scenario/GodgameDemoBootstrapSystem.cs` (support scenario mode)
+- Modify: `Assets/Scripts/Godgame/Demo/Godgame_ScenarioBootstrapSystem.cs` (support scenario mode)
 - New: `Assets/Scripts/Godgame/Tests/ScenarioBootstrapAdapterTests.cs`
 
 **Integration Points:**
@@ -276,7 +276,7 @@ Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.God
 
 ### Files to Modify
 - Delete: `Assets/Scripts/Godgame/Scenario/GodgameScenarioSpawnLoggerSystem.cs`
-- Modify: `Assets/Scripts/Godgame/Scenario/GodgameDemoBootstrapSystem.cs` (support scenario mode)
+- Modify: `Assets/Scripts/Godgame/Demo/Godgame_ScenarioBootstrapSystem.cs` (support scenario mode)
 - Modify: `Assets/Scripts/Godgame/Time/TimeControlSystem.cs` (ensure scenario compatibility)
 - Modify: `Assets/Scripts/Godgame/Registry/Registry/GodgameRegistryBridgeSystem.cs` (ensure scenario compatibility)
 - Modify: `ProjectSettings/EditorBuildSettings.asset` (add execute method)
@@ -296,8 +296,8 @@ Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.God
 
 - `Docs/PureDOTS_ScenarioRunner_Wiring.md` - Scenario runner wiring guide
 - `Docs/PureDOTS_TimeIntegration.md` - Time integration guide
-- `Docs/DemoReadiness_GapAnalysis.md` - Gap analysis
-- `Docs/DemoSceneSetup.md` - Scene setup guide
+- `Docs/Archive/Demo_Legacy/DemoReadiness_GapAnalysis.md` - Gap analysis
+- `Docs/Archive/Demo_Legacy/DemoSceneSetup.md` - Scene setup guide
 
 ---
 
@@ -317,4 +317,3 @@ Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.God
 ```bash
 Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.GodgameScenarioEntryPoints.ValidateScenario --scenario "Assets/Scenarios/godgame_demo.json"
 ```
-

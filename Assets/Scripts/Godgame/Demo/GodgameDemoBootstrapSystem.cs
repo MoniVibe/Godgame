@@ -7,8 +7,9 @@ using Godgame.Presentation;
 using Godgame.Villagers;
 using Godgame.Villages;
 using Godgame.Economy;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
@@ -16,7 +17,7 @@ namespace Godgame.Demo
     {
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<DemoSceneTag>();
+            state.RequireForUpdate<ScenarioSceneTag>();
         }
 
         [BurstCompile]

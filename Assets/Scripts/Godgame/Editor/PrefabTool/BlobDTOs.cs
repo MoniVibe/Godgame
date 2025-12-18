@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Collections;
+using Godgame.Scenario;
 
 namespace Godgame.Editor.PrefabTool
 {
@@ -400,4 +401,3 @@ namespace Godgame.Editor.PrefabTool
         public int IndividualCount => Individuals.Count;
     }
 }
-

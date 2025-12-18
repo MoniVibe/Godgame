@@ -1,7 +1,8 @@
 using Unity.Burst;
 using Unity.Entities;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Stub preflight config system; real implementation will be
@@ -14,7 +15,7 @@ namespace Godgame.Demo
     {
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<DemoSceneTag>();
+            state.RequireForUpdate<ScenarioSceneTag>();
         }
 
         public void OnDestroy(ref SystemState state) {}

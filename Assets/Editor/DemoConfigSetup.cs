@@ -1,6 +1,6 @@
 using UnityEditor;
 using UnityEngine;
-using Godgame.Demo;
+using Godgame.Scenario;
 
 public class DemoConfigSetup
 {
@@ -12,10 +12,10 @@ public class DemoConfigSetup
             go = new GameObject("DemoConfig");
         }
 
-        var authoring = go.GetComponent<DemoSettlementAuthoring>();
+        var authoring = go.GetComponent<SettlementAuthoring>();
         if (authoring == null)
         {
-            authoring = go.AddComponent<DemoSettlementAuthoring>();
+            authoring = go.AddComponent<SettlementAuthoring>();
         }
 
         // Assign prefabs
@@ -29,6 +29,6 @@ public class DemoConfigSetup
         if (authoring.worshipPrefab == null)
              authoring.worshipPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Buildings/Temple_Basic.prefab");
 
-        Debug.Log($"Setup DemoSettlementAuthoring on {go.name}. VillagerPrefab: {authoring.villagerPrefab}");
+        Debug.Log($"Setup SettlementAuthoring on {go.name}. VillagerPrefab: {authoring.villagerPrefab}");
     }
 }

@@ -3,6 +3,7 @@ using Unity.Scenes;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
+using Godgame.Scenario;
 
 public class SubSceneSetupRetry
 {
@@ -80,7 +81,7 @@ public class SubSceneSetupRetry
             SceneManager.MoveGameObjectToScene(newDemoConfig, subSceneInstance);
             
             // Add Authoring
-            var authoring = newDemoConfig.AddComponent<Godgame.Demo.DemoSettlementAuthoring>();
+            var authoring = newDemoConfig.AddComponent<Godgame.Scenario.SettlementAuthoring>();
             
             // Assign prefabs
             authoring.villagerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Villagers/Villager.prefab");

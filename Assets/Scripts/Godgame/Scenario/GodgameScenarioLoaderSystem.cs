@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Godgame.Demo;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -23,12 +22,12 @@ namespace Godgame.Scenario
                 return;
             }
 
-            if (!SystemAPI.TryGetSingleton<DemoOptions>(out var options))
+            if (!SystemAPI.TryGetSingleton<ScenarioOptions>(out var options))
             {
                 return; // Wait for options
             }
 
-            if (!SystemAPI.TryGetSingleton<DemoSettlementConfig>(out var settlementConfig))
+            if (!SystemAPI.TryGetSingleton<SettlementConfig>(out var settlementConfig))
             {
                 CleanupDuplicateConfigs();
                 WarnWaitingForConfig();
@@ -48,12 +47,12 @@ namespace Godgame.Scenario
 
         private void CleanupDuplicateConfigs()
         {
-            var query = SystemAPI.QueryBuilder().WithAll<DemoSettlementConfig>().Build();
+            var query = SystemAPI.QueryBuilder().WithAll<SettlementConfig>().Build();
             int count = query.CalculateEntityCount();
             if (count <= 1)
                 return;
 
-            Debug.LogError($"[GodgameScenarioLoaderSystem] Found {count} DemoSettlementConfig entities! Destroying duplicates...");
+            Debug.LogError($"[GodgameScenarioLoaderSystem] Found {count} SettlementConfig entities! Destroying duplicates...");
             var entities = query.ToEntityArray(Allocator.Temp);
             for (int i = 1; i < entities.Length; i++)
             {
@@ -67,7 +66,7 @@ namespace Godgame.Scenario
             if (_warnedMissingConfig)
                 return;
 
-            Debug.LogWarning("[GodgameScenarioLoaderSystem] Waiting for DemoSettlementConfig to get prefabs...");
+            Debug.LogWarning("[GodgameScenarioLoaderSystem] Waiting for SettlementConfig to get prefabs...");
             _warnedMissingConfig = true;
         }
 
@@ -76,13 +75,13 @@ namespace Godgame.Scenario
             _warnedMissingConfig = false;
         }
 
-        private static bool HasReadyPrefabs(in DemoSettlementConfig settlementConfig)
+        private static bool HasReadyPrefabs(in SettlementConfig settlementConfig)
         {
             return settlementConfig.VillagerPrefab != Entity.Null &&
                    settlementConfig.StorehousePrefab != Entity.Null;
         }
 
-        private void LoadScenario(string path, DemoSettlementConfig settlementConfig)
+        private void LoadScenario(string path, SettlementConfig settlementConfig)
         {
             var fullPath = ResolveScenarioPath(path);
             if (!File.Exists(fullPath))
@@ -119,11 +118,11 @@ namespace Godgame.Scenario
                 else if (entityData.prefab == "Tree") // Assuming Tree maps to ResourceNode for now or ignored
                 {
                     // config.ResourceNodeCount += entityData.count; 
-                    // We don't have TreePrefab in DemoSettlementConfig usually, maybe map to ResourceNode?
+                    // We don't have TreePrefab in SettlementConfig usually, maybe map to ResourceNode?
                 }
             }
             
-            // Hardcode resource nodes for now if not in JSON or to match demo expectations
+            // Hardcode resource nodes for now if not in JSON or to match scenario expectations
             config.ResourceNodeCount = 5; 
 
             EntityManager.AddComponentData(configEntity, config);

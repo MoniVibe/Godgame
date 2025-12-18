@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using Godgame.Scenario;
 
 public class FixDemoConfigReferences
 {
@@ -12,10 +13,10 @@ public class FixDemoConfigReferences
             return;
         }
 
-        var authoring = go.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        var authoring = go.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         if (authoring == null)
         {
-            Debug.LogError("DemoSettlementAuthoring component not found on DemoConfig.");
+            Debug.LogError("SettlementAuthoring component not found on DemoConfig.");
             return;
         }
 

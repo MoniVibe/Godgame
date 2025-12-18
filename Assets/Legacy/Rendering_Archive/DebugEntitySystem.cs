@@ -7,7 +7,7 @@ using Unity.Entities.Graphics;
 using Unity.Rendering;
 using Unity.Transforms;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]

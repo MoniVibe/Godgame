@@ -1,7 +1,7 @@
 using Unity.Entities;
 using UnityEngine;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Debug system that logs all systems in the ECS world at startup.

@@ -77,7 +77,7 @@ Are there any critical execution order requirements?
 ## Current Godgame Setup
 
 Godgame currently has:
-- ✅ `Godgame.Demo.DemoBootstrap` on bootstrap GameObject
+- ✅ `Godgame.Scenario.ScenarioBootstrap` on bootstrap GameObject
 - ✅ `Godgame.Input.GodgameInputReader` (reads input, writes to ECS)
 - ✅ `Godgame.GodgameCameraController` on camera (reads from ECS `CameraInput`)
 - ❓ Missing: `BW2CameraInputBridge` (suspected cause of WASD issue)
@@ -94,4 +94,3 @@ A markdown document (`Space4X_SceneSetup_Brief.md`) with:
 5. **Quick Checklist**: "If X doesn't work, check Y"
 
 This will allow Godgame to match Space4X's working setup.
-

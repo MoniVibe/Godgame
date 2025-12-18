@@ -3,13 +3,13 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
-    /// Ensures DemoOptions, TimeState, and RewindState singletons exist with sensible defaults so the demo always boots and runs.
+    /// Ensures ScenarioOptions, TimeState, and RewindState singletons exist with sensible defaults so the scenario always boots and runs.
     /// </summary>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public partial struct DemoBootstrapEnsureOptionsSystem : ISystem
+    public partial struct ScenarioBootstrapEnsureOptionsSystem : ISystem
     {
         [BurstDiscard]
         private static FixedString64Bytes FS(string s)
@@ -24,13 +24,12 @@ namespace Godgame.Demo
 
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<DemoSceneTag>();
             var em = state.EntityManager;
 
-            if (!SystemAPI.TryGetSingleton<DemoOptions>(out _))
+            if (!SystemAPI.TryGetSingleton<ScenarioOptions>(out _))
             {
-                var e = em.CreateEntity(typeof(DemoOptions));
-                em.SetComponentData(e, new DemoOptions
+                var e = em.CreateEntity(typeof(ScenarioOptions));
+                em.SetComponentData(e, new ScenarioOptions
                 {
                     ScenarioPath = FS("Scenarios/godgame/villager_loop_small.json"),
                     BindingsSet = 0,

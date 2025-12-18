@@ -1,6 +1,7 @@
-using Godgame.Demo;
+using Godgame.AI;
 using Godgame.Presentation;
 using Godgame.Rendering;
+using PureDOTS.Runtime.AI;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -10,12 +11,12 @@ using UnityEngine;
 using PureDOTS.Rendering;
 using static Godgame.Rendering.GodgamePresentationUtility;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
-    /// Burst-safe IDs and labels used by the demo settlement spawner.
+    /// Burst-safe IDs and labels used by the scenario settlement spawner.
     /// </summary>
-    public struct DemoSettlementIdsSingleton : IComponentData
+    public struct SettlementIdsSingleton : IComponentData
     {
         public FixedString32Bytes SettlementLabel;
         public FixedString32Bytes NodeLabelPrefix;
@@ -24,22 +25,22 @@ namespace Godgame.Demo
 
     /// <summary>
     /// Spawns the building layout, ambient resource nodes, and initial villager population
-    /// so the settlement demo has something to animate during play mode.
+    /// so the settlement scenario has something to animate during play mode.
     /// </summary>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    // Burst disabled: this demo system uses managed logging.
-    public partial struct DemoSettlementSpawnSystem : ISystem
+    // Burst disabled: this scenario system uses managed logging.
+    public partial struct SettlementSpawnSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<DemoSceneTag>();
-            state.RequireForUpdate<DemoSettlementConfig>();
+            state.RequireForUpdate<ScenarioSceneTag>();
+            state.RequireForUpdate<SettlementConfig>();
             var entityManager = state.EntityManager;
 
-            if (!SystemAPI.TryGetSingleton<DemoSettlementIdsSingleton>(out _))
+            if (!SystemAPI.TryGetSingleton<SettlementIdsSingleton>(out _))
             {
-                var idsEntity = entityManager.CreateEntity(typeof(DemoSettlementIdsSingleton));
-                entityManager.SetComponentData(idsEntity, new DemoSettlementIdsSingleton
+                var idsEntity = entityManager.CreateEntity(typeof(SettlementIdsSingleton));
+                entityManager.SetComponentData(idsEntity, new SettlementIdsSingleton
                 {
                     SettlementLabel = new FixedString32Bytes("Settlement"),
                     NodeLabelPrefix = new FixedString32Bytes("node."),
@@ -53,7 +54,7 @@ namespace Godgame.Demo
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             foreach (var (config, runtime, transform, resources, entity) in SystemAPI
-                         .Query<RefRO<DemoSettlementConfig>, RefRW<DemoSettlementRuntime>, RefRO<LocalTransform>, DynamicBuffer<DemoSettlementResource>>()
+                         .Query<RefRO<SettlementConfig>, RefRW<SettlementRuntime>, RefRO<LocalTransform>, DynamicBuffer<SettlementResource>>()
                          .WithEntityAccess())
             {
                 if (runtime.ValueRO.HasSpawned != 0)
@@ -62,11 +63,11 @@ namespace Godgame.Demo
                 }
 
                 var configValue = config.ValueRO;
-                var ids = SystemAPI.GetSingleton<DemoSettlementIdsSingleton>();
+                var ids = SystemAPI.GetSingleton<SettlementIdsSingleton>();
                 if (configValue.VillagerPrefab == Entity.Null)
                 {
-                    // Demo log disabled – Burst does not allow managed logging from this system.
-                    // Godgame.GodgameDebug.LogWarning("[DemoSettlementSpawnSystem] Villager prefab reference is missing. Settlement demo cannot spawn population.");
+                    // Logging disabled – Burst does not allow managed logging from this system.
+                    // Godgame.GodgameDebug.LogWarning("[SettlementSpawnSystem] Villager prefab reference is missing. Settlement scenario cannot spawn population.");
                     continue;
                 }
 
@@ -121,14 +122,14 @@ namespace Godgame.Demo
                         label.Append(ids.NodeLabelPrefix[c]);
                     }
                     label.Append(i + 1);
-                    ecb.AddComponent(nodeEntity, new DemoResourceNode
+                    ecb.AddComponent(nodeEntity, new SettlementResourceNode
                     {
                         Settlement = entity,
                         Position = nodePos,
                         Label = label
                     });
                     AssignRenderComponents(ref ecb, nodeEntity, GodgameSemanticKeys.ResourceNode, default);
-                    resources.Add(new DemoSettlementResource { Node = nodeEntity });
+                    resources.Add(new SettlementResource { Node = nodeEntity });
                 }
 
                 for (int i = 0; i < configValue.InitialVillagers; i++)
@@ -140,14 +141,24 @@ namespace Godgame.Demo
                     // Scale up to 5f to be visible
                     ecb.SetComponent(villager, LocalTransform.FromPositionRotationScale(villagerPos, quaternion.identity, 5f));
 
-                    ecb.AddComponent(villager, new DemoVillagerState
+                    ecb.AddComponent(villager, new SettlementVillagerState
                     {
                         Settlement = entity,
-                        Phase = DemoVillagerPhase.Idle,
+                        Phase = SettlementVillagerPhase.Idle,
                         RandomState = random.NextUInt(1, uint.MaxValue)
                     });
                     var role = VillagerRenderKeyUtility.GetDefaultRoleForIndex(i);
                     ecb.AddComponent(villager, new VillagerRenderRole { Value = role });
+                    var roleAssignment = GodgameAIRoleDefinitions.ResolveForVillager(role);
+                    ecb.AddComponent(villager, new AIRole { RoleId = roleAssignment.RoleId });
+                    ecb.AddComponent(villager, new AIDoctrine { DoctrineId = roleAssignment.DoctrineId });
+                    ecb.AddComponent(villager, new AIBehaviorProfile
+                    {
+                        ProfileId = roleAssignment.ProfileId,
+                        ProfileHash = roleAssignment.ProfileHash,
+                        ProfileEntity = Entity.Null,
+                        SourceId = GodgameAIRoleDefinitions.SourceScenario
+                    });
                     var villagerRenderKey = VillagerRenderKeyUtility.GetRenderKeyForRole(role);
 
                     // Add presentation components so they are picked up by the presentation system and debugger

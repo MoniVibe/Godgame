@@ -2,6 +2,7 @@ using System;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Godgame.Scenario;
 
 namespace Godgame.Bands
 {
@@ -318,4 +319,3 @@ namespace Godgame.Bands
         public int VengeanceTargetFaction;
     }
 }
-

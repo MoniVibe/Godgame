@@ -136,14 +136,19 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
         {
             if (villagerConfig.Key < GodgameSemanticKeys.VillagerMiner || villagerConfig.Key > GodgameSemanticKeys.VillagerCombatant)
                 continue;
-            AddVariant($"{villagerConfig.VariantName}_Cylinder", villagerConfig.PrefabPath, "Cylinder");
+            // Villager cylinder variants must be pure primitives so MeshPresenter always resolves to the builtin cylinder mesh.
+            AddVariant($"{villagerConfig.VariantName}_Cylinder", string.Empty, "Cylinder");
         }
 
         var baseThemeMappings = new List<RenderPresentationCatalogDefinition.SemanticVariant>();
         var alternateThemeMappings = new List<RenderPresentationCatalogDefinition.SemanticVariant>();
         foreach (var config in semanticConfigs)
         {
-            var capsuleIndex = variantLookup[config.VariantName];
+            if (!variantLookup.TryGetValue(config.VariantName, out var capsuleIndex))
+            {
+                Debug.LogError($"[SetupGodgameRenderCatalog] Missing base variant '{config.VariantName}' for semantic {config.Key}.");
+                continue;
+            }
             baseThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
             {
                 SemanticKey = config.Key,
@@ -154,7 +159,11 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
 
             var useCylinder = config.Key >= GodgameSemanticKeys.VillagerMiner && config.Key <= GodgameSemanticKeys.VillagerCombatant;
             var variantName = useCylinder ? $"{config.VariantName}_Cylinder" : config.VariantName;
-            var variantIndex = variantLookup[variantName];
+            if (!variantLookup.TryGetValue(variantName, out var variantIndex))
+            {
+                Debug.LogError($"[SetupGodgameRenderCatalog] Failed to resolve variant '{variantName}' for semantic {config.Key}.");
+                continue;
+            }
             alternateThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
             {
                 SemanticKey = config.Key,

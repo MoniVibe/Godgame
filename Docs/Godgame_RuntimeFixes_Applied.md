@@ -13,7 +13,7 @@
 
 **Status**: ✅ Fixed
 
-## Fix 2: Space4XMiningDemoBootstrapSystem Compile Errors
+## Fix 2: Space4XMiningScenarioBootstrapSystem Compile Errors
 
 **Issue**: 
 - `RenderMeshArray` cannot be used with `SystemAPI.GetSingleton<T>()` (it's managed, not unmanaged)
@@ -21,7 +21,7 @@
 
 **Status**: ⚠️ **Not Found in Godgame**
 
-The `Space4XMiningDemoBootstrapSystem` was not found in the Godgame project. It may be:
+The `Space4XMiningScenarioBootstrapSystem` was not found in the Godgame project. It may be:
 1. In PureDOTS package (not directly editable from Godgame)
 2. Not yet created/imported
 3. Named differently
@@ -32,7 +32,7 @@ The `Space4XMiningDemoBootstrapSystem` was not found in the Godgame project. It 
 // Option A: Temporarily disable the system
 [BurstCompile]
 [UpdateInGroup(typeof(InitializationSystemGroup))]
-public partial struct Space4XMiningDemoBootstrapSystem : ISystem
+public partial struct Space4XMiningScenarioBootstrapSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
     {
@@ -99,7 +99,7 @@ Based on Space4X analysis, Godgame's input pattern is **correct**:
 ## Summary
 
 ✅ **Fixed**: Deferred entity crash in `EnsureAOERing`
-⚠️ **Pending**: Space4XMiningDemoBootstrapSystem (not found, may not be an issue)
+⚠️ **Pending**: Space4XMiningScenarioBootstrapSystem (not found, may not be an issue)
 📋 **Documented**: Scene setup verification steps in `Docs/Godgame_WASD_Debugging.md`
 
 ## Related Documentation
@@ -107,4 +107,3 @@ Based on Space4X analysis, Godgame's input pattern is **correct**:
 - `Docs/Godgame_SceneSetup_Checklist.md` - Complete scene setup guide
 - `Docs/Godgame_WASD_Debugging.md` - Step-by-step WASD debugging guide
 - `Docs/Space4X_SceneSetup_Brief.md` - Space4X scene analysis
-

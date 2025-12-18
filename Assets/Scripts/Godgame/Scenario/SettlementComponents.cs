@@ -2,12 +2,12 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
-    /// Authoring-time configuration that describes which prefabs to spawn for the settlement demo.
+    /// Authoring-time configuration describing which prefabs to spawn for the scenario settlement.
     /// </summary>
-    public struct DemoSettlementConfig : IComponentData
+    public struct SettlementConfig : IComponentData
     {
         public Entity VillageCenterPrefab;
         public Entity StorehousePrefab;
@@ -24,7 +24,7 @@ namespace Godgame.Demo
     /// <summary>
     /// Tracks runtime state for the settlement bootstrap so we only spawn content once.
     /// </summary>
-    public struct DemoSettlementRuntime : IComponentData
+    public struct SettlementRuntime : IComponentData
     {
         public byte HasSpawned;
         public Entity VillageCenterInstance;
@@ -36,7 +36,7 @@ namespace Godgame.Demo
     /// <summary>
     /// Buffer that references the resource nodes spawned for a settlement so behaviour systems can query them quickly.
     /// </summary>
-    public struct DemoSettlementResource : IBufferElementData
+    public struct SettlementResource : IBufferElementData
     {
         public Entity Node;
     }
@@ -44,7 +44,7 @@ namespace Godgame.Demo
     /// <summary>
     /// Simple resource node descriptor the villagers can target.
     /// </summary>
-    public struct DemoResourceNode : IComponentData
+    public struct SettlementResourceNode : IComponentData
     {
         public Entity Settlement;
         public float3 Position;
@@ -52,9 +52,9 @@ namespace Godgame.Demo
     }
 
     /// <summary>
-    /// High level state for the simple villager behaviour loop used in the demo.
+    /// High level state for the simple villager behaviour loop used in the scenario.
     /// </summary>
-    public enum DemoVillagerPhase : byte
+    public enum SettlementVillagerPhase : byte
     {
         Idle = 0,
         ToResource = 1,
@@ -66,12 +66,12 @@ namespace Godgame.Demo
     /// <summary>
     /// Tracks villager specific information (current phase, timers, and pseudo random state).
     /// </summary>
-    public struct DemoVillagerState : IComponentData
+    public struct SettlementVillagerState : IComponentData
     {
         public Entity Settlement;
         public Entity CurrentResourceNode;
         public Entity CurrentDepot;
-        public DemoVillagerPhase Phase;
+        public SettlementVillagerPhase Phase;
         public float PhaseTimer;
         public uint RandomState;
     }

@@ -1,8 +1,8 @@
-#if GODGAME_DEMO && GODGAME_DEMO_DEPS
+#if GODGAME_SCENARIO && GODGAME_DEVTOOLS
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using Godgame.Demo;
+using Godgame.Scenario;
 // using PureDOTS.Demo.Village; // legacy demo dependency
 
 namespace Godgame.Villages
@@ -32,8 +32,8 @@ namespace Godgame.Villages
             _nextLogTime = (float)SystemAPI.Time.ElapsedTime + 2.0f; // Log every 2 seconds
 
             var villageQuery = GetEntityQuery(ComponentType.ReadOnly<Village>());
-            // Use DemoVillagerState as a proxy for villagers in the demo
-            var villagerQuery = GetEntityQuery(ComponentType.ReadOnly<DemoVillagerState>());
+            // Use SettlementVillagerState as a proxy for villagers in the scenario bootstrap
+            var villagerQuery = GetEntityQuery(ComponentType.ReadOnly<SettlementVillagerState>());
 
             // PureDOTS demo components
             var puredotsVillageCount = SystemAPI.QueryBuilder().WithAll<VillageTag>().Build().CalculateEntityCount();

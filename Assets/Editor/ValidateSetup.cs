@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using Godgame.Scenario;
 
 public class ValidateSetup
 {
@@ -38,7 +39,7 @@ public class ValidateSetup
         var demoConfig = GameObject.Find("DemoConfig");
         if (demoConfig != null)
         {
-            var authoring = demoConfig.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+            var authoring = demoConfig.GetComponent<Godgame.Scenario.SettlementAuthoring>();
             if (authoring != null)
             {
                 Debug.Log($"DemoConfig found. Checking assignments...");
@@ -50,7 +51,7 @@ public class ValidateSetup
             }
             else
             {
-                Debug.LogError("DemoConfig missing DemoSettlementAuthoring component.");
+                Debug.LogError("DemoConfig missing SettlementAuthoring component.");
             }
         }
         else

@@ -1370,7 +1370,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c8ad415390d3e6348a0f574abd6fa7f9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Demo.DemoBootstrap
+  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Scenario.ScenarioBootstrap
   defaultScenario: villager_loop_small.json
   useFancyBindings: 0
 --- !u!1 &1353040182
@@ -2543,7 +2543,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a7f66e130916107419a233660d1ea8b5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Demo.DemoBootstrapUI
+  m_EditorClassIdentifier: Godgame.Runtime::Godgame.Scenario.ScenarioBootstrapUI
   bootstrap: {fileID: 1240563579}
   scenarioDropdown: {fileID: 408962652}
   loadButton: {fileID: 1942616478}

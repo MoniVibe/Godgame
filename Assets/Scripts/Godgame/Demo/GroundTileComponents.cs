@@ -2,7 +2,7 @@ using PureDOTS.Environment;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Identifies a ground tile entity that mirrors one cell from the shared environment grids.

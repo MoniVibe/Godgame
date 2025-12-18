@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Unity.Collections;
+using Godgame.Scenario;
 
 namespace Godgame.Editor.PrefabTool
 {
@@ -1681,4 +1682,3 @@ namespace Godgame.Editor.PrefabTool
         public Footprint footprint = new Footprint();
     }
 }
-

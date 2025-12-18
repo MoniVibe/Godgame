@@ -86,7 +86,7 @@ Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.God
 - `BandFormationTests` - Band formation
 - `ScenarioSpawnTests` - Scenario spawning
 - `ScenarioRewindDeterminismTests` - Scenario + rewind
-- `DemoBootstrapTests` - Demo bootstrap
+- `ScenarioBootstrapTests` - Scenario bootstrap
 
 ## CI Pipeline Recommendations
 
@@ -100,4 +100,3 @@ Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.God
 - Some tests require `CoreSingletonBootstrapSystem.EnsureSingletons()` in setup
 - PlayMode tests may require headless mode for CI environments
 - Burst compilation check requires Unity Editor (no headless support)
-

@@ -66,6 +66,8 @@ Run via Unity EditMode runner (CI hook optional).
 
 `GodgameVillagerMindTelemetrySystem` (Telemetry folder) runs on the same cadence, aggregates villager count, goal distribution, average focus, and peak need urgency, and appends them to the shared `BehaviorTelemetryRecord` buffer (`BehaviorId.VillagerMind`). When the `GODGAME_BEHAVIOR_TELEMETRY_PATH` env var is set (headless builds do this automatically), `GodgameBehaviorTelemetryExportSystem` flushes those records to NDJSON so scenario reports include mind/focus stats alongside gather/dodge metrics.
 
+`GodgameBehaviorTelemetryExportSystem` now also writes the AI audit streams so designers can answer “why did they do that?” without replaying the scene: decision transitions (with reason codes + top weighted options), action lifecycle events (start/end/fail timestamps with failure reasons), queue pressure samples for scenario command buffers, logic audit counters (invalid refs, NaNs, missing components), and ticket/claim sanity (double-claims, stuck claims, release durations). The audit data sits in the same NDJSON so downstream reports keep a single timeline.
+
 ---
 **Next Steps**
 1. Mirror `VillagerNeedUpdateSystem` metrics into behavior telemetry for golden scenarios.

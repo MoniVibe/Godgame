@@ -1,5 +1,5 @@
 using System;
-using Godgame.Demo;
+using Godgame.Scenario;
 using PureDOTS.Environment;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Systems;

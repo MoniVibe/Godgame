@@ -7,7 +7,7 @@ using Unity.Mathematics;
 using PureDOTS.Demo.Village;
 using PureDOTS.Demo.Rendering;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(GodgameDemoRenderSetupSystem))]

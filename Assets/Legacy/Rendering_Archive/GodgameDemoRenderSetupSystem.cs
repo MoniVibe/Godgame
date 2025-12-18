@@ -4,7 +4,7 @@ using Unity.Rendering;
 using UnityEngine;
 using PureDOTS.Demo.Rendering;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Populates the shared RenderMeshArray used by PureDOTS demo systems

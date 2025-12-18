@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using Godgame.Scenario;
 
 public class PrefabFixer
 {
@@ -56,7 +57,7 @@ public class PrefabFixer
             return;
         }
 
-        var authoring = go.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        var authoring = go.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         if (authoring != null)
         {
             // Re-assign prefabs to ensure they are valid references

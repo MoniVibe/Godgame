@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Godgame.Villagers;
 using LocalVillagerJob = Godgame.Villagers.VillagerJob;
 using DotsVillagerJob = PureDOTS.Runtime.Components.VillagerJob;
 

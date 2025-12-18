@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using Godgame.Combat;
-using Godgame.Demo;
+using Godgame.Scenario;
 using Godgame.Economy;
 using Godgame.Villages;
 using Godgame.Villagers;

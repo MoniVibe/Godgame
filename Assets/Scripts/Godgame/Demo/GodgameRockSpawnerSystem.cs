@@ -1,3 +1,4 @@
+using Godgame.Scenario;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using PureDOTS.Runtime;
 using PureDOTS.Runtime.Physics;
@@ -7,7 +8,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Spawns a handful of rock resource nodes around the starting village/terrain area.
@@ -24,17 +25,17 @@ namespace Godgame.Demo
 
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<DemoSceneTag>();
+            state.RequireForUpdate<ScenarioSceneTag>();
             Debug.Log("[GodgameRockSpawnerSystem] OnCreate");
-            state.RequireForUpdate<DemoScenarioState>();
+            state.RequireForUpdate<ScenarioState>();
         }
 
         // NOTE: Not Burst compiled because DemoRenderUtil.MakeRenderable uses managed code
         public void OnUpdate(ref SystemState state)
         {
             // Check scenario - only run in AllSystemsShowcase or GodgamePhysicsOnly
-            var scenario = SystemAPI.GetSingleton<DemoScenarioState>().Current;
-            if (scenario != DemoScenario.AllSystemsShowcase && scenario != DemoScenario.GodgamePhysicsOnly)
+            var scenario = SystemAPI.GetSingleton<ScenarioState>().Current;
+            if (scenario != ScenarioKind.AllSystemsShowcase && scenario != ScenarioKind.GodgamePhysicsOnly)
             {
                 return;
             }

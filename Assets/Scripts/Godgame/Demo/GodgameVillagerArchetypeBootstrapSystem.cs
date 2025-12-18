@@ -4,8 +4,9 @@ using PureDOTS.Systems;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Ensures every villager has a VillagerArchetypeResolved component so PureDOTS AI systems can evaluate goals.
@@ -17,7 +18,7 @@ namespace Godgame.Demo
     {
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<DemoSceneTag>();
+            state.RequireForUpdate<ScenarioSceneTag>();
             state.RequireForUpdate<VillagerAIState>();
         }
 

@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using Godgame.Scenario;
 
 public class FinalVerify
 {
@@ -16,10 +17,10 @@ public class FinalVerify
             return;
         }
 
-        var authoring = go.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        var authoring = go.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         if (authoring == null)
         {
-            Debug.LogError("DemoSettlementAuthoring component missing on DemoConfig!");
+            Debug.LogError("SettlementAuthoring component missing on DemoConfig!");
             return;
         }
 

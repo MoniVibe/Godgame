@@ -24,11 +24,12 @@
         "PureDOTS.Config",
         "PureDOTS.Camera",
         "PureDOTS.Rendering",
-        "Godgame.Runtime"
+        "Godgame.Runtime",
+        "Godgame.Rendering"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

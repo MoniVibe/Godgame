@@ -1118,15 +1118,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45a335734b1572644a6a5d09d87adc65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Scenes::Unity.Scenes.SubScene
-  _SceneAsset: {fileID: 102900000, guid: 9a5e560de11fa3f43a4e953bdf3167ae, type: 3}
+  _SceneAsset: {fileID: 102900000, guid: c223614b6cdc32f458a7e32d67a3a9ec, type: 3}
   _HierarchyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   AutoLoadScene: 1
   _SceneGUID:
     Value:
-      x: 3496338857
-      y: 1329262878
-      z: 3009012899
-      w: 3933606909
+      x: 3021353516
+      y: 1327746502
+      z: 3527309957
+      w: 3466214006
 --- !u!1 &1022963610
 GameObject:
   m_ObjectHideFlags: 0
@@ -1461,7 +1461,7 @@ GameObject:
   - component: {fileID: 1240563580}
   - component: {fileID: 1240563581}
   m_Layer: 0
-  m_Name: DemoBootstrap
+  m_Name: ScenarioBootstrap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1493,7 +1493,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c8ad415390d3e6348a0f574abd6fa7f9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Godgame.Gameplay::Godgame.Demo.DemoBootstrap
+  m_EditorClassIdentifier: Godgame.Gameplay::Godgame.Scenario.ScenarioBootstrap
   defaultScenario: Demo_01.json
   useFancyBindings: 0
 --- !u!114 &1240563580

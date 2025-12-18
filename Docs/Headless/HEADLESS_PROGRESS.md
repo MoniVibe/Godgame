@@ -14,7 +14,7 @@ The presentation layer has been verified and cleaned up to ensure it runs correc
   - Applied same fixes as Godgame.unity.
 
 ### Systems & Components
-- **RenderFlags**: Verified that spawners (`DemoSettlementSpawnSystem`, `GodgameScenarioSpawnSystem`, etc.) correctly attach `RenderFlags` (Visible=1) to entities.
+- **RenderFlags**: Verified that spawners (`SettlementSpawnSystem`, `GodgameScenarioSpawnSystem`, etc.) correctly attach `RenderFlags` (Visible=1) to entities.
 - **Headless Disables**: Confirmed that `RuntimeMode.IsHeadless` checks are correctly placed in systems that should not run in headless (e.g., `ApplyRenderCatalogSystem`, `SceneDebugger`), but do not block presentation in Editor.
 - **Input System**: Fixed `InvalidOperationException` spam by ensuring the correct Input Module is used.
 

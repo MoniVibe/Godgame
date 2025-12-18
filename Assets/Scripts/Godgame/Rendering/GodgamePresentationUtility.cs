@@ -4,9 +4,9 @@ using Unity.Mathematics;
 
 namespace Godgame.Rendering
 {
-    internal static class GodgamePresentationUtility
+    public static class GodgamePresentationUtility
     {
-        internal struct PrefabPresentationState
+        public struct PrefabPresentationState
         {
             public bool HasRenderKey;
             public bool HasRenderVariantKey;
@@ -21,7 +21,7 @@ namespace Godgame.Rendering
             public bool HasRenderThemeOverride;
         }
 
-        internal static PrefabPresentationState GetPrefabPresentationState(EntityManager entityManager, Entity prefab)
+        public static PrefabPresentationState GetPrefabPresentationState(EntityManager entityManager, Entity prefab)
         {
             if (prefab == Entity.Null)
                 return default;
@@ -42,7 +42,7 @@ namespace Godgame.Rendering
             };
         }
 
-        internal static void AssignRenderComponents(
+        public static void AssignRenderComponents(
             ref EntityCommandBuffer ecb,
             Entity entity,
             ushort semanticKey,
@@ -70,7 +70,7 @@ namespace Godgame.Rendering
             AddOrSet(ref ecb, entity, new RenderUvTransform { Value = new float4(1f, 1f, 0f, 0f) }, prefabState.HasRenderUv);
         }
 
-        internal static void AssignRenderComponents(
+        public static void AssignRenderComponents(
             EntityManager entityManager,
             Entity entity,
             ushort semanticKey,
@@ -98,7 +98,7 @@ namespace Godgame.Rendering
             AddOrSet(entityManager, entity, new RenderUvTransform { Value = new float4(1f, 1f, 0f, 0f) }, prefabState.HasRenderUv);
         }
 
-        internal static void AddOrSet<T>(ref EntityCommandBuffer ecb, Entity entity, T value, bool hasComponent)
+        public static void AddOrSet<T>(ref EntityCommandBuffer ecb, Entity entity, T value, bool hasComponent)
             where T : unmanaged, IComponentData
         {
             if (hasComponent)
@@ -111,7 +111,7 @@ namespace Godgame.Rendering
             }
         }
 
-        internal static void EnsurePresenter<T>(ref EntityCommandBuffer ecb, Entity entity, bool hasComponent, bool enabled)
+        public static void EnsurePresenter<T>(ref EntityCommandBuffer ecb, Entity entity, bool hasComponent, bool enabled)
             where T : unmanaged, IComponentData, IEnableableComponent
         {
             if (!hasComponent)
@@ -121,7 +121,7 @@ namespace Godgame.Rendering
             ecb.SetComponentEnabled<T>(entity, enabled);
         }
 
-        internal static void AddOrSet<T>(EntityManager entityManager, Entity entity, T value, bool hasComponent)
+        public static void AddOrSet<T>(EntityManager entityManager, Entity entity, T value, bool hasComponent)
             where T : unmanaged, IComponentData
         {
             if (hasComponent)
@@ -134,7 +134,7 @@ namespace Godgame.Rendering
             }
         }
 
-        internal static void EnsurePresenter<T>(EntityManager entityManager, Entity entity, bool hasComponent, bool enabled)
+        public static void EnsurePresenter<T>(EntityManager entityManager, Entity entity, bool hasComponent, bool enabled)
             where T : unmanaged, IComponentData, IEnableableComponent
         {
             if (!hasComponent)
@@ -144,7 +144,7 @@ namespace Godgame.Rendering
             entityManager.SetComponentEnabled<T>(entity, enabled);
         }
 
-        internal static void EnsureRenderThemeOverride(
+        public static void EnsureRenderThemeOverride(
             ref EntityCommandBuffer ecb,
             Entity entity,
             bool hasComponent,
@@ -163,7 +163,7 @@ namespace Godgame.Rendering
             ecb.SetComponentEnabled<RenderThemeOverride>(entity, enabled);
         }
 
-        internal static void EnsureRenderThemeOverride(
+        public static void EnsureRenderThemeOverride(
             EntityManager entityManager,
             Entity entity,
             bool hasComponent,

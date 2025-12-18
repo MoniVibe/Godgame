@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using Godgame.Scenario;
 
 public class CleanupDemoConfig
 {
@@ -24,8 +25,8 @@ public class CleanupDemoConfig
             Debug.Log("No missing scripts on DemoConfig");
         }
 
-        // Verify prefabs assigned to DemoSettlementAuthoring
-        var authoring = go.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        // Verify prefabs assigned to SettlementAuthoring
+        var authoring = go.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         if (authoring != null)
         {
             CheckPrefab("Villager", authoring.villagerPrefab);

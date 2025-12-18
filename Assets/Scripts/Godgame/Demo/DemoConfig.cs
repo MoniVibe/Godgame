@@ -1,8 +1,9 @@
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// ScriptableObject configuration for demo spawning parameters.
@@ -67,4 +68,3 @@ namespace Godgame.Demo
         public BlobAssetReference<DemoConfigBlob> Config;
     }
 }
-

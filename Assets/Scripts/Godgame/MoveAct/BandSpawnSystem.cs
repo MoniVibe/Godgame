@@ -1,6 +1,8 @@
+using Godgame.AI;
 using Godgame.MoveAct;
 using PureDOTS.Runtime.Bands;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.AI;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -92,6 +94,17 @@ namespace Godgame.MoveAct
                 });
 
                 ecb.AddBuffer<BandMember>(bandEntity);
+
+                var roleAssignment = GodgameAIRoleDefinitions.ResolveForBand();
+                ecb.AddComponent(bandEntity, new AIRole { RoleId = roleAssignment.RoleId });
+                ecb.AddComponent(bandEntity, new AIDoctrine { DoctrineId = roleAssignment.DoctrineId });
+                ecb.AddComponent(bandEntity, new AIBehaviorProfile
+                {
+                    ProfileId = roleAssignment.ProfileId,
+                    ProfileHash = roleAssignment.ProfileHash,
+                    ProfileEntity = Entity.Null,
+                    SourceId = GodgameAIRoleDefinitions.SourceScenario
+                });
 
                 lastSpawned = bandEntity;
                 lastPosition = request.Position;

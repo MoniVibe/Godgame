@@ -1,3 +1,4 @@
+using Godgame.Telemetry;
 using PureDOTS.Runtime.Components;
 using Unity.Burst;
 using Unity.Collections;
@@ -24,9 +25,9 @@ namespace Godgame.Villages
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
 
             state.RequireForUpdate<TimeState>();
+            state.RequireForUpdate<BehaviorTelemetryState>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var timeState = SystemAPI.GetSingleton<TimeState>();
@@ -40,6 +41,30 @@ namespace Godgame.Villages
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
+            var telemetryEntity = SystemAPI.GetSingletonEntity<BehaviorTelemetryState>();
+            DynamicBuffer<GodgameDecisionTransitionRecord> decisionAuditBuffer = default;
+            if (state.EntityManager.HasBuffer<GodgameDecisionTransitionRecord>(telemetryEntity))
+            {
+                decisionAuditBuffer = state.EntityManager.GetBuffer<GodgameDecisionTransitionRecord>(telemetryEntity);
+            }
+
+            DynamicBuffer<GodgameDecisionTraceRecord> decisionTraceBuffer = default;
+            if (state.EntityManager.HasBuffer<GodgameDecisionTraceRecord>(telemetryEntity))
+            {
+                decisionTraceBuffer = state.EntityManager.GetBuffer<GodgameDecisionTraceRecord>(telemetryEntity);
+            }
+
+            DynamicBuffer<GodgameDecisionOscillationState> oscillationBuffer = default;
+            if (state.EntityManager.HasBuffer<GodgameDecisionOscillationState>(telemetryEntity))
+            {
+                oscillationBuffer = state.EntityManager.GetBuffer<GodgameDecisionOscillationState>(telemetryEntity);
+            }
+
+            var summaryAvailable = state.EntityManager.HasComponent<GodgameTelemetrySummary>(telemetryEntity);
+            var summaryData = summaryAvailable
+                ? state.EntityManager.GetComponentData<GodgameTelemetrySummary>(telemetryEntity)
+                : default;
+
             foreach (var (village, members, resources, decision, expansionRequests, entity) in SystemAPI.Query<
                 RefRO<Village>,
                 DynamicBuffer<VillageMember>,
@@ -52,6 +77,9 @@ namespace Godgame.Villages
                 var decisionValue = decision.ValueRW;
 
                 // Update decision if expired or none exists
+                var previousDecision = decisionValue.DecisionType;
+                var previousPriority = decisionValue.CurrentPriority;
+
                 if (decisionValue.DecisionType == 0 || 
                     (timeState.Tick - decisionValue.DecisionTick) * timeState.FixedDeltaTime > decisionValue.DecisionDuration)
                 {
@@ -87,18 +115,26 @@ namespace Godgame.Villages
                     byte decisionType = 0;
                     Entity targetEntity = Entity.Null;
                     float3 targetPosition = villageValue.CenterPosition;
+                    var reason = GodgameDecisionReason.Unknown;
+
+                    var gatherScore = math.max(0, 120 - totalResources);
+                    var expandScore = villageValue.Phase == VillagePhase.Growing ? math.max(0, totalResources - 50) : 0f;
+                    var moraleScore = math.max(0f, 600f - averageMorale);
+                    var maintainScore = villageValue.Phase == VillagePhase.Stable ? 25f : 0f;
 
                     // Low resources -> prioritize gathering
                     if (totalResources < 100 && memberCount > 0)
                     {
                         priority = 80;
                         decisionType = 4; // Gather
+                        reason = GodgameDecisionReason.ResourceShortage;
                     }
                     // Low morale -> prioritize expansion/improvement
                     else if (averageMorale < 500f && villageValue.Phase == VillagePhase.Growing)
                     {
                         priority = 60;
                         decisionType = 2; // Expand
+                         reason = GodgameDecisionReason.LowMorale;
                         // Add expansion request
                         expansionRequests.Add(new VillageExpansionRequest
                         {
@@ -113,6 +149,7 @@ namespace Godgame.Villages
                     {
                         priority = 50;
                         decisionType = 2; // Expand
+                        reason = GodgameDecisionReason.GrowthPhaseExpansion;
                         expansionRequests.Add(new VillageExpansionRequest
                         {
                             BuildingType = 2, // Storehouse
@@ -126,6 +163,7 @@ namespace Godgame.Villages
                     {
                         priority = 30;
                         decisionType = 0; // None (maintain)
+                        reason = GodgameDecisionReason.StableMaintenance;
                     }
 
                     // Update decision
@@ -136,12 +174,128 @@ namespace Godgame.Villages
                     decisionValue.DecisionTick = timeState.Tick;
                     decisionValue.DecisionDuration = 10f; // 10 seconds
                     decision.ValueRW = decisionValue;
+
+                    if (decisionAuditBuffer.IsCreated && (previousDecision != decisionType || previousPriority != priority))
+                    {
+                        var agentId = BuildVillageAgentId(village.ValueRO.VillageId);
+                        var scores = BuildScoreboard(gatherScore, expandScore, moraleScore, maintainScore);
+                        var record = new GodgameDecisionTransitionRecord
+                        {
+                            Tick = timeState.Tick,
+                            AgentId = agentId,
+                            OldState = previousDecision,
+                            NewState = decisionType,
+                            Reason = reason,
+                            Target = targetEntity,
+                            Priority = priority,
+                            Scores = scores
+                        };
+                        decisionAuditBuffer.Add(record);
+
+                        var decisionLabel = BuildDecisionLabel(decisionType);
+                        if (decisionTraceBuffer.IsCreated)
+                        {
+                            decisionTraceBuffer.Add(new GodgameDecisionTraceRecord
+                            {
+                                Tick = timeState.Tick,
+                                AgentId = agentId,
+                                Domain = GodgameDecisionDomain.Village,
+                                ChosenId = decisionLabel,
+                                ReasonCode = (ushort)reason,
+                                TopChoices = scores,
+                                ContextHash = GodgameTelemetryStringHelpers.HashContext(decisionLabel, timeState.Tick)
+                            });
+                        }
+
+                        if (oscillationBuffer.IsCreated)
+                        {
+                            if (UpdateOscillation(oscillationBuffer, agentId, decisionLabel, timeState.Tick) && summaryAvailable)
+                            {
+                                summaryData.OscillationCount++;
+                                summaryData.SummaryDirty = 1;
+                            }
+                        }
+                    }
                 }
             }
 
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
+
+            if (summaryAvailable)
+            {
+                state.EntityManager.SetComponentData(telemetryEntity, summaryData);
+            }
+        }
+
+        private static FixedList128Bytes<GodgameDecisionScoreEntry> BuildScoreboard(float gather, float expand, float morale, float maintain)
+        {
+            var scores = new FixedList128Bytes<GodgameDecisionScoreEntry>();
+            InsertScore(ref scores, CreateScoreEntry("gather", gather));
+            InsertScore(ref scores, CreateScoreEntry("expand", expand));
+            InsertScore(ref scores, CreateScoreEntry("morale", morale));
+            InsertScore(ref scores, CreateScoreEntry("maintain", maintain));
+            return scores;
+        }
+
+        private static GodgameDecisionScoreEntry CreateScoreEntry(string label, float score)
+        {
+            var entry = new GodgameDecisionScoreEntry { Score = score };
+            entry.Label.Append(label);
+            return entry;
+        }
+
+        private static void InsertScore(ref FixedList128Bytes<GodgameDecisionScoreEntry> list, in GodgameDecisionScoreEntry entry)
+        {
+            if (entry.Score <= 0f)
+            {
+                return;
+            }
+
+            list.Add(entry);
+        }
+
+        private static FixedString64Bytes BuildVillageAgentId(in FixedString64Bytes sourceId)
+        {
+            FixedString64Bytes agentId = default;
+            agentId.Append("village/");
+            agentId.Append(sourceId);
+            return agentId;
+        }
+
+        private static FixedString64Bytes BuildDecisionLabel(byte decisionType)
+        {
+            FixedString64Bytes label = default;
+            label.Append("decision/");
+            label.Append(decisionType);
+            return label;
+        }
+
+        private const uint OscillationThresholdTicks = 600;
+
+        private static bool UpdateOscillation(DynamicBuffer<GodgameDecisionOscillationState> buffer, in FixedString64Bytes agentId, in FixedString64Bytes decisionId, uint tick)
+        {
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                var entry = buffer[i];
+                if (entry.AgentId.Equals(agentId))
+                {
+                    var oscillated = !entry.LastDecisionId.Equals(decisionId) && tick - entry.LastDecisionTick <= OscillationThresholdTicks;
+                    entry.LastDecisionId = decisionId;
+                    entry.LastDecisionTick = tick;
+                    buffer[i] = entry;
+                    return oscillated;
+                }
+            }
+
+            buffer.Add(new GodgameDecisionOscillationState
+            {
+                AgentId = agentId,
+                LastDecisionId = decisionId,
+                LastDecisionTick = tick
+            });
+
+            return false;
         }
     }
 }
-

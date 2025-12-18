@@ -2,7 +2,7 @@ using Godgame.Economy;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     public struct GodgameDemoBootstrapConfig : IComponentData
     {
@@ -20,12 +20,14 @@ namespace Godgame.Demo
     {
         public byte HasInitialized;
     }
+}
 
-    public struct GodgameDemoResourceNode : IComponentData
+namespace Godgame.Scenario
+{
+    public struct GodgameScenarioResourceNode : IComponentData
     {
         public float3 Position;
         public ResourceType ResourceType;
         public int Capacity;
     }
 }
-

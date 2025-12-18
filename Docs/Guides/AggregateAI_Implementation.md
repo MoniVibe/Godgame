@@ -477,8 +477,7 @@ public enum MissionType : byte
 
 ## Related Documentation
 
-- `Docs/DemoReadiness_GapAnalysis.md` - Gap analysis
+- `Docs/Archive/Demo_Legacy/DemoReadiness_GapAnalysis.md` - Gap analysis
 - `Docs/Guides/Godgame_PureDOTS_Entity_Mapping.md` - Entity mapping guide
 - `Docs/Concepts/Villagers/Village_Villager_Alignment.md` - Village alignment design
 - `Docs/Concepts/Villagers/Entity_Relations_And_Interactions.md` - Aggregate relations design
-

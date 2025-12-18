@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Collections;
-using Godgame.Demo;
+using Godgame.Scenario;
 
 public class CheckVillagers
 {
@@ -16,7 +16,7 @@ public class CheckVillagers
         }
 
         var entityManager = world.EntityManager;
-        var query = entityManager.CreateEntityQuery(typeof(DemoVillagerState), typeof(LocalTransform));
+        var query = entityManager.CreateEntityQuery(typeof(SettlementVillagerState), typeof(LocalTransform));
         var entityCount = query.CalculateEntityCount();
         
         Debug.Log($"Found {entityCount} Villager entities.");

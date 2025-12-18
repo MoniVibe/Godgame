@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Godgame.Editor.PrefabTool;
+using Godgame.Scenario;
 
 namespace Godgame.Editor.PrefabTool
 {

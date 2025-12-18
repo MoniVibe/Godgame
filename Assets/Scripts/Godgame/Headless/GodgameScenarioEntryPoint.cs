@@ -75,7 +75,18 @@ namespace Godgame.Headless
                 SystemEnv.SetEnvironmentVariable(ScenarioEnvVar, scenarioOverridePath);
                 var result = ScenarioRunnerExecutor.RunFromFile(scenarioPath, reportPath);
                 Debug.Log($"[GodgameScenarioEntryPoint] Scenario '{result.ScenarioId}' completed successfully (ticks={result.RunTicks} snapshots={result.SnapshotLogCount}).");
-                Quit(0);
+                LogScenarioIssues(result);
+                if (ScenarioExitUtility.ShouldExitNonZero(result, out var severity))
+                {
+                    var exitCode = severity == ScenarioSeverity.Fatal ? 2 : 3;
+                    Debug.LogError($"[GodgameScenarioEntryPoint] Scenario '{result.ScenarioId}' completed with severity {severity}.");
+                    Quit(exitCode);
+                }
+                else
+                {
+                    Quit(0);
+                }
+                return;
             }
             catch (Exception ex)
             {
@@ -86,6 +97,19 @@ namespace Godgame.Headless
             {
                 SystemEnv.SetEnvironmentVariable(TelemetryEnvVar, null);
                 SystemEnv.SetEnvironmentVariable(ScenarioEnvVar, null);
+            }
+        }
+
+        private static void LogScenarioIssues(in ScenarioRunResult result)
+        {
+            if (result.Issues == null || result.Issues.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var issue in result.Issues)
+            {
+                Debug.Log($"[GodgameScenarioEntryPoint] Issue {issue.Kind}/{issue.Severity} ({issue.Code.ToString()}): {issue.Message.ToString()}");
             }
         }
 

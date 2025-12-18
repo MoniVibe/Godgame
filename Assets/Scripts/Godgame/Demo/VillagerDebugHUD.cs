@@ -1,11 +1,11 @@
-#if GODGAME_DEMO && GODGAME_DEMO_DEPS
+#if GODGAME_SCENARIO && GODGAME_DEVTOOLS
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UI;
 // using PureDOTS.Demo.Village; // legacy demo dependency
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Simple HUD component for displaying villager counts in the village demo scene.
@@ -56,9 +56,9 @@ namespace Godgame.Demo
 
             entityManager = world.EntityManager;
 
-            villagerQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<VillagerTag>());
-            homeLotQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<HomeLot>());
-            workLotQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<WorkLot>());
+            villagerQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<Godgame.Villagers.VillagerTag>());
+            homeLotQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<Godgame.Villagers.HomeLot>());
+            workLotQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<Godgame.Villagers.WorkLot>());
 
             queriesInitialized = true;
         }

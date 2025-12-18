@@ -6,8 +6,9 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Resamples the shared environment grids for each ground tile, updates cached climate values,
@@ -47,7 +48,7 @@ namespace Godgame.Demo
 
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<DemoSceneTag>();
+            state.RequireForUpdate<ScenarioSceneTag>();
             state.RequireForUpdate<GroundTile>();
             _dirtyLookup = state.GetComponentLookup<SwappablePresentationDirtyTag>(isReadOnly: true);
             _moistureRuntimeLookup = state.GetBufferLookup<MoistureGridRuntimeCell>(isReadOnly: true);

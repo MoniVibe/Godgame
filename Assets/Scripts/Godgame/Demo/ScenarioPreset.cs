@@ -1,8 +1,9 @@
 using Godgame.Presentation;
 using Godgame.Presentation.Authoring;
 using UnityEngine;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// ScriptableObject for scenario presets.
@@ -89,4 +90,3 @@ namespace Godgame.Demo
         }
     }
 }
-

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityResources = UnityEngine.Resources;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Generates a simple quad mesh at edit/runtime so we have a ground plane that can receive navmesh data.

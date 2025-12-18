@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using Godgame.Scenario;
 
 public class FixGodgamePrefabs
 {
@@ -75,10 +76,10 @@ public class FixGodgamePrefabs
             return;
         }
 
-        var authoring = go.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        var authoring = go.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         if (authoring == null)
         {
-            Debug.LogError("DemoSettlementAuthoring component not found on DemoConfig.");
+            Debug.LogError("SettlementAuthoring component not found on DemoConfig.");
             return;
         }
 

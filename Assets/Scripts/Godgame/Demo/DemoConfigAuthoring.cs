@@ -2,7 +2,7 @@ using Unity.Entities;
 using Unity.Collections;
 using UnityEngine;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Authoring component that bakes DemoConfig ScriptableObject to blob asset.

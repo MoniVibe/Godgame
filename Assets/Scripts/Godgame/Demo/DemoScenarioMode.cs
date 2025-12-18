@@ -1,4 +1,5 @@
-namespace Godgame.Demo
+using Godgame.Scenario;
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Mode for demo/scenario bootstrapping.
@@ -15,4 +16,3 @@ namespace Godgame.Demo
         Scenario_1M = 3
     }
 }
-

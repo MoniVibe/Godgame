@@ -3,6 +3,7 @@ using Unity.Scenes;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
+using Godgame.Scenario;
 
 public class SubSceneFinalSetup
 {
@@ -31,7 +32,7 @@ public class SubSceneFinalSetup
         if (demoConfig == null)
         {
             demoConfig = new GameObject("DemoConfig");
-            demoConfig.AddComponent<Godgame.Demo.DemoSettlementAuthoring>();
+            demoConfig.AddComponent<Godgame.Scenario.SettlementAuthoring>();
         }
 
         if (demoConfig.scene != subSceneInstance)
@@ -41,7 +42,7 @@ public class SubSceneFinalSetup
         }
 
         // Re-assign prefabs to ensure they are valid
-        var authoring = demoConfig.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        var authoring = demoConfig.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         authoring.villagerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Villagers/Villager.prefab");
         authoring.storehousePrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Buildings/Storehouse.prefab");
         authoring.villageCenterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Buildings/VillageCenter.prefab");

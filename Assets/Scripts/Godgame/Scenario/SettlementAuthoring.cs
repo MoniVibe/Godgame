@@ -3,14 +3,14 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
-    /// Describes which prefabs should be used when standing up the interactive settlement demo.
+    /// Describes which prefabs should be used when standing up the interactive scenario settlement.
     /// </summary>
     // Forced rebake
     [DisallowMultipleComponent]
-    public sealed class DemoSettlementAuthoring : MonoBehaviour
+    public sealed class SettlementAuthoring : MonoBehaviour
     {
         [Header("Prefabs")]
         public GameObject villageCenterPrefab;
@@ -27,15 +27,15 @@ namespace Godgame.Demo
         [Tooltip("Optional deterministic seed. If zero we derive a stable seed from the authoring object's instance id.")]
         public uint randomSeed;
 
-        private sealed class DemoSettlementBaker : Baker<DemoSettlementAuthoring>
+        private sealed class SettlementBaker : Baker<SettlementAuthoring>
         {
-            public override void Bake(DemoSettlementAuthoring authoring)
+            public override void Bake(SettlementAuthoring authoring)
             {
-                Debug.Log($"[DemoSettlementBaker] Baking {authoring.name} in scene {authoring.gameObject.scene.path}");
+                Debug.Log($"[SettlementBaker] Baking {authoring.name} in scene {authoring.gameObject.scene.path}");
                 // Use ConvertAndDestroy so the config lives only in the DOTS world.
                 var entity = GetEntity(authoring, TransformUsageFlags.Dynamic);
 
-                var config = new DemoSettlementConfig
+                var config = new SettlementConfig
                 {
                     VillageCenterPrefab = ResolvePrefab(authoring.villageCenterPrefab),
                     StorehousePrefab = ResolvePrefab(authoring.storehousePrefab),
@@ -50,16 +50,16 @@ namespace Godgame.Demo
                 };
 
                 AddComponent(entity, config);
-                AddComponent(entity, new DemoSettlementRuntime());
+                AddComponent(entity, new SettlementRuntime());
                 AddComponent(entity, LocalTransform.FromPositionRotationScale(authoring.transform.position, quaternion.identity, 1f));
-                AddBuffer<DemoSettlementResource>(entity);
+                AddBuffer<SettlementResource>(entity);
             }
 
             private Entity ResolvePrefab(GameObject prefab)
             {
                 if (prefab == null)
                 {
-                    Debug.LogWarning($"[DemoSettlementBaker] Prefab is null");
+                    Debug.LogWarning($"[SettlementBaker] Prefab is null");
                     return Entity.Null;
                 }
 
@@ -68,27 +68,27 @@ namespace Godgame.Demo
                     var entity = GetEntity(prefab, TransformUsageFlags.Dynamic);
                     if (entity == Entity.Null)
                     {
-                        Debug.LogWarning($"[DemoSettlementBaker] GetEntity returned Null for prefab {prefab.name}");
+                        Debug.LogWarning($"[SettlementBaker] GetEntity returned Null for prefab {prefab.name}");
                     }
                     else
                     {
-                        Debug.Log($"[DemoSettlementBaker] Resolved prefab {prefab.name} to entity {entity}");
+                        Debug.Log($"[SettlementBaker] Resolved prefab {prefab.name} to entity {entity}");
                     }
                     return entity;
                 }
                 catch (MissingReferenceException)
                 {
-                    Debug.LogError($"[DemoSettlementBaker] MissingReferenceException when resolving prefab. The reference exists but points to a missing object.");
+                    Debug.LogError($"[SettlementBaker] MissingReferenceException when resolving prefab. The reference exists but points to a missing object.");
                     return Entity.Null;
                 }
                 catch (System.Exception e)
                 {
-                    Debug.LogError($"[DemoSettlementBaker] Exception resolving prefab: {e}");
+                    Debug.LogError($"[SettlementBaker] Exception resolving prefab: {e}");
                     return Entity.Null;
                 }
             }
 
-            private static uint ResolveSeed(DemoSettlementAuthoring authoring)
+            private static uint ResolveSeed(SettlementAuthoring authoring)
             {
                 if (authoring.randomSeed != 0)
                 {

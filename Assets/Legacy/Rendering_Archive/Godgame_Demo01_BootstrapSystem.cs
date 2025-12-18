@@ -1,3 +1,4 @@
+using Godgame.Scenario;
 #if LEGACY_RENDERING_ARCHIVE_DISABLED
 using Godgame.Economy;
 using Godgame.Input;
@@ -13,7 +14,7 @@ using Unity.Mathematics;
 using Unity.Rendering;
 using Unity.Transforms;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Bootstrap system for Godgame Demo_01.
@@ -49,7 +50,7 @@ namespace Godgame.Demo
 
             // Spawn demo content
             SpawnDemoVillages(ref state);
-            SpawnDemoResourceNodes(ref state);
+            SpawnSettlementResourceNodes(ref state);
 
             state.Enabled = false;
         }
@@ -304,7 +305,7 @@ namespace Godgame.Demo
             return entity;
         }
 
-        private void SpawnDemoResourceNodes(ref SystemState state)
+        private void SpawnSettlementResourceNodes(ref SystemState state)
         {
             // Get demo config (use defaults if not found)
             DemoConfigBlob config = GetDemoConfig(ref state);

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using PureDOTS.Authoring;
-using Godgame.Demo;
+using Godgame.Scenario;
 
 public class GodgameFixer
 {

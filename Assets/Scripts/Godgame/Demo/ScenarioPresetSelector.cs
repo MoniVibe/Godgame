@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// MonoBehaviour for selecting scenario presets.
@@ -77,4 +78,3 @@ namespace Godgame.Demo
         }
     }
 }
-

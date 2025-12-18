@@ -54,7 +54,7 @@ namespace Godgame.Miracles
         private void ApplyRegionMiracleEffects(ref SystemState state, RegionMiracleEffect effect)
         {
             // Find ground tiles/biomes within radius
-            foreach (var (biomeDataRef, tile, transform) in SystemAPI.Query<RefRW<BiomePresentationData>, RefRO<Godgame.Demo.GroundTile>, RefRO<Unity.Transforms.LocalTransform>>())
+            foreach (var (biomeDataRef, tile, transform) in SystemAPI.Query<RefRW<BiomePresentationData>, RefRO<Godgame.Scenario.GroundTile>, RefRO<Unity.Transforms.LocalTransform>>())
             {
                 float distance = math.distance(transform.ValueRO.Position, effect.CenterPosition);
                 if (distance <= effect.Radius)

@@ -1,6 +1,7 @@
-using Godgame.Demo;
+using Godgame.AI;
 using Godgame.Economy;
 using Godgame.Rendering;
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using Unity.Burst;
 using Unity.Collections;
@@ -75,6 +76,16 @@ namespace Godgame.Scenario
 
                         var role = VillagerRenderKeyUtility.GetDefaultRoleForIndex(i);
                         ecb.AddComponent(villager, new VillagerRenderRole { Value = role });
+                        var roleAssignment = GodgameAIRoleDefinitions.ResolveForVillager(role);
+                        ecb.AddComponent(villager, new AIRole { RoleId = roleAssignment.RoleId });
+                        ecb.AddComponent(villager, new AIDoctrine { DoctrineId = roleAssignment.DoctrineId });
+                        ecb.AddComponent(villager, new AIBehaviorProfile
+                        {
+                            ProfileId = roleAssignment.ProfileId,
+                            ProfileHash = roleAssignment.ProfileHash,
+                            ProfileEntity = Entity.Null,
+                            SourceId = GodgameAIRoleDefinitions.SourceScenario
+                        });
                         var renderKeyId = VillagerRenderKeyUtility.GetRenderKeyForRole(role);
                         var dotsJobType = VillagerRenderKeyUtility.GetDefaultPureDotsJobForRole(role);
 
@@ -140,7 +151,7 @@ namespace Godgame.Scenario
                             math.sin(angle) * configValue.SpawnRadius);
 
                         ecb.AddComponent(nodeEntity, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, 1f));
-                        ecb.AddComponent(nodeEntity, new Godgame.Demo.GodgameDemoResourceNode
+                        ecb.AddComponent(nodeEntity, new GodgameScenarioResourceNode
                         {
                             Position = pos,
                             ResourceType = ResourceType.IronOre,

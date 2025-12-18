@@ -1,6 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
+using Godgame.Scenario;
 
 public class PrefabRebuilderForce
 {
@@ -94,7 +95,7 @@ public class PrefabRebuilderForce
         var go = GameObject.Find(name);
         if (go == null) return;
 
-        var authoring = go.GetComponent<Godgame.Demo.DemoSettlementAuthoring>();
+        var authoring = go.GetComponent<Godgame.Scenario.SettlementAuthoring>();
         if (authoring != null)
         {
             authoring.villagerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Villagers/Villager.prefab");

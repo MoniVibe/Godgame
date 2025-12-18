@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEditor.SceneManagement;
-using Godgame.Demo;
+using Godgame.Scenario;
 
 public class RecreateDemoConfigComponent
 {
@@ -14,10 +14,10 @@ public class RecreateDemoConfigComponent
             return;
         }
 
-        var oldComp = go.GetComponent<DemoSettlementAuthoring>();
+        var oldComp = go.GetComponent<SettlementAuthoring>();
         if (oldComp == null)
         {
-            Debug.LogError("DemoSettlementAuthoring not found.");
+            Debug.LogError("SettlementAuthoring not found.");
             return;
         }
 
@@ -32,7 +32,7 @@ public class RecreateDemoConfigComponent
         Object.DestroyImmediate(oldComp);
 
         // 3. Add new component
-        var newComp = go.AddComponent<DemoSettlementAuthoring>();
+        var newComp = go.AddComponent<SettlementAuthoring>();
 
         // 4. Restore values
         newComp.initialVillagers = initialVillagers;
@@ -57,6 +57,6 @@ public class RecreateDemoConfigComponent
         EditorSceneManager.MarkSceneDirty(go.scene);
         EditorSceneManager.SaveScene(go.scene);
         
-        Debug.Log("Recreated DemoSettlementAuthoring component and saved scene.");
+        Debug.Log("Recreated SettlementAuthoring component and saved scene.");
     }
 }

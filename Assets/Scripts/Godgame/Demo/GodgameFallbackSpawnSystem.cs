@@ -1,5 +1,6 @@
+using Godgame.Scenario;
 #if false // Legacy fallback replaced by SmokeTestFallbackBootstrapSystem (see SmokeTestFallbackBootstrapSystem.cs)
-using Godgame.Demo;
+using Godgame.Scenario;
 using Godgame.Economy;
 using Godgame.Rendering;
 using PureDOTS.Runtime.Components;
@@ -12,7 +13,7 @@ using UnityEngine;
 using RenderKey = PureDOTS.Rendering.RenderKey;
 using RenderFlags = PureDOTS.Rendering.RenderFlags;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Headless/dev fallback that seeds a minimal village so smoketests never start empty.
@@ -38,7 +39,7 @@ namespace Godgame.Demo
             state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
             _villagerQuery = state.GetEntityQuery(ComponentType.ReadOnly<VillagerTag>());
             _villageQuery = state.GetEntityQuery(ComponentType.ReadOnly<VillageTag>());
-            _resourceNodeQuery = state.GetEntityQuery(ComponentType.ReadOnly<GodgameDemoResourceNode>());
+            _resourceNodeQuery = state.GetEntityQuery(ComponentType.ReadOnly<GodgameScenarioResourceNode>());
         }
 
         [BurstCompile]
@@ -169,7 +170,7 @@ namespace Godgame.Demo
 
                 var node = ecb.CreateEntity();
                 ecb.AddComponent(node, LocalTransform.FromPositionRotationScale(position, quaternion.identity, 1.25f));
-                ecb.AddComponent(node, new GodgameDemoResourceNode
+                ecb.AddComponent(node, new GodgameScenarioResourceNode
                 {
                     Position = position,
                     ResourceType = resourceTypes[i],

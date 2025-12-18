@@ -103,7 +103,7 @@ Assets/Scripts/Godgame/
 - **Status**: Functional, syncs to PureDOTS MiracleRegistry
 
 #### ✅ Demo Systems (`Demo/`)
-- **DemoSettlementSpawnSystem**: Spawns demo entities
+- **SettlementSpawnSystem**: Spawns demo entities
 - **DemoVillagerBehaviorSystem**: Demo villager behaviors
 - **GroundTileSystems**: Procedural ground tile generation
 - **Status**: Functional, used in demo scenes
@@ -286,9 +286,9 @@ See `Docs/CI_Commands.md` for:
 - **Active TODOs**: `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md`
 - **Truth Sources**: `Docs/TruthSources_QuickReference.md`
 - **Progress**: `Docs/Progress.md` (session log)
-- **Demo Status**: `Docs/DemoReadiness_Status.md`
-- **Gap Analysis**: `Docs/DemoReadiness_GapAnalysis.md`
-- **System Overview**: `Docs/DemoSystemsOverview.md`
+- **Demo Status**: `Docs/Archive/Demo_Legacy/DemoReadiness_Status.md`
+- **Gap Analysis**: `Docs/Archive/Demo_Legacy/DemoReadiness_GapAnalysis.md`
+- **System Overview**: `Docs/Archive/Demo_Legacy/DemoSystemsOverview.md`
 
 ---
 
@@ -302,11 +302,11 @@ See `Docs/CI_Commands.md` for:
    - Wire needs into utility scheduler
    - Add tests: `VillagerInterruptTests`, `VillagerNeedsTests`
 
-2. **Demo Scene Bootstrap** (High Priority)
-   - Create self-contained demo scene
-   - Implement bootstrap spawn system
+2. **Scenario Bootstrap** (High Priority)
+   - Create self-contained scenario scene
+   - Implement scenario bootstrap spawn system
    - Wire prefab authoring pipeline
-   - Add tests: `DemoBootstrapTests`
+   - Add tests: `ScenarioBootstrapTests`
 
 3. **Job Scheduler** (Medium Priority)
    - Implement job assignment buffer
@@ -366,9 +366,8 @@ The Godgame project has a **solid foundation** with core systems (registries, ti
 ---
 
 **Related Documentation**:
-- `Docs/DemoReadiness_Status.md` - Current demo status
-- `Docs/DemoReadiness_GapAnalysis.md` - Detailed gap analysis
-- `Docs/DemoSystemsOverview.md` - System architecture
+- `Docs/Archive/Demo_Legacy/DemoReadiness_Status.md` - Current demo status
+- `Docs/Archive/Demo_Legacy/DemoReadiness_GapAnalysis.md` - Detailed gap analysis
+- `Docs/Archive/Demo_Legacy/DemoSystemsOverview.md` - System architecture
 - `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` - Integration TODO
 - `Docs/TruthSources_QuickReference.md` - Truth source quick reference
-

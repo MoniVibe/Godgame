@@ -9,12 +9,13 @@ using UnityEngine.UI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Registry;
 using PureDOTS.Runtime.Transport;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     public class DemoBootstrapUI : MonoBehaviour
     {
-        public DemoBootstrap bootstrap;
+        public ScenarioBootstrap bootstrap;
         public Dropdown scenarioDropdown;
         public Button loadButton;
         public Button toggleBindingsButton;
@@ -49,7 +50,7 @@ namespace Godgame.Demo
         private void Start()
         {
             if (bootstrap == null)
-                bootstrap = FindFirstObjectByType<DemoBootstrap>();
+                bootstrap = FindFirstObjectByType<ScenarioBootstrap>();
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world != null)

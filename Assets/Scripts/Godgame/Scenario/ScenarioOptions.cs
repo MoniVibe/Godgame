@@ -1,9 +1,9 @@
 using Unity.Entities;
 using Unity.Collections;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
-    public struct DemoOptions : IComponentData
+    public struct ScenarioOptions : IComponentData
     {
         public FixedString64Bytes ScenarioPath;
         public byte BindingsSet; // 0=Minimal, 1=Fancy

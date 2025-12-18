@@ -169,7 +169,7 @@ MonoBehaviour:
   storehousePrefab: {fileID: 4278972622082774487, guid: dfcc0ad23cce29e4e9a1d3e640167596, type: 3}
   housingPrefab: {fileID: 4278972622082774487, guid: 46274cf8632d335499c0489a2224a7ed, type: 3}
   worshipPrefab: {fileID: 4278972622082774487, guid: 965faa13abfd62e4c902c2f2f5e3a0c2, type: 3}
-  villagerPrefab: {fileID: 100000, guid: 2ce797cb7f2f4e7aa20b3d9d37cf8b23, type: 3}
+  villagerPrefab: {fileID: 5819911612082785228, guid: 773472109c0493442af351a06b11d9f0, type: 3}
   initialVillagers: 6
   villagerSpawnRadius: 8
   buildingRingRadius: 6

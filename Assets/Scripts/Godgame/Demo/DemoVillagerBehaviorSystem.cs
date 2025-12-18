@@ -5,8 +5,9 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Godgame.Scenario;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Drives a lightweight gather/deliver loop so villagers constantly move between resource nodes and the depot.
@@ -16,19 +17,19 @@ namespace Godgame.Demo
     [UpdateInGroup(typeof(VillagerSystemGroup), OrderFirst = true)]
     public partial struct DemoVillagerBehaviorSystem : ISystem
     {
-        private ComponentLookup<DemoSettlementRuntime> _settlementLookup;
+        private ComponentLookup<SettlementRuntime> _settlementLookup;
         private ComponentLookup<LocalTransform> _transformLookup;
-        private BufferLookup<DemoSettlementResource> _resourceLookup;
+        private BufferLookup<SettlementResource> _resourceLookup;
 
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<DemoSceneTag>();
-            state.RequireForUpdate<DemoSettlementConfig>();
+            state.RequireForUpdate<ScenarioSceneTag>();
+            state.RequireForUpdate<SettlementConfig>();
             state.RequireForUpdate<TimeState>();
 
-            _settlementLookup = state.GetComponentLookup<DemoSettlementRuntime>(true);
+            _settlementLookup = state.GetComponentLookup<SettlementRuntime>(true);
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
-            _resourceLookup = state.GetBufferLookup<DemoSettlementResource>(true);
+            _resourceLookup = state.GetBufferLookup<SettlementResource>(true);
         }
 
         [BurstCompile]
@@ -42,7 +43,7 @@ namespace Godgame.Demo
             var deltaTime = timeState.FixedDeltaTime;
 
             foreach (var (demoState, ai, job, ticket, flags, availability, transform, entity) in SystemAPI
-                         .Query<RefRW<DemoVillagerState>, RefRW<VillagerAIState>, RefRW<VillagerJob>, RefRW<VillagerJobTicket>, RefRW<VillagerFlags>, RefRW<VillagerAvailability>, RefRO<LocalTransform>>()
+                         .Query<RefRW<SettlementVillagerState>, RefRW<VillagerAIState>, RefRW<VillagerJob>, RefRW<VillagerJobTicket>, RefRW<VillagerFlags>, RefRW<VillagerAvailability>, RefRO<LocalTransform>>()
                          .WithEntityAccess())
             {
                 var stateData = demoState.ValueRO;
@@ -66,7 +67,7 @@ namespace Godgame.Demo
 
                 switch (updatedState.Phase)
                 {
-                    case DemoVillagerPhase.Idle:
+                    case SettlementVillagerPhase.Idle:
                         updatedState.CurrentResourceNode = PickResource(resources, ref random);
                         if (updatedState.CurrentResourceNode == Entity.Null)
                         {
@@ -75,19 +76,19 @@ namespace Godgame.Demo
 
                         BeginWork(ref updatedState, ref aiState, ref jobValue, ref ticketValue, ref flagsValue, ref availabilityValue,
                             updatedState.CurrentResourceNode, timeState.Tick);
-                        updatedState.Phase = DemoVillagerPhase.ToResource;
+                        updatedState.Phase = SettlementVillagerPhase.ToResource;
                         break;
 
-                    case DemoVillagerPhase.ToResource:
+                    case SettlementVillagerPhase.ToResource:
                         if (!TryGetPosition(in updatedState.CurrentResourceNode, ref _transformLookup, out var gatherPos))
                         {
-                            updatedState.Phase = DemoVillagerPhase.Idle;
+                            updatedState.Phase = SettlementVillagerPhase.Idle;
                             break;
                         }
 
                         if (HasReached(transform.ValueRO.Position, gatherPos))
                         {
-                            updatedState.Phase = DemoVillagerPhase.Harvest;
+                            updatedState.Phase = SettlementVillagerPhase.Harvest;
                             updatedState.PhaseTimer = random.NextFloat(1.2f, 2.8f);
                             aiState.CurrentState = VillagerAIState.State.Working;
                             jobValue.Phase = VillagerJob.JobPhase.Gathering;
@@ -97,14 +98,14 @@ namespace Godgame.Demo
                         }
                         break;
 
-                    case DemoVillagerPhase.Harvest:
+                    case SettlementVillagerPhase.Harvest:
                         updatedState.PhaseTimer -= deltaTime;
                         if (updatedState.PhaseTimer <= 0f)
                         {
                             updatedState.CurrentDepot = ResolveDepot(in runtime);
                             if (updatedState.CurrentDepot == Entity.Null)
                             {
-                                updatedState.Phase = DemoVillagerPhase.Resting;
+                                updatedState.Phase = SettlementVillagerPhase.Resting;
                                 updatedState.PhaseTimer = random.NextFloat(1f, 2f);
                                 break;
                             }
@@ -119,21 +120,21 @@ namespace Godgame.Demo
                             ticketValue.ResourceEntity = updatedState.CurrentDepot;
                             ticketValue.Phase = (byte)VillagerJob.JobPhase.Delivering;
                             ticketValue.LastProgressTick = timeState.Tick;
-                            updatedState.Phase = DemoVillagerPhase.ToDepot;
+                            updatedState.Phase = SettlementVillagerPhase.ToDepot;
                         }
                         break;
 
-                    case DemoVillagerPhase.ToDepot:
+                    case SettlementVillagerPhase.ToDepot:
                         if (!TryGetPosition(in updatedState.CurrentDepot, ref _transformLookup, out var depotPos))
                         {
-                            updatedState.Phase = DemoVillagerPhase.Resting;
+                            updatedState.Phase = SettlementVillagerPhase.Resting;
                             updatedState.PhaseTimer = random.NextFloat(1f, 2f);
                             break;
                         }
 
                         if (HasReached(transform.ValueRO.Position, depotPos))
                         {
-                            updatedState.Phase = DemoVillagerPhase.Resting;
+                            updatedState.Phase = SettlementVillagerPhase.Resting;
                             updatedState.PhaseTimer = random.NextFloat(1f, 2f);
                             aiState.CurrentState = VillagerAIState.State.Travelling;
                             jobValue.Phase = VillagerJob.JobPhase.Completed;
@@ -143,7 +144,7 @@ namespace Godgame.Demo
                         }
                         break;
 
-                    case DemoVillagerPhase.Resting:
+                    case SettlementVillagerPhase.Resting:
                         updatedState.PhaseTimer -= deltaTime;
                         if (updatedState.PhaseTimer <= 0f)
                         {
@@ -162,7 +163,7 @@ namespace Godgame.Demo
             }
         }
 
-        private static Entity PickResource(DynamicBuffer<DemoSettlementResource> resources, ref Unity.Mathematics.Random random)
+        private static Entity PickResource(DynamicBuffer<SettlementResource> resources, ref Unity.Mathematics.Random random)
         {
             if (resources.Length == 0)
             {
@@ -173,7 +174,7 @@ namespace Godgame.Demo
             return resources[index].Node;
         }
 
-        private static Entity ResolveDepot(in DemoSettlementRuntime runtime)
+        private static Entity ResolveDepot(in SettlementRuntime runtime)
         {
             if (runtime.StorehouseInstance != Entity.Null)
             {
@@ -210,7 +211,7 @@ namespace Godgame.Demo
             return math.distancesq(current, target) <= 0.36f;
         }
 
-        private static void BeginWork(ref DemoVillagerState stateData,
+        private static void BeginWork(ref SettlementVillagerState stateData,
             ref VillagerAIState aiState,
             ref VillagerJob job,
             ref VillagerJobTicket ticket,
@@ -247,7 +248,7 @@ namespace Godgame.Demo
             availability.LastChangeTick = tick;
         }
 
-        private static void FinishRest(ref DemoVillagerState stateData,
+        private static void FinishRest(ref SettlementVillagerState stateData,
             ref VillagerAIState aiState,
             ref VillagerJob job,
             ref VillagerJobTicket ticket,
@@ -255,7 +256,7 @@ namespace Godgame.Demo
             ref VillagerAvailability availability,
             uint tick)
         {
-            stateData.Phase = DemoVillagerPhase.Idle;
+            stateData.Phase = SettlementVillagerPhase.Idle;
             stateData.CurrentDepot = Entity.Null;
             stateData.CurrentResourceNode = Entity.Null;
 

@@ -1,10 +1,10 @@
-using Godgame.Demo;
+using Godgame.Scenario;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-namespace Godgame.Demo
+namespace Godgame.Scenario
 {
     /// <summary>
     /// Authoring component for demo bootstrap configuration.

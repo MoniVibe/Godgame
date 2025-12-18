@@ -265,7 +265,7 @@ Scene Root
 Based on Space4X patterns, Godgame should have:
 
 ### Bootstrap GameObject:
-- ✅ `Godgame.Demo.DemoBootstrap` (existing)
+- ✅ `Godgame.Scenario.ScenarioBootstrap` (existing)
 - ❓ `PureDOTS.Authoring.PureDotsConfigAuthoring` (if not in SubScene)
 - ❓ `PureDOTS.Authoring.SpatialPartitionAuthoring` (if not in SubScene)
 
@@ -303,7 +303,6 @@ Based on Space4X patterns, Godgame should have:
 - Ensure camera has `CameraRigApplier` if using `CameraRigState`
 - Ensure input bridge writes to ECS singleton components
 - Entities Graphics will work automatically with any active camera
-
 
 
 
