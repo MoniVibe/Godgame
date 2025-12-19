@@ -17,7 +17,7 @@ namespace Godgame.Systems
         private static readonly FixedString64Bytes SourceId = new FixedString64Bytes("Godgame.Villagers");
         private static readonly FixedString64Bytes EventProfileAssigned = new FixedString64Bytes("BehaviorProfileAssigned");
         private static readonly FixedString64Bytes EventGoalChanged = new FixedString64Bytes("GoalChanged");
-        private EntityQuery _missingTelemetryQuery;
+        private BufferLookup<TelemetryEvent> _telemetryEventLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -28,34 +28,21 @@ namespace Godgame.Systems
             state.RequireForUpdate<TelemetryStream>();
             state.RequireForUpdate<TelemetryStreamSingleton>();
             state.RequireForUpdate<ScenarioTick>();
-
-            _missingTelemetryQuery = state.GetEntityQuery(new EntityQueryDesc
-            {
-                All = new[]
-                {
-                    ComponentType.ReadOnly<VillagerAIState>(),
-                    ComponentType.ReadOnly<AIRole>()
-                },
-                None = new[]
-                {
-                    ComponentType.ReadOnly<GodgameAITelemetryState>()
-                }
-            });
+            state.RequireForUpdate<GodgameAITelemetryState>(); // rely on bootstrap to add structural state ahead of telemetry writes
+            _telemetryEventLookup = state.GetBufferLookup<TelemetryEvent>(false);
         }
 
         public void OnUpdate(ref SystemState state)
         {
-            if (!TryGetTelemetryEventBuffer(ref state, out var eventBuffer))
+            _telemetryEventLookup.Update(ref state);
+            var streamEntity = SystemAPI.GetSingleton<TelemetryStreamSingleton>().Stream;
+            if (streamEntity == Entity.Null || !_telemetryEventLookup.HasBuffer(streamEntity))
             {
                 return;
             }
 
+            var eventBuffer = _telemetryEventLookup[streamEntity];
             var tick = SystemAPI.GetSingleton<ScenarioTick>().Value;
-
-            if (!_missingTelemetryQuery.IsEmptyIgnoreFilter)
-            {
-                state.EntityManager.AddComponent<GodgameAITelemetryState>(_missingTelemetryQuery);
-            }
 
             foreach (var (aiState, role, doctrine, profile, telemetry, entity) in SystemAPI
                          .Query<RefRO<VillagerAIState>, RefRO<AIRole>, RefRO<AIDoctrine>, RefRO<AIBehaviorProfile>, RefRW<GodgameAITelemetryState>>()
@@ -112,21 +99,5 @@ namespace Godgame.Systems
             return writer.Build();
         }
 
-        private bool TryGetTelemetryEventBuffer(ref SystemState state, out DynamicBuffer<TelemetryEvent> buffer)
-        {
-            buffer = default;
-            if (!SystemAPI.TryGetSingleton<TelemetryStreamSingleton>(out var telemetryRef))
-            {
-                return false;
-            }
-
-            if (telemetryRef.Entity == Entity.Null || !state.EntityManager.HasBuffer<TelemetryEvent>(telemetryRef.Entity))
-            {
-                return false;
-            }
-
-            buffer = state.EntityManager.GetBuffer<TelemetryEvent>(telemetryRef.Entity);
-            return true;
-        }
     }
 }

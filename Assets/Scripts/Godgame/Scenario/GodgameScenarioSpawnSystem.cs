@@ -117,7 +117,7 @@ namespace Godgame.Scenario
                             LastChangeTick = 0
                         });
                         ecb.AddComponent(villager, Godgame.Villagers.VillagerBehavior.Neutral);
-                        AssignRenderComponents(ref ecb, villager, renderKeyId, villagerPresentation);
+                        ApplyScenarioRenderContract(ref ecb, villager, renderKeyId, villagerPresentation);
                     }
                 }
 
@@ -134,7 +134,7 @@ namespace Godgame.Scenario
                             math.sin(angle) * configValue.SpawnRadius * 0.5f);
 
                         ecb.SetComponent(storehouse, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, 1f));
-                        AssignRenderComponents(ref ecb, storehouse, GodgameSemanticKeys.Storehouse, storePresentation);
+                        ApplyScenarioRenderContract(ref ecb, storehouse, GodgameSemanticKeys.Storehouse, storePresentation);
                     }
                 }
 
@@ -157,7 +157,7 @@ namespace Godgame.Scenario
                             ResourceType = ResourceType.IronOre,
                             Capacity = 100
                         });
-                        AssignRenderComponents(ref ecb, nodeEntity, GodgameSemanticKeys.ResourceNode, default);
+                        ApplyScenarioRenderContract(ref ecb, nodeEntity, GodgameSemanticKeys.ResourceNode, default);
                     }
                 }
 

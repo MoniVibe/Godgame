@@ -13,7 +13,6 @@ namespace Godgame.Telemetry
     /// Lightweight invariant checks that emit logic audit records.
     /// </summary>
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [UpdateAfter(typeof(Godgame.Villagers.VillagerJobSystem))]
     public partial struct GodgameLogicAuditSystem : ISystem
     {
         private ComponentLookup<Godgame.Villagers.VillagerNeeds> _needsLookup;

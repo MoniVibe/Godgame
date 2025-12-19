@@ -12,7 +12,14 @@ namespace Godgame.Scenario
     {
         private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
         private bool _loaded;
-        private bool _warnedMissingConfig;
+        private bool _didWarnMissingConfig;
+        private bool _loggedSettlementConfigCount;
+        private EntityQuery _settlementConfigQuery;
+
+        protected override void OnCreate()
+        {
+            _settlementConfigQuery = GetEntityQuery(ComponentType.ReadOnly<SettlementConfig>());
+        }
 
         protected override void OnUpdate()
         {
@@ -27,58 +34,58 @@ namespace Godgame.Scenario
                 return; // Wait for options
             }
 
-            if (!SystemAPI.TryGetSingleton<SettlementConfig>(out var settlementConfig))
+            if (_settlementConfigQuery.IsEmptyIgnoreFilter)
             {
-                CleanupDuplicateConfigs();
-                WarnWaitingForConfig();
+                WarnMissingConfig();
                 return;
             }
 
-            if (!HasReadyPrefabs(in settlementConfig))
-            {
-                WarnWaitingForConfig();
-                return;
-            }
+            CleanupDuplicateConfigs();
 
+            var settlementConfig = SystemAPI.GetSingleton<SettlementConfig>();
+
+            ClearMissingConfigWarning();
             _loaded = true;
-            ResetWaitingWarning();
             LoadScenario(options.ScenarioPath.ToString(), settlementConfig);
         }
 
         private void CleanupDuplicateConfigs()
         {
-            var query = SystemAPI.QueryBuilder().WithAll<SettlementConfig>().Build();
-            int count = query.CalculateEntityCount();
+            int count = _settlementConfigQuery.CalculateEntityCount();
             if (count <= 1)
                 return;
 
             Debug.LogError($"[GodgameScenarioLoaderSystem] Found {count} SettlementConfig entities! Destroying duplicates...");
-            var entities = query.ToEntityArray(Allocator.Temp);
+            using var entities = _settlementConfigQuery.ToEntityArray(Allocator.Temp);
             for (int i = 1; i < entities.Length; i++)
             {
                 EntityManager.DestroyEntity(entities[i]);
             }
-            entities.Dispose();
         }
 
-        private void WarnWaitingForConfig()
+        private void WarnMissingConfig()
         {
-            if (_warnedMissingConfig)
+            LogSettlementConfigCountOnce();
+
+            if (_didWarnMissingConfig)
                 return;
 
-            Debug.LogWarning("[GodgameScenarioLoaderSystem] Waiting for SettlementConfig to get prefabs...");
-            _warnedMissingConfig = true;
+            Debug.LogWarning("[GodgameScenarioLoaderSystem] Waiting for SettlementConfig SubScene to load...");
+            _didWarnMissingConfig = true;
         }
 
-        private void ResetWaitingWarning()
+        private void LogSettlementConfigCountOnce()
         {
-            _warnedMissingConfig = false;
+            if (_loggedSettlementConfigCount)
+                return;
+
+            Debug.Log($"[GodgameScenarioLoaderSystem] SettlementConfig count={_settlementConfigQuery.CalculateEntityCount()}");
+            _loggedSettlementConfigCount = true;
         }
 
-        private static bool HasReadyPrefabs(in SettlementConfig settlementConfig)
+        private void ClearMissingConfigWarning()
         {
-            return settlementConfig.VillagerPrefab != Entity.Null &&
-                   settlementConfig.StorehousePrefab != Entity.Null;
+            _didWarnMissingConfig = false;
         }
 
         private void LoadScenario(string path, SettlementConfig settlementConfig)

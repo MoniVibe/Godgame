@@ -110,14 +110,14 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
 
         var semanticConfigs = new List<(ushort Key, string VariantName, string PrefabPath, string Primitive)>
         {
-            (GodgameSemanticKeys.VillagerMiner, "VillagerMiner_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameSemanticKeys.VillagerFarmer, "VillagerFarmer_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameSemanticKeys.VillagerForester, "VillagerForester_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameSemanticKeys.VillagerBreeder, "VillagerBreeder_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameSemanticKeys.VillagerWorshipper, "VillagerWorshipper_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameSemanticKeys.VillagerRefiner, "VillagerRefiner_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameSemanticKeys.VillagerPeacekeeper, "VillagerPeacekeeper_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
-            (GodgameSemanticKeys.VillagerCombatant, "VillagerCombatant_Capsule", "Assets/Placeholders/Villager_Placeholder.prefab", "Capsule"),
+            (GodgameSemanticKeys.VillagerMiner, "VillagerMiner_Cylinder", "Assets/Placeholders/Villager_Placeholder.prefab", "Cylinder"),
+            (GodgameSemanticKeys.VillagerFarmer, "VillagerFarmer_Cylinder", "Assets/Placeholders/Villager_Placeholder.prefab", "Cylinder"),
+            (GodgameSemanticKeys.VillagerForester, "VillagerForester_Cylinder", "Assets/Placeholders/Villager_Placeholder.prefab", "Cylinder"),
+            (GodgameSemanticKeys.VillagerBreeder, "VillagerBreeder_Cylinder", "Assets/Placeholders/Villager_Placeholder.prefab", "Cylinder"),
+            (GodgameSemanticKeys.VillagerWorshipper, "VillagerWorshipper_Cylinder", "Assets/Placeholders/Villager_Placeholder.prefab", "Cylinder"),
+            (GodgameSemanticKeys.VillagerRefiner, "VillagerRefiner_Cylinder", "Assets/Placeholders/Villager_Placeholder.prefab", "Cylinder"),
+            (GodgameSemanticKeys.VillagerPeacekeeper, "VillagerPeacekeeper_Cylinder", "Assets/Placeholders/Villager_Placeholder.prefab", "Cylinder"),
+            (GodgameSemanticKeys.VillagerCombatant, "VillagerCombatant_Cylinder", "Assets/Placeholders/Villager_Placeholder.prefab", "Cylinder"),
             (GodgameSemanticKeys.VillageCenter, "VillageCenter_Cube", "Assets/Placeholders/Building_Placeholder.prefab", "Cube"),
             (GodgameSemanticKeys.ResourceChunk, "ResourceChunk_Sphere", "Assets/Godgame/GG_Rock.prefab", "Sphere"),
             (GodgameSemanticKeys.Vegetation, "Vegetation_Cylinder", "Assets/Prefabs/Vegetation/Tree_Placeholder.prefab", "Cylinder"),
@@ -132,39 +132,15 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
             AddVariant(config.VariantName, config.PrefabPath, config.Primitive);
         }
 
-        foreach (var villagerConfig in semanticConfigs)
-        {
-            if (villagerConfig.Key < GodgameSemanticKeys.VillagerMiner || villagerConfig.Key > GodgameSemanticKeys.VillagerCombatant)
-                continue;
-            // Villager cylinder variants must be pure primitives so MeshPresenter always resolves to the builtin cylinder mesh.
-            AddVariant($"{villagerConfig.VariantName}_Cylinder", string.Empty, "Cylinder");
-        }
-
         var baseThemeMappings = new List<RenderPresentationCatalogDefinition.SemanticVariant>();
-        var alternateThemeMappings = new List<RenderPresentationCatalogDefinition.SemanticVariant>();
         foreach (var config in semanticConfigs)
         {
-            if (!variantLookup.TryGetValue(config.VariantName, out var capsuleIndex))
+            if (!variantLookup.TryGetValue(config.VariantName, out var variantIndex))
             {
-                Debug.LogError($"[SetupGodgameRenderCatalog] Missing base variant '{config.VariantName}' for semantic {config.Key}.");
+                Debug.LogError($"[SetupGodgameRenderCatalog] Missing variant '{config.VariantName}' for semantic {config.Key}.");
                 continue;
             }
             baseThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
-            {
-                SemanticKey = config.Key,
-                Lod0Variant = capsuleIndex,
-                Lod1Variant = 0,
-                Lod2Variant = 0
-            });
-
-            var useCylinder = config.Key >= GodgameSemanticKeys.VillagerMiner && config.Key <= GodgameSemanticKeys.VillagerCombatant;
-            var variantName = useCylinder ? $"{config.VariantName}_Cylinder" : config.VariantName;
-            if (!variantLookup.TryGetValue(variantName, out var variantIndex))
-            {
-                Debug.LogError($"[SetupGodgameRenderCatalog] Failed to resolve variant '{variantName}' for semantic {config.Key}.");
-                continue;
-            }
-            alternateThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
             {
                 SemanticKey = config.Key,
                 Lod0Variant = variantIndex,
@@ -178,14 +154,8 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
         {
             new RenderPresentationCatalogDefinition.ThemeDefinition
             {
-                Name = "CylinderVillagers",
+                Name = "Default",
                 ThemeId = 0,
-                SemanticVariants = alternateThemeMappings.ToArray()
-            },
-            new RenderPresentationCatalogDefinition.ThemeDefinition
-            {
-                Name = "CapsuleVillagers",
-                ThemeId = 1,
                 SemanticVariants = baseThemeMappings.ToArray()
             }
         };

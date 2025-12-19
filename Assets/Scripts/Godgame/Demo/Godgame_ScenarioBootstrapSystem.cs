@@ -3,7 +3,6 @@ using Godgame.Presentation;
 using Godgame.Rendering;
 using Godgame.Villages;
 using Godgame.Villagers;
-using PureDOTS.Rendering;
 using PureDOTS.Runtime.Registry;
 using Unity.Burst;
 using Unity.Collections;
@@ -174,14 +173,7 @@ namespace Godgame.Scenario
                     EffectIntensity = 0f
                 });
                 var resolvedKey = VillagerRenderKeyUtility.ResolveVillagerRenderKey(state.EntityManager, entity);
-                ecb.AddComponent(entity, new RenderSemanticKey { Value = resolvedKey });
-                ecb.AddComponent<MeshPresenter>(entity);
-                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
-                {
-                    Visible = 1,
-                    ShadowCaster = 1,
-                    HighlightMask = 0
-                });
+                GodgamePresentationUtility.ApplyScenarioRenderContract(ref ecb, entity, resolvedKey, default);
             }
 
             ecb.Playback(state.EntityManager);
@@ -213,14 +205,7 @@ namespace Godgame.Scenario
                     InfluenceRadius = village.ValueRO.InfluenceRadius,
                     Intensity = 1f
                 });
-                ecb.AddComponent(entity, new RenderSemanticKey { Value = GodgameSemanticKeys.VillageCenter });
-                ecb.AddComponent<MeshPresenter>(entity);
-                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
-                {
-                    Visible = 1,
-                    ShadowCaster = 1,
-                    HighlightMask = 0
-                });
+                GodgamePresentationUtility.ApplyScenarioRenderContract(ref ecb, entity, GodgameSemanticKeys.VillageCenter, default);
 
                 // Ensure VillageMember buffer exists
                 if (!state.EntityManager.HasBuffer<VillageMember>(entity))
@@ -258,14 +243,7 @@ namespace Godgame.Scenario
                     QuantityScale = 0.5f + resource.ValueRO.Quantity * 0.01f,
                     IsCarried = 0
                 });
-                ecb.AddComponent(entity, new RenderSemanticKey { Value = GodgameSemanticKeys.ResourceChunk });
-                ecb.AddComponent<MeshPresenter>(entity);
-                ecb.AddComponent(entity, new PureDOTS.Rendering.RenderFlags
-                {
-                    Visible = 1,
-                    ShadowCaster = 1,
-                    HighlightMask = 0
-                });
+                GodgamePresentationUtility.ApplyScenarioRenderContract(ref ecb, entity, GodgameSemanticKeys.ResourceChunk, default);
             }
 
             ecb.Playback(state.EntityManager);

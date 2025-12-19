@@ -89,22 +89,22 @@ namespace Godgame.Scenario
 
                 if (runtimeValue.VillageCenterInstance != Entity.Null)
                 {
-                    AssignRenderComponents(ref ecb, runtimeValue.VillageCenterInstance, GodgameSemanticKeys.VillageCenter, centerPresentation);
+                    ApplyScenarioRenderContract(ref ecb, runtimeValue.VillageCenterInstance, GodgameSemanticKeys.VillageCenter, centerPresentation);
                 }
 
                 if (runtimeValue.StorehouseInstance != Entity.Null)
                 {
-                    AssignRenderComponents(ref ecb, runtimeValue.StorehouseInstance, GodgameSemanticKeys.Storehouse, storePresentation);
+                    ApplyScenarioRenderContract(ref ecb, runtimeValue.StorehouseInstance, GodgameSemanticKeys.Storehouse, storePresentation);
                 }
 
                 if (runtimeValue.HousingInstance != Entity.Null)
                 {
-                    AssignRenderComponents(ref ecb, runtimeValue.HousingInstance, GodgameSemanticKeys.Housing, housingPresentation);
+                    ApplyScenarioRenderContract(ref ecb, runtimeValue.HousingInstance, GodgameSemanticKeys.Housing, housingPresentation);
                 }
 
                 if (runtimeValue.WorshipInstance != Entity.Null)
                 {
-                    AssignRenderComponents(ref ecb, runtimeValue.WorshipInstance, GodgameSemanticKeys.Worship, worshipPresentation);
+                    ApplyScenarioRenderContract(ref ecb, runtimeValue.WorshipInstance, GodgameSemanticKeys.Worship, worshipPresentation);
                 }
 
                 resources.Clear();
@@ -128,7 +128,7 @@ namespace Godgame.Scenario
                         Position = nodePos,
                         Label = label
                     });
-                    AssignRenderComponents(ref ecb, nodeEntity, GodgameSemanticKeys.ResourceNode, default);
+                    ApplyScenarioRenderContract(ref ecb, nodeEntity, GodgameSemanticKeys.ResourceNode, default);
                     resources.Add(new SettlementResource { Node = nodeEntity });
                 }
 
@@ -176,7 +176,7 @@ namespace Godgame.Scenario
                         AnimationState = 0,
                         EffectIntensity = 0f
                     });
-                    AssignRenderComponents(ref ecb, villager, villagerRenderKey, villagerPresentation);
+                    ApplyScenarioRenderContract(ref ecb, villager, villagerRenderKey, villagerPresentation);
                     if (i == 0)
                     {
                         ecb.SetComponent(villager, new RenderThemeOverride { Value = 1 });

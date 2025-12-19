@@ -138,5 +138,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 448ff0db2b1d50c48b9f295508d63d52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ArchetypeId: 150
+  ArchetypeId: 151
   Lod: 0

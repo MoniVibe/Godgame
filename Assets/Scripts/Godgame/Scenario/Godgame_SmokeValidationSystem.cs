@@ -2,6 +2,7 @@ using Godgame.Economy;
 using Godgame.Presentation;
 using Godgame.Villages;
 using Godgame.Villagers;
+using PureDOTS.Runtime;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
@@ -22,6 +23,8 @@ namespace Godgame.Scenario
         {
             _validated = false;
             state.RequireForUpdate<ScenarioSceneTag>();
+            state.RequireForUpdate<ScenarioState>();
+            state.RequireForUpdate<SettlementConfig>();
         }
 
         public void OnUpdate(ref SystemState state)
@@ -29,6 +32,18 @@ namespace Godgame.Scenario
             if (_validated)
             {
                 state.Enabled = false;
+                return;
+            }
+
+            if (!SystemAPI.TryGetSingleton<ScenarioState>(out var scenario) ||
+                !scenario.EnableGodgame ||
+                !scenario.IsInitialized)
+            {
+                return;
+            }
+
+            if (!SystemAPI.HasSingleton<SettlementConfig>())
+            {
                 return;
             }
 

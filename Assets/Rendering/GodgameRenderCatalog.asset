@@ -13,210 +13,204 @@ MonoBehaviour:
   m_Name: GodgameRenderCatalog
   m_EditorClassIdentifier: 
   Variants:
-  - Name: VillagerMiner_Capsule
+  - Name: VillagerMiner_Cylinder
     Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 8f50a7cbf0dd4a11bc12c1ab58b2f6f1, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
-  - Name: VillagerFarmer_Capsule
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
+  - Name: VillagerFarmer_Cylinder
     Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 5c77e7d4a5f9494cb809986cfc58fe7e, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
-  - Name: VillagerForester_Capsule
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
+  - Name: VillagerForester_Cylinder
     Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 867c87f3961840b5bcdcbf08ccdac640, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
-  - Name: VillagerBreeder_Capsule
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
+  - Name: VillagerBreeder_Cylinder
     Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 9cb69e20a7414a679c929bafff662f63, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
-  - Name: VillagerWorshipper_Capsule
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
+  - Name: VillagerWorshipper_Cylinder
     Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 0cf0d87549a1499590ee0dc7d5bcffd1, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
-  - Name: VillagerRefiner_Capsule
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
+  - Name: VillagerRefiner_Cylinder
     Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: d5c721ce96194bb3bd41b3ced4837336, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
-  - Name: VillagerPeacekeeper_Capsule
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
+  - Name: VillagerPeacekeeper_Cylinder
     Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 0a95765ad5de4114ae3def9c2cdec00f, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
-  - Name: VillagerCombatant_Capsule
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
+  - Name: VillagerCombatant_Cylinder
     Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 0b3305902cbc4c91a791d4c500a6384d, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   - Name: VillageCenter_Cube
     Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 7f02d3dda8ba4d4080b7965b3b27bd59, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
     PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   - Name: ResourceChunk_Sphere
-    Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: c0438364c5014ba7a1dcb05b09d4f8a0, type: 2}
+    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: b2d3a6928db14cd4ab1495fc754ef0f5, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
     PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   - Name: Vegetation_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
     Material: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
     BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
     BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
     PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   - Name: ResourceNode_Cube
-    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 2db841f87c3a492293ba5cd9a3666d10, type: 2}
+    Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
     PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   - Name: Storehouse_Cube
     Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 3d239bb9e3324077942f6922472a2e4f, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
     PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   - Name: Housing_Cube
     Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 5a7e9718d7a24a3390f03b07ca441b66, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
     PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   - Name: Worship_Cube
     Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 0a9efe72c11a4fa69d1858b4933a5fa0, type: 2}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
     PresenterMask: 1
-  - Name: VillagerMiner_Capsule_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 8f50a7cbf0dd4a11bc12c1ab58b2f6f1, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
-    PresenterMask: 1
-  - Name: VillagerFarmer_Capsule_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 5c77e7d4a5f9494cb809986cfc58fe7e, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
-    PresenterMask: 1
-  - Name: VillagerForester_Capsule_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 867c87f3961840b5bcdcbf08ccdac640, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
-    PresenterMask: 1
-  - Name: VillagerBreeder_Capsule_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 9cb69e20a7414a679c929bafff662f63, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
-    PresenterMask: 1
-  - Name: VillagerWorshipper_Capsule_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 0cf0d87549a1499590ee0dc7d5bcffd1, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
-    PresenterMask: 1
-  - Name: VillagerRefiner_Capsule_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: d5c721ce96194bb3bd41b3ced4837336, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
-    PresenterMask: 1
-  - Name: VillagerPeacekeeper_Capsule_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 0a95765ad5de4114ae3def9c2cdec00f, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
-    PresenterMask: 1
-  - Name: VillagerCombatant_Capsule_Cylinder
-    Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: 0b3305902cbc4c91a791d4c500a6384d, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
-    PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   Themes:
-  - Name: CylinderVillagers
+  - Name: Default
     ThemeId: 0
-    SemanticVariants:
-    - SemanticKey: 100
-      Lod0Variant: 15
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 101
-      Lod0Variant: 16
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 102
-      Lod0Variant: 17
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 103
-      Lod0Variant: 18
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 104
-      Lod0Variant: 19
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 105
-      Lod0Variant: 20
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 106
-      Lod0Variant: 21
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 107
-      Lod0Variant: 22
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 110
-      Lod0Variant: 8
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 120
-      Lod0Variant: 9
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 130
-      Lod0Variant: 10
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 140
-      Lod0Variant: 11
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 150
-      Lod0Variant: 12
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 151
-      Lod0Variant: 13
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 152
-      Lod0Variant: 14
-      Lod1Variant: 0
-      Lod2Variant: 0
-  - Name: CapsuleVillagers
-    ThemeId: 1
     SemanticVariants:
     - SemanticKey: 100
       Lod0Variant: 0
@@ -279,4 +273,5 @@ MonoBehaviour:
       Lod1Variant: 0
       Lod2Variant: 0
   FallbackMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-  FallbackMaterial: {fileID: 2100000, guid: 7f02d3dda8ba4d4080b7965b3b27bd59, type: 2}
+  FallbackMaterial: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  LodCount: 1

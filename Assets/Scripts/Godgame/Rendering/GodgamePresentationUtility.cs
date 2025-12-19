@@ -42,6 +42,48 @@ namespace Godgame.Rendering
             };
         }
 
+        public static void ApplyScenarioRenderContract(
+            ref EntityCommandBuffer ecb,
+            Entity entity,
+            ushort semanticKey,
+            PrefabPresentationState prefabState)
+        {
+            AddOrSet(ref ecb, entity, new RenderSemanticKey { Value = semanticKey }, prefabState.HasSemanticKey);
+            AddOrSet(ref ecb, entity, new RenderVariantKey { Value = 0 }, prefabState.HasRenderVariantKey);
+            AddOrSet(ref ecb, entity, new RenderFlags
+            {
+                Visible = 1,
+                ShadowCaster = 1,
+                HighlightMask = 0
+            }, prefabState.HasRenderFlags);
+            EnsureMeshPresenter(ref ecb, entity, prefabState.HasMeshPresenter, true);
+            EnsureRenderThemeOverride(ref ecb, entity, prefabState.HasRenderThemeOverride, new RenderThemeOverride
+            {
+                Value = 0
+            }, false);
+        }
+
+        public static void ApplyScenarioRenderContract(
+            EntityManager entityManager,
+            Entity entity,
+            ushort semanticKey,
+            PrefabPresentationState prefabState = default)
+        {
+            AddOrSet(entityManager, entity, new RenderSemanticKey { Value = semanticKey }, prefabState.HasSemanticKey);
+            AddOrSet(entityManager, entity, new RenderVariantKey { Value = 0 }, prefabState.HasRenderVariantKey);
+            AddOrSet(entityManager, entity, new RenderFlags
+            {
+                Visible = 1,
+                ShadowCaster = 1,
+                HighlightMask = 0
+            }, prefabState.HasRenderFlags);
+            EnsureMeshPresenter(entityManager, entity, prefabState.HasMeshPresenter, true);
+            EnsureRenderThemeOverride(entityManager, entity, prefabState.HasRenderThemeOverride, new RenderThemeOverride
+            {
+                Value = 0
+            }, false);
+        }
+
         public static void AssignRenderComponents(
             ref EntityCommandBuffer ecb,
             Entity entity,
@@ -57,9 +99,9 @@ namespace Godgame.Rendering
                 HighlightMask = 0
             }, prefabState.HasRenderFlags);
 
-            EnsurePresenter<MeshPresenter>(ref ecb, entity, prefabState.HasMeshPresenter, true);
-            EnsurePresenter<SpritePresenter>(ref ecb, entity, prefabState.HasSpritePresenter, false);
-            EnsurePresenter<DebugPresenter>(ref ecb, entity, prefabState.HasDebugPresenter, false);
+            EnsureMeshPresenter(ref ecb, entity, prefabState.HasMeshPresenter, true);
+            EnsureSpritePresenter(ref ecb, entity, prefabState.HasSpritePresenter, false);
+            EnsureDebugPresenter(ref ecb, entity, prefabState.HasDebugPresenter, false);
             EnsureRenderThemeOverride(ref ecb, entity, prefabState.HasRenderThemeOverride, new RenderThemeOverride
             {
                 Value = 0
@@ -85,9 +127,9 @@ namespace Godgame.Rendering
                 HighlightMask = 0
             }, prefabState.HasRenderFlags);
 
-            EnsurePresenter<MeshPresenter>(entityManager, entity, prefabState.HasMeshPresenter, true);
-            EnsurePresenter<SpritePresenter>(entityManager, entity, prefabState.HasSpritePresenter, false);
-            EnsurePresenter<DebugPresenter>(entityManager, entity, prefabState.HasDebugPresenter, false);
+            EnsureMeshPresenter(entityManager, entity, prefabState.HasMeshPresenter, true);
+            EnsureSpritePresenter(entityManager, entity, prefabState.HasSpritePresenter, false);
+            EnsureDebugPresenter(entityManager, entity, prefabState.HasDebugPresenter, false);
             EnsureRenderThemeOverride(entityManager, entity, prefabState.HasRenderThemeOverride, new RenderThemeOverride
             {
                 Value = 0
@@ -111,16 +153,6 @@ namespace Godgame.Rendering
             }
         }
 
-        public static void EnsurePresenter<T>(ref EntityCommandBuffer ecb, Entity entity, bool hasComponent, bool enabled)
-            where T : unmanaged, IComponentData, IEnableableComponent
-        {
-            if (!hasComponent)
-            {
-                ecb.AddComponent<T>(entity);
-            }
-            ecb.SetComponentEnabled<T>(entity, enabled);
-        }
-
         public static void AddOrSet<T>(EntityManager entityManager, Entity entity, T value, bool hasComponent)
             where T : unmanaged, IComponentData
         {
@@ -134,14 +166,58 @@ namespace Godgame.Rendering
             }
         }
 
-        public static void EnsurePresenter<T>(EntityManager entityManager, Entity entity, bool hasComponent, bool enabled)
-            where T : unmanaged, IComponentData, IEnableableComponent
+        private static void EnsureMeshPresenter(ref EntityCommandBuffer ecb, Entity entity, bool hasComponent, bool enabled)
         {
             if (!hasComponent)
             {
-                entityManager.AddComponent<T>(entity);
+                ecb.AddComponent(entity, new MeshPresenter { DefIndex = RenderPresentationConstants.UnassignedPresenterDefIndex });
             }
-            entityManager.SetComponentEnabled<T>(entity, enabled);
+            ecb.SetComponentEnabled<MeshPresenter>(entity, enabled);
+        }
+
+        private static void EnsureSpritePresenter(ref EntityCommandBuffer ecb, Entity entity, bool hasComponent, bool enabled)
+        {
+            if (!hasComponent)
+            {
+                ecb.AddComponent(entity, new SpritePresenter { DefIndex = RenderPresentationConstants.UnassignedPresenterDefIndex });
+            }
+            ecb.SetComponentEnabled<SpritePresenter>(entity, enabled);
+        }
+
+        private static void EnsureDebugPresenter(ref EntityCommandBuffer ecb, Entity entity, bool hasComponent, bool enabled)
+        {
+            if (!hasComponent)
+            {
+                ecb.AddComponent(entity, new DebugPresenter { DefIndex = RenderPresentationConstants.UnassignedPresenterDefIndex });
+            }
+            ecb.SetComponentEnabled<DebugPresenter>(entity, enabled);
+        }
+
+        private static void EnsureMeshPresenter(EntityManager entityManager, Entity entity, bool hasComponent, bool enabled)
+        {
+            if (!hasComponent)
+            {
+                entityManager.AddComponentData(entity, new MeshPresenter { DefIndex = RenderPresentationConstants.UnassignedPresenterDefIndex });
+            }
+            entityManager.SetComponentEnabled<MeshPresenter>(entity, enabled);
+        }
+
+        private static void EnsureSpritePresenter(EntityManager entityManager, Entity entity, bool hasComponent, bool enabled)
+        {
+            if (!hasComponent)
+            {
+                entityManager.AddComponentData(entity, new SpritePresenter { DefIndex = RenderPresentationConstants.UnassignedPresenterDefIndex });
+            }
+            entityManager.SetComponentEnabled<SpritePresenter>(entity, enabled);
+        }
+
+        private static void EnsureDebugPresenter(EntityManager entityManager, Entity entity, bool hasComponent, bool enabled)
+        {
+            if (!hasComponent)
+            {
+                entityManager.AddComponentData(entity, new DebugPresenter { DefIndex = RenderPresentationConstants.UnassignedPresenterDefIndex });
+            }
+            entityManager.SetComponentEnabled<DebugPresenter>(entity, enabled);
         }
 
         public static void EnsureRenderThemeOverride(

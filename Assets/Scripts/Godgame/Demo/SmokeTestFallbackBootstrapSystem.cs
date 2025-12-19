@@ -16,7 +16,17 @@ namespace Godgame.Scenario
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class SmokeTestFallbackBootstrapSystem : SystemBase
     {
-        bool _hasRun;
+        private bool _hasRun;
+        private EntityQuery _villageQuery;
+        private EntityQuery _villagerQuery;
+        private EntityQuery _resourceQuery;
+
+        protected override void OnCreate()
+        {
+            _villageQuery = GetEntityQuery(ComponentType.ReadOnly<Village>());
+            _villagerQuery = GetEntityQuery(ComponentType.ReadOnly<VillagerNeeds>());
+            _resourceQuery = GetEntityQuery(ComponentType.ReadOnly<ResourceSourceConfig>());
+        }
 
         protected override void OnUpdate()
         {
@@ -32,13 +42,9 @@ namespace Godgame.Scenario
                 return;
             }
 
-            using var villageQuery = SystemAPI.QueryBuilder().WithAll<Village>().Build();
-            using var villagerQuery = SystemAPI.QueryBuilder().WithAll<VillagerNeeds>().Build();
-            using var resourceQuery = SystemAPI.QueryBuilder().WithAll<ResourceSourceConfig>().Build();
-
-            if (!villageQuery.IsEmptyIgnoreFilter &&
-                !villagerQuery.IsEmptyIgnoreFilter &&
-                !resourceQuery.IsEmptyIgnoreFilter)
+            if (!_villageQuery.IsEmptyIgnoreFilter &&
+                !_villagerQuery.IsEmptyIgnoreFilter &&
+                !_resourceQuery.IsEmptyIgnoreFilter)
             {
                 Enabled = false;
                 return;

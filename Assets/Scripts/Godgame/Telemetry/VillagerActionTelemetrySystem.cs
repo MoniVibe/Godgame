@@ -41,7 +41,6 @@ namespace Godgame.Telemetry
     }
 
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [UpdateAfter(typeof(Godgame.Villagers.VillagerJobSystem))]
     public partial struct VillagerActionTelemetrySystem : ISystem
     {
         private ComponentLookup<Godgame.Villagers.VillagerId> _villagerIdLookup;

@@ -7,6 +7,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using Godgame.Rendering;
 
 namespace Godgame.Scenario
 {
@@ -143,6 +144,8 @@ namespace Godgame.Scenario
 
             // Add collision event buffer
             em.AddBuffer<PhysicsCollisionEventElement>(rockEntity);
+
+            GodgamePresentationUtility.ApplyScenarioRenderContract(em, rockEntity, GodgameSemanticKeys.ResourceNode);
         }
     }
 }
