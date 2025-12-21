@@ -29,5 +29,6 @@ namespace Godgame.Rendering
         public const ushort Worship = 152;
         public const ushort ConstructionGhost = 160;
         public const ushort Band = 170;
+        public const ushort GhostTether = 280;
     }
 }

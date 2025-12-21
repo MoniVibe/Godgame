@@ -30,7 +30,15 @@ namespace Godgame.CameraRig
                 var pan = new float3(cmdValue.PanInput.x, 0f, cmdValue.PanInput.y);
                 rigValue.FocusPoint += pan * cfg.PanSpeed * deltaTime;
 
-                rigValue.Distance = math.clamp(rigValue.Distance - cmdValue.ZoomInput * cfg.ZoomSpeed * deltaTime, cfg.MinDistance, cfg.MaxDistance);
+                if (math.abs(cmdValue.ZoomInput) > 0.001f)
+                {
+                    // Mouse scroll is a per-frame delta (device units, typically ~120 per notch). Do NOT scale by dt.
+                    float scrollNotches = cmdValue.ZoomInput / 120f;
+                    rigValue.Distance = math.clamp(
+                        rigValue.Distance - scrollNotches * (cfg.ZoomSpeed * 2f),
+                        cfg.MinDistance,
+                        cfg.MaxDistance);
+                }
 
                 rig.ValueRW = rigValue;
                 command.ValueRW = default;

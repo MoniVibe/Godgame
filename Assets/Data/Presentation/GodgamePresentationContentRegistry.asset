@@ -1,0 +1,114 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 421d1c5488704139a24a650880e599d8, type: 3}
+  m_Name: GodgamePresentationContentRegistry
+  m_EditorClassIdentifier: PureDOTS.Authoring::PureDOTS.Authoring.PresentationContentRegistryAsset
+  entries:
+  - registryId: godgame.villager
+    renderSemanticKey: 100
+    renderArchetypeId: 100
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 0.4
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.village_center
+    renderSemanticKey: 110
+    renderArchetypeId: 110
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 3.2
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.resource_chunk
+    renderSemanticKey: 120
+    renderArchetypeId: 120
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 0.7
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.vegetation
+    renderSemanticKey: 130
+    renderArchetypeId: 130
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 0.9
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.storehouse
+    renderSemanticKey: 150
+    renderArchetypeId: 150
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 2.6
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.housing
+    renderSemanticKey: 151
+    renderArchetypeId: 151
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 2.2
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.worship
+    renderSemanticKey: 152
+    renderArchetypeId: 152
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 2.4
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.construction_ghost
+    renderSemanticKey: 160
+    renderArchetypeId: 160
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 2
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.band
+    renderSemanticKey: 170
+    renderArchetypeId: 170
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 1.4
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.resource_node
+    renderSemanticKey: 140
+    renderArchetypeId: 140
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 1
+    baseScale: 1.4
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}
+  - registryId: godgame.ghost_tether
+    renderSemanticKey: 280
+    renderArchetypeId: 280
+    descriptorKey: 
+    sceneGuid: 
+    setBaseScale: 0
+    baseScale: 1
+    setBaseTint: 0
+    baseTint: {r: 1, g: 1, b: 1, a: 1}

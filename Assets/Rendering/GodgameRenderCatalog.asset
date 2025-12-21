@@ -131,7 +131,7 @@ MonoBehaviour:
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
   - Name: ResourceChunk_Sphere
-    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+    Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
     Material: {fileID: 2100000, guid: b2d3a6928db14cd4ab1495fc754ef0f5, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
@@ -208,68 +208,85 @@ MonoBehaviour:
     TracerLength: 6
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
+  - Name: GhostTether
+    Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
+    BoundsCenter: {x: 0, y: 0, z: 0}
+    BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
+    PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   Themes:
   - Name: Default
     ThemeId: 0
     SemanticVariants:
     - SemanticKey: 100
-      Lod0Variant: 0
-      Lod1Variant: 0
-      Lod2Variant: 0
-    - SemanticKey: 101
       Lod0Variant: 1
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 102
+    - SemanticKey: 101
       Lod0Variant: 2
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 103
+    - SemanticKey: 102
       Lod0Variant: 3
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 104
+    - SemanticKey: 103
       Lod0Variant: 4
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 105
+    - SemanticKey: 104
       Lod0Variant: 5
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 106
+    - SemanticKey: 105
       Lod0Variant: 6
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 107
+    - SemanticKey: 106
       Lod0Variant: 7
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 110
+    - SemanticKey: 107
       Lod0Variant: 8
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 120
+    - SemanticKey: 110
       Lod0Variant: 9
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 130
+    - SemanticKey: 120
       Lod0Variant: 10
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 140
+    - SemanticKey: 130
       Lod0Variant: 11
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 150
+    - SemanticKey: 140
       Lod0Variant: 12
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 151
+    - SemanticKey: 150
       Lod0Variant: 13
       Lod1Variant: 0
       Lod2Variant: 0
-    - SemanticKey: 152
+    - SemanticKey: 151
       Lod0Variant: 14
+      Lod1Variant: 0
+      Lod2Variant: 0
+    - SemanticKey: 152
+      Lod0Variant: 15
+      Lod1Variant: 0
+      Lod2Variant: 0
+    - SemanticKey: 280
+      Lod0Variant: 16
       Lod1Variant: 0
       Lod2Variant: 0
   FallbackMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}

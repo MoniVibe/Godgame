@@ -94,7 +94,7 @@ namespace Godgame.Performance
             _writer.WriteLine($"{Time.frameCount},{frameTimeMs:F2},{gcAllocKB},{drawCalls},{batches}");
             _writer.Flush();
 
-            // Performance logging disabled for now - will revisit once demos are visually stable
+            // Performance logging disabled for now - will revisit once scenarios are visually stable
             // If Debug.LogWarning calls exist here, they are disabled via GODGAME_LEGACY_DEBUG guard
             // UnityEngine.Debug.LogWarning($"[Perf] Frame budget (ms): {frameBudget}");
             // UnityEngine.Debug.LogWarning($"[Perf] Average frame time (ms): {avgFrameMs}");

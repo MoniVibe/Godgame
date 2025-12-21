@@ -42,15 +42,6 @@ namespace Godgame.Telemetry
 
             if (string.IsNullOrWhiteSpace(exportPath))
             {
-                if (config.Enabled != 0 && config.OutputPath.Length > 0)
-                {
-                    config.Enabled = 0;
-                    config.OutputPath = default;
-                    config.Version++;
-                    SystemAPI.SetComponent(configEntity, config);
-                    Debug.Log("[GodgameTelemetry] Disabled telemetry export (no path configured).");
-                }
-
                 _loggedPath = false;
                 return;
             }
@@ -76,7 +67,7 @@ namespace Godgame.Telemetry
                 Debug.Log($"[GodgameTelemetry] Export path set to '{exportPath}'");
                 _loggedPath = true;
             }
-    }
+        }
 
         private static FixedString512Bytes ToFixedString(string path)
         {

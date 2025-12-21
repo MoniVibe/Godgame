@@ -1,4 +1,5 @@
 using Godgame.Construction;
+using Godgame.Villages;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Systems;
 using Unity.Burst;
@@ -41,6 +42,7 @@ namespace Godgame.Construction
 
             foreach (var (progress, flags, ghost, entity) in SystemAPI
                          .Query<RefRW<ConstructionSiteProgress>, RefRW<ConstructionSiteFlags>, RefRW<JobsiteGhost>>()
+                         .WithNone<VillageConstructionSite>()
                          .WithEntityAccess())
             {
                 // Skip if completion already finalized.

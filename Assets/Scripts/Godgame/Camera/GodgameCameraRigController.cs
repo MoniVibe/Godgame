@@ -1,4 +1,5 @@
 using Godgame.CameraRig;
+using PureDOTS.Runtime.Camera;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -28,6 +29,11 @@ namespace Godgame.CameraRig
             
             if (targetCamera == null)
                 targetCamera = UnityEngine.Camera.main;
+
+            if (targetCamera != null && targetCamera.GetComponent<CameraRigApplier>() == null)
+            {
+                targetCamera.gameObject.AddComponent<CameraRigApplier>();
+            }
 
             var world = World.DefaultGameObjectInjectionWorld;
             if (world == null)
@@ -124,15 +130,20 @@ namespace Godgame.CameraRig
 
             var rigState = _entityManager.GetComponentData<CameraRigState>(_rigEntity);
 
-            var yawRad = math.radians(rigState.Yaw);
-            var pitchRad = math.radians(rigState.Pitch);
-            var rotation = quaternion.EulerXYZ(new float3(pitchRad, yawRad, 0f));
-            var forward = math.mul(rotation, new float3(0f, 0f, 1f));
-            var position = rigState.FocusPoint - forward * rigState.Distance;
+            var state = new PureDOTS.Runtime.Camera.CameraRigState
+            {
+                Focus = new Vector3(rigState.FocusPoint.x, rigState.FocusPoint.y, rigState.FocusPoint.z),
+                Pitch = rigState.Pitch,
+                Yaw = rigState.Yaw,
+                Roll = 0f,
+                Distance = rigState.Distance,
+                Mode = CameraRigMode.Orbit,
+                PerspectiveMode = true,
+                FieldOfView = targetCamera.fieldOfView,
+                RigType = CameraRigType.Godgame
+            };
 
-            var camTransform = targetCamera.transform;
-            camTransform.position = position;
-            camTransform.rotation = Quaternion.Euler(rigState.Pitch, rigState.Yaw, 0f);
+            CameraRigService.Publish(state);
         }
     }
 }

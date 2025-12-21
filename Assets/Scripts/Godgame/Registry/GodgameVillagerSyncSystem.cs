@@ -11,7 +11,7 @@ namespace Godgame.Registry
 {
     /// <summary>
     /// Syncs Godgame villager entities to the shared PureDOTS villager registry so telemetry & HUD flows
-    /// can discover them while we demo the gathering loop.
+    /// can discover them while we exercise the gathering loop.
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -63,6 +63,7 @@ namespace Godgame.Registry
                 return;
             }
 
+            state.EntityManager.CompleteDependencyBeforeRO<VillagerAIState>();
             _availabilityLookup.Update(ref state);
             _ticketLookup.Update(ref state);
             _needsLookup.Update(ref state);
@@ -299,4 +300,3 @@ namespace Godgame.Registry
         }
     }
 }
-

@@ -48,6 +48,7 @@ namespace Godgame.Registry
 
         public void OnUpdate(ref SystemState state)
         {
+            state.EntityManager.CompleteDependencyBeforeRO<VillagerAIState>();
             _villagerMirrorLookup.Update(ref state);
             _availabilityLookup.Update(ref state);
             _needsLookup.Update(ref state);
@@ -516,7 +517,7 @@ namespace Godgame.Registry
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
     public partial struct GodgameSpawnerRegistryMirrorSystem : ISystem
     {
-        private static readonly FixedString64Bytes VillagerSpawnerTypeId = new FixedString64Bytes("godgame.villager");
+        private FixedString64Bytes _villagerSpawnerTypeId;
 
         private ComponentLookup<GodgameSpawnerMirror> _spawnerMirrorLookup;
         private ComponentLookup<VillageSpawnerConfig> _spawnerConfigLookup;
@@ -530,6 +531,7 @@ namespace Godgame.Registry
 
             _spawnerMirrorLookup = state.GetComponentLookup<GodgameSpawnerMirror>(isReadOnly: false);
             _spawnerConfigLookup = state.GetComponentLookup<VillageSpawnerConfig>(isReadOnly: true);
+            _villagerSpawnerTypeId = CreateVillagerSpawnerTypeId();
 
             state.RequireForUpdate(SystemAPI.QueryBuilder()
                 .WithAll<VillageSpawnerConfig, LocalTransform>()
@@ -569,7 +571,7 @@ namespace Godgame.Registry
                                || mirror.DefaultAIGoal != config.DefaultAIGoal
                                || mirror.IsActive != isActive;
 
-                mirror.SpawnerTypeId = VillagerSpawnerTypeId;
+                mirror.SpawnerTypeId = _villagerSpawnerTypeId;
                 mirror.TotalCapacity = totalCapacity;
                 mirror.SpawnedCount = spawnedCount;
                 mirror.PendingSpawnCount = pendingCount;
@@ -588,6 +590,28 @@ namespace Godgame.Registry
                     _spawnerMirrorLookup[entity] = mirror;
                 }
             }
+        }
+
+        private static FixedString64Bytes CreateVillagerSpawnerTypeId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('g');
+            id.Append('o');
+            id.Append('d');
+            id.Append('g');
+            id.Append('a');
+            id.Append('m');
+            id.Append('e');
+            id.Append('.');
+            id.Append('v');
+            id.Append('i');
+            id.Append('l');
+            id.Append('l');
+            id.Append('a');
+            id.Append('g');
+            id.Append('e');
+            id.Append('r');
+            return id;
         }
     }
 
@@ -687,4 +711,3 @@ namespace Godgame.Registry
         }
     }
 }
-

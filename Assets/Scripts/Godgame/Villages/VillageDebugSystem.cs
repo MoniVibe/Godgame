@@ -3,7 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Godgame.Scenario;
-// using PureDOTS.Demo.Village; // legacy demo dependency
+// using PureDOTS.LegacyScenario.Village; // legacy scenario dependency
 
 namespace Godgame.Villages
 {
@@ -35,7 +35,7 @@ namespace Godgame.Villages
             // Use SettlementVillagerState as a proxy for villagers in the scenario bootstrap
             var villagerQuery = GetEntityQuery(ComponentType.ReadOnly<SettlementVillagerState>());
 
-            // PureDOTS demo components
+            // PureDOTS legacy scenario components
             var puredotsVillageCount = SystemAPI.QueryBuilder().WithAll<VillageTag>().Build().CalculateEntityCount();
             var puredotsVillagerCount = SystemAPI.QueryBuilder().WithAll<VillagerTag>().Build().CalculateEntityCount();
 

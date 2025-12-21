@@ -21,9 +21,9 @@ namespace Godgame.Scenario
 
         [Header("Counts & Layout")]
         [Min(0)] public int initialVillagers = 6;
-        [Min(0.5f)] public float villagerSpawnRadius = 8f;
-        [Min(1f)] public float buildingRingRadius = 6f;
-        [Min(1f)] public float resourceRingRadius = 12f;
+        [Min(0.5f)] public float villagerSpawnRadius = 35f;
+        [Min(1f)] public float buildingRingRadius = 25f;
+        [Min(1f)] public float resourceRingRadius = 60f;
         [Tooltip("Optional deterministic seed. If zero we derive a stable seed from the authoring object's instance id.")]
         public uint randomSeed;
 

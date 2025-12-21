@@ -1,4 +1,6 @@
+using Godgame.Presentation;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Rendering;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -213,14 +215,31 @@ namespace Godgame.Resources
     {
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (pile, transform) in SystemAPI.Query<RefRO<AggregatePile>, RefRW<LocalTransform>>())
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
+
+            foreach (var (pile, transform, entity) in SystemAPI
+                         .Query<RefRO<AggregatePile>, RefRW<LocalTransform>>()
+                         .WithEntityAccess())
             {
                 float expectedScale = pile.ValueRO.GetVisualScale();
                 if (math.abs(transform.ValueRO.Scale - expectedScale) > 0.01f)
                 {
                     transform.ValueRW.Scale = expectedScale;
                 }
+
+                var tint = GodgamePresentationColors.ForResourceTypeIndex(pile.ValueRO.ResourceTypeIndex);
+                if (state.EntityManager.HasComponent<RenderTint>(entity))
+                {
+                    state.EntityManager.SetComponentData(entity, new RenderTint { Value = tint });
+                }
+                else
+                {
+                    ecb.AddComponent(entity, new RenderTint { Value = tint });
+                }
             }
+
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
         }
     }
 
@@ -276,4 +295,3 @@ namespace Godgame.Resources
         }
     }
 }
-

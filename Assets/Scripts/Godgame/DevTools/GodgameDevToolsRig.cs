@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Godgame.DevTools
 {
@@ -18,15 +19,17 @@ namespace Godgame.DevTools
         [Tooltip("Default entity count for stress tests")]
         public int defaultStressTestCount = 1000;
         
-        [Header("Demo Scene Settings")]
-        [Tooltip("Number of villages to spawn in demo setup")]
-        public int demoVillageCount = 3;
+        [Header("Scenario Scene Settings")]
+        [Tooltip("Number of villages to spawn in scenario setup")]
+        [FormerlySerializedAs("demoVillageCount")]
+        public int scenarioVillageCount = 3;
         
-        [Tooltip("Villagers per village in demo")]
+        [Tooltip("Villagers per village in scenario")]
         public int villagersPerVillage = 10;
         
-        [Tooltip("Include combat bands in demo")]
-        public bool includeCombatnBands = true;
+        [Tooltip("Include combat bands in scenario")]
+        [FormerlySerializedAs("includeCombatnBands")]
+        public bool includeCombatBands = true;
         
         private GodgameDevMenu _devMenu;
         
@@ -53,24 +56,24 @@ namespace Godgame.DevTools
         }
         
         /// <summary>
-        /// Spawns a complete demo scene setup with villages, villagers, and optionally combat bands.
+        /// Spawns a complete scenario setup with villages, villagers, and optionally combat bands.
         /// </summary>
-        [ContextMenu("Spawn Demo Setup")]
-        public void SpawnDemoSetup()
+        [ContextMenu("Spawn Scenario Setup")]
+        public void SpawnScenarioSetup()
         {
             if (DevMenuECSBridgeSystem.Bridge == null)
             {
-                Debug.LogWarning("[DevTools] Cannot spawn demo - ECS not running. Enter Play mode first.");
+                Debug.LogWarning("[DevTools] Cannot spawn scenario - ECS not running. Enter Play mode first.");
                 return;
             }
             
             var bridge = DevMenuECSBridgeSystem.Bridge;
             
             // Spawn villages in a circle
-            var angleStep = 360f / demoVillageCount;
+            var angleStep = 360f / scenarioVillageCount;
             var radius = 50f;
             
-            for (int i = 0; i < demoVillageCount; i++)
+            for (int i = 0; i < scenarioVillageCount; i++)
             {
                 var angle = i * angleStep * Mathf.Deg2Rad;
                 var pos = new Unity.Mathematics.float3(
@@ -83,7 +86,7 @@ namespace Godgame.DevTools
             }
             
             // Optionally spawn combat bands
-            if (includeCombatnBands)
+            if (includeCombatBands)
             {
                 // Friendly band at center-left
                 bridge.RequestSpawn(DevSpawnType.Band, new Unity.Mathematics.float3(-20f, 0f, 0f), 5, true, true);
@@ -91,8 +94,8 @@ namespace Godgame.DevTools
                 bridge.RequestSpawn(DevSpawnType.Band, new Unity.Mathematics.float3(20f, 0f, 0f), 5, true, false);
             }
             
-            Debug.Log($"[DevTools] Demo setup: {demoVillageCount} villages with {villagersPerVillage} villagers each" +
-                      (includeCombatnBands ? " + combat bands" : ""));
+            Debug.Log($"[DevTools] Scenario setup: {scenarioVillageCount} villages with {villagersPerVillage} villagers each" +
+                      (includeCombatBands ? " + combat bands" : ""));
         }
         
         /// <summary>
@@ -126,7 +129,6 @@ namespace Godgame.DevTools
         }
     }
 }
-
 
 
 

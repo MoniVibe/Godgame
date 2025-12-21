@@ -129,6 +129,9 @@ GameObject:
   m_Component:
   - component: {fileID: 208925974}
   - component: {fileID: 208925973}
+  - component: {fileID: 208925975}
+  - component: {fileID: 208925976}
+  - component: {fileID: 208925977}
   m_Layer: 0
   m_Name: GodgameRenderCatalog
   m_TagString: Untagged
@@ -149,6 +152,57 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Godgame.Rendering::Godgame.Rendering.Catalog.RenderCatalogAuthoring
   CatalogDefinition: {fileID: 11400000, guid: adbc3bf635dc62840a71d37074a449d3, type: 2}
+--- !u!114 &208925975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208925972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 421d1c5488704139a24a650880e599d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  registry: {fileID: 11400000, guid: a6548bc3b5924668b197bbb8cb67bdc3, type: 2}
+--- !u!114 &208925976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208925972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ccef7b4119d1e24a9d624fcbb14b640, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Godgame.Presentation.Authoring::Godgame.Presentation.Authoring.PresentationLayerConfigAuthoring
+  ColonyMultiplier: 0.15
+  IslandMultiplier: 0.3
+  ContinentMultiplier: 0.6
+  PlanetMultiplier: 1
+  OrbitalMultiplier: 2
+  SystemMultiplier: 6
+  GalacticMultiplier: 20
+--- !u!114 &208925977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 208925972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ccef7b4119d1e24a9d624fcbb14b640, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Godgame.Presentation.Authoring::Godgame.Presentation.Authoring.PresentationConfigAuthoring
+  LOD0Distance: 40
+  LOD1Distance: 200
+  LOD2Distance: 500
+  DensitySlider: 1
+  MaxLOD0Villagers: 1000
+  MaxRenderedChunks: 2000
+  MaxFrameTimeMs: 16.7
 --- !u!4 &208925974
 Transform:
   m_ObjectHideFlags: 0
@@ -177,7 +231,7 @@ GameObject:
   - component: {fileID: 213000004}
   - component: {fileID: 213000003}
   m_Layer: 0
-  m_Name: DemoConfig
+  m_Name: SimulationConfig
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

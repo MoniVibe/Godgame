@@ -14,7 +14,7 @@ namespace Godgame.Scenario
     /// Editor-only checks (not Burst-compiled) that run after the scenario bootstrap.
     /// </summary>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [UpdateAfter(typeof(Godgame_ScenarioBootstrapSystem))]
+    [UpdateAfter(typeof(GodgameScenarioBootstrapSystem))]
     public partial struct Godgame_SmokeValidationSystem : ISystem
     {
         private bool _validated;

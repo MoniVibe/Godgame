@@ -1,6 +1,8 @@
 using Godgame.Economy;
+using Godgame.Presentation;
 using Godgame.Registry;
 using Godgame.Resources;
+using PureDOTS.Rendering;
 using PureDOTS.Runtime.Spatial;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -51,10 +53,14 @@ namespace Godgame.Authoring
 
                 // Add spatial indexing for efficient queries
                 AddComponent<SpatialIndexedTag>(entity);
+
+                AddComponent(entity, new RenderTint
+                {
+                    Value = GodgamePresentationColors.ForResourceType(authoring.resourceType)
+                });
             }
         }
     }
 }
-
 
 

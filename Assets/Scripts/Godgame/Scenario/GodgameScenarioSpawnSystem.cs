@@ -1,5 +1,6 @@
 using Godgame.AI;
 using Godgame.Economy;
+using Godgame.Presentation;
 using Godgame.Rendering;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
@@ -30,6 +31,8 @@ namespace Godgame.Scenario
         public void OnUpdate(ref SystemState state)
         {
             var ecb = new EntityCommandBuffer(Allocator.Temp);
+            const float villagerScale = 0.9f;
+            const float buildingScale = 3f;
 
             foreach (var (config, runtime, entity) in SystemAPI.Query<
                 RefRO<GodgameScenarioConfig>,
@@ -62,7 +65,7 @@ namespace Godgame.Scenario
                             0f,
                             math.sin(spawnAngle) * spawnRadius);
 
-                        ecb.SetComponent(villager, LocalTransform.FromPositionRotationScale(spawnPos, quaternion.identity, 1f));
+                        ecb.SetComponent(villager, LocalTransform.FromPositionRotationScale(spawnPos, quaternion.identity, villagerScale));
                         ecb.AddComponent<LocalToWorld>(villager);
 
                         // Initialize villager components
@@ -133,8 +136,12 @@ namespace Godgame.Scenario
                             0f,
                             math.sin(angle) * configValue.SpawnRadius * 0.5f);
 
-                        ecb.SetComponent(storehouse, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, 1f));
+                        ecb.SetComponent(storehouse, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, buildingScale));
                         ApplyScenarioRenderContract(ref ecb, storehouse, GodgameSemanticKeys.Storehouse, storePresentation);
+                        AddOrSet(ref ecb, storehouse, new RenderTint
+                        {
+                            Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Storehouse)
+                        }, storePresentation.HasRenderTint);
                     }
                 }
 
@@ -158,6 +165,10 @@ namespace Godgame.Scenario
                             Capacity = 100
                         });
                         ApplyScenarioRenderContract(ref ecb, nodeEntity, GodgameSemanticKeys.ResourceNode, default);
+                        ecb.AddComponent(nodeEntity, new RenderTint
+                        {
+                            Value = GodgamePresentationColors.ForResourceType(ResourceType.IronOre)
+                        });
                     }
                 }
 

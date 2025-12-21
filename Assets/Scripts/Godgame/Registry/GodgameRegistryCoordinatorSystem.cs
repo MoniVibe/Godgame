@@ -52,7 +52,7 @@ namespace Godgame.Registry
             }
 
 #if UNITY_EDITOR
-            // Emit lightweight warnings during demo bring-up so missing registries are obvious.
+            // Emit lightweight warnings during scenario bring-up so missing registries are obvious.
             const uint warningIntervalTicks = 120; // ~2 seconds @60fps
             if (timeState.Tick - _lastWarningTick >= warningIntervalTicks)
             {
@@ -91,4 +91,3 @@ namespace Godgame.Registry
         }
     }
 }
-

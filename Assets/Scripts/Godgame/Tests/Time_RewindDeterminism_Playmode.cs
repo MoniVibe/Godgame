@@ -27,28 +27,28 @@ namespace Godgame.Tests.Time
             _world.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
             _simGroup = _world.GetOrCreateSystemManaged<SimulationSystemGroup>();
 
-            // Create time demo config and state
-            var configEntity = _entityManager.CreateEntity(typeof(TimeDemoConfig), typeof(TimeDemoState));
-            _entityManager.SetComponentData(configEntity, new TimeDemoConfig
+            // Create time determinism config and state
+            var configEntity = _entityManager.CreateEntity(typeof(TimeDeterminismConfig), typeof(TimeDeterminismState));
+            _entityManager.SetComponentData(configEntity, new TimeDeterminismConfig
             {
                 VelocityPerSecond = new float3(1f, 0f, 0f),
                 PhaseRadiansPerSecond = 1f
             });
-            _entityManager.SetComponentData(configEntity, new TimeDemoState
+            _entityManager.SetComponentData(configEntity, new TimeDeterminismState
             {
                 Position = float3.zero,
                 Phase = 0f,
                 LastAppliedTick = 0
             });
 
-            var demoEntity = _entityManager.CreateEntity(typeof(TimeDemoState), typeof(LocalTransform));
-            _entityManager.SetComponentData(demoEntity, new TimeDemoState
+            var determinismEntity = _entityManager.CreateEntity(typeof(TimeDeterminismState), typeof(LocalTransform));
+            _entityManager.SetComponentData(determinismEntity, new TimeDeterminismState
             {
                 Position = float3.zero,
                 Phase = 0f,
                 LastAppliedTick = 0
             });
-            _entityManager.SetComponentData(demoEntity, LocalTransform.FromPosition(float3.zero));
+            _entityManager.SetComponentData(determinismEntity, LocalTransform.FromPosition(float3.zero));
         }
 
         [TearDown]
@@ -74,10 +74,10 @@ namespace Godgame.Tests.Time
             var timeQuery = _entityManager.CreateEntityQuery(typeof(TimeState));
             var timeEntity = timeQuery.GetSingletonEntity();
             var timeStateBefore = _entityManager.GetComponentData<TimeState>(timeEntity);
-            var demoQuery = _entityManager.CreateEntityQuery(typeof(TimeDemoState));
-            var demoEntity = demoQuery.GetSingletonEntity();
-            var demoStateBefore = _entityManager.GetComponentData<TimeDemoState>(demoEntity);
-            var transformBefore = _entityManager.GetComponentData<LocalTransform>(demoEntity);
+            var determinismQuery = _entityManager.CreateEntityQuery(typeof(TimeDeterminismState));
+            var determinismEntity = determinismQuery.GetSingletonEntity();
+            var determinismStateBefore = _entityManager.GetComponentData<TimeDeterminismState>(determinismEntity);
+            var transformBefore = _entityManager.GetComponentData<LocalTransform>(determinismEntity);
 
             // Rewind 2 seconds (assuming 60 ticks per second)
             var rewindTicks = 120u;
@@ -103,14 +103,14 @@ namespace Godgame.Tests.Time
 
             // Verify state matches bytewise
             var timeStateAfter = _entityManager.GetComponentData<TimeState>(timeEntity);
-            var demoStateAfter = _entityManager.GetComponentData<TimeDemoState>(demoEntity);
-            var transformAfter = _entityManager.GetComponentData<LocalTransform>(demoEntity);
+            var determinismStateAfter = _entityManager.GetComponentData<TimeDeterminismState>(determinismEntity);
+            var transformAfter = _entityManager.GetComponentData<LocalTransform>(determinismEntity);
 
             Assert.AreEqual(timeStateBefore.Tick, timeStateAfter.Tick, "Tick should match");
-            Assert.AreEqual(demoStateBefore.Position.x, demoStateAfter.Position.x, 0.001f, "Position X should match deterministically");
-            Assert.AreEqual(demoStateBefore.Position.y, demoStateAfter.Position.y, 0.001f, "Position Y should match deterministically");
-            Assert.AreEqual(demoStateBefore.Position.z, demoStateAfter.Position.z, 0.001f, "Position Z should match deterministically");
-            Assert.AreEqual(demoStateBefore.Phase, demoStateAfter.Phase, 0.001f, "Phase should match deterministically");
+            Assert.AreEqual(determinismStateBefore.Position.x, determinismStateAfter.Position.x, 0.001f, "Position X should match deterministically");
+            Assert.AreEqual(determinismStateBefore.Position.y, determinismStateAfter.Position.y, 0.001f, "Position Y should match deterministically");
+            Assert.AreEqual(determinismStateBefore.Position.z, determinismStateAfter.Position.z, 0.001f, "Position Z should match deterministically");
+            Assert.AreEqual(determinismStateBefore.Phase, determinismStateAfter.Phase, 0.001f, "Phase should match deterministically");
         }
 
         [Test]
@@ -123,9 +123,9 @@ namespace Godgame.Tests.Time
             }
 
             // Capture state
-            var demoQuery = _entityManager.CreateEntityQuery(typeof(TimeDemoState));
-            var demoEntity = demoQuery.GetSingletonEntity();
-            var stateBeforePause = _entityManager.GetComponentData<TimeDemoState>(demoEntity);
+            var determinismQuery = _entityManager.CreateEntityQuery(typeof(TimeDeterminismState));
+            var determinismEntity = determinismQuery.GetSingletonEntity();
+            var stateBeforePause = _entityManager.GetComponentData<TimeDeterminismState>(determinismEntity);
 
             // Pause
             var timeQuery = _entityManager.CreateEntityQuery(typeof(TimeState));
@@ -137,7 +137,7 @@ namespace Godgame.Tests.Time
             // Update (should not advance)
             UpdateSystems();
 
-            var stateDuringPause = _entityManager.GetComponentData<TimeDemoState>(demoEntity);
+            var stateDuringPause = _entityManager.GetComponentData<TimeDeterminismState>(determinismEntity);
             Assert.AreEqual(stateBeforePause.Position.x, stateDuringPause.Position.x, 0.001f, "State should not change when paused");
 
             // Resume
@@ -147,25 +147,24 @@ namespace Godgame.Tests.Time
             // Update (should advance)
             UpdateSystems();
 
-            var stateAfterResume = _entityManager.GetComponentData<TimeDemoState>(demoEntity);
+            var stateAfterResume = _entityManager.GetComponentData<TimeDeterminismState>(determinismEntity);
             Assert.Greater(stateAfterResume.Position.x, stateDuringPause.Position.x, "State should advance after resume");
         }
 
         private void UpdateSystems()
         {
-            var timeDemoMotion = _world.GetOrCreateSystem<TimeDemoMotionSystem>();
-            var timeDemoHistory = _world.GetOrCreateSystem<TimeDemoHistorySystem>();
+            var timeDeterminismMotion = _world.GetOrCreateSystem<TimeDeterminismMotionSystem>();
+            var timeDeterminismHistory = _world.GetOrCreateSystem<TimeDeterminismHistorySystem>();
             var timeControl = _world.GetOrCreateSystem<TimeControlSystem>();
 
-            _simGroup.RemoveSystemFromUpdateList(timeDemoMotion);
-            _simGroup.RemoveSystemFromUpdateList(timeDemoHistory);
+            _simGroup.RemoveSystemFromUpdateList(timeDeterminismMotion);
+            _simGroup.RemoveSystemFromUpdateList(timeDeterminismHistory);
             _simGroup.RemoveSystemFromUpdateList(timeControl);
-            _simGroup.AddSystemToUpdateList(timeDemoMotion);
-            _simGroup.AddSystemToUpdateList(timeDemoHistory);
+            _simGroup.AddSystemToUpdateList(timeDeterminismMotion);
+            _simGroup.AddSystemToUpdateList(timeDeterminismHistory);
             _simGroup.AddSystemToUpdateList(timeControl);
             _simGroup.SortSystems();
             _simGroup.Update();
         }
     }
 }
-

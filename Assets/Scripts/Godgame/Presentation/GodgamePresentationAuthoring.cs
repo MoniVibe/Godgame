@@ -39,6 +39,68 @@ namespace Godgame.Presentation.Authoring
         }
     }
 
+    public class PresentationLayerConfigAuthoring : MonoBehaviour
+    {
+        [Header("Layer Distance Multipliers")]
+        public float ColonyMultiplier = PresentationLayerConfig.Default.ColonyMultiplier;
+        public float IslandMultiplier = PresentationLayerConfig.Default.IslandMultiplier;
+        public float ContinentMultiplier = PresentationLayerConfig.Default.ContinentMultiplier;
+        public float PlanetMultiplier = PresentationLayerConfig.Default.PlanetMultiplier;
+        public float OrbitalMultiplier = PresentationLayerConfig.Default.OrbitalMultiplier;
+        public float SystemMultiplier = PresentationLayerConfig.Default.SystemMultiplier;
+        public float GalacticMultiplier = PresentationLayerConfig.Default.GalacticMultiplier;
+    }
+
+    public class PresentationLayerConfigBaker : Baker<PresentationLayerConfigAuthoring>
+    {
+        public override void Bake(PresentationLayerConfigAuthoring authoring)
+        {
+            var entity = GetEntity(TransformUsageFlags.None);
+
+            AddComponent(entity, new Godgame.Presentation.PresentationLayerConfig
+            {
+                ColonyMultiplier = authoring.ColonyMultiplier,
+                IslandMultiplier = authoring.IslandMultiplier,
+                ContinentMultiplier = authoring.ContinentMultiplier,
+                PlanetMultiplier = authoring.PlanetMultiplier,
+                OrbitalMultiplier = authoring.OrbitalMultiplier,
+                SystemMultiplier = authoring.SystemMultiplier,
+                GalacticMultiplier = authoring.GalacticMultiplier
+            });
+        }
+    }
+
+    public class PresentationScaleConfigAuthoring : MonoBehaviour
+    {
+        [Header("Layer Scale Multipliers")]
+        public float ColonyMultiplier = PresentationScaleConfig.Default.ColonyMultiplier;
+        public float IslandMultiplier = PresentationScaleConfig.Default.IslandMultiplier;
+        public float ContinentMultiplier = PresentationScaleConfig.Default.ContinentMultiplier;
+        public float PlanetMultiplier = PresentationScaleConfig.Default.PlanetMultiplier;
+        public float OrbitalMultiplier = PresentationScaleConfig.Default.OrbitalMultiplier;
+        public float SystemMultiplier = PresentationScaleConfig.Default.SystemMultiplier;
+        public float GalacticMultiplier = PresentationScaleConfig.Default.GalacticMultiplier;
+    }
+
+    public class PresentationScaleConfigBaker : Baker<PresentationScaleConfigAuthoring>
+    {
+        public override void Bake(PresentationScaleConfigAuthoring authoring)
+        {
+            var entity = GetEntity(TransformUsageFlags.None);
+
+            AddComponent(entity, new Godgame.Presentation.PresentationScaleConfig
+            {
+                ColonyMultiplier = authoring.ColonyMultiplier,
+                IslandMultiplier = authoring.IslandMultiplier,
+                ContinentMultiplier = authoring.ContinentMultiplier,
+                PlanetMultiplier = authoring.PlanetMultiplier,
+                OrbitalMultiplier = authoring.OrbitalMultiplier,
+                SystemMultiplier = authoring.SystemMultiplier,
+                GalacticMultiplier = authoring.GalacticMultiplier
+            });
+        }
+    }
+
     // Base class for biome/terrain binding authoring; extend as needed.
     public class SwappablePresentationBindingAuthoring : MonoBehaviour
     {

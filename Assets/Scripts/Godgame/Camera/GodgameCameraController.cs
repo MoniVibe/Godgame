@@ -1,7 +1,5 @@
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Unity.Mathematics;
 using Unity.Entities;
 using Godgame.Input;
 using PureDOTS.Runtime.Camera;
@@ -84,6 +82,10 @@ namespace Godgame
             if (_unityCamera != null)
             {
                 _cameraTransform = _unityCamera.transform;
+                if (_unityCamera.GetComponent<CameraRigApplier>() == null)
+                {
+                    _unityCamera.gameObject.AddComponent<CameraRigApplier>();
+                }
 
                 if (_resetToDefaultOnStart)
                 {
@@ -205,9 +207,6 @@ namespace Godgame
 
             _rotation = Quaternion.Euler(_pitch, _yaw, 0f);
 
-            // Apply the pose to the actual camera
-            ApplyCameraPose();
-
             // Publish to CameraRigService (for DOTS systems to read)
             PublishCurrentState();
         }
@@ -216,11 +215,12 @@ namespace Godgame
         {
             var state = new CameraRigState
             {
-                Position = _position,
-                Rotation = _rotation,
-                Pitch = math.radians(_pitch),
-                Yaw = math.radians(_yaw),
-                Distance = 10f, // Default distance
+                Focus = _position,
+                Pitch = _pitch,
+                Yaw = _yaw,
+                Roll = 0f,
+                Distance = 0f,
+                Mode = CameraRigMode.FreeFly,
                 PerspectiveMode = true,
                 FieldOfView = _unityCamera != null ? _unityCamera.fieldOfView : 60f,
                 RigType = CameraRigType.Godgame
@@ -244,11 +244,12 @@ namespace Godgame
 
             state = new CameraRigState
             {
-                Position = controller._position,
-                Rotation = controller._rotation,
-                Pitch = math.radians(controller._pitch),
-                Yaw = math.radians(controller._yaw),
-                Distance = 10f, // Default distance
+                Focus = controller._position,
+                Pitch = controller._pitch,
+                Yaw = controller._yaw,
+                Roll = 0f,
+                Distance = 0f,
+                Mode = CameraRigMode.FreeFly,
                 PerspectiveMode = true,
                 FieldOfView = controller._unityCamera != null ? controller._unityCamera.fieldOfView : 60f,
                 RigType = CameraRigType.Godgame
@@ -264,11 +265,6 @@ namespace Godgame
 
             _rotation = Quaternion.Euler(_pitch, _yaw, 0f);
             _position = _defaultFocus - _rotation * (Vector3.forward * _defaultDistance);
-
-            if (_cameraTransform != null)
-            {
-                _cameraTransform.SetPositionAndRotation(_position, _rotation);
-            }
         }
 
         private static float NormalizeDegrees(float degrees)
@@ -280,22 +276,13 @@ namespace Godgame
 
         private void ApplyCameraPose()
         {
-            if (_cameraTransform != null)
-            {
-                _cameraTransform.SetPositionAndRotation(_position, _rotation);
-
 #if UNITY_EDITOR && GODGAME_DEBUG_CAMERA
-                // TEMP DEBUG: Log camera position and yaw periodically
-                if (UnityEngine.Time.frameCount % 120 == 0) // Every 2 seconds at 60fps
-                {
-                    Debug.Log($"[GodgameCamera] Pos: {_position:F1}, Yaw: {_yaw:F1}°, Pitch: {_pitch:F1}°");
-                }
-#endif
-            }
-            else
+            // TEMP DEBUG: Log camera position and yaw periodically
+            if (UnityEngine.Time.frameCount % 120 == 0) // Every 2 seconds at 60fps
             {
-                Debug.LogWarning("[GodgameCamera] No _cameraTransform set; cannot apply pose.");
+                Debug.Log($"[GodgameCamera] (Publish-only) Pos: {_position:F1}, Yaw: {_yaw:F1}°, Pitch: {_pitch:F1}°");
             }
+#endif
         }
 
         private void HandleZoom(Mouse mouse, float dt)
@@ -304,8 +291,10 @@ namespace Godgame
             if (Mathf.Abs(scroll) < 0.01f)
                 return;
 
-            // Normalize scroll and scale
-            float zoomAmount = scroll * _zoomSpeed * dt;
+            // Pointer scroll is a per-frame delta (device units, typically ~120 per notch). Do NOT multiply by dt.
+            // Convert to "notches" so zoom feels stable across framerates.
+            float scrollNotches = scroll / 120f;
+            float zoomAmount = scrollNotches * (_zoomSpeed * 2f);
 
             // Ray from camera through cursor
             Ray ray = _unityCamera.ScreenPointToRay(mouse.position.ReadValue());
@@ -423,4 +412,3 @@ namespace Godgame
         }
     }
 }
-

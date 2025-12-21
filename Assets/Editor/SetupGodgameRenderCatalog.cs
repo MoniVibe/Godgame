@@ -140,10 +140,11 @@ public class SetupGodgameRenderCatalog : MonoBehaviour
                 Debug.LogError($"[SetupGodgameRenderCatalog] Missing variant '{config.VariantName}' for semantic {config.Key}.");
                 continue;
             }
+            var catalogIndex = variantIndex + 1; // slot 0 is the fallback variant in the baked catalog
             baseThemeMappings.Add(new RenderPresentationCatalogDefinition.SemanticVariant
             {
                 SemanticKey = config.Key,
-                Lod0Variant = variantIndex,
+                Lod0Variant = catalogIndex,
                 Lod1Variant = 0,
                 Lod2Variant = 0
             });

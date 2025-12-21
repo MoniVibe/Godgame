@@ -14,11 +14,11 @@ namespace Godgame.Registry.Authoring
     [DisallowMultipleComponent]
     public sealed class GodgameSpatialBootstrapAuthoring : MonoBehaviour
     {
-        [Tooltip("Spatial partition profile that drives the grid bounds/cell sizing for the demo scene.")]
+        [Tooltip("Spatial partition profile that drives the grid bounds/cell sizing for the scenario scene.")]
         public SpatialPartitionProfile profile;
 
         [Header("Optional Environment Grid")]
-        [Tooltip("Environment grid config that seeds moisture/temperature/sunlight defaults for the demo loop.")]
+        [Tooltip("Environment grid config that seeds moisture/temperature/sunlight defaults for the scenario loop.")]
         public EnvironmentGridConfig environmentConfig;
     }
 

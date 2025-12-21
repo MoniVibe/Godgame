@@ -3,6 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Godgame.Core;
+using UnityEngine;
 
 namespace Godgame.Input
 {
@@ -16,6 +17,9 @@ namespace Godgame.Input
     {
         private float _currentSpeed;
         private bool _isPaused;
+        private bool _logInitialized;
+        private float _lastLoggedSpeed;
+        private bool _lastLoggedPaused;
 
         public void OnCreate(ref SystemState state)
         {
@@ -23,6 +27,9 @@ namespace Godgame.Input
             state.RequireForUpdate<RewindState>();
             _currentSpeed = 1f;
             _isPaused = false;
+            _logInitialized = false;
+            _lastLoggedSpeed = 0f;
+            _lastLoggedPaused = false;
         }
 
         [BurstCompile]
@@ -59,7 +66,14 @@ namespace Godgame.Input
             // 2. GodgameInputReader extension to read time control inputs
             // 3. Write commands to buffer based on input state
 #if UNITY_EDITOR
-            LogState(_isPaused, _currentSpeed);
+            if (!Application.isBatchMode &&
+                (!_logInitialized || _lastLoggedPaused != _isPaused || _lastLoggedSpeed != _currentSpeed))
+            {
+                _logInitialized = true;
+                _lastLoggedPaused = _isPaused;
+                _lastLoggedSpeed = _currentSpeed;
+                LogState(_isPaused, _currentSpeed);
+            }
 #endif
         }
 

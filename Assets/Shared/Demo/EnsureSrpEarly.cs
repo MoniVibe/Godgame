@@ -1,8 +1,7 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+using Godgame.Rendering;
+using Godgame.Scenario;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
-using PureDOTS.Runtime.Core;
 
 static class EnsureSrpEarly
 {
@@ -10,29 +9,12 @@ static class EnsureSrpEarly
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     static void Ensure()
     {
-        if (RuntimeMode.IsHeadless)
-            return;
-        if (Application.platform == RuntimePlatform.LinuxPlayer)
-            return;
-
-        if (GraphicsSettings.currentRenderPipeline != null)
+        if (!GodgameLegacyScenarioGate.IsEnabled)
         {
-            Debug.Log($"[EnsureSrpEarly] SRP already set: {GraphicsSettings.currentRenderPipeline.GetType().Name}");
             return;
         }
 
-        // Load tiny demo URP (create once in Resources/Rendering)
-        var asset = Resources.Load<UniversalRenderPipelineAsset>("Rendering/DemoURP");
-        if (!asset)
-        {
-            asset = ScriptableObject.CreateInstance<UniversalRenderPipelineAsset>();
-            Debug.LogWarning("[EnsureSrpEarly] DemoURP not found in Resources/Rendering; using a transient URP asset.");
-        }
-
-        QualitySettings.renderPipeline = asset;           // assign for this run only
-        GraphicsSettings.defaultRenderPipeline = asset;   // belt & suspenders
-
-        Debug.Log($"[EnsureSrpEarly] SRP set to {asset.GetType().Name} before world bootstrap.");
+        GodgameRenderPipelineBootstrap.TryEnsureRenderPipeline(legacyOnly: true);
     }
 }
 #endif

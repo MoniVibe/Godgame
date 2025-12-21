@@ -21,7 +21,7 @@ namespace Godgame.Time
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    // Removed invalid UpdateAfter: TimeDemoBootstrapSystem runs OrderLast, so ordering must stay at group level.
+    // Removed invalid UpdateAfter: TimeDeterminismBootstrapSystem runs OrderLast, so ordering must stay at group level.
     public partial struct TimeControlSystem : ISystem
     {
         private static readonly float[] SpeedTiers = { 0f, 0.25f, 0.5f, 1f, 2f, 4f, 8f };

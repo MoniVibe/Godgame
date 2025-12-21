@@ -1,5 +1,7 @@
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Modularity;
+using PureDOTS.Runtime.Perception;
 using Godgame.Modules;
 using Godgame.Villagers;
 using Unity.Entities;
@@ -209,6 +211,9 @@ namespace Godgame.Authoring
                     TargetEntity = Entity.Null
                 });
 
+                AddComponent<CommunicationModuleTag>(entity);
+                AddComponent(entity, MediumContext.DefaultGas);
+
                 // Add personality component
                 AddComponent(entity, new VillagerPersonality
                 {
@@ -392,6 +397,5 @@ namespace Godgame.Authoring
         }
     }
 }
-
 
 

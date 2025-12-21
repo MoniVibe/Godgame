@@ -12,7 +12,9 @@ namespace Godgame.Telemetry
         ResourceShortage = 1,
         LowMorale = 2,
         GrowthPhaseExpansion = 3,
-        StableMaintenance = 4
+        StableMaintenance = 4,
+        MicroNeedPressure = 5,
+        ThreatReported = 6
     }
 
     public struct GodgameDecisionScoreEntry

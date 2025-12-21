@@ -11,6 +11,28 @@ namespace Godgame.Presentation
     public struct ResourceChunkPresentationTag : IComponentData { }
     public struct ResourceNodePresentationTag : IComponentData { }
     public struct VegetationPresentationTag : IComponentData { }
+    public struct StorehousePresentationTag : IComponentData { }
+    public struct HousingPresentationTag : IComponentData { }
+    public struct WorshipPresentationTag : IComponentData { }
+    public struct ConstructionGhostPresentationTag : IComponentData { }
+    public struct BandPresentationTag : IComponentData { }
+
+    // Presentation layers (distance buckets)
+    public enum PresentationLayerId : byte
+    {
+        Colony = 0,
+        Island = 1,
+        Continent = 2,
+        Planet = 3,
+        Orbital = 4,
+        System = 5,
+        Galactic = 6
+    }
+
+    public struct PresentationLayer : IComponentData
+    {
+        public PresentationLayerId Value;
+    }
 
     public struct CameraTag : IComponentData { }
 
@@ -58,6 +80,18 @@ namespace Godgame.Presentation
         public float4 ResourceTypeTint;
         public float QuantityScale;
         public byte IsCarried;
+    }
+
+    public struct PresentationExpiryHint : IComponentData
+    {
+        public float SecondsRemaining;
+        public float SecondsTotal;
+        public byte IsActive;
+    }
+
+    public struct PresentationExpiryBaseTint : IComponentData
+    {
+        public float4 Value;
     }
 
     public struct VegetationVisualState : IComponentData
@@ -118,6 +152,50 @@ namespace Godgame.Presentation
             MaxRenderedChunks = 2000,
             MaxFrameTimeMs = 16.7f,
             ForceVillagersVisible = false
+        };
+    }
+
+    public struct PresentationLayerConfig : IComponentData
+    {
+        public float ColonyMultiplier;
+        public float IslandMultiplier;
+        public float ContinentMultiplier;
+        public float PlanetMultiplier;
+        public float OrbitalMultiplier;
+        public float SystemMultiplier;
+        public float GalacticMultiplier;
+
+        public static PresentationLayerConfig Default => new PresentationLayerConfig
+        {
+            ColonyMultiplier = 0.15f,
+            IslandMultiplier = 0.3f,
+            ContinentMultiplier = 0.6f,
+            PlanetMultiplier = 1f,
+            OrbitalMultiplier = 2f,
+            SystemMultiplier = 6f,
+            GalacticMultiplier = 20f
+        };
+    }
+
+    public struct PresentationScaleConfig : IComponentData
+    {
+        public float ColonyMultiplier;
+        public float IslandMultiplier;
+        public float ContinentMultiplier;
+        public float PlanetMultiplier;
+        public float OrbitalMultiplier;
+        public float SystemMultiplier;
+        public float GalacticMultiplier;
+
+        public static PresentationScaleConfig Default => new PresentationScaleConfig
+        {
+            ColonyMultiplier = 1f,
+            IslandMultiplier = 1.1f,
+            ContinentMultiplier = 1.2f,
+            PlanetMultiplier = 1.35f,
+            OrbitalMultiplier = 1.6f,
+            SystemMultiplier = 2f,
+            GalacticMultiplier = 3f
         };
     }
 

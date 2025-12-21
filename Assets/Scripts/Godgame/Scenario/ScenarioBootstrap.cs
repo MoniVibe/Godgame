@@ -266,6 +266,7 @@ namespace Godgame.Scenario
 
             var cameraGo = new GameObject("ScenarioCamera (Auto)");
             var camera = cameraGo.AddComponent<UnityEngine.Camera>();
+            cameraGo.AddComponent<PureDOTS.Runtime.Camera.CameraRigApplier>();
             camera.transform.position = new Vector3(0f, 12f, -12f);
             camera.transform.LookAt(Vector3.zero);
             camera.clearFlags = CameraClearFlags.Skybox;

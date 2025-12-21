@@ -35,7 +35,7 @@ namespace Godgame.Rendering
         }
 
         /// <summary>
-        /// Provides a best-effort PureDOTS job to assign when spawning demo villagers for a role.
+        /// Provides a best-effort PureDOTS job to assign when spawning scenario villagers for a role.
         /// </summary>
         public static DotsVillagerJob.JobType GetDefaultPureDotsJobForRole(VillagerRenderRoleId role) =>
             role switch
