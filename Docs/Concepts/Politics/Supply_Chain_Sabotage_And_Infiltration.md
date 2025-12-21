@@ -649,6 +649,562 @@ Outcome: Enemy gains advantage (target's assumption is wrong)
 
 ---
 
+## Complex Operations & Strategic Assets
+
+### Strategic Planning for Complex Objectives
+
+**Complex infiltration objectives** require sophisticated planning with **strategic assets on standby** and **multiple contingency plans**.
+
+**Intelligent Aggregate Entities:**
+
+Sophisticated factions/empires plan complex operations with:
+- **Multiple contingency plans** (success scenarios, failure scenarios)
+- **Strategic assets on standby** (extraction teams, backup operations, diversionary actions)
+- **Layered operations** (primary objective + backup targets)
+- **Risk management** (agent extraction vs termination decisions)
+
+---
+
+### Contingency Planning
+
+**Contingency Plan Types:**
+
+#### 1. Success Contingencies
+
+**When Primary Objective Succeeds:**
+
+**Follow-Up Operations:**
+- Exploit success (expand operation, target additional objectives)
+- Secure gains (prevent counter-operations, protect agents)
+- Maintain cover (agents continue operations, gather more intel)
+
+**Strategic Assets:**
+- **Extraction Teams:** Ready to extract agents if success exposes them
+- **Backup Operations:** Additional operations prepared to exploit success
+- **Diversionary Actions:** Operations to distract from successful infiltration
+
+**Example:**
+```
+Primary Objective: Sabotage encryption modules (succeeds)
+Success Contingency:
+  - Exploit: Use backdoor to gather intel for 6 months
+  - Extract: Extraction team ready if agents exposed
+  - Backup: Additional sabotage operations prepared (signal processors, targeting computers)
+  - Diversion: False flag operations distract from encryption compromise
+```
+
+---
+
+#### 2. Failure Contingencies
+
+**When Primary Objective Fails:**
+
+**Containment:**
+- Prevent discovery (agents escape before detection)
+- Limit damage (minimize intelligence loss)
+- Protect other operations (prevent cascade of exposure)
+
+**Strategic Assets:**
+- **Extraction Teams:** Evacuate agents before capture
+- **Termination Teams:** Eliminate agents if extraction impossible
+- **Cover Operations:** False operations to mask real objective
+- **Backup Targets:** Alternative objectives if primary fails
+
+**Example:**
+```
+Primary Objective: Sabotage encryption modules (fails - detected early)
+Failure Contingency:
+  - Containment: Agents extract immediately (prevents exposure)
+  - Backup Target: Shift to signal processor sabotage (alternative infiltration vector)
+  - Cover Operation: False operation masks real objective (target thinks attack was on different system)
+  - Intelligence Protection: Agents don't reveal other operations if captured
+```
+
+---
+
+#### 3. Partial Success Contingencies
+
+**When Primary Objective Partially Succeeds:**
+
+**Adaptation:**
+- Adjust objectives (exploit partial success, mitigate failures)
+- Combine with backup operations (layer partial successes)
+- Maintain operations (continue despite setbacks)
+
+**Strategic Assets:**
+- **Adaptive Operations:** Modify plans based on partial results
+- **Layered Attacks:** Combine partial successes from multiple operations
+- **Recovery Teams:** Salvage operations from partial failures
+
+**Example:**
+```
+Primary Objective: Sabotage encryption modules (partial success - 50% compromised)
+Partial Success Contingency:
+  - Adapt: Exploit 50% compromised modules, target remaining 50%
+  - Layer: Combine with signal processor sabotage (enhanced effect)
+  - Recover: Additional infiltration to complete sabotage
+```
+
+---
+
+### Agent Extraction & Termination
+
+**When Operations Are Compromised:**
+
+Intelligent aggregate entities must decide: **Extract agents** or **Terminate them**.
+
+---
+
+#### Extraction (Preferred Option)
+
+**When to Extract:**
+
+**Conditions Favoring Extraction:**
+- Agents have valuable intelligence (knowledge of other operations)
+- Agents are loyal/high-value (investment worth protecting)
+- Extraction is feasible (agents can reach extraction point)
+- Exposure risk is manageable (extraction doesn't expose more)
+
+**Extraction Methods:**
+
+**Standard Extraction:**
+- **Extraction Teams:** Dedicated teams retrieve agents
+- **Safe Houses:** Temporary locations for agent recovery
+- **Evacuation Routes:** Pre-planned escape paths
+- **Cover Identities:** New identities for extracted agents
+
+**Emergency Extraction:**
+- **Exfiltration Under Fire:** Extract during active pursuit
+- **Covert Extraction:** Extract without detection (maintain cover)
+- **False Flag Extraction:** Extract using false operation (mask real extraction)
+
+**Extraction Planning:**
+```
+Extraction Plan:
+  - Extraction Team: 6-member team (combat-trained, stealth-capable)
+  - Safe House: Abandoned warehouse in neutral territory
+  - Evacuation Route: Land route → sea route → neutral port
+  - Cover: Agents extracted as "refugees" fleeing conflict
+  - Timeline: Extraction must occur within 48 hours of compromise
+```
+
+---
+
+#### Termination (Containment Option)
+
+**When to Terminate:**
+
+**Conditions Favoring Termination:**
+- Extraction is impossible (agents surrounded, no escape route)
+- Agents are compromised (already captured, likely to reveal intelligence)
+- Agents are low-value (disposable, not worth extraction risk)
+- Exposure risk is high (extraction would expose more operations)
+
+**Termination Methods:**
+
+**Covert Termination:**
+- **Assassination:** Silent kill (appears accidental or natural)
+- **Suicide:** Agent commits suicide (appears voluntary)
+- **False Flag:** Terminate using enemy forces (blame on target)
+
+**Overt Termination:**
+- **Elimination Team:** Combat team eliminates agents (high risk, last resort)
+- **Explosive:** Remotely detonated device (deniable, no traces)
+- **Poisoning:** Undetectable poison (appears natural death)
+
+**Termination Planning:**
+```
+Termination Plan:
+  - Method: Poison pill (undetectable, appears natural)
+  - Execution: Remote activation if agent compromised
+  - Fallback: Elimination team if poison fails
+  - Deniability: Operation appears unconnected to employer
+  - Timeline: Immediate (within hours of compromise)
+```
+
+---
+
+### Agent Suicide Protocols
+
+**Agent Suicide (Last Resort):**
+
+Some agents will **commit suicide** if caught, depending on **loyalty and profile**.
+
+---
+
+#### Suicide Decision Factors
+
+**Loyalty:**
+- **High Loyalty (80+):** Will commit suicide to protect operations
+- **Medium Loyalty (50-79):** May commit suicide if pressured
+- **Low Loyalty (<50):** Will not commit suicide, likely to reveal intelligence
+
+**Profile (Alignment/Outlook):**
+- **High Honor/High Purity:** More likely to commit suicide (honor-bound, protect secrets)
+- **High Fear/Low Courage:** Less likely to commit suicide (fear of death)
+- **High Aggression/High Pride:** May commit suicide (prefer death over capture/humiliation)
+
+**Suicide Probability:**
+```
+SuicideChance = 
+    (Loyalty × 0.4) +
+    (HonorOutlook × 0.2) +
+    (PurityAlignment × 0.2) +
+    (FearOutlook × -0.1) +
+    (CourageLevel × 0.1)
+
+Where:
+  Loyalty = 0-100 (agent loyalty to employer)
+  HonorOutlook = 0-100 (honor-bound outlook)
+  PurityAlignment = 0-100 (purity alignment - self-sacrifice)
+  FearOutlook = 0-100 (fear outlook - negative modifier)
+  CourageLevel = 0-100 (courage level)
+  
+Example:
+  Loyalty 90, Honor 80, Purity 70, Fear 20, Courage 75
+  = (90 × 0.4) + (80 × 0.2) + (70 × 0.2) + (20 × -0.1) + (75 × 0.1)
+  = 36 + 16 + 14 - 2 + 7.5 = 71.5% suicide chance
+```
+
+---
+
+#### Suicide Methods
+
+**Pill (Poison):**
+- **Cyanide Pill:** Fast-acting, undetectable (appears natural death)
+- **Activation:** Agent takes pill when capture imminent
+- **Advantages:** Deniable, appears voluntary, no traces
+
+**Other Methods:**
+- **Explosive Device:** Suicide bomb (eliminates agent + potential captors)
+- **Self-Inflicted Wound:** Agent kills self (gunshot, blade, fall)
+- **Defiance:** Agent attacks captors (suicide by combat, "death before capture")
+
+**Example:**
+```
+Agent Profile:
+  - Loyalty: 95 (extremely loyal)
+  - Honor: 85 (high honor outlook)
+  - Purity: 80 (high purity alignment)
+  - Suicide Probability: 88%
+
+Capture Scenario:
+  Agent surrounded, no escape route, extraction impossible
+  Agent Decision: Takes cyanide pill (suicide)
+  Result: Agent dies, intelligence protected, operations secure
+```
+
+---
+
+### Multi-Team/Band Contingencies
+
+**Complex operations involve multiple teams/bands:**
+
+---
+
+#### Primary Team (Objective)
+
+**Primary Team Responsibilities:**
+- Execute primary objective (sabotage, infiltration, etc.)
+- Maintain cover (avoid detection)
+- Report progress (intelligence updates)
+
+---
+
+#### Backup Team (Contingency)
+
+**Backup Team Responsibilities:**
+- Standby for extraction (if primary team compromised)
+- Execute backup objectives (if primary objective fails)
+- Provide diversion (distract from primary operation)
+
+**Example:**
+```
+Primary Team: Infiltrate supplier facility, sabotage encryption modules
+Backup Team: Standby for extraction OR execute signal processor sabotage (if encryption fails)
+
+Operation Flow:
+  - Primary team infiltrates, begins sabotage
+  - Backup team monitors (ready to extract if compromised)
+  - If primary succeeds: Backup team extracts primary team
+  - If primary fails: Backup team executes alternative sabotage (signal processors)
+```
+
+---
+
+#### Extraction Team (Rescue)
+
+**Extraction Team Responsibilities:**
+- Extract agents if compromised
+- Provide cover fire (combat support during extraction)
+- Evacuate to safety (safe houses, neutral territory)
+
+**Example:**
+```
+Operation: Encryption module sabotage
+Primary Team: Infiltrates facility, sabotages modules
+Extraction Team: Standby 20km away, ready to extract if compromised
+
+Compromise Scenario:
+  Primary team detected, surrounded by security forces
+  Extraction team activates: Provides diversion, extracts primary team
+  Result: Primary team rescued, operation partially successful (some modules sabotaged)
+```
+
+---
+
+#### Termination Team (Containment)
+
+**Termination Team Responsibilities:**
+- Eliminate agents if extraction impossible
+- Prevent intelligence leaks (silence compromised agents)
+- Maintain deniability (appears unrelated to employer)
+
+**Example:**
+```
+Operation: Encryption module sabotage
+Primary Team: Infiltrates facility, sabotages modules
+Termination Team: Standby, ready to eliminate if extraction impossible
+
+Compromise Scenario:
+  Primary team captured, extraction impossible (heavily guarded facility)
+  Termination team activates: Eliminates primary team (appears as facility security response)
+  Result: Agents eliminated, intelligence protected, operation partially successful
+```
+
+---
+
+### Layered Operations & Strategic Backups
+
+**Complex operations target multiple objectives simultaneously:**
+
+---
+
+#### Primary + Backup Targets
+
+**Operation Structure:**
+
+**Primary Target (Main Objective):**
+- Complex, high-value objective (sabotage critical system)
+- Requires significant resources
+- High risk, high reward
+
+**Backup Targets (Strategic Backups):**
+- Simpler, alternative objectives (if primary fails)
+- Lower risk, moderate reward
+- Provide fallback options
+
+**Example:**
+```
+Primary Target: Sabotage military communications encryption (complex, high-value)
+Backup Target 1: Sabotage signal processors (simpler, moderate value)
+Backup Target 2: Sabotage targeting computers (simpler, moderate value)
+
+Operation Flow:
+  - Primary team attempts primary target
+  - If primary succeeds: Exploit success, backup teams extract
+  - If primary fails: Backup teams execute backup targets (alternative infiltration vectors)
+```
+
+---
+
+#### High-Value Target Operations
+
+**Operations backed up by high-value targets:**
+
+**1. Ambassador/Envoy/Elite/Rulership Trips**
+
+**Target:** High-ranking individuals traveling to neutral/contested/hostile areas.
+
+**Objectives:**
+- **Kidnapping:** Capture for intelligence, ransom, political leverage
+- **Assassination:** Eliminate political/military leaders
+- **Sabotage:** Compromise diplomatic missions
+- **Intelligence Gathering:** Monitor negotiations, gather intel
+
+**Strategic Backup:**
+- If primary infiltration fails, target ambassador/elite trips (alternative objective)
+- Ambassador trips provide access to high-value targets (rulers, elites)
+- Success provides intelligence, political leverage, or elimination of key figures
+
+**Example:**
+```
+Primary Operation: Sabotage encryption modules
+Backup Operation: Target ambassador trip (if primary fails)
+
+Ambassador Trip:
+  - Ambassador travels to neutral territory for peace negotiations
+  - Backup team intercepts: Kidnaps ambassador, extracts intelligence
+  - Result: Alternative objective achieved (intel from ambassador compensates for failed sabotage)
+```
+
+---
+
+**2. Bank/Guild Convoys**
+
+**Target:** Convoys carrying valuables (gold, resources, rare items).
+
+**Objectives:**
+- **Interception:** Capture convoy, steal valuables
+- **Sabotage:** Destroy convoy, economic damage
+- **Intelligence:** Monitor convoy routes, gather economic intel
+
+**Strategic Backup:**
+- If primary operation fails, target convoys (economic disruption)
+- Convoys provide valuable resources (fund future operations)
+- Economic damage weakens target (reduces ability to counter-operations)
+
+**Example:**
+```
+Primary Operation: Sabotage encryption modules
+Backup Operation: Intercept bank convoy (if primary fails)
+
+Bank Convoy:
+  - Guild convoy carrying 10,000 gold, rare materials
+  - Backup team intercepts: Captures convoy, steals valuables
+  - Result: Alternative objective achieved (economic damage + funding for future operations)
+```
+
+---
+
+**3. Rich Trade Routes**
+
+**Target:** High-value trade routes (merchant caravans, shipping lanes).
+
+**Objectives:**
+- **Disruption:** Block trade routes, economic damage
+- **Interception:** Capture shipments, steal resources
+- **Intelligence:** Monitor trade patterns, gather economic intel
+
+**Strategic Backup:**
+- If primary operation fails, disrupt trade routes (economic warfare)
+- Trade disruption weakens target economy
+- Provides resources for future operations
+
+**Example:**
+```
+Primary Operation: Sabotage encryption modules
+Backup Operation: Disrupt trade routes (if primary fails)
+
+Trade Route Disruption:
+  - Key trade route between two nations
+  - Backup team blocks route: Piracy, sabotage, interception
+  - Result: Economic damage, trade disrupted, alternative objective achieved
+```
+
+---
+
+**4. Remote Colonies**
+
+**Target:** Remote colonies, outposts, frontier settlements.
+
+**Objectives:**
+- **Conquest:** Capture colony, expand territory
+- **Sabotage:** Destroy colony infrastructure
+- **Intelligence:** Monitor colony activities, gather intel
+
+**Strategic Backup:**
+- If primary operation fails, target remote colonies (territorial gains)
+- Colonies are vulnerable (isolated, weaker defenses)
+- Success provides strategic position, resources, or intelligence
+
+**Example:**
+```
+Primary Operation: Sabotage encryption modules
+Backup Operation: Target remote colony (if primary fails)
+
+Remote Colony:
+  - Frontier mining colony (isolated, weak defenses)
+  - Backup team attacks: Captures colony, extracts resources
+  - Result: Alternative objective achieved (territorial gain + resources)
+```
+
+---
+
+### Multi-Operation Coordination
+
+**Intelligent aggregate entities coordinate multiple operations:**
+
+**Operation Hierarchy:**
+
+**Tier 1: Primary Operations**
+- Complex, high-value objectives
+- Significant resource investment
+- High strategic impact
+
+**Tier 2: Backup Operations**
+- Alternative objectives (if primary fails)
+- Moderate resource investment
+- Moderate strategic impact
+
+**Tier 3: Diversionary Operations**
+- Distract from primary operations
+- Low resource investment
+- Low strategic impact (but protects primary)
+
+**Tier 4: Contingency Operations**
+- Extract/terminate agents
+- Protect intelligence
+- Minimize exposure
+
+**Example: Multi-Operation Coordination**
+```
+Primary Operation: Sabotage encryption modules (Tier 1)
+  - Primary Team: Infiltrates supplier, sabotages modules
+  - Extraction Team: Standby for extraction (Tier 4)
+  - Termination Team: Standby for termination if extraction impossible (Tier 4)
+
+Backup Operation 1: Target ambassador trip (Tier 2)
+  - Backup Team 1: Monitors ambassador, ready to intercept if primary fails
+
+Backup Operation 2: Intercept bank convoy (Tier 2)
+  - Backup Team 2: Monitors convoy route, ready to intercept if primary fails
+
+Diversionary Operation: False flag sabotage (Tier 3)
+  - Diversion Team: Executes false operation (distracts from real objective)
+
+Coordination:
+  - If primary succeeds: All teams support success exploitation
+  - If primary fails: Backup teams execute alternative objectives
+  - If primary compromised: Extraction/termination teams activate
+  - Diversionary operation runs throughout (maintains deception)
+```
+
+---
+
+### Strategic Asset Management
+
+**Intelligent aggregate entities manage strategic assets:**
+
+**Asset Types:**
+
+**Intelligence Assets:**
+- Infiltration teams (primary, backup, extraction)
+- Intelligence networks (informants, double agents)
+- Surveillance capabilities (monitoring, reconnaissance)
+
+**Combat Assets:**
+- Extraction teams (combat-trained rescue units)
+- Termination teams (assassination, elimination)
+- Diversionary forces (false operations, distractions)
+
+**Economic Assets:**
+- Funding for operations (payroll, equipment, bribes)
+- Resource acquisition (steal from targets, fund operations)
+- Economic disruption (weaken target economy)
+
+**Asset Allocation:**
+
+```
+Strategic Asset Allocation:
+  Primary Operation: 40% of assets (main objective)
+  Backup Operations: 30% of assets (alternative objectives)
+  Contingency Operations: 20% of assets (extraction/termination)
+  Diversionary Operations: 10% of assets (deception, distraction)
+```
+
+---
+
 ## Integration with Existing Systems
 
 ### Espionage & Infiltration Integration
