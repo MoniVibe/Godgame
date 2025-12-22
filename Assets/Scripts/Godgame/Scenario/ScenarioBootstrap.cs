@@ -12,7 +12,7 @@ namespace Godgame.Scenario
 {
     public class ScenarioBootstrap : MonoBehaviour
     {
-        public string defaultScenario = "villager_loop_small.json";
+        public string defaultScenario = "village_loop_smoke.json";
         public bool useFancyBindings = false;
 
         private Entity scenarioOptionsEntity;

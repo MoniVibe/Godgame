@@ -22,6 +22,7 @@ namespace Godgame.Villages
         private const uint ThreatTtlTicks = 600; // ~10s at 60hz
 
         private BufferLookup<GroupKnowledgeEntry> _groupCacheLookup;
+        private ComponentLookup<GroupKnowledgeConfig> _configLookup;
         private ComponentLookup<LocalTransform> _transformLookup;
 
         [BurstCompile]
@@ -29,10 +30,12 @@ namespace Godgame.Villages
         {
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
-            state.RequireForUpdate<GroupKnowledgeCacheTag>();
+            state.RequireForUpdate<GroupKnowledgeCache>();
+            state.RequireForUpdate<GroupKnowledgeConfig>();
             state.RequireForUpdate<VillagerThreatState>();
 
             _groupCacheLookup = state.GetBufferLookup<GroupKnowledgeEntry>(false);
+            _configLookup = state.GetComponentLookup<GroupKnowledgeConfig>(true);
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
         }
 
@@ -47,6 +50,7 @@ namespace Godgame.Villages
             }
 
             _groupCacheLookup.Update(ref state);
+            _configLookup.Update(ref state);
             _transformLookup.Update(ref state);
 
             foreach (var (threat, patriotism, villager) in SystemAPI
@@ -67,26 +71,105 @@ namespace Godgame.Villages
 
                 var confidence = threatValue.HasLineOfSight != 0 ? 1f : 0.55f;
                 var position = _transformLookup.HasComponent(villager) ? _transformLookup[villager].Position : float3.zero;
+                var flags = (byte)GroupKnowledgeFlags.FromPerception;
+                if (threatValue.HasLineOfSight == 0)
+                {
+                    flags |= GroupKnowledgeFlags.Unreliable;
+                }
 
                 var entry = new GroupKnowledgeEntry
                 {
-                    Kind = GroupKnowledgeKind.ThreatSeen,
-                    Flags = threatValue.HasLineOfSight,
-                    AuxId = 0,
-                    FirstTick = timeState.Tick,
-                    LastTick = timeState.Tick,
-                    ExpireTick = timeState.Tick + ThreatTtlTicks,
-                    SubjectEntity = threatValue.ThreatEntity,
-                    ReporterEntity = villager,
+                    Kind = GroupKnowledgeClaimKind.ThreatSeen,
+                    Flags = flags,
+                    Subject = threatValue.ThreatEntity,
+                    Source = villager,
                     Position = position,
-                    Urgency = math.saturate(threatValue.Urgency),
-                    Confidence = confidence
+                    Confidence = math.saturate(threatValue.Urgency) * confidence,
+                    LastSeenTick = timeState.Tick,
+                    PayloadId = default
                 };
 
                 var cache = _groupCacheLookup[villageEntity];
-                GroupKnowledgeCache.Upsert(cache, in entry);
+                var config = _configLookup.HasComponent(villageEntity)
+                    ? _configLookup[villageEntity]
+                    : GroupKnowledgeConfig.Default;
+                UpsertEntry(cache, timeState.Tick, config, entry, ThreatTtlTicks);
             }
+        }
+
+        private static void UpsertEntry(
+            DynamicBuffer<GroupKnowledgeEntry> entries,
+            uint tick,
+            in GroupKnowledgeConfig config,
+            GroupKnowledgeEntry candidate,
+            uint fallbackStaleTicks)
+        {
+            if (candidate.Confidence < config.MinConfidence)
+            {
+                candidate.Flags |= GroupKnowledgeFlags.Unreliable;
+            }
+
+            candidate.LastSeenTick = tick;
+
+            var matchIndex = -1;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                if (entry.Kind != candidate.Kind)
+                {
+                    continue;
+                }
+
+                if (candidate.Subject != Entity.Null && entry.Subject == candidate.Subject)
+                {
+                    matchIndex = i;
+                    break;
+                }
+            }
+
+            if (matchIndex >= 0)
+            {
+                var existing = entries[matchIndex];
+                existing.Confidence = math.max(existing.Confidence, candidate.Confidence);
+                existing.LastSeenTick = tick;
+                existing.Subject = candidate.Subject != Entity.Null ? candidate.Subject : existing.Subject;
+                existing.Source = candidate.Source != Entity.Null ? candidate.Source : existing.Source;
+                existing.Position = math.lengthsq(candidate.Position) > 0f ? candidate.Position : existing.Position;
+                existing.Flags |= candidate.Flags;
+                entries[matchIndex] = existing;
+                return;
+            }
+
+            if (entries.Length < math.max(1, config.MaxEntries))
+            {
+                entries.Add(candidate);
+                return;
+            }
+
+            var staleAfterTicks = config.StaleAfterTicks > 0 ? config.StaleAfterTicks : fallbackStaleTicks;
+            var evictIndex = SelectEvictionIndex(entries, tick, staleAfterTicks);
+            entries[evictIndex] = candidate;
+        }
+
+        private static int SelectEvictionIndex(DynamicBuffer<GroupKnowledgeEntry> entries, uint tick, uint staleAfterTicks)
+        {
+            var worstIndex = 0;
+            var worstScore = float.MaxValue;
+            var decayTicks = staleAfterTicks > 0 ? staleAfterTicks : 600u;
+
+            for (int i = 0; i < entries.Length; i++)
+            {
+                var entry = entries[i];
+                var age = tick >= entry.LastSeenTick ? tick - entry.LastSeenTick : 0u;
+                var score = entry.Confidence - math.min(1f, age / (float)decayTicks);
+                if (score < worstScore)
+                {
+                    worstScore = score;
+                    worstIndex = i;
+                }
+            }
+
+            return worstIndex;
         }
     }
 }
-

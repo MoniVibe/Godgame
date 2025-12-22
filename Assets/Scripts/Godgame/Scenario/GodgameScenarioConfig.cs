@@ -1,7 +1,6 @@
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace Godgame.Scenario
 {
@@ -9,7 +8,6 @@ namespace Godgame.Scenario
     /// ScriptableObject configuration for scenario spawning parameters.
     /// Create an asset and assign it to GodgameScenarioConfigAuthoring to configure scenario content.
     /// </summary>
-    [MovedFrom(true, "Godgame.Scenario", null, "DemoConfig")]
     [CreateAssetMenu(fileName = "GodgameScenarioConfig", menuName = "Godgame/Scenario Config", order = 1)]
     public class GodgameScenarioConfig : ScriptableObject
     {
@@ -48,7 +46,6 @@ namespace Godgame.Scenario
     /// <summary>
     /// Blob data structure for scenario config (baked from ScriptableObject).
     /// </summary>
-    [MovedFrom(true, "Godgame.Scenario", null, "DemoConfigBlob")]
     public struct GodgameScenarioConfigBlob
     {
         public GodgameScenarioMode Mode;
@@ -65,7 +62,6 @@ namespace Godgame.Scenario
     /// <summary>
     /// Component storing reference to scenario config blob.
     /// </summary>
-    [MovedFrom(true, "Godgame.Scenario", null, "DemoConfigBlobReference")]
     public struct GodgameScenarioConfigBlobReference : IComponentData
     {
         public BlobAssetReference<GodgameScenarioConfigBlob> Config;

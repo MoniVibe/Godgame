@@ -66,8 +66,8 @@ namespace Godgame.Headless
 	            {
 	                if (LooksLikeScenarioRunnerJson(scenarioPath))
 	                {
-	                    var existingTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
-	                    if (string.IsNullOrWhiteSpace(existingTelemetryPath) && !string.IsNullOrEmpty(telemetryPath))
+	                    var runnerTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
+	                    if (string.IsNullOrWhiteSpace(runnerTelemetryPath) && !string.IsNullOrEmpty(telemetryPath))
 	                    {
 	                        SystemEnv.SetEnvironmentVariable(PureDotsTelemetryPathEnvVar, telemetryPath);
 	                        SystemEnv.SetEnvironmentVariable(PureDotsTelemetryEnableEnvVar, "1");

@@ -124,7 +124,7 @@ namespace Godgame.Headless
                 {
                     case SettlementVillagerPhase.Idle:
                     {
-                        updated.CurrentDepot = ResolveDepot(runtime, position);
+                        updated.CurrentDepot = ResolveDepot(ref state, runtime, position);
                         if (updated.CurrentDepot == Entity.Null)
                         {
                             updated.PhaseTimer = 0f;
@@ -153,7 +153,7 @@ namespace Godgame.Headless
                         updated.PhaseTimer -= deltaTime;
                         if (updated.PhaseTimer <= 0f)
                         {
-                            updated.CurrentDepot = ResolveDepot(runtime, position);
+                            updated.CurrentDepot = ResolveDepot(ref state, runtime, position);
                             updated.Phase = SettlementVillagerPhase.ToDepot;
                             updated.PhaseTimer = math.max(0.25f, 6f * fixedDt);
                         }
@@ -212,7 +212,7 @@ namespace Godgame.Headless
             return deltaTicks == 0u ? 0f : fixedDt * deltaTicks;
         }
 
-        private Entity ResolveDepot(in SettlementRuntime runtime, in float3 villagerPosition)
+        private Entity ResolveDepot(ref SystemState state, in SettlementRuntime runtime, in float3 villagerPosition)
         {
             var candidate = ResolveDepotFromRuntime(runtime);
             if (candidate != Entity.Null && candidate.Index >= 0 && _storehouseInventoryLookup.HasComponent(candidate))

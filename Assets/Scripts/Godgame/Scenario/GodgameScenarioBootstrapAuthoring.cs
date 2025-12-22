@@ -3,7 +3,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace Godgame.Scenario
 {
@@ -12,7 +11,6 @@ namespace Godgame.Scenario
     /// Add to a GameObject in the scenario scene to configure entity spawning at startup.
     /// </summary>
     [DisallowMultipleComponent]
-    [MovedFrom(true, "Godgame.Scenario", null, "GodgameDemoBootstrapAuthoring")]
     public sealed class GodgameScenarioBootstrapAuthoring : MonoBehaviour
     {
         [Header("Prefabs")]

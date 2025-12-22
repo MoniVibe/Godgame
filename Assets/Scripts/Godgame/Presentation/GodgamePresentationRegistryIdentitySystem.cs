@@ -41,23 +41,23 @@ namespace Godgame.Presentation
         {
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            AddIdentity(ref ecb, _villagerId, state, ComponentType.ReadOnly<VillagerPresentationTag>());
-            AddIdentity(ref ecb, _villageCenterId, state, ComponentType.ReadOnly<VillageCenterPresentationTag>());
-            AddIdentity(ref ecb, _resourceChunkId, state, ComponentType.ReadOnly<ResourceChunkPresentationTag>());
-            AddIdentity(ref ecb, _resourceNodeId, state, ComponentType.ReadOnly<ResourceNodePresentationTag>());
-            AddIdentity(ref ecb, _vegetationId, state, ComponentType.ReadOnly<VegetationPresentationTag>());
-            AddIdentity(ref ecb, _storehouseId, state, ComponentType.ReadOnly<StorehousePresentationTag>());
-            AddIdentity(ref ecb, _housingId, state, ComponentType.ReadOnly<HousingPresentationTag>());
-            AddIdentity(ref ecb, _worshipId, state, ComponentType.ReadOnly<WorshipPresentationTag>());
-            AddIdentity(ref ecb, _constructionGhostId, state, ComponentType.ReadOnly<ConstructionGhostPresentationTag>());
-            AddIdentity(ref ecb, _bandId, state, ComponentType.ReadOnly<BandPresentationTag>());
-            AddIdentity(ref ecb, _ghostTetherId, state, ComponentType.ReadOnly<GhostTetherTag>());
+            AddIdentity(ref ecb, _villagerId, ref state, ComponentType.ReadOnly<VillagerPresentationTag>());
+            AddIdentity(ref ecb, _villageCenterId, ref state, ComponentType.ReadOnly<VillageCenterPresentationTag>());
+            AddIdentity(ref ecb, _resourceChunkId, ref state, ComponentType.ReadOnly<ResourceChunkPresentationTag>());
+            AddIdentity(ref ecb, _resourceNodeId, ref state, ComponentType.ReadOnly<ResourceNodePresentationTag>());
+            AddIdentity(ref ecb, _vegetationId, ref state, ComponentType.ReadOnly<VegetationPresentationTag>());
+            AddIdentity(ref ecb, _storehouseId, ref state, ComponentType.ReadOnly<StorehousePresentationTag>());
+            AddIdentity(ref ecb, _housingId, ref state, ComponentType.ReadOnly<HousingPresentationTag>());
+            AddIdentity(ref ecb, _worshipId, ref state, ComponentType.ReadOnly<WorshipPresentationTag>());
+            AddIdentity(ref ecb, _constructionGhostId, ref state, ComponentType.ReadOnly<ConstructionGhostPresentationTag>());
+            AddIdentity(ref ecb, _bandId, ref state, ComponentType.ReadOnly<BandPresentationTag>());
+            AddIdentity(ref ecb, _ghostTetherId, ref state, ComponentType.ReadOnly<GhostTetherTag>());
 
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
         }
 
-        private static void AddIdentity(ref EntityCommandBuffer ecb, RegistryId id, in SystemState state, ComponentType marker)
+        private static void AddIdentity(ref EntityCommandBuffer ecb, RegistryId id, ref SystemState state, ComponentType marker)
         {
             if (!id.IsValid)
             {

@@ -4,7 +4,6 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.Profiling;
 using UnityEngine.UI;
 using PureDOTS.Runtime.Components;
@@ -14,7 +13,6 @@ using Godgame.Scenario;
 
 namespace Godgame.Scenario
 {
-    [MovedFrom(true, "Godgame.Scenario", null, "DemoBootstrapUI")]
     public class GodgameScenarioBootstrapUI : MonoBehaviour
     {
         public ScenarioBootstrap bootstrap;

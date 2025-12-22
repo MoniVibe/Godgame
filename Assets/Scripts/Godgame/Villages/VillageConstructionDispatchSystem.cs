@@ -71,7 +71,7 @@ namespace Godgame.Villages
         {
             if (RuntimeMode.IsHeadless)
             {
-                if (!SystemAPI.TryGetSingleton(out VillageBuildSliceConfig config) || config.EnableInHeadless == 0)
+                if (!SystemAPI.TryGetSingleton(out VillageBuildSliceConfig sliceConfig) || sliceConfig.EnableInHeadless == 0)
                 {
                     return;
                 }

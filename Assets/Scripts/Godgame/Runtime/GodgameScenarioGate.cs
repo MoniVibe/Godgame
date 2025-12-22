@@ -5,26 +5,27 @@ using UnityEngine.Scripting.APIUpdating;
 namespace Godgame.Scenario
 {
     /// <summary>
-    /// Tag used to opt into legacy scenario systems.
+    /// Tag used to opt into scenario-gated systems.
     /// </summary>
-    [MovedFrom(true, "Godgame.Scenario", null, "LegacyGodgameDemoTag")]
-    public struct LegacyGodgameScenarioTag : IComponentData
+    [MovedFrom(true, "Godgame.Scenario", null, "LegacyGodgameScenarioTag")]
+    public struct GodgameScenarioTag : IComponentData
     {
     }
 
-    public static class GodgameLegacyScenarioGate
+    public static class GodgameScenarioGate
     {
-        public const string ScenarioEnvVar = "GODGAME_LEGACY_SCENARIO";
+        public const string ScenarioEnvVar = "GODGAME_SCENARIO";
+        private const string ScenarioEnvVarCompat = "GODGAME_LEGACY_SCENARIO";
 
         public static bool IsEnabled
         {
             get
             {
-                return IsEnabled(ScenarioEnvVar);
+                return IsEnabledEnv(ScenarioEnvVar) || IsEnabledEnv(ScenarioEnvVarCompat);
             }
         }
 
-        private static bool IsEnabled(string envVar)
+        private static bool IsEnabledEnv(string envVar)
         {
             var value = Environment.GetEnvironmentVariable(envVar);
             if (string.IsNullOrEmpty(value))

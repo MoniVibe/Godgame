@@ -18,6 +18,8 @@ namespace Godgame.Villages
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillageAIDecisionSystem : ISystem
     {
+        private const uint ThreatTtlTicks = 600;
+
         private ComponentLookup<AuthorityBody> _authorityBodyLookup;
         private BufferLookup<AuthoritySeatRef> _authoritySeatRefLookup;
         private ComponentLookup<AuthoritySeat> _authoritySeatLookup;
@@ -30,7 +32,8 @@ namespace Godgame.Villages
             state.RequireForUpdate<BehaviorTelemetryState>();
             state.RequireForUpdate<VillageNeedAwareness>();
             state.RequireForUpdate<VillageConstructionRuntime>();
-            state.RequireForUpdate<GroupKnowledgeCacheTag>();
+            state.RequireForUpdate<GroupKnowledgeCache>();
+            state.RequireForUpdate<GroupKnowledgeConfig>();
             state.RequireForUpdate<MoralityEventQueueTag>();
 
             _authorityBodyLookup = state.GetComponentLookup<AuthorityBody>(true);
@@ -92,6 +95,7 @@ namespace Godgame.Villages
             {
                 var villageValue = village.ValueRO;
                 var decisionValue = decision.ValueRW;
+                var config = SystemAPI.GetComponent<GroupKnowledgeConfig>(entity);
 
                 // Update decision if expired or none exists
                 var previousDecision = decisionValue.DecisionType;
@@ -100,7 +104,7 @@ namespace Godgame.Villages
                 var decisionExpired = decisionValue.DecisionType == 0 ||
                                       (timeState.Tick - decisionValue.DecisionTick) * timeState.FixedDeltaTime > decisionValue.DecisionDuration;
 
-                var hasThreat = TrySelectActiveThreat(groupCache, timeState.Tick, out var threatEntry);
+                var hasThreat = TrySelectActiveThreat(groupCache, timeState.Tick, config, out var threatEntry);
                 var needsInterrupt = hasThreat && previousDecision != 3; // Defend interrupts anything else.
 
                 if (decisionExpired || needsInterrupt)
@@ -136,7 +140,7 @@ namespace Godgame.Villages
                     {
                         priority = 100;
                         decisionType = 3; // Defend
-                        targetEntity = threatEntry.SubjectEntity;
+                        targetEntity = threatEntry.Subject;
                         targetPosition = threatEntry.Position;
                         reason = GodgameDecisionReason.ThreatReported;
                     }
@@ -375,27 +379,31 @@ namespace Godgame.Villages
             return MoralityActionToken.Unknown;
         }
 
-        private static bool TrySelectActiveThreat(DynamicBuffer<GroupKnowledgeEntry> cache, uint tick, out GroupKnowledgeEntry entry)
+        private static bool TrySelectActiveThreat(DynamicBuffer<GroupKnowledgeEntry> cache, uint tick, in GroupKnowledgeConfig config, out GroupKnowledgeEntry entry)
         {
             entry = default;
             var bestScore = 0f;
             var found = false;
+            var minScore = math.max(0.15f, config.MinConfidence);
+            var staleAfterTicks = config.StaleAfterTicks > 0
+                ? math.min(config.StaleAfterTicks, ThreatTtlTicks)
+                : ThreatTtlTicks;
 
             for (int i = 0; i < cache.Length; i++)
             {
                 var candidate = cache[i];
-                if (candidate.Kind != GroupKnowledgeKind.ThreatSeen || candidate.SubjectEntity == Entity.Null)
+                if (candidate.Kind != GroupKnowledgeClaimKind.ThreatSeen || candidate.Subject == Entity.Null)
                 {
                     continue;
                 }
 
-                if (candidate.ExpireTick != 0u && tick > candidate.ExpireTick)
+                if (staleAfterTicks > 0 && tick - candidate.LastSeenTick > staleAfterTicks)
                 {
                     continue;
                 }
 
-                var score = math.saturate(candidate.Urgency) * math.saturate(candidate.Confidence);
-                if (!found || score > bestScore || (score == bestScore && candidate.LastTick > entry.LastTick))
+                var score = math.saturate(candidate.Confidence);
+                if (!found || score > bestScore || (score == bestScore && candidate.LastSeenTick > entry.LastSeenTick))
                 {
                     entry = candidate;
                     bestScore = score;
@@ -403,7 +411,7 @@ namespace Godgame.Villages
                 }
             }
 
-            return found && bestScore >= 0.15f;
+            return found && bestScore >= minScore;
         }
 
         private static VillageBuildingType MapNeedToBuilding(VillageNeedChannel need)

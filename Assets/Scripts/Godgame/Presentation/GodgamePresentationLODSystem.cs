@@ -71,12 +71,12 @@ namespace Godgame.Presentation
 
             foreach (var (_, entity) in SystemAPI
                          .Query<RefRO<PresentationLODState>>()
-                         .WithNone<PresentationLayer,
-                             VillagerPresentationTag,
-                             VillageCenterPresentationTag,
-                             ResourceChunkPresentationTag,
-                             ResourceNodePresentationTag,
-                             VegetationPresentationTag>()
+                         .WithNone<PresentationLayer>()
+                         .WithNone<VillagerPresentationTag>()
+                         .WithNone<VillageCenterPresentationTag>()
+                         .WithNone<ResourceChunkPresentationTag>()
+                         .WithNone<ResourceNodePresentationTag>()
+                         .WithNone<VegetationPresentationTag>()
                          .WithEntityAccess())
             {
                 ecb.AddComponent(entity, new PresentationLayer { Value = PresentationLayerId.Planet });
@@ -117,13 +117,32 @@ namespace Godgame.Presentation
                 return;
             }
 
-            var baseConfig = SystemAPI.TryGetSingleton<PresentationConfig>(out var config)
-                ? config
-                : PresentationConfig.Default;
+            var baseConfig = PresentationConfig.Default;
+            bool hasConfig = false;
 
-            var layerConfig = SystemAPI.TryGetSingleton<PresentationLayerConfig>(out var layerOverride)
-                ? layerOverride
-                : PresentationLayerConfig.Default;
+            foreach (var config in SystemAPI.Query<RefRO<PresentationConfig>>()
+                         .WithNone<PresentationConfigRuntimeTag>())
+            {
+                baseConfig = config.ValueRO;
+                hasConfig = true;
+                break;
+            }
+
+            if (!hasConfig)
+            {
+                foreach (var config in SystemAPI.Query<RefRO<PresentationConfig>>())
+                {
+                    baseConfig = config.ValueRO;
+                    break;
+                }
+            }
+
+            var layerConfig = PresentationLayerConfig.Default;
+            foreach (var layerOverride in SystemAPI.Query<RefRO<PresentationLayerConfig>>())
+            {
+                layerConfig = layerOverride.ValueRO;
+                break;
+            }
 
             _layerLookup.Update(ref state);
             _renderKeyLookup.Update(ref state);
@@ -157,7 +176,7 @@ namespace Godgame.Presentation
                 if (_renderKeyLookup.HasComponent(entity))
                 {
                     var key = _renderKeyLookup[entity];
-                    var lodIndex = (byte)math.min((byte)lod, (byte)2);
+                    var lodIndex = (byte)math.min((int)lod, 2);
                     if (key.LOD != lodIndex)
                     {
                         key.LOD = lodIndex;

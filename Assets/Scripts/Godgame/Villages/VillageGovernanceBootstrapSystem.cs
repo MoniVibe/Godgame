@@ -124,9 +124,14 @@ namespace Godgame.Villages
                 ecb.AddBuffer<VillageExpansionRequest>(villageEntity);
             }
 
-            if (!entityManager.HasComponent<GroupKnowledgeCacheTag>(villageEntity))
+            if (!entityManager.HasComponent<GroupKnowledgeCache>(villageEntity))
             {
-                ecb.AddComponent<GroupKnowledgeCacheTag>(villageEntity);
+                ecb.AddComponent(villageEntity, new GroupKnowledgeCache());
+            }
+
+            if (!entityManager.HasComponent<GroupKnowledgeConfig>(villageEntity))
+            {
+                ecb.AddComponent(villageEntity, GroupKnowledgeConfig.Default);
             }
 
             if (!entityManager.HasBuffer<GroupKnowledgeEntry>(villageEntity))

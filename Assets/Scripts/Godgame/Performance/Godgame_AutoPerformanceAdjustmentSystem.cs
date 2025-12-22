@@ -37,7 +37,32 @@ namespace Godgame.Performance
                 return;
             }
 
-            var configRef = SystemAPI.GetSingletonRW<PresentationConfig>();
+            RefRW<PresentationConfig> configRef = default;
+            bool hasConfig = false;
+
+            foreach (var candidate in SystemAPI.Query<RefRW<PresentationConfig>>()
+                         .WithNone<PresentationConfigRuntimeTag>())
+            {
+                configRef = candidate;
+                hasConfig = true;
+                break;
+            }
+
+            if (!hasConfig)
+            {
+                foreach (var candidate in SystemAPI.Query<RefRW<PresentationConfig>>())
+                {
+                    configRef = candidate;
+                    hasConfig = true;
+                    break;
+                }
+            }
+
+            if (!hasConfig)
+            {
+                return;
+            }
+
             ref var config = ref configRef.ValueRW;
 
             if (!SystemAPI.TryGetSingleton<PresentationMetrics>(out var metrics))
@@ -94,4 +119,3 @@ namespace Godgame.Performance
         }
     }
 }
-

@@ -9,12 +9,12 @@ static class EnsureSrpEarly
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     static void Ensure()
     {
-        if (!GodgameLegacyScenarioGate.IsEnabled)
+        if (!GodgameScenarioGate.IsEnabled)
         {
             return;
         }
 
-        GodgameRenderPipelineBootstrap.TryEnsureRenderPipeline(legacyOnly: true);
+        GodgameRenderPipelineBootstrap.TryEnsureRenderPipeline(scenarioOnly: true);
     }
 }
 #endif

@@ -8,14 +8,14 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.Scripting.APIUpdating;
 
 [DefaultExecutionOrder(-10000)]
-[MovedFrom(true, null, null, "DemoEnsureSRP")]
-public sealed class GodgameLegacyScenarioEnsureSRP : MonoBehaviour
+[MovedFrom(true, null, null, "GodgameLegacyScenarioEnsureSRP")]
+public sealed class GodgameScenarioEnsureSRP : MonoBehaviour
 {
     public UniversalRenderPipelineAsset fallbackAsset;
 
     void Awake()
     {
-        if (!GodgameLegacyScenarioGate.IsEnabled)
+        if (!GodgameScenarioGate.IsEnabled)
         {
             enabled = false;
             return;
@@ -37,11 +37,11 @@ public sealed class GodgameLegacyScenarioEnsureSRP : MonoBehaviour
         {
             QualitySettings.renderPipeline = fallbackAsset;
             GraphicsSettings.defaultRenderPipeline = fallbackAsset;
-            Debug.Log($"[GodgameLegacyScenarioEnsureSRP] Render pipeline set to {fallbackAsset.name}.");
+            Debug.Log($"[GodgameScenarioEnsureSRP] Render pipeline set to {fallbackAsset.name}.");
         }
         else
         {
-            GodgameRenderPipelineBootstrap.TryEnsureRenderPipeline(legacyOnly: true);
+            GodgameRenderPipelineBootstrap.TryEnsureRenderPipeline(scenarioOnly: true);
         }
 
         enabled = false;

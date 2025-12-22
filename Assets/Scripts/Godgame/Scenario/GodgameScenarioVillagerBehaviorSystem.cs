@@ -14,6 +14,7 @@ namespace Godgame.Scenario
     /// Drives a lightweight gather/deliver loop so villagers constantly move between resource nodes and the depot.
     /// Keeps PureDOTS villager analytics flowing while we stand up a more complete gameplay loop.
     /// </summary>
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(VillagerSystemGroup), OrderFirst = true)]
     public partial struct GodgameScenarioVillagerBehaviorSystem : ISystem
     {
@@ -35,6 +36,13 @@ namespace Godgame.Scenario
 
         public void OnCreate(ref SystemState state)
         {
+            // Hard-disabled: scenario loop should not simulate missing behaviors.
+            state.Enabled = false;
+            if (!state.Enabled)
+            {
+                return;
+            }
+
             state.RequireForUpdate<ScenarioSceneTag>();
             state.RequireForUpdate<SettlementConfig>();
             state.RequireForUpdate<GodgameScenarioConfigBlobReference>();

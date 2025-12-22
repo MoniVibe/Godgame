@@ -14,6 +14,7 @@ namespace Godgame.Scenario
         private bool _loaded;
         private bool _didWarnMissingConfig;
         private bool _loggedSettlementConfigCount;
+        private bool _loggedScenarioSkip;
         private EntityQuery _settlementConfigQuery;
 
         protected override void OnCreate()
@@ -32,6 +33,24 @@ namespace Godgame.Scenario
             if (!SystemAPI.TryGetSingleton<ScenarioOptions>(out var options))
             {
                 return; // Wait for options
+            }
+
+            if (!SystemAPI.TryGetSingleton<GodgameScenarioConfigBlobReference>(out var scenarioConfig) ||
+                !scenarioConfig.Config.IsCreated)
+            {
+                return; // Wait for scenario config
+            }
+
+            if (scenarioConfig.Config.Value.Mode == GodgameScenarioMode.Scenario01)
+            {
+                if (!_loggedScenarioSkip)
+                {
+                    Debug.Log("[GodgameScenarioLoaderSystem] Scenario01 active; skipping JSON scenario load.");
+                    _loggedScenarioSkip = true;
+                }
+                _loaded = true;
+                Enabled = false;
+                return;
             }
 
             if (_settlementConfigQuery.IsEmptyIgnoreFilter)
@@ -103,7 +122,7 @@ namespace Godgame.Scenario
             Debug.Log($"[GodgameScenarioLoaderSystem] Loading scenario: {scenarioData.name}");
 
             var configEntity = EntityManager.CreateEntity();
-            var config = new GodgameScenarioConfig
+            var config = new GodgameScenarioSpawnConfig
             {
                 VillagerPrefab = settlementConfig.VillagerPrefab,
                 StorehousePrefab = settlementConfig.StorehousePrefab,
@@ -112,6 +131,7 @@ namespace Godgame.Scenario
             };
 
             // Parse entities from JSON
+            int resourceNodeCount = 0;
             foreach (var entityData in scenarioData.entities)
             {
                 if (entityData.prefab == "Villager")
@@ -122,15 +142,13 @@ namespace Godgame.Scenario
                 {
                     config.StorehouseCount += entityData.count;
                 }
-                else if (entityData.prefab == "Tree") // Assuming Tree maps to ResourceNode for now or ignored
+                else if (entityData.prefab == "Tree" || entityData.prefab == "ResourceNode")
                 {
-                    // config.ResourceNodeCount += entityData.count; 
-                    // We don't have TreePrefab in SettlementConfig usually, maybe map to ResourceNode?
+                    resourceNodeCount += entityData.count;
                 }
             }
-            
-            // Hardcode resource nodes for now if not in JSON or to match scenario expectations
-            config.ResourceNodeCount = 5; 
+
+            config.ResourceNodeCount = resourceNodeCount;
 
             EntityManager.AddComponentData(configEntity, config);
             EntityManager.AddComponentData(configEntity, new GodgameScenarioRuntime());

@@ -155,6 +155,10 @@ namespace Godgame.Presentation
         };
     }
 
+    public struct PresentationConfigRuntimeTag : IComponentData
+    {
+    }
+
     public struct PresentationLayerConfig : IComponentData
     {
         public float ColonyMultiplier;

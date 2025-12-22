@@ -28,7 +28,7 @@ namespace Godgame.Scenario
 
         void OnEnable()
         {
-            if (!GodgameLegacyScenarioGate.IsEnabled)
+            if (!GodgameScenarioGate.IsEnabled)
             {
                 enabled = false;
                 return;

@@ -1,37 +1,37 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using Godgame.Scenario;
-using PureDOTS.Runtime.Core;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityDebug = UnityEngine.Debug;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace Godgame.Rendering
 {
-    internal static class GodgameRenderPipelineBootstrap
+    public static class GodgameRenderPipelineBootstrap
     {
         private const string GamePipelineResource = "Rendering/GodgameURP";
-        private const string LegacyPipelineResource = "Rendering/ScenarioURP";
+        private const string ScenarioPipelineResource = "Rendering/ScenarioURP";
 #if UNITY_EDITOR
-        private const string LegacyPipelineAssetPath = "Assets/Rendering/ScenarioURP.asset";
+        private const string ScenarioPipelineAssetPath = "Assets/Rendering/ScenarioURP.asset";
 #endif
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
         private static void EnsureOnLoad()
         {
-            TryEnsureRenderPipeline(legacyOnly: false);
+            TryEnsureRenderPipeline(scenarioOnly: false);
         }
 
-        internal static bool TryEnsureRenderPipeline(bool legacyOnly)
+        public static bool TryEnsureRenderPipeline(bool scenarioOnly)
         {
-            if (legacyOnly && !GodgameLegacyScenarioGate.IsEnabled)
+            if (scenarioOnly && !GodgameScenarioGate.IsEnabled)
             {
                 return false;
             }
 
-            if (RuntimeMode.IsHeadless)
+            if (PureDOTS.Runtime.Core.RuntimeMode.IsHeadless)
             {
                 return false;
             }
@@ -44,25 +44,25 @@ namespace Godgame.Rendering
             var asset = Resources.Load<UniversalRenderPipelineAsset>(GamePipelineResource);
             if (asset == null)
             {
-                asset = Resources.Load<UniversalRenderPipelineAsset>(LegacyPipelineResource);
+                asset = Resources.Load<UniversalRenderPipelineAsset>(ScenarioPipelineResource);
             }
 
 #if UNITY_EDITOR
             if (asset == null)
             {
-                asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(LegacyPipelineAssetPath);
+                asset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(ScenarioPipelineAssetPath);
             }
 #endif
 
             if (asset == null)
             {
-                Debug.LogWarning("[GodgameRenderPipelineBootstrap] Render pipeline asset not found. Configure GraphicsSettings/QualitySettings for the game.");
+                UnityDebug.LogWarning("[GodgameRenderPipelineBootstrap] Render pipeline asset not found. Configure GraphicsSettings/QualitySettings for the game.");
                 return false;
             }
 
             QualitySettings.renderPipeline = asset;
             GraphicsSettings.defaultRenderPipeline = asset;
-            Debug.Log($"[GodgameRenderPipelineBootstrap] Render pipeline set to {asset.name}.");
+            UnityDebug.Log($"[GodgameRenderPipelineBootstrap] Render pipeline set to {asset.name}.");
             return true;
         }
     }

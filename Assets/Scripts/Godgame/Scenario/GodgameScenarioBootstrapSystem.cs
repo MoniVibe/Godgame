@@ -79,14 +79,54 @@ namespace Godgame.Scenario
 
         private void EnsurePresentationConfig(ref SystemState state)
         {
-            if (!_presentationConfigQuery.IsEmptyIgnoreFilter)
+            using var configs = _presentationConfigQuery.ToEntityArray(Allocator.Temp);
+            if (configs.Length == 0)
+            {
+                var configEntity = state.EntityManager.CreateEntity();
+                state.EntityManager.AddComponentData(configEntity, PresentationConfig.Default);
+                state.EntityManager.AddComponent<PresentationConfigRuntimeTag>(configEntity);
+                state.EntityManager.SetName(configEntity, "PresentationConfig");
+                return;
+            }
+
+            if (configs.Length == 1)
             {
                 return;
             }
 
-            var configEntity = state.EntityManager.CreateEntity();
-            state.EntityManager.AddComponentData(configEntity, PresentationConfig.Default);
-            state.EntityManager.SetName(configEntity, "PresentationConfig");
+            var entityManager = state.EntityManager;
+            Entity keep = Entity.Null;
+
+            foreach (var entity in configs)
+            {
+                if (!entityManager.HasComponent<PresentationConfigRuntimeTag>(entity))
+                {
+                    keep = entity;
+                    break;
+                }
+            }
+
+            if (keep == Entity.Null)
+            {
+                keep = configs[0];
+            }
+
+            foreach (var entity in configs)
+            {
+                if (entity == keep)
+                {
+                    continue;
+                }
+
+                if (entityManager.HasComponent<PresentationConfigRuntimeTag>(entity))
+                {
+                    entityManager.DestroyEntity(entity);
+                }
+                else
+                {
+                    entityManager.RemoveComponent<PresentationConfig>(entity);
+                }
+            }
         }
 
         private void AddPresentationToScenarioEntities(ref SystemState state, GodgameScenarioMode mode)
@@ -106,13 +146,28 @@ namespace Godgame.Scenario
 
         private void AdjustPresentationConfigForScenario(ref SystemState state, GodgameScenarioMode mode)
         {
-            if (_presentationConfigQuery.IsEmptyIgnoreFilter)
+            bool updated = false;
+
+            foreach (var configRef in SystemAPI.Query<RefRW<PresentationConfig>>()
+                         .WithNone<PresentationConfigRuntimeTag>())
             {
-                return;
+                ApplyScenarioConfig(ref configRef.ValueRW, mode);
+                updated = true;
+                break;
             }
 
-            ref var configRef = ref _presentationConfigQuery.GetSingletonRW<PresentationConfig>().ValueRW;
+            if (!updated)
+            {
+                foreach (var configRef in SystemAPI.Query<RefRW<PresentationConfig>>())
+                {
+                    ApplyScenarioConfig(ref configRef.ValueRW, mode);
+                    break;
+                }
+            }
+        }
 
+        private static void ApplyScenarioConfig(ref PresentationConfig configRef, GodgameScenarioMode mode)
+        {
             // Adjust LOD distances and density based on scenario scale
             switch (mode)
             {

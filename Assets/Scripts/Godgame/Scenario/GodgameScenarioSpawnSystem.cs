@@ -24,7 +24,7 @@ namespace Godgame.Scenario
     {
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<GodgameScenarioConfig>();
+            state.RequireForUpdate<GodgameScenarioSpawnConfig>();
         }
 
         [BurstCompile]
@@ -35,7 +35,7 @@ namespace Godgame.Scenario
             const float buildingScale = 3f;
 
             foreach (var (config, runtime, entity) in SystemAPI.Query<
-                RefRO<GodgameScenarioConfig>,
+                RefRO<GodgameScenarioSpawnConfig>,
                 RefRW<GodgameScenarioRuntime>>()
                 .WithEntityAccess())
             {
@@ -185,7 +185,7 @@ namespace Godgame.Scenario
     /// Configuration for scenario spawn system.
     /// Maps scenario JSON data to entity spawn parameters.
     /// </summary>
-    public struct GodgameScenarioConfig : IComponentData
+    public struct GodgameScenarioSpawnConfig : IComponentData
     {
         public Entity VillagerPrefab;
         public Entity StorehousePrefab;

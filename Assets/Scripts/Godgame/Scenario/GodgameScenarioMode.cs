@@ -1,11 +1,8 @@
-using UnityEngine.Scripting.APIUpdating;
-
 namespace Godgame.Scenario
 {
     /// <summary>
     /// Mode for scenario bootstrapping.
     /// </summary>
-    [MovedFrom(true, "Godgame.Scenario", null, "DemoScenarioMode")]
     public enum GodgameScenarioMode : byte
     {
         /// <summary>Fixed Scenario_01 with configurable parameters</summary>

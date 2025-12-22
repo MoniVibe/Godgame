@@ -31,7 +31,31 @@ namespace Godgame.Performance
             }
             _frameCounter = 0;
 
-            var config = SystemAPI.GetSingleton<PresentationConfig>();
+            PresentationConfig config = PresentationConfig.Default;
+            bool hasConfig = false;
+
+            foreach (var configRef in SystemAPI.Query<RefRO<PresentationConfig>>()
+                         .WithNone<PresentationConfigRuntimeTag>())
+            {
+                config = configRef.ValueRO;
+                hasConfig = true;
+                break;
+            }
+
+            if (!hasConfig)
+            {
+                foreach (var configRef in SystemAPI.Query<RefRO<PresentationConfig>>())
+                {
+                    config = configRef.ValueRO;
+                    hasConfig = true;
+                    break;
+                }
+            }
+
+            if (!hasConfig)
+            {
+                return;
+            }
 
             // Check frame time
             float frameTimeMs = UnityEngine.Time.deltaTime * 1000f;
@@ -64,4 +88,3 @@ namespace Godgame.Performance
         }
     }
 }
-

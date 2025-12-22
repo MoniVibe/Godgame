@@ -14,6 +14,7 @@ namespace Godgame.Scenario
     /// and headless runs generate meaningful time-driven state changes.
     /// </summary>
     [BurstCompile]
+    [DisableAutoCreation]
     [UpdateInGroup(typeof(VillagerSystemGroup))]
     [UpdateAfter(typeof(GodgameScenarioVillagerBehaviorSystem))]
     public partial struct GodgameScenarioVillagerMoveSystem : ISystem
@@ -25,6 +26,13 @@ namespace Godgame.Scenario
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
+            // Hard-disabled: scenario loop should not simulate missing behaviors.
+            state.Enabled = false;
+            if (!state.Enabled)
+            {
+                return;
+            }
+
             state.RequireForUpdate<ScenarioSceneTag>();
             state.RequireForUpdate<SettlementConfig>();
             state.RequireForUpdate<GodgameScenarioConfigBlobReference>();

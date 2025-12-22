@@ -1,11 +1,9 @@
 using Godgame.Economy;
 using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace Godgame.Scenario
 {
-    [MovedFrom(true, "Godgame.Scenario", null, "GodgameDemoBootstrapConfig")]
     public struct GodgameScenarioBootstrapConfig : IComponentData
     {
         public Entity VillagerPrefab;
@@ -18,7 +16,6 @@ namespace Godgame.Scenario
         public float BehaviorRandomizationRange;
     }
 
-    [MovedFrom(true, "Godgame.Scenario", null, "GodgameDemoBootstrapRuntime")]
     public struct GodgameScenarioBootstrapRuntime : IComponentData
     {
         public byte HasInitialized;

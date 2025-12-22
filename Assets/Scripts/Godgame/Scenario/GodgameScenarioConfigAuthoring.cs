@@ -1,7 +1,6 @@
 using Unity.Entities;
 using Unity.Collections;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
 namespace Godgame.Scenario
 {
@@ -9,7 +8,6 @@ namespace Godgame.Scenario
     /// Authoring component that bakes GodgameScenarioConfig ScriptableObject to blob asset.
     /// Place on a GameObject in your scene and assign a GodgameScenarioConfig asset.
     /// </summary>
-    [MovedFrom(true, "Godgame.Scenario", null, "DemoConfigAuthoring")]
     public class GodgameScenarioConfigAuthoring : MonoBehaviour
     {
         [Header("Scenario Configuration")]

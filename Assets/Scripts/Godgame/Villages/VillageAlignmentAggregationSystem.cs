@@ -98,7 +98,6 @@ namespace Godgame.Villages
             }
         }
 
-        [BurstCompile]
         private static byte ResolveDominantOutlook(
             Entity leader,
             DynamicBuffer<VillageMember> members,

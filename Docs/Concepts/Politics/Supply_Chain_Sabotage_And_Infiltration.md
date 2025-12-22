@@ -33,7 +33,7 @@
 - **Full Success:** Sabotage works as intended (complete failure at critical moment)
 - **Critical Success:** Sabotage exceeds expectations (catastrophic failure, cascading effects)
 
-**Counter-Operations:** Targets may detect sabotage and execute counter-operations (counter-sabotage, counter-espionage, playing along to feed false information). This creates multi-layer conflicts similar to ambush/counter-ambush systems.
+**Counter-Operations:** Targets may detect sabotage and execute counter-operations (counter-sabotage, counter-espionage, playing along to feed false information, or even be recruited by the saboteurs). This creates multi-layer conflicts similar to ambush/counter-ambush systems.
 
 ---
 
@@ -554,6 +554,489 @@ Effect: Communications restored, jamming defeated
 - **False Orders:** Forged command documents (target follows wrong orders)
 - **False Intelligence:** Fabricated intelligence reports (target makes wrong decisions)
 - **False Credentials:** Forged identity documents (saboteurs gain access)
+- **False Communications:** Forged messages, transmissions, correspondence
+
+---
+
+### Document/Communication Forgery Quality
+
+**Forgery quality determines detection difficulty** and effectiveness.
+
+---
+
+#### Quality Factors
+
+**1. Original Message Clarity**
+
+**Source Material Quality:**
+- **Clear Original:** Intercepted message is clear, complete, high-quality (good template for forgery)
+- **Partial/Corrupted Original:** Message is incomplete, corrupted, unclear (poor template, harder to forge convincingly)
+- **No Original:** Forging without source material (most difficult, requires full creation)
+
+**Quality Contribution:**
+```
+ClarityContribution = OriginalClarity × 0.3
+
+Where:
+  OriginalClarity = 0.0-1.0 (clarity/completeness of intercepted source)
+  
+Example:
+  Clear original (0.9): +0.27 quality
+  Partial original (0.5): +0.15 quality
+  No original (0.0): +0.0 quality
+```
+
+---
+
+**2. Forgery Skill**
+
+**Entity's Forgery Ability:**
+- **Forgery Skill:** Entity's expertise in document/communication forgery (0-100)
+- **Experience:** Previous successful forgeries increase skill
+- **Specialization:** Some entities specialize in specific document types (orders, intelligence, credentials)
+
+**Quality Contribution:**
+```
+SkillContribution = ForgerySkill × 0.4
+
+Where:
+  ForgerySkill = 0-100 (entity's forgery expertise)
+  
+Example:
+  Master forger (90 skill): +36 quality
+  Skilled forger (70 skill): +28 quality
+  Novice forger (30 skill): +12 quality
+```
+
+---
+
+**3. Language/Protocol Knowledge**
+
+**Understanding Target Systems:**
+- **Language Proficiency:** Knowledge of target's language (fluency, grammar, syntax)
+- **Protocol Knowledge:** Understanding of communication protocols (military codes, diplomatic formats, official styles)
+- **Technical Knowledge:** Understanding of technical systems (encryption formats, digital signatures, authentication methods)
+
+**Quality Contribution:**
+```
+LanguageContribution = (LanguageKnowledge × 0.15) + (ProtocolKnowledge × 0.15)
+
+Where:
+  LanguageKnowledge = 0-100 (language proficiency)
+  ProtocolKnowledge = 0-100 (protocol/system understanding)
+  
+Example:
+  Fluent speaker + protocol expert (90/90): +27 quality
+  Basic speaker + protocol novice (50/30): +12 quality
+```
+
+---
+
+**4. Cultural Knowledge (Bonus)**
+
+**Understanding Target Culture:**
+- **Lingo/Slang:** Knowledge of cultural slang, jargon, colloquialisms
+- **Abbreviations:** Understanding of common abbreviations, shorthand
+- **Phonics/Accents:** Knowledge of phonetic patterns, regional accents (spoken forgeries)
+- **Cultural Context:** Understanding of cultural norms, references, inside jokes
+- **Behavioral Patterns:** Knowledge of how target communicates (style, tone, formality)
+
+**Cultural Bonus:**
+```
+CulturalBonus = 
+    (LingoKnowledge × 0.05) +
+    (AbbreviationKnowledge × 0.03) +
+    (PhoneticKnowledge × 0.02) +
+    (CulturalContext × 0.05)
+
+Where:
+  LingoKnowledge = 0-100 (slang/jargon knowledge)
+  AbbreviationKnowledge = 0-100 (abbreviation/shorthand knowledge)
+  PhoneticKnowledge = 0-100 (phonetic/accent knowledge - for spoken forgeries)
+  CulturalContext = 0-100 (cultural norms/references knowledge)
+  
+Maximum Cultural Bonus: +15 quality (if all cultural knowledge is 100)
+```
+
+**Example:**
+```
+Spy has deep cultural knowledge:
+  Lingo: 95 (knows all slang)
+  Abbreviations: 90 (understands all shorthand)
+  Phonetic: 80 (recognizes accent patterns)
+  Cultural Context: 85 (understands cultural references)
+  
+Cultural Bonus = (95 × 0.05) + (90 × 0.03) + (80 × 0.02) + (85 × 0.05)
+               = 4.75 + 2.7 + 1.6 + 4.25 = +13.3 quality bonus
+```
+
+---
+
+#### Total Forgery Quality Calculation
+
+```
+ForgeryQuality = 
+    ClarityContribution +
+    SkillContribution +
+    LanguageContribution +
+    CulturalBonus
+
+Maximum Quality: 100 (perfect forgery)
+Typical Range: 20-90 (depending on entity skills and source material)
+```
+
+**Quality Examples:**
+
+**Master Forgery (High Quality):**
+```
+Clear original (0.9) × 0.3 = 0.27
+Master forger (95 skill) × 0.4 = 38.0
+Fluent + expert (95/95) × 0.3 = 28.5
+Cultural knowledge bonus = +14.0
+
+Total Quality: 80.77 (excellent forgery, very hard to detect)
+```
+
+**Novice Forgery (Low Quality):**
+```
+No original (0.0) × 0.3 = 0.0
+Novice forger (25 skill) × 0.4 = 10.0
+Basic + novice (40/20) × 0.3 = 9.0
+No cultural knowledge = +0.0
+
+Total Quality: 19.0 (poor forgery, easy to detect)
+```
+
+---
+
+### On-the-Fly Forgery
+
+**Some spies are so skilled they can forge documents on the fly** (during conversation, in real-time).
+
+**On-the-Fly Forgery Characteristics:**
+
+**Requirements:**
+- **High Forgery Skill:** 80+ required (exceptional expertise)
+- **Language Fluency:** 90+ required (native-level proficiency)
+- **Quick Thinking:** High Intelligence/Adaptability
+- **Cultural Knowledge:** Deep understanding (lingo, context, patterns)
+
+**Limitations:**
+- **Lower Quality:** On-the-fly forgeries typically 10-20 quality points lower than prepared forgeries
+- **Time Pressure:** Must forge quickly (increases detection risk)
+- **No Revision:** Can't refine/edit (first draft is final)
+
+**Use Cases:**
+- **Conversational Forgery:** Creating false documents during conversation/negotiation
+- **Immediate Response:** Forging documents in response to unexpected requests
+- **Improvised Operations:** Creating forgeries when plans change
+
+**Example:**
+```
+Spy Profile:
+  Forgery Skill: 95
+  Language Knowledge: 98
+  Protocol Knowledge: 90
+  Cultural Knowledge: 92
+
+Situation: Target asks spy to produce authorization document immediately
+On-the-Fly Forgery:
+  Base Quality: 75 (excellent skills)
+  On-the-Fly Penalty: -15 (time pressure, no revision)
+  Final Quality: 60 (good quality, but detectable with careful inspection)
+```
+
+---
+
+### Perfect Forgeries & Belief Systems
+
+**Some documents are so finely crafted** that detection becomes extremely difficult, and the forgery itself becomes "real" in the target's belief system.
+
+---
+
+#### Quality Thresholds & Detection
+
+**Detection Difficulty:**
+```
+DetectionDifficulty = 100 - ForgeryQuality
+
+Where:
+  ForgeryQuality = 0-100 (calculated as above)
+  
+Detection Difficulty Ranges:
+  0-20: Very Easy (obvious forgery, easily detected)
+  21-40: Easy (detectable with standard inspection)
+  41-60: Moderate (requires careful analysis to detect)
+  61-80: Difficult (requires expert analysis, may be missed)
+  81-95: Very Difficult (expert analysis needed, often believed)
+  96-100: Nearly Impossible (essentially perfect, almost always believed)
+```
+
+---
+
+#### High-Quality Forgery Effects
+
+**When Forgery Quality > 80:**
+
+**Target Behavior Changes:**
+
+**1. Using Forged Papers as Evidence**
+
+**Instead of clearing the accused's name**, the aggregate entity **uses the forged papers as evidence against the accused element**:
+
+**Example:**
+```
+Forgery: High-quality forged orders (Quality 85) implicate General X in treason
+Target Reaction:
+  - Target believes forgery is genuine (detection failed)
+  - Target uses forged orders as evidence (prosecutes General X)
+  - General X is accused, tried, convicted based on forged evidence
+  - Target never questions authenticity (forgery too convincing)
+```
+
+**Psychological Mechanism:**
+- Forgery is so convincing it bypasses skepticism
+- Target's confirmation bias (wants to believe evidence)
+- Authority/power dynamics (higher-ups trust the document)
+
+---
+
+**2. Accused Believes Manipulation**
+
+**The accused entity may believe mind control or other manipulations are at play:**
+
+**Example:**
+```
+Forgery: Perfect forgery (Quality 95) of General X's orders to attack allies
+Target Reaction:
+  - Target uses forged orders to prosecute General X
+  - General X sees forged orders (appears to be his own handwriting, signature)
+  - General X cannot explain orders (doesn't remember giving them)
+  - General X Conclusion: "I must have been mind-controlled/manipulated!"
+  
+Result:
+  - Accused believes manipulation occurred (can't explain "their" actions)
+  - Psychological crisis (identity confusion, trust breakdown)
+  - May confess to crimes they didn't commit (believes manipulation is real)
+```
+
+**Psychological Mechanism:**
+- Perfect forgeries are indistinguishable from originals
+- Accused has no memory of creating document (because they didn't)
+- Only logical explanation (to accused): manipulation/mind control
+- Creates internal crisis (confusion, self-doubt, paranoia)
+
+---
+
+#### Forgery Quality & Belief Systems
+
+**Quality 80-90:**
+- **Target uses as evidence:** High likelihood (80-90%)
+- **Accused believes manipulation:** Moderate likelihood (30-50%)
+- **Detection possible:** Expert analysis required (20-30% detection chance)
+
+**Quality 91-95:**
+- **Target uses as evidence:** Very high likelihood (95%+)
+- **Accused believes manipulation:** High likelihood (60-80%)
+- **Detection possible:** Extremely difficult (5-10% detection chance)
+
+**Quality 96-100 (Perfect/Imperfect Perfection):**
+- **Target uses as evidence:** Near certainty (99%+)
+- **Accused believes manipulation:** Very high likelihood (80-95%)
+- **Detection possible:** Nearly impossible (1-3% detection chance)
+- **May never be discovered:** Forgery becomes accepted as truth
+
+---
+
+#### Forgery Discovery Consequences
+
+**If Perfect Forgery is Eventually Discovered:**
+
+**Scenario 1: Discovery After Conviction**
+```
+Timeline:
+  - Forgery used as evidence (Month 1)
+  - Accused convicted, executed (Month 2)
+  - Forgery discovered as fake (Month 6)
+  
+Consequences:
+  - Massive legitimacy crisis (injustice revealed)
+  - Public outrage (wrongful execution)
+  - Leadership credibility destroyed (believed false evidence)
+  - Accused's family/faction demands justice
+  - Internal conflict (who allowed this? who forged it?)
+```
+
+**Scenario 2: Discovery Before Conviction**
+```
+Timeline:
+  - Forgery used as evidence (Month 1)
+  - Accused on trial (Month 2)
+  - Forgery discovered as fake (Month 2, during trial)
+  
+Consequences:
+  - Accused exonerated (but already accused, reputation damaged)
+  - Leadership credibility damaged (believed false evidence)
+  - Counter-espionage intensifies (seeking forger)
+  - Accused may still have psychological crisis (briefly believed manipulation)
+```
+
+---
+
+### Forgery Quality Examples
+
+**Example 1: High-Quality Forgery (Quality 85)**
+
+**Setup:**
+```
+Spy Profile:
+  Forgery Skill: 90
+  Language Knowledge: 95
+  Protocol Knowledge: 88
+  Cultural Knowledge: 85
+  Original Clarity: 0.8 (good source material)
+
+Calculation:
+  Clarity: 0.8 × 0.3 = 0.24
+  Skill: 90 × 0.4 = 36.0
+  Language: (95 + 88) × 0.15 = 27.45
+  Cultural: 85 × 0.15 = 12.75
+  Total: 76.44
+
+On-the-Fly Penalty: None (prepared forgery)
+Final Quality: 76 (rounded)
+```
+
+**Outcome:**
+- **Detection Difficulty:** 24 (Difficult - expert analysis needed)
+- **Target uses as evidence:** 85% likelihood
+- **Accused believes manipulation:** 35% likelihood
+
+---
+
+**Example 2: Perfect Forgery (Quality 97)**
+
+**Setup:**
+```
+Master Spy Profile:
+  Forgery Skill: 100 (legendary master)
+  Language Knowledge: 100 (native-level fluency)
+  Protocol Knowledge: 100 (complete protocol mastery)
+  Cultural Knowledge: 100 (deep cultural immersion)
+  Original Clarity: 1.0 (perfect source material)
+
+Calculation:
+  Clarity: 1.0 × 0.3 = 0.30
+  Skill: 100 × 0.4 = 40.0
+  Language: (100 + 100) × 0.15 = 30.0
+  Cultural: 100 × 0.15 = 15.0
+  Total: 85.3
+
+Bonus: Perfect execution bonus +12 (exceptional craftsmanship)
+Final Quality: 97 (nearly perfect)
+```
+
+**Outcome:**
+- **Detection Difficulty:** 3 (Nearly Impossible)
+- **Target uses as evidence:** 99% likelihood
+- **Accused believes manipulation:** 90% likelihood
+- **Never discovered:** 70% chance forgery never detected
+
+---
+
+**Example 3: On-the-Fly Perfect Forgery (Quality 82)**
+
+**Setup:**
+```
+Master Spy (same as above) forges document during conversation:
+
+Base Quality: 85.3 (excellent skills)
+On-the-Fly Penalty: -15 (time pressure, no revision)
+Final Quality: 70 (rounded to 70, then +12 perfect execution bonus = 82)
+```
+
+**Outcome:**
+- **Detection Difficulty:** 18 (Difficult - but expert analysis might catch it)
+- **Target uses as evidence:** 75% likelihood
+- **Accused believes manipulation:** 40% likelihood
+- **Remarkable achievement:** On-the-fly forgery of this quality is extremely rare
+
+---
+
+### Forgery Detection Mechanics
+
+**Detection Methods:**
+
+**1. Visual Inspection:**
+- Handwriting analysis (stylometric analysis)
+- Signature verification (signature experts)
+- Format checking (protocol compliance, style consistency)
+
+**2. Technical Analysis:**
+- Digital signature verification (cryptographic validation)
+- Document metadata (creation date, author, modification history)
+- Material analysis (paper type, ink composition, age)
+
+**3. Contextual Analysis:**
+- Timeline verification (did events happen as document claims?)
+- Cross-reference checking (does document match other evidence?)
+- Behavioral analysis (does document match accused's typical behavior?)
+
+**4. Expert Analysis:**
+- Forgery detection specialists (trained experts)
+- Cultural experts (verify cultural context, lingo, references)
+- Protocol experts (verify protocol compliance, formatting)
+
+**Detection Success:**
+```
+DetectionSuccess = 
+    InspectorSkill × 0.4 +
+    TechnicalCapability × 0.3 +
+    ContextualEvidence × 0.2 +
+    RandomFactor × 0.1
+
+Where:
+  InspectorSkill = 0-100 (forgery detection expertise)
+  TechnicalCapability = 0-100 (technical analysis tools/capability)
+  ContextualEvidence = 0-100 (contextual inconsistencies found)
+  RandomFactor = 0-100 (luck, chance discoveries)
+  
+Detection occurs if: DetectionSuccess > DetectionDifficulty
+```
+
+---
+
+### Component Updates
+
+**Forgery Quality Tracking:**
+
+```csharp
+// Document/communication forgery
+public struct ForgeryOperation : IComponentData
+{
+    public Entity TargetEntity;              // Target organization
+    public Entity ForgerEntity;              // Entity creating forgery
+    public ForgeryType Type;                 // Orders, Intelligence, Credentials, Communications
+    public float Quality;                    // 0-100 (forgery quality)
+    public bool IsOnTheFly;                  // True if forged in real-time
+    public bool IsUsedAsEvidence;            // True if target uses forgery as evidence
+    public bool AccusedBelievesManipulation; // True if accused believes manipulation occurred
+    public uint CreationTick;                // When forgery was created
+}
+
+// Forgery quality components
+public struct ForgerProfile : IComponentData
+{
+    public float ForgerySkill;               // 0-100 (forgery expertise)
+    public float LanguageKnowledge;          // 0-100 (target language proficiency)
+    public float ProtocolKnowledge;          // 0-100 (protocol/system understanding)
+    public float LingoKnowledge;             // 0-100 (slang/jargon knowledge)
+    public float AbbreviationKnowledge;      // 0-100 (abbreviation/shorthand knowledge)
+    public float PhoneticKnowledge;          // 0-100 (phonetic/accent knowledge)
+    public float CulturalContext;            // 0-100 (cultural norms/references knowledge)
+    public bool CanForgeOnTheFly;            // True if can forge in real-time (requires 80+ skill)
+}
+```
 
 ---
 

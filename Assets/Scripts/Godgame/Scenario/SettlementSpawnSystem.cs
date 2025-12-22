@@ -37,9 +37,6 @@ namespace Godgame.Scenario
         private const float VillagerHeightOffset = 0.5f;
         private const float BuildingScale = 6f;
         private const float ResourceNodeScale = 3f;
-        private const float MinVillagerSpawnRadius = 80f;
-        private const float MinBuildingRingRadius = 60f;
-        private const float MinResourceRingRadius = 140f;
 
         public void OnCreate(ref SystemState state)
         {
@@ -83,9 +80,9 @@ namespace Godgame.Scenario
 
                 var center = transform.ValueRO.Position;
                 var random = CreateRandom(configValue.Seed, (uint)entity.Index);
-                var buildingRingRadius = math.max(configValue.BuildingRingRadius, MinBuildingRingRadius);
-                var resourceRingRadius = math.max(configValue.ResourceRingRadius, MinResourceRingRadius);
-                var villagerSpawnRadius = math.max(configValue.VillagerSpawnRadius, MinVillagerSpawnRadius);
+                var buildingRingRadius = math.max(1f, configValue.BuildingRingRadius);
+                var resourceRingRadius = math.max(1f, configValue.ResourceRingRadius);
+                var villagerSpawnRadius = math.max(1f, configValue.VillagerSpawnRadius);
 
                 var runtimeValue = runtime.ValueRO;
                 var entityManager = state.EntityManager;

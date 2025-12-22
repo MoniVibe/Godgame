@@ -1,5 +1,8 @@
 using Godgame.Scenario;
 using Godgame.Villages;
+using LocalNavigation = Godgame.Villagers.Navigation;
+using LocalJobPhase = Godgame.Villagers.JobPhase;
+using LocalVillagerJobState = Godgame.Villagers.VillagerJobState;
 using PureDOTS.Rendering;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
@@ -203,6 +206,35 @@ namespace Godgame.Presentation
                 ApplyFromJob(job.ValueRO, ref visual.ValueRW);
             }
 
+            foreach (var (jobState, navigation, visual, transform) in SystemAPI
+                         .Query<RefRO<LocalVillagerJobState>, RefRO<LocalNavigation>, RefRW<VillagerVisualState>, RefRW<LocalTransform>>()
+                         .WithAll<VillagerPresentationTag>()
+                         .WithNone<SettlementVillagerState, VillagerAIState, VillagerJob>())
+            {
+                ApplyFromJobState(jobState.ValueRO, ref visual.ValueRW);
+
+                if (!IsJobStateTraveling(jobState.ValueRO))
+                {
+                    continue;
+                }
+
+                var current = transform.ValueRO.Position;
+                var targetPos = navigation.ValueRO.Destination;
+                targetPos.y = current.y;
+
+                var toTarget = targetPos - current;
+                toTarget.y = 0f;
+                if (math.lengthsq(toTarget) <= 0.0001f)
+                {
+                    continue;
+                }
+
+                var rotation = quaternion.LookRotationSafe(math.normalize(toTarget), new float3(0f, 1f, 0f));
+                var updated = transform.ValueRO;
+                updated.Rotation = rotation;
+                transform.ValueRW = updated;
+            }
+
             foreach (var (ai, visual, transform, entity) in SystemAPI
                          .Query<RefRO<VillagerAIState>, RefRW<VillagerVisualState>, RefRW<LocalTransform>>()
                          .WithAll<VillagerPresentationTag>()
@@ -280,6 +312,27 @@ namespace Godgame.Presentation
                     : (int)VillagerTaskState.Idle;
 
             visualState.AnimationState = traveling ? 1 : working ? 2 : 0;
+        }
+
+        private static void ApplyFromJobState(in LocalVillagerJobState job, ref VillagerVisualState visualState)
+        {
+            visualState.TaskIconIndex = (int)job.Type;
+
+            bool traveling = IsJobStateTraveling(job);
+            bool working = job.Phase == LocalJobPhase.Gather || job.Phase == LocalJobPhase.Deliver;
+
+            visualState.TaskState = traveling
+                ? (int)VillagerTaskState.Traveling
+                : working
+                    ? (int)VillagerTaskState.Working
+                    : (int)VillagerTaskState.Idle;
+
+            visualState.AnimationState = traveling ? 1 : working ? 2 : 0;
+        }
+
+        private static bool IsJobStateTraveling(in LocalVillagerJobState job)
+        {
+            return job.Phase == LocalJobPhase.NavigateToNode || job.Phase == LocalJobPhase.NavigateToStorehouse;
         }
 
         private static void ApplyFromJob(in VillagerJob job, ref VillagerVisualState visualState)

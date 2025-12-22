@@ -211,6 +211,26 @@ namespace Godgame.Authoring
                     TargetEntity = Entity.Null
                 });
 
+                var jobStateType = authoring.jobType == Godgame.Villagers.VillagerJob.JobType.Gatherer
+                    ? Godgame.Villagers.JobType.Gather
+                    : Godgame.Villagers.JobType.None;
+                AddComponent(entity, new VillagerJobState
+                {
+                    Type = jobStateType,
+                    Phase = Godgame.Villagers.JobPhase.Idle,
+                    Target = Entity.Null,
+                    ResourceTypeIndex = 0,
+                    CarryCount = 0f,
+                    CarryMax = 0f,
+                    DropoffCooldown = 0f
+                });
+
+                AddComponent(entity, new Navigation
+                {
+                    Destination = float3.zero,
+                    Speed = 0f
+                });
+
                 AddComponent<CommunicationModuleTag>(entity);
                 AddComponent(entity, MediumContext.DefaultGas);
 
@@ -397,5 +417,4 @@ namespace Godgame.Authoring
         }
     }
 }
-
 
