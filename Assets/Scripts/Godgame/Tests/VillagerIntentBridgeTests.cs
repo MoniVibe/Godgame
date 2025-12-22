@@ -28,9 +28,26 @@ namespace Godgame.Tests
                 FixedDeltaTime = 0.1f,
                 IsPaused = false
             });
-            _entityManager.SetComponentData(_entityManager.CreateEntity(typeof(RewindState)), new RewindState
+            var rewindEntity = _entityManager.CreateEntity(typeof(RewindState), typeof(RewindLegacyState));
+            _entityManager.SetComponentData(rewindEntity, new RewindState
             {
-                Mode = RewindMode.Record
+                Mode = RewindMode.Record,
+                TargetTick = 0,
+                TickDuration = 0.1f,
+                MaxHistoryTicks = 600,
+                PendingStepTicks = 0
+            });
+            _entityManager.SetComponentData(rewindEntity, new RewindLegacyState
+            {
+                PlaybackSpeed = 1f,
+                CurrentTick = 0,
+                StartTick = 0,
+                PlaybackTick = 0,
+                PlaybackTicksPerSecond = 10f,
+                ScrubDirection = 0,
+                ScrubSpeedMultiplier = 1f,
+                RewindWindowTicks = 0,
+                ActiveTrack = default
             });
 
             var cadence = MindCadenceSettings.CreateDefault();

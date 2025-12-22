@@ -31,6 +31,7 @@ namespace Godgame.Time
         {
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
+            state.RequireForUpdate<RewindLegacyState>();
         }
 
         [BurstCompile]
@@ -43,6 +44,7 @@ namespace Godgame.Time
 
             var timeState = SystemAPI.GetSingletonRW<TimeState>();
             var rewindState = SystemAPI.GetSingletonRW<RewindState>();
+            var legacyState = SystemAPI.GetSingletonRW<RewindLegacyState>();
 
             // Get HUD event buffer (assumes entity exists from bootstrap)
             if (!SystemAPI.TryGetSingletonBuffer<HudEvent>(out var hudBuffer))
@@ -101,7 +103,8 @@ namespace Godgame.Time
                 {
                     rewindState.ValueRW.Mode = RewindMode.Playback;
                     // Simplified: set playback tick to current - some offset
-                    rewindState.ValueRW.PlaybackTick = timeState.ValueRO.Tick > 60u
+                    legacyState.ValueRW.StartTick = timeState.ValueRO.Tick;
+                    legacyState.ValueRW.PlaybackTick = timeState.ValueRO.Tick > 60u
                         ? timeState.ValueRO.Tick - 60u
                         : 0u;
                     if (hudBuffer.IsCreated)
@@ -171,4 +174,3 @@ namespace Godgame.Time
         }
     }
 }
-

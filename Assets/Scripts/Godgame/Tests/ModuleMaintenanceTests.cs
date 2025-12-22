@@ -214,8 +214,32 @@ namespace Godgame.Tests.Modules
             var rewindEntity = GetSingletonEntity<RewindState>();
             _entityManager.SetComponentData(rewindEntity, new RewindState
             {
-                Mode = RewindMode.Record
+                Mode = RewindMode.Record,
+                TargetTick = 1,
+                TickDuration = 1f,
+                MaxHistoryTicks = 600,
+                PendingStepTicks = 0
             });
+            var legacy = new RewindLegacyState
+            {
+                PlaybackSpeed = 1f,
+                CurrentTick = 1,
+                StartTick = 0,
+                PlaybackTick = 1,
+                PlaybackTicksPerSecond = 1f,
+                ScrubDirection = 0,
+                ScrubSpeedMultiplier = 1f,
+                RewindWindowTicks = 0,
+                ActiveTrack = default
+            };
+            if (_entityManager.HasComponent<RewindLegacyState>(rewindEntity))
+            {
+                _entityManager.SetComponentData(rewindEntity, legacy);
+            }
+            else
+            {
+                _entityManager.AddComponentData(rewindEntity, legacy);
+            }
 
             // Worker with processing skill.
             var worker = _entityManager.CreateEntity(typeof(SkillSet));

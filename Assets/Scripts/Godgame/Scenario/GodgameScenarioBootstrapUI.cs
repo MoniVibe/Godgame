@@ -184,7 +184,10 @@ namespace Godgame.Scenario
                 if (count == 1)
                 {
                     var rewindState = rewindStateQuery.GetSingleton<RewindState>();
-                    SetText(snapshotStats, $"Rewind: {rewindState.Mode} @ {rewindState.PlaybackTick}");
+                    var viewTick = timeStateQuery != null && timeStateQuery.TryGetSingleton(out TimeState timeState)
+                        ? timeState.Tick
+                        : 0u;
+                    SetText(snapshotStats, $"Rewind: {rewindState.Mode} @ {viewTick}");
                 }
                 else
                 {

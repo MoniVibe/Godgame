@@ -74,7 +74,7 @@ namespace Godgame.Time
             }
             else if (context.IsCatchUpPhase || context.IsPlaybackPhase)
             {
-                uint targetTick = context.IsPlaybackPhase ? context.Rewind.PlaybackTick : context.Time.Tick;
+                uint targetTick = context.Time.Tick;
                 if (!_history.TryGet(targetTick, out var bytes))
                 {
                     return;

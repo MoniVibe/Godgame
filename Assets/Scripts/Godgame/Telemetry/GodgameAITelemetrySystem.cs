@@ -1,10 +1,10 @@
 using Godgame.Telemetry;
-using Godgame.Villagers;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Telemetry;
 using PureDOTS.Runtime.Scenarios;
 using Unity.Collections;
 using Unity.Entities;
+using VillagerAIState = PureDOTS.Runtime.Components.VillagerAIState;
 
 namespace Godgame.Systems
 {

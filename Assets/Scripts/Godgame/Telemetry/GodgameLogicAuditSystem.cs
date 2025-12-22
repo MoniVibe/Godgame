@@ -20,7 +20,7 @@ namespace Godgame.Telemetry
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BehaviorTelemetryState>();
-            state.RequireForUpdate<Godgame.Villagers.VillagerAIState>();
+            state.RequireForUpdate<VillagerAIState>();
             state.RequireForUpdate<TimeState>();
             _needsLookup = state.GetComponentLookup<Godgame.Villagers.VillagerNeeds>(true);
         }
@@ -38,7 +38,7 @@ namespace Godgame.Telemetry
             _needsLookup.Update(ref state);
 
             var invalidRefs = 0;
-            foreach (var ai in SystemAPI.Query<RefRO<Godgame.Villagers.VillagerAIState>>())
+            foreach (var ai in SystemAPI.Query<RefRO<VillagerAIState>>())
             {
                 if (ai.ValueRO.TargetEntity != Entity.Null && !state.EntityManager.Exists(ai.ValueRO.TargetEntity))
                 {

@@ -46,6 +46,15 @@ namespace Godgame.Authoring.Perception
         [Range(0f, 1f)]
         public float ParanormalAcuity = 0.5f;
 
+        [Header("Emissions")]
+        [Tooltip("Smell emission strength (0-1)")]
+        [Range(0f, 1f)]
+        public float SmellEmission = 0.4f;
+
+        [Tooltip("Sound emission strength (0-1)")]
+        [Range(0f, 1f)]
+        public float SoundEmission = 0.3f;
+
         [Header("Settings")]
         [Tooltip("Sensor update interval (seconds)")]
         public float UpdateInterval = 0.5f;
@@ -63,6 +72,10 @@ namespace Godgame.Authoring.Perception
         {
             var entity = GetEntity(TransformUsageFlags.Dynamic);
 
+            var baseRange = math.max(authoring.VisionRange, math.max(authoring.HearingRange,
+                math.max(authoring.SmellRange, authoring.ParanormalRange)));
+            var rangeDenom = math.max(baseRange, 0.01f);
+
             // Add SenseCapability with Godgame channel mappings
             AddComponent(entity, new SenseCapability
             {
@@ -70,13 +83,60 @@ namespace Godgame.Authoring.Perception
                                  PerceptionChannel.Hearing | 
                                  PerceptionChannel.Smell | 
                                  PerceptionChannel.Paranormal,
-                Range = math.max(authoring.VisionRange, math.max(authoring.HearingRange, 
-                         math.max(authoring.SmellRange, authoring.ParanormalRange))),
+                Range = baseRange,
                 FieldOfView = authoring.VisionFOV,
-                Acuity = 1f, // Use average or max - Phase 1: simple
+                Acuity = 1f,
                 UpdateInterval = authoring.UpdateInterval,
                 MaxTrackedTargets = authoring.MaxTrackedTargets,
                 Flags = 0
+            });
+
+            var organs = AddBuffer<SenseOrganState>(entity);
+            organs.Add(new SenseOrganState
+            {
+                OrganType = SenseOrganType.Eye,
+                Channels = PerceptionChannel.Vision,
+                Gain = 1f,
+                Condition = authoring.VisionAcuity,
+                NoiseFloor = 1f - authoring.VisionAcuity,
+                RangeMultiplier = authoring.VisionRange / rangeDenom
+            });
+            organs.Add(new SenseOrganState
+            {
+                OrganType = SenseOrganType.Ear,
+                Channels = PerceptionChannel.Hearing,
+                Gain = 1f,
+                Condition = authoring.HearingAcuity,
+                NoiseFloor = 1f - authoring.HearingAcuity,
+                RangeMultiplier = authoring.HearingRange / rangeDenom
+            });
+            organs.Add(new SenseOrganState
+            {
+                OrganType = SenseOrganType.Nose,
+                Channels = PerceptionChannel.Smell,
+                Gain = 1f,
+                Condition = authoring.SmellAcuity,
+                NoiseFloor = 1f - authoring.SmellAcuity,
+                RangeMultiplier = authoring.SmellRange / rangeDenom
+            });
+            organs.Add(new SenseOrganState
+            {
+                OrganType = SenseOrganType.ParanormalSense,
+                Channels = PerceptionChannel.Paranormal,
+                Gain = 1f,
+                Condition = authoring.ParanormalAcuity,
+                NoiseFloor = 1f - authoring.ParanormalAcuity,
+                RangeMultiplier = authoring.ParanormalRange / rangeDenom
+            });
+
+            var hasEmissions = authoring.SmellEmission > 0f || authoring.SoundEmission > 0f;
+            AddComponent(entity, new SensorySignalEmitter
+            {
+                Channels = PerceptionChannel.Smell | PerceptionChannel.Hearing,
+                SmellStrength = authoring.SmellEmission,
+                SoundStrength = authoring.SoundEmission,
+                EMStrength = 0f,
+                IsActive = (byte)(hasEmissions ? 1 : 0)
             });
 
             // Add PerceptionState buffer
@@ -84,7 +144,8 @@ namespace Godgame.Authoring.Perception
 
             // Add PerceptionState component
             AddComponent<PerceptionState>(entity);
+
+            AddComponent<SignalPerceptionState>(entity);
         }
     }
 }
-

@@ -1,6 +1,6 @@
-using Godgame.Villagers;
 using Unity.Collections;
 using Unity.Entities;
+using VillagerAIState = PureDOTS.Runtime.Components.VillagerAIState;
 
 namespace Godgame.Telemetry
 {

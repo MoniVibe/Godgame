@@ -1,14 +1,17 @@
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Communication;
 using PureDOTS.Runtime.Modularity;
 using PureDOTS.Runtime.Perception;
+using PureDOTS.Runtime.Spatial;
+using Godgame.AI;
 using Godgame.Modules;
 using Godgame.Villagers;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
-using System.Linq;
 
 namespace Godgame.Authoring
 {
@@ -29,7 +32,7 @@ namespace Godgame.Authoring
         private Godgame.Villagers.VillagerJob.JobType jobType = Godgame.Villagers.VillagerJob.JobType.Gatherer;
 
         [SerializeField]
-        private Godgame.Villagers.VillagerAIState.Goal aiGoal = Godgame.Villagers.VillagerAIState.Goal.Work;
+        private VillagerAIState.Goal aiGoal = VillagerAIState.Goal.Work;
 
         [SerializeField]
         private float3 spawnPosition = float3.zero;
@@ -204,11 +207,14 @@ namespace Godgame.Authoring
                     Productivity = 1f
                 });
 
-                AddComponent(entity, new Godgame.Villagers.VillagerAIState
+                AddComponent(entity, new VillagerAIState
                 {
-                    CurrentState = Godgame.Villagers.VillagerAIState.State.Idle,
+                    CurrentState = VillagerAIState.State.Idle,
                     CurrentGoal = authoring.aiGoal,
-                    TargetEntity = Entity.Null
+                    TargetEntity = Entity.Null,
+                    TargetPosition = float3.zero,
+                    StateTimer = 0f,
+                    StateStartTick = 0
                 });
 
                 var jobStateType = authoring.jobType == Godgame.Villagers.VillagerJob.JobType.Gatherer
@@ -233,6 +239,16 @@ namespace Godgame.Authoring
 
                 AddComponent<CommunicationModuleTag>(entity);
                 AddComponent(entity, MediumContext.DefaultGas);
+
+                AddComponent(entity, new AIRole { RoleId = GodgameAIRoleDefinitions.RoleCivilian });
+                AddComponent(entity, new AIDoctrine { DoctrineId = GodgameAIRoleDefinitions.DoctrineCivilian });
+                AddComponent(entity, new AIBehaviorProfile
+                {
+                    ProfileId = GodgameAIRoleDefinitions.ProfileCivilian,
+                    ProfileHash = GodgameAIRoleDefinitions.ProfileCivilianHash,
+                    ProfileEntity = Entity.Null,
+                    SourceId = GodgameAIRoleDefinitions.SourceScenario
+                });
 
                 // Add personality component
                 AddComponent(entity, new VillagerPersonality
@@ -302,22 +318,53 @@ namespace Godgame.Authoring
                 });
 
                 // Add needs (convert float 0-100 to byte)
+                var foodValue = math.clamp(authoring.food, 0f, 100f);
+                var restValue = math.clamp(authoring.rest, 0f, 100f);
+                var sleepValue = math.clamp(authoring.sleep, 0f, 100f);
+                var healthValue = math.clamp(authoring.generalHealth, 0f, 100f);
+                var moraleValue = math.clamp(authoring.generalHealth, 0f, 100f);
+
                 var needs = new Godgame.Villagers.VillagerNeeds
                 {
-                    Food = (byte)math.clamp((int)authoring.food, 0, 100),
-                    Rest = (byte)math.clamp((int)authoring.rest, 0, 100),
-                    Sleep = (byte)math.clamp((int)authoring.sleep, 0, 100),
-                    GeneralHealth = (byte)math.clamp((int)authoring.generalHealth, 0, 100),
-                    Health = math.clamp(authoring.generalHealth, 0f, 100f),
+                    Food = (byte)math.clamp((int)foodValue, 0, 100),
+                    Rest = (byte)math.clamp((int)restValue, 0, 100),
+                    Sleep = (byte)math.clamp((int)sleepValue, 0, 100),
+                    GeneralHealth = (byte)math.clamp((int)healthValue, 0, 100),
+                    Health = healthValue,
                     MaxHealth = 100f,
-                    Energy = math.clamp(authoring.rest, 0f, 100f)
+                    Energy = restValue,
+                    Morale = moraleValue
                 };
                 AddComponent(entity, needs);
 
                 // Add mood (initialize from general health or default)
                 AddComponent(entity, new Godgame.Villagers.VillagerMood
                 {
-                    Mood = math.clamp(authoring.generalHealth, 0f, 100f)
+                    Mood = moraleValue
+                });
+
+                AddComponent(entity, new PureDOTS.Runtime.Components.VillagerNeeds
+                {
+                    Food = (byte)math.clamp((int)foodValue, 0, 100),
+                    Rest = (byte)math.clamp((int)restValue, 0, 100),
+                    Sleep = (byte)math.clamp((int)sleepValue, 0, 100),
+                    GeneralHealth = (byte)math.clamp((int)healthValue, 0, 100),
+                    Health = healthValue,
+                    MaxHealth = 100f,
+                    Hunger = foodValue,
+                    Energy = restValue,
+                    Morale = moraleValue,
+                    Temperature = 0f
+                });
+
+                AddComponent(entity, new PureDOTS.Runtime.Components.VillagerMood
+                {
+                    Mood = moraleValue,
+                    TargetMood = moraleValue,
+                    MoodChangeRate = 1f,
+                    Wellbeing = moraleValue,
+                    Alignment = 50f,
+                    LastAlignmentInfluenceTick = 0
                 });
 
                 // Add combat stats (will be calculated by VillagerStatCalculationSystem if baseAttack/baseDefense are 0)
@@ -403,6 +450,149 @@ namespace Godgame.Authoring
                     Urgency = 0f,
                     HasLineOfSight = 0
                 });
+
+                if (!HasComponent<CommDecisionConfig>(entity))
+                {
+                    AddComponent(entity, CommDecisionConfig.Default);
+                }
+
+                if (!HasComponent<CommDecodeFactors>(entity))
+                {
+                    AddComponent(entity, CommDecodeFactors.Default);
+                }
+
+                AddAISystemComponents(entity);
+            }
+
+            private void AddAISystemComponents(Entity entity)
+            {
+                var blobBuilder = new BlobBuilder(Allocator.Temp);
+                ref var root = ref blobBuilder.ConstructRoot<AIUtilityArchetypeBlob>();
+                var actions = blobBuilder.Allocate(ref root.Actions, 4);
+
+                // Action 0: Satisfy hunger (virtual sensor 0).
+                ref var action0 = ref actions[0];
+                var factors0 = blobBuilder.Allocate(ref action0.Factors, 1);
+                factors0[0] = new AIUtilityCurveBlob
+                {
+                    SensorIndex = 0,
+                    Threshold = 0.3f,
+                    Weight = 2f,
+                    ResponsePower = 2f,
+                    MaxValue = 1f
+                };
+
+                // Action 1: Rest (virtual sensor 1).
+                ref var action1 = ref actions[1];
+                var factors1 = blobBuilder.Allocate(ref action1.Factors, 1);
+                factors1[0] = new AIUtilityCurveBlob
+                {
+                    SensorIndex = 1,
+                    Threshold = 0.2f,
+                    Weight = 1.5f,
+                    ResponsePower = 1.5f,
+                    MaxValue = 1f
+                };
+
+                // Action 2: Improve morale (virtual sensor 2).
+                ref var action2 = ref actions[2];
+                var factors2 = blobBuilder.Allocate(ref action2.Factors, 1);
+                factors2[0] = new AIUtilityCurveBlob
+                {
+                    SensorIndex = 2,
+                    Threshold = 0.4f,
+                    Weight = 1f,
+                    ResponsePower = 1f,
+                    MaxValue = 1f
+                };
+
+                // Action 3: Work (first spatial reading at index 3).
+                ref var action3 = ref actions[3];
+                var factors3 = blobBuilder.Allocate(ref action3.Factors, 1);
+                factors3[0] = new AIUtilityCurveBlob
+                {
+                    SensorIndex = 3,
+                    Threshold = 0f,
+                    Weight = 0.8f,
+                    ResponsePower = 1f,
+                    MaxValue = 1f
+                };
+
+                var utilityBlob = blobBuilder.CreateBlobAssetReference<AIUtilityArchetypeBlob>(Allocator.Temp);
+                blobBuilder.Dispose();
+                AddBlobAsset(ref utilityBlob, out _);
+
+                AddComponent(entity, new AISensorConfig
+                {
+                    UpdateInterval = 0.5f,
+                    Range = 30f,
+                    MaxResults = 8,
+                    QueryOptions = SpatialQueryOptions.RequireDeterministicSorting,
+                    PrimaryCategory = AISensorCategory.ResourceNode,
+                    SecondaryCategory = AISensorCategory.Storehouse
+                });
+
+                AddComponent(entity, new AISensorState
+                {
+                    Elapsed = 0f,
+                    LastSampleTick = 0
+                });
+
+                AddBuffer<AISensorReading>(entity);
+
+                AddComponent(entity, new AIBehaviourArchetype
+                {
+                    UtilityBlob = utilityBlob
+                });
+
+                AddComponent(entity, new AIUtilityState
+                {
+                    BestActionIndex = 0,
+                    BestScore = 0f,
+                    LastEvaluationTick = 0
+                });
+
+                AddBuffer<AIActionState>(entity);
+
+                AddComponent(entity, new AISteeringConfig
+                {
+                    MaxSpeed = 3f,
+                    Acceleration = 8f,
+                    Responsiveness = 0.5f,
+                    DegreesOfFreedom = 2,
+                    ObstacleLookAhead = 2f
+                });
+
+                AddComponent(entity, new AISteeringState
+                {
+                    DesiredDirection = float3.zero,
+                    LinearVelocity = float3.zero,
+                    LastSampledTarget = float3.zero,
+                    LastUpdateTick = 0
+                });
+
+                AddComponent(entity, new AITargetState
+                {
+                    TargetEntity = Entity.Null,
+                    TargetPosition = float3.zero,
+                    ActionIndex = 0,
+                    Flags = 0
+                });
+
+                var binding = new VillagerAIUtilityBinding();
+                binding.Goals.Add(VillagerAIState.Goal.SurviveHunger);
+                binding.Goals.Add(VillagerAIState.Goal.Rest);
+                binding.Goals.Add(VillagerAIState.Goal.Rest);
+                binding.Goals.Add(VillagerAIState.Goal.Work);
+                AddComponent(entity, binding);
+
+                AddComponent(entity, new VillagerAIPipelineBridgeState
+                {
+                    LastBridgedTick = 0,
+                    LastActionIndex = 0,
+                    LastScore = 0f,
+                    IsAIPipelineActive = 1
+                });
             }
 
             private static float ToUrgency(float statValue)
@@ -417,4 +607,3 @@ namespace Godgame.Authoring
         }
     }
 }
-

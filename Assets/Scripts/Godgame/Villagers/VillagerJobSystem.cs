@@ -1,6 +1,7 @@
 using Godgame.Registry;
 using Godgame.Resources;
 using Godgame.Villagers;
+using Godgame.Logistics;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Combat;
@@ -148,6 +149,7 @@ namespace Godgame.Villagers
         }
 
         [BurstCompile]
+        [WithNone(typeof(LogisticsHaulerTag))]
         public partial struct StepJob : IJobEntity
         {
             public const float DefaultGatherRate = 8f;

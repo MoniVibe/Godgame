@@ -87,8 +87,11 @@ namespace Godgame.Tests.Time
             var rewindEntity = rewindQuery.GetSingletonEntity();
             var rewindState = _entityManager.GetComponentData<RewindState>(rewindEntity);
             rewindState.Mode = RewindMode.Playback;
-            rewindState.PlaybackTick = targetTick;
+            rewindState.TargetTick = (int)targetTick;
             _entityManager.SetComponentData(rewindEntity, rewindState);
+            var legacy = _entityManager.GetComponentData<RewindLegacyState>(rewindEntity);
+            legacy.PlaybackTick = targetTick;
+            _entityManager.SetComponentData(rewindEntity, legacy);
 
             var timeState = timeStateBefore;
             timeState.Tick = targetTick;

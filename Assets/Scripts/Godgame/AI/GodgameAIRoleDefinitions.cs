@@ -40,10 +40,10 @@ namespace Godgame.AI
             return new RoleProfileAssignment(RoleBand, DoctrineBand, ProfileBand, ProfileBandHash);
         }
 
-        private const uint ProfileCivilianHash = 0x4A0C3F57;
-        private const uint ProfilePeacekeeperHash = 0x67C4A2F1;
-        private const uint ProfileArmyHash = 0x8DBB12C3;
-        private const uint ProfileBandHash = 0x5F2189AD;
+        public const uint ProfileCivilianHash = 0x4A0C3F57;
+        public const uint ProfilePeacekeeperHash = 0x67C4A2F1;
+        public const uint ProfileArmyHash = 0x8DBB12C3;
+        public const uint ProfileBandHash = 0x5F2189AD;
 
         public readonly struct RoleProfileAssignment
         {
