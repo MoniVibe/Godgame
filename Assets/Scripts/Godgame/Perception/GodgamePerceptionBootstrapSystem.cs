@@ -18,20 +18,17 @@ namespace Godgame.Perception
     /// <summary>
     /// Seeds perception-related components for core Godgame entities.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(Godgame.Scenario.GodgameScenarioSpawnSystem))]
     [UpdateAfter(typeof(Godgame.Scenario.SettlementSpawnSystem))]
     [UpdateAfter(typeof(Godgame.Scenario.SmokeTestFallbackBootstrapSystem))]
     public partial struct GodgamePerceptionBootstrapSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameWorldTag>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var em = state.EntityManager;
@@ -171,7 +168,6 @@ namespace Godgame.Perception
             ecb.Dispose();
         }
 
-        [BurstCompile]
         private static void EnsurePerception(
             ref EntityCommandBuffer ecb,
             EntityManager entityManager,

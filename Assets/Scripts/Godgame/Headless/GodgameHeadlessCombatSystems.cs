@@ -11,6 +11,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
 using VillagerAIState = PureDOTS.Runtime.Components.VillagerAIState;
 using VillagerCombatStats = Godgame.Villagers.VillagerCombatStats;
 using UnityDebug = UnityEngine.Debug;
@@ -24,6 +25,7 @@ namespace Godgame.Headless
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameHeadlessCombatLoopSystem : ISystem
     {
+        private const string EnabledEnv = "GODGAME_HEADLESS_COMBAT_PROOF";
         private byte _enabled;
         private byte _tickInitialized;
         private uint _lastTick;
@@ -33,6 +35,7 @@ namespace Godgame.Headless
         private Entity _defender;
         private float _engageDistanceSq;
         private float _damageScale;
+        private const float DefaultResolveSeconds = 6f;
         private ComponentLookup<VillagerCombatStats> _combatLookup;
         private ComponentLookup<VillagerThreatState> _threatLookup;
         private ComponentLookup<LocalTransform> _transformLookup;
@@ -40,7 +43,8 @@ namespace Godgame.Headless
 
         public void OnCreate(ref SystemState state)
         {
-            if (!RuntimeMode.IsHeadless)
+            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
+            if (!RuntimeMode.IsHeadless || !string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
             {
                 state.Enabled = false;
                 return;
@@ -119,9 +123,11 @@ namespace Godgame.Headless
 
             var attackerDamage = math.max(1f, attackerStats.AttackDamage);
             var defenderDamage = math.max(1f, defenderStats.AttackDamage);
+            var baselineHealth = math.max(1f, math.max(attackerStats.MaxHealth, defenderStats.MaxHealth));
+            var minDps = baselineHealth / math.max(1f, DefaultResolveSeconds);
 
-            var attackDelta = attackerDamage * _damageScale * deltaTime;
-            var defendDelta = defenderDamage * _damageScale * deltaTime;
+            var attackDelta = math.max(attackerDamage * _damageScale, minDps) * deltaTime;
+            var defendDelta = math.max(defenderDamage * _damageScale, minDps) * deltaTime;
 
             defenderStats.CurrentHealth = math.max(0f, defenderStats.CurrentHealth - attackDelta);
             attackerStats.CurrentHealth = math.max(0f, attackerStats.CurrentHealth - defendDelta);
@@ -304,14 +310,14 @@ namespace Godgame.Headless
 
         public void OnCreate(ref SystemState state)
         {
-            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
-            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode)
             {
                 state.Enabled = false;
                 return;
             }
 
-            if (!RuntimeMode.IsHeadless && !string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
+            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
+            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
             {
                 state.Enabled = false;
                 return;

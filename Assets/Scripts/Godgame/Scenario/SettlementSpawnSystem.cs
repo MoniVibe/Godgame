@@ -4,6 +4,7 @@ using Godgame.Presentation;
 using Godgame.Rendering;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Aggregate;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -92,6 +93,49 @@ namespace Godgame.Scenario
                 var worshipPresentation = GetPrefabPresentationState(entityManager, configValue.WorshipPrefab);
                 var villagerPresentation = GetPrefabPresentationState(entityManager, configValue.VillagerPrefab);
 
+                var aggregateFlags =
+                    CollectiveAggregateFlags.HasWorkOrders |
+                    CollectiveAggregateFlags.HasHaulingNetwork |
+                    CollectiveAggregateFlags.HasConstructionOffice |
+                    CollectiveAggregateFlags.HasSocialVenues |
+                    CollectiveAggregateFlags.TracksHistory;
+
+                var aggregate = new CollectiveAggregate
+                {
+                    Owner = entity,
+                    Anchor = Entity.Null,
+                    State = CollectiveAggregateState.Active,
+                    Flags = aggregateFlags,
+                    EstablishedTick = 0,
+                    LastStateChangeTick = 0,
+                    MemberCount = 0,
+                    BuildingCount = 0,
+                    DependentStructureCount = 0,
+                    PendingWorkOrders = 0,
+                    PendingHaulingRoutes = 0,
+                    PendingApprovals = 0
+                };
+
+                ecb.AddComponent(entity, aggregate);
+                var aggregateMembers = ecb.AddBuffer<CollectiveAggregateMember>(entity);
+                ecb.AddBuffer<CollectiveWorkOrder>(entity);
+                ecb.AddBuffer<CollectiveHaulingRoute>(entity);
+                ecb.AddBuffer<CollectiveConstructionApproval>(entity);
+                var socialVenues = ecb.AddBuffer<CollectiveSocialVenue>(entity);
+                var historyEntries = ecb.AddBuffer<CollectiveAggregateHistoryEntry>(entity);
+                historyEntries.Add(new CollectiveAggregateHistoryEntry
+                {
+                    Tick = 0,
+                    EventType = CollectiveHistoryEventType.Revived,
+                    Magnitude = 1f,
+                    RelatedEntity = entity,
+                    Context = new FixedString64Bytes("scenario.spawn")
+                });
+
+                var venueCapacity = (byte)math.clamp(configValue.InitialVillagers, 1, 200);
+                int buildingCount = 0;
+                int dependentStructureCount = 0;
+
                 runtimeValue.VillageCenterInstance = InstantiatePrefab(ref ecb, configValue.VillageCenterPrefab, center);
                 var storehousePos = center + OffsetOnCircle(0f, buildingRingRadius);
                 runtimeValue.StorehouseInstance = InstantiatePrefab(ref ecb, configValue.StorehousePrefab, storehousePos);
@@ -115,6 +159,18 @@ namespace Godgame.Scenario
                     }, centerPresentation.HasRenderTint);
                     ecb.SetComponent(runtimeValue.VillageCenterInstance,
                         LocalTransform.FromPositionRotationScale(center, quaternion.identity, BuildingScale));
+                    buildingCount++;
+
+                    socialVenues.Add(new CollectiveSocialVenue
+                    {
+                        VenueId = new FixedString32Bytes("council_hall"),
+                        Type = CollectiveSocialVenueType.CouncilHall,
+                        Building = runtimeValue.VillageCenterInstance,
+                        Capacity = venueCapacity,
+                        Occupancy = 0,
+                        Priority = 3,
+                        LastActivityTick = 0
+                    });
                 }
 
                 if (runtimeValue.StorehouseInstance != Entity.Null)
@@ -126,6 +182,18 @@ namespace Godgame.Scenario
                     }, storePresentation.HasRenderTint);
                     ecb.SetComponent(runtimeValue.StorehouseInstance,
                         LocalTransform.FromPositionRotationScale(storehousePos, quaternion.identity, BuildingScale));
+
+                    socialVenues.Add(new CollectiveSocialVenue
+                    {
+                        VenueId = new FixedString32Bytes("storehouse"),
+                        Type = CollectiveSocialVenueType.Market,
+                        Building = runtimeValue.StorehouseInstance,
+                        Capacity = venueCapacity,
+                        Occupancy = 0,
+                        Priority = 2,
+                        LastActivityTick = 0
+                    });
+                    buildingCount++;
                 }
 
                 if (runtimeValue.HousingInstance != Entity.Null)
@@ -138,6 +206,18 @@ namespace Godgame.Scenario
                     var housingPos = center + OffsetOnCircle(math.PI * 2f / 3f, buildingRingRadius);
                     ecb.SetComponent(runtimeValue.HousingInstance,
                         LocalTransform.FromPositionRotationScale(housingPos, quaternion.identity, BuildingScale));
+
+                    socialVenues.Add(new CollectiveSocialVenue
+                    {
+                        VenueId = new FixedString32Bytes("hearth"),
+                        Type = CollectiveSocialVenueType.Hearth,
+                        Building = runtimeValue.HousingInstance,
+                        Capacity = venueCapacity,
+                        Occupancy = 0,
+                        Priority = 1,
+                        LastActivityTick = 0
+                    });
+                    buildingCount++;
                 }
 
                 if (runtimeValue.WorshipInstance != Entity.Null)
@@ -150,6 +230,18 @@ namespace Godgame.Scenario
                     var worshipPos = center + OffsetOnCircle(math.PI * 4f / 3f, buildingRingRadius);
                     ecb.SetComponent(runtimeValue.WorshipInstance,
                         LocalTransform.FromPositionRotationScale(worshipPos, quaternion.identity, BuildingScale));
+
+                    socialVenues.Add(new CollectiveSocialVenue
+                    {
+                        VenueId = new FixedString32Bytes("shrine"),
+                        Type = CollectiveSocialVenueType.Shrine,
+                        Building = runtimeValue.WorshipInstance,
+                        Capacity = venueCapacity,
+                        Occupancy = 0,
+                        Priority = 2,
+                        LastActivityTick = 0
+                    });
+                    buildingCount++;
                 }
 
                 resources.Clear();
@@ -178,6 +270,7 @@ namespace Godgame.Scenario
                     ecb.AddComponent(nodeEntity, new RenderTint { Value = nodeTint });
                     // IMPORTANT: nodeEntity is ECB-deferred until playback. Append via ECB so the reference is remapped.
                     ecb.AppendToBuffer(entity, new SettlementResource { Node = nodeEntity });
+                    dependentStructureCount++;
                 }
 
                 for (int i = 0; i < configValue.InitialVillagers; i++)
@@ -230,7 +323,29 @@ namespace Godgame.Scenario
                         ecb.SetComponentEnabled<RenderThemeOverride>(villager, true);
                     }
                     AddOrSet(ref ecb, villager, new RenderTint { Value = ResolveRoleTint(role) }, villagerPresentation.HasRenderTint);
+
+                    var roleLabel = new FixedString32Bytes(role.ToString());
+                    var memberFlags = CollectiveAggregateMemberFlags.IsResident | CollectiveAggregateMemberFlags.IsWorker;
+                    if (role == VillagerRenderRoleId.Combatant || role == VillagerRenderRoleId.Peacekeeper)
+                    {
+                        memberFlags |= CollectiveAggregateMemberFlags.IsCombatant;
+                    }
+
+                    aggregateMembers.Add(new CollectiveAggregateMember
+                    {
+                        MemberEntity = villager,
+                        RoleId = roleLabel,
+                        Flags = memberFlags,
+                        JoinedTick = 0,
+                        LastSeenTick = 0
+                    });
                 }
+
+                aggregate.MemberCount = configValue.InitialVillagers;
+                aggregate.BuildingCount = buildingCount;
+                aggregate.DependentStructureCount = dependentStructureCount;
+                aggregate.Anchor = runtimeValue.VillageCenterInstance;
+                ecb.SetComponent(entity, aggregate);
 
                 runtimeValue.HasSpawned = 1;
                 // IMPORTANT: runtimeValue contains ECB-deferred entity references from Instantiate/CreateEntity.

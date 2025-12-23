@@ -24,7 +24,7 @@ namespace Godgame.Headless
 
         public void OnCreate(ref SystemState state)
         {
-            if (!Application.isBatchMode || !RuntimeMode.IsHeadless)
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode)
             {
                 state.Enabled = false;
                 return;
@@ -42,6 +42,13 @@ namespace Godgame.Headless
 
             foreach (var request in SystemAPI.Query<RefRO<GodgameHeadlessExitRequest>>())
             {
+                if (Application.isEditor)
+                {
+                    UnityDebug.Log($"[GodgameHeadlessExitSystem] Quit requested (code={request.ValueRO.ExitCode}, tick={request.ValueRO.RequestedTick}) but running in editor; ignoring.");
+                    _quitIssued = 1;
+                    break;
+                }
+
                 _quitIssued = 1;
                 UnityDebug.Log($"[GodgameHeadlessExitSystem] Quit requested (code={request.ValueRO.ExitCode}, tick={request.ValueRO.RequestedTick}); quitting.");
                 Application.Quit(request.ValueRO.ExitCode);

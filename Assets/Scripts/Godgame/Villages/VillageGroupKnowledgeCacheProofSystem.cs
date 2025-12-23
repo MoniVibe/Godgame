@@ -3,6 +3,7 @@ using PureDOTS.Runtime.Core;
 using PureDOTS.Runtime.Knowledge;
 using Unity.Entities;
 using Unity.Mathematics;
+using UnityEngine;
 using UnityDebug = UnityEngine.Debug;
 
 namespace Godgame.Villages
@@ -19,7 +20,7 @@ public partial struct VillageGroupKnowledgeCacheProofSystem : ISystem
 
         public void OnCreate(ref SystemState state)
         {
-            if (!RuntimeMode.IsHeadless)
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode)
             {
                 state.Enabled = false;
                 return;

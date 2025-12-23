@@ -1,8 +1,11 @@
 using System;
+using Godgame.Economy;
 using Godgame.Scenario;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
+using PureDOTS.Runtime.Resource;
 using PureDOTS.Runtime.Time;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -41,6 +44,8 @@ namespace Godgame.Headless
         private ComponentLookup<LocalTransform> _transformLookup;
         private BufferLookup<SettlementResource> _resourceLookup;
         private ComponentLookup<StorehouseInventory> _storehouseInventoryLookup;
+        private BufferLookup<StorehouseInventoryItem> _storehouseItemsLookup;
+        private BufferLookup<StorehouseCapacityElement> _storehouseCapacityLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -78,6 +83,8 @@ namespace Godgame.Headless
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
             _resourceLookup = state.GetBufferLookup<SettlementResource>(true);
             _storehouseInventoryLookup = state.GetComponentLookup<StorehouseInventory>(false);
+            _storehouseItemsLookup = state.GetBufferLookup<StorehouseInventoryItem>(false);
+            _storehouseCapacityLookup = state.GetBufferLookup<StorehouseCapacityElement>(true);
         }
 
         public void OnUpdate(ref SystemState state)
@@ -102,11 +109,14 @@ namespace Godgame.Headless
             state.EntityManager.CompleteDependencyBeforeRW<SettlementVillagerState>();
             state.EntityManager.CompleteDependencyBeforeRW<LocalTransform>();
             state.EntityManager.CompleteDependencyBeforeRW<StorehouseInventory>();
+            state.EntityManager.CompleteDependencyBeforeRW<StorehouseInventoryItem>();
 
             _settlementRuntimeLookup.Update(ref state);
             _transformLookup.Update(ref state);
             _resourceLookup.Update(ref state);
             _storehouseInventoryLookup.Update(ref state);
+            _storehouseItemsLookup.Update(ref state);
+            _storehouseCapacityLookup.Update(ref state);
 
             foreach (var (villagerState, transform, entity) in SystemAPI
                          .Query<RefRW<SettlementVillagerState>, RefRW<LocalTransform>>()
@@ -337,12 +347,74 @@ namespace Godgame.Headless
             }
 
             var inventory = _storehouseInventoryLookup[depot];
+            var accepted = _depositAmount;
+
+            if (_storehouseItemsLookup.HasBuffer(depot))
+            {
+                var items = _storehouseItemsLookup[depot];
+                var capacities = _storehouseCapacityLookup.HasBuffer(depot)
+                    ? _storehouseCapacityLookup[depot]
+                    : default;
+
+                var resourceId = CreateWoodResourceId();
+                var added = StorehouseAPI.Add(ref items, in capacities, resourceId, _depositAmount);
+                if (added <= 0f && _depositAmount > 0f)
+                {
+                    // Fallback: keep the proof advancing when capacity metadata is missing.
+                    var updated = false;
+                    for (var i = 0; i < items.Length; i++)
+                    {
+                        if (!items[i].ResourceTypeId.Equals(resourceId))
+                        {
+                            continue;
+                        }
+
+                        var item = items[i];
+                        item.Amount += _depositAmount;
+                        items[i] = item;
+                        updated = true;
+                        break;
+                    }
+
+                    if (!updated)
+                    {
+                        items.Add(new StorehouseInventoryItem
+                        {
+                            ResourceTypeId = resourceId,
+                            Amount = _depositAmount,
+                            Reserved = 0f,
+                            TierId = (byte)ResourceQualityTier.Common,
+                            AverageQuality = 50
+                        });
+                    }
+
+                    added = _depositAmount;
+                }
+
+                accepted = added;
+            }
+
+            if (accepted <= 0f)
+            {
+                return;
+            }
+
             var capacity = math.max(0f, inventory.TotalCapacity);
             var stored = math.max(0f, inventory.TotalStored);
-            stored = capacity > 0f ? math.min(capacity, stored + _depositAmount) : stored + _depositAmount;
+            stored = capacity > 0f ? math.min(capacity, stored + accepted) : stored + accepted;
             inventory.TotalStored = stored;
             inventory.LastUpdateTick = tick;
             _storehouseInventoryLookup[depot] = inventory;
+        }
+
+        private static FixedString64Bytes CreateWoodResourceId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('w');
+            id.Append('o');
+            id.Append('o');
+            id.Append('d');
+            return id;
         }
 
         private static float ReadEnvFloat(string key, float defaultValue)

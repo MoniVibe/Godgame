@@ -1,0 +1,49 @@
+{
+  "name": "Godgame Smoke",
+  "description": "Shared smoke scenario used by headless + TRI_Godgame_Smoke to showcase villages, aggregates, and work loops.",
+  "entities": [
+    {
+      "prefab": "Villager",
+      "count": 24,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 40
+    },
+    {
+      "prefab": "Villager",
+      "count": 24,
+      "position": { "x": 90, "y": 0, "z": 60 },
+      "radius": 40
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 2,
+      "position": { "x": 10, "y": 0, "z": -15 },
+      "radius": 5
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 2,
+      "position": { "x": 100, "y": 0, "z": 70 },
+      "radius": 5
+    },
+    {
+      "prefab": "Tree",
+      "count": 60,
+      "position": { "x": 25, "y": 0, "z": 20 },
+      "radius": 55
+    },
+    {
+      "prefab": "Tree",
+      "count": 60,
+      "position": { "x": 110, "y": 0, "z": 85 },
+      "radius": 55
+    },
+    {
+      "prefab": "ResourceNode",
+      "count": 20,
+      "position": { "x": 60, "y": 0, "z": 35 },
+      "radius": 45
+    }
+  ]
+}
+

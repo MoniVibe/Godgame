@@ -13,6 +13,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
 using UnityDebug = UnityEngine.Debug;
 using SystemEnv = System.Environment;
 
@@ -136,11 +137,17 @@ namespace Godgame.Headless
                     }
                 }
 
-                if (distSq <= _arrivalDistanceSq)
+                var arrived = distSq <= _arrivalDistanceSq;
+                var satisfactionScale = arrived ? 1f : 0.5f;
+                var updated = needs.ValueRO;
+                var delta = ComputeSatisfactionDelta(currentGoal, tuning.ValueRO, fixedDt, deltaTime) * satisfactionScale;
+                if (delta > 0f)
                 {
-                    var updated = needs.ValueRO;
-                    var delta = ComputeSatisfactionDelta(currentGoal, tuning.ValueRO, fixedDt, deltaTime);
                     ApplySatisfaction(currentGoal, ref updated, delta);
+                    if (arrived)
+                    {
+                        ClampSatisfied(currentGoal, ref updated, 0.25f);
+                    }
                     needs.ValueRW = updated;
                 }
 
@@ -515,6 +522,28 @@ namespace Godgame.Headless
             }
         }
 
+        private static void ClampSatisfied(VillagerGoal goal, ref VillagerNeedState needs, float satisfiedThreshold)
+        {
+            switch (goal)
+            {
+                case VillagerGoal.Eat:
+                    needs.HungerUrgency = math.min(needs.HungerUrgency, satisfiedThreshold);
+                    break;
+                case VillagerGoal.Sleep:
+                    needs.RestUrgency = math.min(needs.RestUrgency, satisfiedThreshold);
+                    break;
+                case VillagerGoal.Pray:
+                    needs.FaithUrgency = math.min(needs.FaithUrgency, satisfiedThreshold);
+                    break;
+                case VillagerGoal.SeekShelter:
+                    needs.SafetyUrgency = math.min(needs.SafetyUrgency, satisfiedThreshold);
+                    break;
+                case VillagerGoal.Socialize:
+                    needs.SocialUrgency = math.min(needs.SocialUrgency, satisfiedThreshold);
+                    break;
+            }
+        }
+
         private static float ReadEnvFloat(string key, float defaultValue)
         {
             var raw = SystemEnv.GetEnvironmentVariable(key);
@@ -585,14 +614,14 @@ namespace Godgame.Headless
 
         public void OnCreate(ref SystemState state)
         {
-            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
-            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode)
             {
                 state.Enabled = false;
                 return;
             }
 
-            if (!RuntimeMode.IsHeadless && !string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
+            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
+            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
             {
                 state.Enabled = false;
                 return;

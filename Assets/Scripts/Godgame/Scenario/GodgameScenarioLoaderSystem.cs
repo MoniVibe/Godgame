@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using PureDOTS.Runtime.Core;
 
 namespace Godgame.Scenario
 {
@@ -41,7 +42,9 @@ namespace Godgame.Scenario
                 return; // Wait for scenario config
             }
 
-            if (scenarioConfig.Config.Value.Mode == GodgameScenarioMode.Scenario01)
+            if (scenarioConfig.Config.Value.Mode == GodgameScenarioMode.Scenario01 &&
+                !RuntimeMode.IsHeadless &&
+                !IsScenarioOverrideRequested())
             {
                 if (!_loggedScenarioSkip)
                 {
@@ -172,6 +175,32 @@ namespace Godgame.Scenario
             var safeRelative = relativePath ?? string.Empty;
             var combined = Path.Combine(Application.dataPath, safeRelative);
             return Path.GetFullPath(combined);
+        }
+
+        private static bool IsScenarioOverrideRequested()
+        {
+            if (!string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable(ScenarioEnvVar)))
+            {
+                return true;
+            }
+
+            var args = System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                var arg = args[i];
+                if (string.Equals(arg, "--scenario", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                var prefix = "--scenario=";
+                if (arg.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         [System.Serializable]

@@ -4,6 +4,7 @@ using PureDOTS.Runtime.Communication;
 using PureDOTS.Runtime.Modularity;
 using PureDOTS.Runtime.Perception;
 using PureDOTS.Runtime.Spatial;
+using PureDOTS.Systems;
 using Godgame.AI;
 using Godgame.Modules;
 using Godgame.Villagers;
@@ -231,7 +232,7 @@ namespace Godgame.Authoring
                     DropoffCooldown = 0f
                 });
 
-                AddComponent(entity, new Navigation
+                AddComponent(entity, new Godgame.Villagers.Navigation
                 {
                     Destination = float3.zero,
                     Speed = 0f
@@ -451,15 +452,8 @@ namespace Godgame.Authoring
                     HasLineOfSight = 0
                 });
 
-                if (!HasComponent<CommDecisionConfig>(entity))
-                {
-                    AddComponent(entity, CommDecisionConfig.Default);
-                }
-
-                if (!HasComponent<CommDecodeFactors>(entity))
-                {
-                    AddComponent(entity, CommDecodeFactors.Default);
-                }
+                AddComponent(entity, CommDecisionConfig.Default);
+                AddComponent(entity, CommDecodeFactors.Default);
 
                 AddAISystemComponents(entity);
             }
@@ -518,7 +512,7 @@ namespace Godgame.Authoring
                     MaxValue = 1f
                 };
 
-                var utilityBlob = blobBuilder.CreateBlobAssetReference<AIUtilityArchetypeBlob>(Allocator.Temp);
+                var utilityBlob = blobBuilder.CreateBlobAssetReference<AIUtilityArchetypeBlob>(Allocator.Persistent);
                 blobBuilder.Dispose();
                 AddBlobAsset(ref utilityBlob, out _);
 

@@ -1,5 +1,5 @@
 using Godgame.Villagers;
-using PureDOTS.Runtime.Aggregates;
+using PureDOTS.Runtime.Aggregate;
 using PureDOTS.Runtime.Bands;
 using PureDOTS.Runtime.Components;
 using Unity.Burst;

@@ -46,14 +46,14 @@ namespace Godgame.Headless
 
         public void OnCreate(ref SystemState state)
         {
-            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
-            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode)
             {
                 state.Enabled = false;
                 return;
             }
 
-            if (!RuntimeMode.IsHeadless && !string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
+            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
+            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
             {
                 state.Enabled = false;
                 return;

@@ -24,7 +24,8 @@ namespace Godgame.Presentation.Authoring
     {
         public override void Bake(PresentationConfigAuthoring authoring)
         {
-            var entity = GetEntity(TransformUsageFlags.None);
+            // Use a dedicated entity so duplicate baker invocations don't collide on the main entity.
+            var entity = CreateAdditionalEntity(TransformUsageFlags.None);
 
             AddComponent(entity, new Godgame.Presentation.PresentationConfig
             {

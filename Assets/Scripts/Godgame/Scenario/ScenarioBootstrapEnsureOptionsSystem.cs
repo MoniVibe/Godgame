@@ -31,7 +31,7 @@ namespace Godgame.Scenario
                 var e = em.CreateEntity(typeof(ScenarioOptions));
                 em.SetComponentData(e, new ScenarioOptions
                 {
-                    ScenarioPath = FS("Scenarios/godgame/village_loop_smoke.json"),
+                    ScenarioPath = FS("Scenarios/godgame/godgame_smoke.json"),
                     BindingsSet = 0,
                     Veteran = 0
                 });

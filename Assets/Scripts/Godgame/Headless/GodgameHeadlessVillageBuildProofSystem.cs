@@ -5,6 +5,8 @@ using PureDOTS.Runtime.Core;
 using PureDOTS.Runtime.Telemetry;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 using UnityDebug = UnityEngine.Debug;
 using SystemEnv = System.Environment;
@@ -23,6 +25,7 @@ namespace Godgame.Headless
         private const uint DefaultTimeoutTicks = 1800; // ~30 seconds at 60hz
 
         private byte _done;
+        private byte _seededRequest;
         private uint _startTick;
         private uint _timeoutTick;
 
@@ -31,14 +34,14 @@ namespace Godgame.Headless
 
         public void OnCreate(ref SystemState state)
         {
-            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
-            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode)
             {
                 state.Enabled = false;
                 return;
             }
 
-            if (!RuntimeMode.IsHeadless && !string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
+            var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
+            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
             {
                 state.Enabled = false;
                 return;
@@ -63,6 +66,8 @@ namespace Godgame.Headless
             {
                 return;
             }
+
+            EnsureBuildRequest(ref state, timeState.Tick);
 
             if (_timeoutTick == 0u)
             {
@@ -126,6 +131,41 @@ namespace Godgame.Headless
             }
 
             GodgameHeadlessExitSystem.Request(ref state, tick, exitCode);
+        }
+
+        private void EnsureBuildRequest(ref SystemState state, uint tick)
+        {
+            if (_seededRequest != 0)
+            {
+                return;
+            }
+
+            foreach (var (village, requests, entity) in SystemAPI.Query<RefRO<Village>, DynamicBuffer<VillageExpansionRequest>>()
+                         .WithEntityAccess())
+            {
+                if (requests.Length > 0)
+                {
+                    _seededRequest = 1;
+                    return;
+                }
+
+                var center = village.ValueRO.CenterPosition;
+                if (state.EntityManager.HasComponent<LocalTransform>(entity))
+                {
+                    center = state.EntityManager.GetComponentData<LocalTransform>(entity).Position;
+                }
+
+                requests.Add(new VillageExpansionRequest
+                {
+                    BuildingType = (byte)VillageBuildingType.Storehouse,
+                    Position = center + new float3(6f, 0f, 0f),
+                    Priority = 80,
+                    RequestTick = tick
+                });
+
+                _seededRequest = 1;
+                return;
+            }
         }
     }
 }

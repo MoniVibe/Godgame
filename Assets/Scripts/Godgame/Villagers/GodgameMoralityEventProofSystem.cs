@@ -2,6 +2,7 @@ using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
 using PureDOTS.Runtime.Social;
 using Unity.Entities;
+using UnityEngine;
 using UnityDebug = UnityEngine.Debug;
 
 namespace Godgame.Villagers
@@ -17,7 +18,7 @@ namespace Godgame.Villagers
 
         public void OnCreate(ref SystemState state)
         {
-            if (!RuntimeMode.IsHeadless)
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode)
             {
                 state.Enabled = false;
                 return;
@@ -52,4 +53,3 @@ namespace Godgame.Villagers
         }
     }
 }
-

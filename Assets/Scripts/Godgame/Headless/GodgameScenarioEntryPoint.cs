@@ -23,7 +23,7 @@ namespace Godgame.Headless
 	        private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
 	        private static bool s_executed;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
         static void RunScenarioIfRequested()
         {
             if (s_executed)
@@ -87,6 +87,7 @@ namespace Godgame.Headless
 	                    return;
 	                }
 
+	                DisableHeadlessProofsForScenario();
 	                SystemEnv.SetEnvironmentVariable(ScenarioEnvVar, scenarioPath);
 
 	                var existingTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
@@ -176,6 +177,20 @@ namespace Godgame.Headless
 	            return head.Contains("\"runTicks\"", StringComparison.OrdinalIgnoreCase) ||
 	                   head.Contains("\"inputCommands\"", StringComparison.OrdinalIgnoreCase) ||
 	                   head.Contains("\"scenarioId\"", StringComparison.OrdinalIgnoreCase);
+	        }
+
+	        private static void DisableHeadlessProofsForScenario()
+	        {
+	            SetEnvIfUnset("PUREDOTS_HEADLESS_TIME_PROOF", "0");
+	            SetEnvIfUnset("PUREDOTS_HEADLESS_REWIND_PROOF", "0");
+	        }
+
+	        private static void SetEnvIfUnset(string key, string value)
+	        {
+	            if (string.IsNullOrWhiteSpace(SystemEnv.GetEnvironmentVariable(key)))
+	            {
+	                SystemEnv.SetEnvironmentVariable(key, value);
+	            }
 	        }
 
         private static void Quit(int exitCode)

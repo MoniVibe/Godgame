@@ -2,6 +2,7 @@ using Godgame.AI;
 using Godgame.Economy;
 using Godgame.Presentation;
 using Godgame.Rendering;
+using Godgame.Villages;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using Unity.Burst;
@@ -18,7 +19,6 @@ namespace Godgame.Scenario
     /// Spawns entities from scenario JSON data for headless testing and scenario execution.
     /// Replaces the logger stub with actual entity spawning logic.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct GodgameScenarioSpawnSystem : ISystem
     {
@@ -27,10 +27,10 @@ namespace Godgame.Scenario
             state.RequireForUpdate<GodgameScenarioSpawnConfig>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var ecb = new EntityCommandBuffer(Allocator.Temp);
+            var entityManager = state.EntityManager;
             const float villagerScale = 0.9f;
             const float buildingScale = 3f;
 
@@ -46,11 +46,67 @@ namespace Godgame.Scenario
 
                 var configValue = config.ValueRO;
                 var runtimeValue = runtime.ValueRO;
-                var villagerPresentation = GetPrefabPresentationState(state.EntityManager, configValue.VillagerPrefab);
-                var storePresentation = GetPrefabPresentationState(state.EntityManager, configValue.StorehousePrefab);
+                var villagerPresentation = GetPrefabPresentationState(entityManager, configValue.VillagerPrefab);
+                var storePresentation = GetPrefabPresentationState(entityManager, configValue.StorehousePrefab);
 
                 var center = float3.zero;
                 var random = new Unity.Mathematics.Random(configValue.Seed != 0 ? configValue.Seed : (uint)entity.Index + 1u);
+                var prefabHasSettlementState = configValue.VillagerPrefab != Entity.Null &&
+                                               entityManager.HasComponent<SettlementVillagerState>(configValue.VillagerPrefab);
+
+                var settlementRuntime = default(SettlementRuntime);
+                var settlementEntity = Entity.Null;
+                var hasSettlement = TryGetExistingSettlement(entityManager, out settlementEntity, out settlementRuntime);
+                if (!hasSettlement)
+                {
+                    settlementEntity = ecb.CreateEntity();
+                    settlementRuntime = new SettlementRuntime { HasSpawned = 1 };
+                    ecb.AddComponent(settlementEntity, LocalTransform.FromPosition(center));
+                    ecb.AddComponent(settlementEntity, settlementRuntime);
+                    ecb.AddBuffer<SettlementResource>(settlementEntity);
+                }
+                else
+                {
+                    settlementRuntime.HasSpawned = 1;
+                    if (!entityManager.HasComponent<LocalTransform>(settlementEntity))
+                    {
+                        ecb.AddComponent(settlementEntity, LocalTransform.FromPosition(center));
+                    }
+
+                    if (!entityManager.HasBuffer<SettlementResource>(settlementEntity))
+                    {
+                        ecb.AddBuffer<SettlementResource>(settlementEntity);
+                    }
+                }
+
+                var villageEntity = Entity.Null;
+                if (!TryGetExistingVillage(entityManager, out villageEntity))
+                {
+                    villageEntity = ecb.CreateEntity();
+                    ecb.AddComponent(villageEntity, LocalTransform.FromPosition(center));
+                    ecb.AddComponent(villageEntity, new Village
+                    {
+                        VillageId = new FixedString64Bytes("scenario_village"),
+                        VillageName = new FixedString64Bytes("Scenario Village"),
+                        Phase = VillagePhase.Growing,
+                        CenterPosition = center,
+                        InfluenceRadius = math.max(10f, configValue.SpawnRadius),
+                        MemberCount = math.max(0, configValue.VillagerCount),
+                        LastUpdateTick = 0u
+                    });
+                    ecb.AddComponent(villageEntity, new VillageAIDecision
+                    {
+                        CurrentPriority = 0,
+                        DecisionType = 0,
+                        TargetEntity = Entity.Null,
+                        TargetPosition = center,
+                        DecisionTick = 0u,
+                        DecisionDuration = 10f
+                    });
+                    ecb.AddBuffer<VillageResource>(villageEntity);
+                    ecb.AddBuffer<VillageMember>(villageEntity);
+                    ecb.AddBuffer<VillageExpansionRequest>(villageEntity);
+                }
 
                 // Spawn villagers from scenario data
                 if (configValue.VillagerPrefab != Entity.Null && configValue.VillagerCount > 0)
@@ -120,29 +176,97 @@ namespace Godgame.Scenario
                             LastChangeTick = 0
                         });
                         ecb.AddComponent(villager, Godgame.Villagers.VillagerBehavior.Neutral);
+
+                        if (settlementEntity != Entity.Null)
+                        {
+                            var villagerState = new SettlementVillagerState
+                            {
+                                Settlement = settlementEntity,
+                                Phase = SettlementVillagerPhase.Idle,
+                                RandomState = random.NextUInt(1, uint.MaxValue)
+                            };
+
+                            if (prefabHasSettlementState)
+                            {
+                                ecb.SetComponent(villager, villagerState);
+                            }
+                            else
+                            {
+                                ecb.AddComponent(villager, villagerState);
+                            }
+                        }
+
                         ApplyScenarioRenderContract(ref ecb, villager, renderKeyId, villagerPresentation);
                     }
                 }
 
                 // Spawn storehouses from scenario data
-                if (configValue.StorehousePrefab != Entity.Null && configValue.StorehouseCount > 0)
+                Entity primaryStorehouse = Entity.Null;
+                if (configValue.StorehouseCount > 0)
                 {
                     for (int i = 0; i < configValue.StorehouseCount; i++)
                     {
-                        var storehouse = ecb.Instantiate(configValue.StorehousePrefab);
+                        Entity storehouse;
                         var angle = (i * math.PI * 2f) / math.max(1, configValue.StorehouseCount);
                         var pos = center + new float3(
                             math.cos(angle) * configValue.SpawnRadius * 0.5f,
                             0f,
                             math.sin(angle) * configValue.SpawnRadius * 0.5f);
 
-                        ecb.SetComponent(storehouse, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, buildingScale));
-                        ApplyScenarioRenderContract(ref ecb, storehouse, GodgameSemanticKeys.Storehouse, storePresentation);
-                        AddOrSet(ref ecb, storehouse, new RenderTint
+                        var storehouseIsFallback = configValue.StorehousePrefab == Entity.Null;
+                        if (!storehouseIsFallback)
                         {
-                            Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Storehouse)
-                        }, storePresentation.HasRenderTint);
+                            storehouse = ecb.Instantiate(configValue.StorehousePrefab);
+                            ecb.SetComponent(storehouse, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, buildingScale));
+                            ApplyScenarioRenderContract(ref ecb, storehouse, GodgameSemanticKeys.Storehouse, storePresentation);
+                            AddOrSet(ref ecb, storehouse, new RenderTint
+                            {
+                                Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Storehouse)
+                            }, storePresentation.HasRenderTint);
+                        }
+                        else
+                        {
+                            storehouse = CreateFallbackStorehouse(ref ecb, pos, buildingScale);
+                        }
+
+                        if (!storehouseIsFallback)
+                        {
+                            EnsureStorehouseComponents(entityManager, ref ecb, configValue.StorehousePrefab, storehouse);
+                        }
+
+                        if (primaryStorehouse == Entity.Null)
+                        {
+                            primaryStorehouse = storehouse;
+                        }
                     }
+                }
+
+                if (primaryStorehouse != Entity.Null)
+                {
+                    if (settlementRuntime.StorehouseInstance == Entity.Null)
+                    {
+                        settlementRuntime.StorehouseInstance = primaryStorehouse;
+                    }
+
+                    if (settlementRuntime.VillageCenterInstance == Entity.Null)
+                    {
+                        settlementRuntime.VillageCenterInstance = primaryStorehouse;
+                    }
+
+                    if (settlementRuntime.HousingInstance == Entity.Null)
+                    {
+                        settlementRuntime.HousingInstance = primaryStorehouse;
+                    }
+
+                    if (settlementRuntime.WorshipInstance == Entity.Null)
+                    {
+                        settlementRuntime.WorshipInstance = primaryStorehouse;
+                    }
+                }
+
+                if (settlementEntity != Entity.Null)
+                {
+                    ecb.SetComponent(settlementEntity, settlementRuntime);
                 }
 
                 // Spawn resource nodes from scenario data
@@ -169,6 +293,11 @@ namespace Godgame.Scenario
                         {
                             Value = GodgamePresentationColors.ForResourceType(ResourceType.IronOre)
                         });
+
+                        if (settlementEntity != Entity.Null)
+                        {
+                            ecb.AppendToBuffer(settlementEntity, new SettlementResource { Node = nodeEntity });
+                        }
                     }
                 }
 
@@ -178,6 +307,123 @@ namespace Godgame.Scenario
 
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
+        }
+
+        private static bool TryGetExistingSettlement(EntityManager entityManager, out Entity settlement, out SettlementRuntime runtime)
+        {
+            settlement = Entity.Null;
+            runtime = default;
+
+            using var query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<SettlementRuntime>());
+            if (query.IsEmptyIgnoreFilter)
+            {
+                return false;
+            }
+
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            if (entities.Length == 0)
+            {
+                return false;
+            }
+
+            settlement = entities[0];
+            if (settlement != Entity.Null && entityManager.HasComponent<SettlementRuntime>(settlement))
+            {
+                runtime = entityManager.GetComponentData<SettlementRuntime>(settlement);
+            }
+
+            return settlement != Entity.Null;
+        }
+
+        private static bool TryGetExistingVillage(EntityManager entityManager, out Entity village)
+        {
+            village = Entity.Null;
+            using var query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<Village>());
+            if (query.IsEmptyIgnoreFilter)
+            {
+                return false;
+            }
+
+            using var entities = query.ToEntityArray(Allocator.Temp);
+            if (entities.Length == 0)
+            {
+                return false;
+            }
+
+            village = entities[0];
+            return village != Entity.Null;
+        }
+
+        private static Entity CreateFallbackStorehouse(ref EntityCommandBuffer ecb, in float3 position, float scale)
+        {
+            var storehouse = ecb.CreateEntity();
+            ecb.AddComponent(storehouse, LocalTransform.FromPositionRotationScale(position, quaternion.identity, scale));
+            ecb.AddComponent(storehouse, new StorehouseConfig
+            {
+                ShredRate = 0f,
+                MaxShredQueueSize = 0,
+                InputRate = 0f,
+                OutputRate = 0f,
+                Label = default
+            });
+            ecb.AddComponent(storehouse, new StorehouseInventory
+            {
+                TotalStored = 0f,
+                TotalCapacity = 250f,
+                ItemTypeCount = 0,
+                IsShredding = 0,
+                LastUpdateTick = 0
+            });
+            var capacities = ecb.AddBuffer<StorehouseCapacityElement>(storehouse);
+            capacities.Add(new StorehouseCapacityElement
+            {
+                ResourceTypeId = new FixedString64Bytes("wood"),
+                MaxCapacity = 250f
+            });
+            ecb.AddBuffer<StorehouseInventoryItem>(storehouse);
+            return storehouse;
+        }
+
+        private static void EnsureStorehouseComponents(EntityManager entityManager, ref EntityCommandBuffer ecb, Entity prefab, Entity instance)
+        {
+            if (instance == Entity.Null)
+            {
+                return;
+            }
+
+            if (prefab == Entity.Null || !entityManager.HasComponent<StorehouseConfig>(prefab))
+            {
+                ecb.AddComponent(instance, new StorehouseConfig
+                {
+                    ShredRate = 0f,
+                    MaxShredQueueSize = 0,
+                    InputRate = 0f,
+                    OutputRate = 0f,
+                    Label = default
+                });
+            }
+
+            if (prefab == Entity.Null || !entityManager.HasComponent<StorehouseInventory>(prefab))
+            {
+                ecb.AddComponent(instance, new StorehouseInventory
+                {
+                    TotalStored = 0f,
+                    TotalCapacity = 250f,
+                    ItemTypeCount = 0,
+                    IsShredding = 0,
+                    LastUpdateTick = 0
+                });
+            }
+
+            if (prefab == Entity.Null || !entityManager.HasComponent<StorehouseCapacityElement>(prefab))
+            {
+                ecb.AddBuffer<StorehouseCapacityElement>(instance);
+            }
+
+            if (prefab == Entity.Null || !entityManager.HasComponent<StorehouseInventoryItem>(prefab))
+            {
+                ecb.AddBuffer<StorehouseInventoryItem>(instance);
+            }
         }
     }
 

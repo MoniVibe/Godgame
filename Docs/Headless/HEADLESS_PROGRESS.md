@@ -1,24 +1,36 @@
-# Headless & Presentation Progress
+# Headless & Presentation Progress (updated 2025-12-23)
 
-## Presentation Sweep (Agent B) - 2025-12-14
+## Canonical Smoke Scenario
+- **Scenario artifact**: `Assets/Scenarios/Godgame/godgame_smoke.json`
+  - 2 settlements (Villager + Storehouse groupings) + resource belts for the gather/haul/build loop.
+  - Shared between headless runner and `TRI_Godgame_Smoke.unity` via `ScenarioOptions`.
+- **Scenario injection**:
+  - `ScenarioBootstrapEnsureOptionsSystem` seeds `ScenarioOptions.ScenarioPath = Scenarios/godgame/godgame_smoke.json` for headless/Bootstrap scenes.
+  - `ScenarioBootstrap` (Mono in `TRI_Godgame_Smoke`) resolves the same scenario, auto-upgrading legacy `village_loop_smoke.json` references.
+- **Headless run**:
+  - `HeadlessBootstrap.unity` (or ScenarioRunner CLI) loads the SubScene stack + `godgame_smoke.json`.
+  - `GODGAME_SCENARIO_PATH` env var or `--scenario=` CLI can override, but the smoke workflow assumes the shared JSON.
 
-### Summary
-The presentation layer has been verified and cleaned up to ensure it runs correctly in the Editor and Presentation builds, without interference from Headless-specific logic.
+## Smoke Scene Expectations
+- Scene: `Assets/Scenes/TRI_Godgame_Smoke.unity`
+  - Contains Scenario UI, diagnostics (`Godgame_RenderKeySimDebugSystem`, `Godgame_SmokeValidationSystem`), cameras, and registry SubScenes.
+  - Uses the same render catalog + presentation setup as the headless world; no presentation-only spawners.
+  - **Camera rig**: if the scene lacks a camera, `ScenarioBootstrap` spawns `CameraInputRig (Auto)` (WASD/QE translation, RMB orbit, scroll zoom). Designers can still drop their own rig to override it.
+- Diagnostic checkpoints:
+  - `Godgame_RenderKeySimDebugSystem` logs counts for villagers/villages/bands on load—warnings now cite `godgame_smoke.json`.
+  - `Godgame_SmokeValidationSystem` + `GodgameSmokeTimeAndMovementProbeSystem` verify TimeState/RewindState and villager motion.
 
-### Scene Status
-- **Assets/Godgame.unity**: Verified and Fixed.
-  - Added/Fixed `PureDotsRuntimeConfigLoader` with valid config assignment.
-  - Added/Fixed `DemoEnsureSRP` with valid URP asset assignment.
-  - Replaced legacy `StandaloneInputModule` with `InputSystemUIInputModule` to fix Input System errors.
-- **Assets/Scenes/TRI_Godgame_Smoke.unity**: Verified and Fixed.
-  - Applied same fixes as Godgame.unity.
+## Incremental Feature Mirroring Rules
+1. **Headless first**: land new behavior in `godgame_smoke.json` (or associated PureDOTS systems) and prove it via telemetry/logs.
+2. **Presentation follow-up**:
+   - Expose semantic keys / diagnostics for the new entity type.
+   - Extend `TRI_Godgame_Smoke` with visualization hooks only (overlays, debug UI). No extra gameplay entities.
+3. **Documentation**: update this file (and archive the previous snapshot) within 3–4 days of a new smoke feature landing.
 
-### Systems & Components
-- **RenderFlags**: Verified that spawners (`SettlementSpawnSystem`, `GodgameScenarioSpawnSystem`, etc.) correctly attach `RenderFlags` (Visible=1) to entities.
-- **Headless Disables**: Confirmed that `RuntimeMode.IsHeadless` checks are correctly placed in systems that should not run in headless (e.g., `ApplyRenderCatalogSystem`, `SceneDebugger`), but do not block presentation in Editor.
-- **Input System**: Fixed `InvalidOperationException` spam by ensuring the correct Input Module is used.
-
-### Notes for Headless Agent
-- The presentation scenes are now self-contained and do not rely on legacy Resources assets (which were moved to `_Archive`).
-- `PureDotsResourceTypes` and `PureDotsRuntimeConfig` are correctly assigned in the scene, so Headless builds should ensure these assets are present or generated correctly (which Agent A already handled).
-- No further action is required from the Headless lane regarding presentation scenes.
+## Quick Validation Checklist
+- Run headless command (see `headless_runbook.md`) → confirm logs mention `godgame_smoke.json` and villager/storehouse counts.
+- Open `TRI_Godgame_Smoke.unity` → ensure Scenario Bootstrap UI reports `godgame_smoke.json`.
+- Check `Console` for:
+  - `[Godgame Render SIM] ... godgame_smoke.json` message.
+  - Smoke validation systems reporting TimeState/RewindState healthy.
+- Optional: run the smoke diagnostics PlayMode test suite (under `Assets/Tests/PlayMode/GodgameSmokeTests.cs`) to catch regressions.

@@ -92,7 +92,6 @@ namespace Godgame.Telemetry
     /// </summary>
     [UpdateInGroup(typeof(PureDOTS.Systems.PureDotsPresentationSystemGroup))]
     [UpdateAfter(typeof(TelemetryExportSystemGroup))]
-    [UpdateAfter(typeof(PureDOTS.Systems.Telemetry.TelemetryExportSystem))]
     public partial struct GodgameAIAuditExportSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

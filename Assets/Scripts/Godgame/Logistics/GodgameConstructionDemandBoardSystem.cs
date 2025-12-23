@@ -15,7 +15,6 @@ namespace Godgame.Logistics
     /// </summary>
     [BurstCompile]
     [UpdateInGroup(typeof(ConstructionSystemGroup))]
-    [UpdateBefore(typeof(LogisticsBoardClaimSystem))]
     public partial struct GodgameConstructionDemandBoardSystem : ISystem
     {
         [BurstCompile]

@@ -1,5 +1,6 @@
 using Godgame.AI;
 using PureDOTS.Runtime.Communication;
+using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
 using PureDOTS.Systems;
 using Unity.Burst;

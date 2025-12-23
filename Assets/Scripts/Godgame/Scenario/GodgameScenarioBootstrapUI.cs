@@ -184,8 +184,8 @@ namespace Godgame.Scenario
                 if (count == 1)
                 {
                     var rewindState = rewindStateQuery.GetSingleton<RewindState>();
-                    var viewTick = timeStateQuery != null && timeStateQuery.TryGetSingleton(out TimeState timeState)
-                        ? timeState.Tick
+                    var viewTick = timeStateQuery != null && timeStateQuery.TryGetSingleton(out TimeState rewindTimeState)
+                        ? rewindTimeState.Tick
                         : 0u;
                     SetText(snapshotStats, $"Rewind: {rewindState.Mode} @ {viewTick}");
                 }

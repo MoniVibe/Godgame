@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
@@ -12,8 +13,14 @@ namespace Godgame.Scenario
 {
     public class ScenarioBootstrap : MonoBehaviour
     {
-        public string defaultScenario = "village_loop_smoke.json";
+        private const string LegacyDefaultScenario = "village_loop_smoke.json";
+        private const string SharedSmokeScenario = "godgame_smoke.json";
+
+        [SerializeField]
+        public string defaultScenario = SharedSmokeScenario;
         public bool useFancyBindings = false;
+
+        private const string CameraRigResourcePath = "Prefabs/CameraInputRig";
 
         private Entity scenarioOptionsEntity;
         private float currentSpeed = 1f;
@@ -51,9 +58,10 @@ namespace Godgame.Scenario
                 scenarioOptionsEntity = entityManager.CreateEntity(typeof(ScenarioOptions));
             }
 
+            var scenarioName = ResolveScenarioName();
             var options = new ScenarioOptions
             {
-                ScenarioPath = BuildScenarioPath(defaultScenario),
+                ScenarioPath = BuildScenarioPath(scenarioName),
                 BindingsSet = (byte)(useFancyBindings ? 1 : 0),
                 Veteran = 0
             };
@@ -255,12 +263,35 @@ namespace Godgame.Scenario
             return new FixedString64Bytes("Scenarios/godgame/" + scenarioName);
         }
 
+        private string ResolveScenarioName()
+        {
+            if (string.IsNullOrWhiteSpace(defaultScenario) ||
+                string.Equals(defaultScenario, LegacyDefaultScenario, StringComparison.OrdinalIgnoreCase))
+            {
+                defaultScenario = SharedSmokeScenario;
+            }
+
+            return defaultScenario;
+        }
+
         private static void EnsureCamera()
         {
-#if UNITY_EDITOR
-            // Editor-only safety: ensure there is at least one camera so scenario scenes are viewable.
+            if (RuntimeMode.IsHeadless)
+            {
+                return;
+            }
+
             if (UnityEngine.Camera.main != null || FindFirstObjectByType<UnityEngine.Camera>() != null)
             {
+                return;
+            }
+
+            var rigPrefab = UnityEngine.Resources.Load<GameObject>(CameraRigResourcePath);
+            if (rigPrefab != null)
+            {
+                var rigInstance = Instantiate(rigPrefab);
+                rigInstance.name = "CameraInputRig (Auto)";
+                Debug.Log("[ScenarioBootstrap] Spawned CameraInputRig (Auto) from Resources.");
                 return;
             }
 
@@ -270,8 +301,7 @@ namespace Godgame.Scenario
             camera.transform.position = new Vector3(0f, 12f, -12f);
             camera.transform.LookAt(Vector3.zero);
             camera.clearFlags = CameraClearFlags.Skybox;
-            Debug.LogWarning("[ScenarioBootstrap] Spawned a fallback Camera for the scenario. Add a camera to the scene to override this.");
-#endif
+            Debug.LogWarning("[ScenarioBootstrap] Spawned a fallback Camera for the scenario (no CameraInputRig prefab found).");
         }
     }
 }

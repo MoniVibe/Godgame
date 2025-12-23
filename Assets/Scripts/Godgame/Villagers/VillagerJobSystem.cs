@@ -24,7 +24,6 @@ namespace Godgame.Villagers
     public partial struct VillagerJobSystem : ISystem
     {
         private ComponentLookup<GodgameResourceNodeMirror> _resourceNodeLookup;
-        private ComponentLookup<LocalTransform> _transformLookup;
         private ComponentLookup<GodgameStorehouse> _storehouseLookup;
         private BufferLookup<StorehouseInventoryItem> _inventoryLookup;
         private BufferLookup<StorehouseCapacityElement> _capacityLookup;
@@ -40,7 +39,6 @@ namespace Godgame.Villagers
             state.RequireForUpdate<ResourceTypeIndex>();
             state.RequireForUpdate<BehaviorConfigRegistry>();
             _resourceNodeLookup = state.GetComponentLookup<GodgameResourceNodeMirror>(false);
-            _transformLookup = state.GetComponentLookup<LocalTransform>(isReadOnly: true);
             _storehouseLookup = state.GetComponentLookup<GodgameStorehouse>(isReadOnly: true);
             _inventoryLookup = state.GetBufferLookup<StorehouseInventoryItem>(false);
             _capacityLookup = state.GetBufferLookup<StorehouseCapacityElement>(isReadOnly: true);
@@ -65,7 +63,6 @@ namespace Godgame.Villagers
             }
 
             _resourceNodeLookup.Update(ref state);
-            _transformLookup.Update(ref state);
             _storehouseLookup.Update(ref state);
             _inventoryLookup.Update(ref state);
             _capacityLookup.Update(ref state);
@@ -109,12 +106,11 @@ namespace Godgame.Villagers
             var storehouseEntities = _storehouseQuery.ToEntityArray(state.WorldUpdateAllocator);
             var storehouseTransforms = _storehouseQuery.ToComponentDataArray<LocalTransform>(state.WorldUpdateAllocator);
 
-            new StepJob
+            state.Dependency = new StepJob
             {
                 Delta = deltaTime,
                 Ecb = ecb,
                 ResourceNodeLookup = _resourceNodeLookup,
-                TransformLookup = _transformLookup,
                 StorehouseLookup = _storehouseLookup,
                 InventoryLookup = _inventoryLookup,
                 CapacityLookup = _capacityLookup,
@@ -133,7 +129,7 @@ namespace Godgame.Villagers
                 MoveSpeed = StepJob.DefaultMoveSpeed,
                 GoalLookup = _goalLookup,
                 HazardLookup = _hazardLookup
-            }.ScheduleParallel();
+            }.Schedule(state.Dependency);
 
             state.Dependency.Complete();
 
@@ -163,17 +159,16 @@ namespace Godgame.Villagers
             public float Delta;
             public EntityCommandBuffer.ParallelWriter Ecb;
             public ComponentLookup<GodgameResourceNodeMirror> ResourceNodeLookup;
-            [ReadOnly] public ComponentLookup<LocalTransform> TransformLookup;
             [ReadOnly] public ComponentLookup<GodgameStorehouse> StorehouseLookup;
             public BufferLookup<StorehouseInventoryItem> InventoryLookup;
             [ReadOnly] public BufferLookup<StorehouseCapacityElement> CapacityLookup;
             [ReadOnly] public BlobAssetReference<ResourceTypeIndexBlob> Catalog;
 
-            [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<Entity> ResourceNodeEntities;
-            [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<LocalTransform> ResourceNodeTransforms;
-            [DeallocateOnJobCompletion] public NativeArray<GodgameResourceNodeMirror> ResourceNodeMirrors;
-            [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<Entity> StorehouseEntities;
-            [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<LocalTransform> StorehouseTransforms;
+            [ReadOnly] public NativeArray<Entity> ResourceNodeEntities;
+            [ReadOnly] public NativeArray<LocalTransform> ResourceNodeTransforms;
+            public NativeArray<GodgameResourceNodeMirror> ResourceNodeMirrors;
+            [ReadOnly] public NativeArray<Entity> StorehouseEntities;
+            [ReadOnly] public NativeArray<LocalTransform> StorehouseTransforms;
 
             public float GatherRatePerSecond;
             public float CarryCapacityOverride;
