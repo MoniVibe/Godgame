@@ -35,8 +35,8 @@ namespace Godgame.Scenario
 
         private static bool ContainsSubstring(in FixedString64Bytes str, in FixedString64Bytes substring)
         {
-            FixedString64Bytes substringMutable = substring;
-            return str.IndexOf(ref substringMutable) >= 0;
+            // FixedString.IndexOf does NOT take `ref` for the needle; `ref` here triggers CS1615.
+            return str.IndexOf(substring) >= 0;
         }
 
         private static bool MatchesRegistryId(in FixedString64Bytes registryId, in FixedString64Bytes exactMatch, in FixedString64Bytes substring)
@@ -70,16 +70,23 @@ namespace Godgame.Scenario
             var spawnCenter = float3.zero;
             const float spawnRadius = 20f;
 
-            var villagerSubstring = new FixedString64Bytes("villager");
-            var villagerExact = new FixedString64Bytes("godgame.villager");
-            var storehouseSubstring = new FixedString64Bytes("storehouse");
-            var storehouseExact = new FixedString64Bytes("godgame.storehouse");
-            var resourceNodeSubstring = new FixedString64Bytes("resource_node");
-            var resourceChunkSubstring = new FixedString64Bytes("resource_chunk");
-            var resourceNodeExact = new FixedString64Bytes("godgame.resource_node");
-            var resourceChunkExact = new FixedString64Bytes("godgame.resource_chunk");
-            var villageSubstring = new FixedString64Bytes("village");
-            var villageExact = new FixedString64Bytes("godgame.village_center");
+            // Burst-safe FixedString construction: no managed `string` ctor calls in Burst paths.
+            var villagerSubstring = new FixedString64Bytes();     villagerSubstring.Append('v'); villagerSubstring.Append('i'); villagerSubstring.Append('l'); villagerSubstring.Append('l'); villagerSubstring.Append('a'); villagerSubstring.Append('g'); villagerSubstring.Append('e'); villagerSubstring.Append('r');
+            var villagerExact = new FixedString64Bytes();         villagerExact.Append('g'); villagerExact.Append('o'); villagerExact.Append('d'); villagerExact.Append('g'); villagerExact.Append('a'); villagerExact.Append('m'); villagerExact.Append('e'); villagerExact.Append('.'); villagerExact.Append('v'); villagerExact.Append('i'); villagerExact.Append('l'); villagerExact.Append('l'); villagerExact.Append('a'); villagerExact.Append('g'); villagerExact.Append('e'); villagerExact.Append('r');
+
+            var storehouseSubstring = new FixedString64Bytes();   storehouseSubstring.Append('s'); storehouseSubstring.Append('t'); storehouseSubstring.Append('o'); storehouseSubstring.Append('r'); storehouseSubstring.Append('e'); storehouseSubstring.Append('h'); storehouseSubstring.Append('o'); storehouseSubstring.Append('u'); storehouseSubstring.Append('s'); storehouseSubstring.Append('e');
+            var storehouseExact = new FixedString64Bytes();       storehouseExact.Append('g'); storehouseExact.Append('o'); storehouseExact.Append('d'); storehouseExact.Append('g'); storehouseExact.Append('a'); storehouseExact.Append('m'); storehouseExact.Append('e'); storehouseExact.Append('.'); storehouseExact.Append('s'); storehouseExact.Append('t'); storehouseExact.Append('o'); storehouseExact.Append('r'); storehouseExact.Append('e'); storehouseExact.Append('h'); storehouseExact.Append('o'); storehouseExact.Append('u'); storehouseExact.Append('s'); storehouseExact.Append('e');
+
+            var resourceNodeSubstring = new FixedString64Bytes(); resourceNodeSubstring.Append('r'); resourceNodeSubstring.Append('e'); resourceNodeSubstring.Append('s'); resourceNodeSubstring.Append('o'); resourceNodeSubstring.Append('u'); resourceNodeSubstring.Append('r'); resourceNodeSubstring.Append('c'); resourceNodeSubstring.Append('e'); resourceNodeSubstring.Append('_'); resourceNodeSubstring.Append('n'); resourceNodeSubstring.Append('o'); resourceNodeSubstring.Append('d'); resourceNodeSubstring.Append('e');
+            var resourceChunkSubstring = new FixedString64Bytes();resourceChunkSubstring.Append('r'); resourceChunkSubstring.Append('e'); resourceChunkSubstring.Append('s'); resourceChunkSubstring.Append('o'); resourceChunkSubstring.Append('u'); resourceChunkSubstring.Append('r'); resourceChunkSubstring.Append('c'); resourceChunkSubstring.Append('e'); resourceChunkSubstring.Append('_'); resourceChunkSubstring.Append('c'); resourceChunkSubstring.Append('h'); resourceChunkSubstring.Append('u'); resourceChunkSubstring.Append('n'); resourceChunkSubstring.Append('k');
+
+            var resourceNodeExact = new FixedString64Bytes();     resourceNodeExact.Append('g'); resourceNodeExact.Append('o'); resourceNodeExact.Append('d'); resourceNodeExact.Append('g'); resourceNodeExact.Append('a'); resourceNodeExact.Append('m'); resourceNodeExact.Append('e'); resourceNodeExact.Append('.'); resourceNodeExact.Append('r'); resourceNodeExact.Append('e'); resourceNodeExact.Append('s'); resourceNodeExact.Append('o'); resourceNodeExact.Append('u'); resourceNodeExact.Append('r'); resourceNodeExact.Append('c'); resourceNodeExact.Append('e'); resourceNodeExact.Append('_'); resourceNodeExact.Append('n'); resourceNodeExact.Append('o'); resourceNodeExact.Append('d'); resourceNodeExact.Append('e');
+            var resourceChunkExact = new FixedString64Bytes();    resourceChunkExact.Append('g'); resourceChunkExact.Append('o'); resourceChunkExact.Append('d'); resourceChunkExact.Append('g'); resourceChunkExact.Append('a'); resourceChunkExact.Append('m'); resourceChunkExact.Append('e'); resourceChunkExact.Append('.'); resourceChunkExact.Append('r'); resourceChunkExact.Append('e'); resourceChunkExact.Append('s'); resourceChunkExact.Append('o'); resourceChunkExact.Append('u'); resourceChunkExact.Append('r'); resourceChunkExact.Append('c'); resourceChunkExact.Append('e'); resourceChunkExact.Append('_'); resourceChunkExact.Append('c'); resourceChunkExact.Append('h'); resourceChunkExact.Append('u'); resourceChunkExact.Append('n'); resourceChunkExact.Append('k');
+
+            var villageSubstring = new FixedString64Bytes();      villageSubstring.Append('v'); villageSubstring.Append('i'); villageSubstring.Append('l'); villageSubstring.Append('l'); villageSubstring.Append('a'); villageSubstring.Append('g'); villageSubstring.Append('e');
+            var villageExact = new FixedString64Bytes();          villageExact.Append('g'); villageExact.Append('o'); villageExact.Append('d'); villageExact.Append('g'); villageExact.Append('a'); villageExact.Append('m'); villageExact.Append('e'); villageExact.Append('.'); villageExact.Append('v'); villageExact.Append('i'); villageExact.Append('l'); villageExact.Append('l'); villageExact.Append('a'); villageExact.Append('g'); villageExact.Append('e'); villageExact.Append('_'); villageExact.Append('c'); villageExact.Append('e'); villageExact.Append('n'); villageExact.Append('t'); villageExact.Append('e'); villageExact.Append('r');
+
+            var storehouseLabel = new FixedString64Bytes();       storehouseLabel.Append('S'); storehouseLabel.Append('t'); storehouseLabel.Append('o'); storehouseLabel.Append('r'); storehouseLabel.Append('e'); storehouseLabel.Append('h'); storehouseLabel.Append('o'); storehouseLabel.Append('u'); storehouseLabel.Append('s'); storehouseLabel.Append('e');
 
             for (int i = 0; i < counts.Length; i++)
             {
@@ -177,7 +184,7 @@ namespace Godgame.Scenario
                             MaxShredQueueSize = 0,
                             InputRate = 100f,
                             OutputRate = 100f,
-                            Label = new FixedString64Bytes("Storehouse")
+                            Label = storehouseLabel
                         });
                         ecb.AddBuffer<StorehouseInventoryItem>(storehouse);
                         ecb.AddBuffer<StorehouseCapacityElement>(storehouse);
