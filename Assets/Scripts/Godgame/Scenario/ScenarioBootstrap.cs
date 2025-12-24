@@ -7,6 +7,7 @@ using Unity.Collections;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
+using Godgame.Input;
 using PureDOTS.Runtime.Core;
 
 namespace Godgame.Scenario
@@ -29,11 +30,14 @@ namespace Godgame.Scenario
 
         private void Awake()
         {
-            if (!RuntimeMode.IsHeadless)
+            if (RuntimeMode.IsHeadless)
             {
-                EnsureInputSystemUI();
-                EnsureCamera();
+                return;
             }
+
+            EnsureInputSystemUI();
+            EnsureCamera();
+            EnsureInputReader();
         }
 
         private void Start()
@@ -281,8 +285,10 @@ namespace Godgame.Scenario
                 return;
             }
 
-            if (UnityEngine.Camera.main != null || FindFirstObjectByType<UnityEngine.Camera>() != null)
+            var existingCamera = UnityEngine.Camera.main ?? FindFirstObjectByType<UnityEngine.Camera>();
+            if (existingCamera != null)
             {
+                WireCamera(existingCamera.gameObject);
                 return;
             }
 
@@ -291,17 +297,67 @@ namespace Godgame.Scenario
             {
                 var rigInstance = Instantiate(rigPrefab);
                 rigInstance.name = "CameraInputRig (Auto)";
+                var prefabCamera = rigInstance.GetComponentInChildren<UnityEngine.Camera>();
+                WireCamera(prefabCamera != null ? prefabCamera.gameObject : rigInstance);
                 Debug.Log("[ScenarioBootstrap] Spawned CameraInputRig (Auto) from Resources.");
                 return;
             }
 
             var cameraGo = new GameObject("ScenarioCamera (Auto)");
+            cameraGo.tag = "MainCamera";
             var camera = cameraGo.AddComponent<UnityEngine.Camera>();
-            cameraGo.AddComponent<PureDOTS.Runtime.Camera.CameraRigApplier>();
             camera.transform.position = new Vector3(0f, 12f, -12f);
             camera.transform.LookAt(Vector3.zero);
             camera.clearFlags = CameraClearFlags.Skybox;
+            WireCamera(cameraGo);
             Debug.LogWarning("[ScenarioBootstrap] Spawned a fallback Camera for the scenario (no CameraInputRig prefab found).");
+        }
+
+        private static void WireCamera(GameObject cameraGameObject)
+        {
+            if (cameraGameObject == null)
+            {
+                return;
+            }
+
+            if (!cameraGameObject.TryGetComponent(out UnityEngine.Camera camera))
+            {
+                camera = cameraGameObject.AddComponent<UnityEngine.Camera>();
+            }
+
+            if (!cameraGameObject.CompareTag("MainCamera"))
+            {
+                cameraGameObject.tag = "MainCamera";
+            }
+
+            if (cameraGameObject.GetComponent<PureDOTS.Runtime.Camera.CameraRigApplier>() == null)
+            {
+                cameraGameObject.AddComponent<PureDOTS.Runtime.Camera.CameraRigApplier>();
+            }
+
+            if (cameraGameObject.GetComponent<GodgameCameraController>() == null)
+            {
+                cameraGameObject.AddComponent<GodgameCameraController>();
+                Debug.Log("[ScenarioBootstrap] Added GodgameCameraController to camera.");
+            }
+        }
+
+        private static void EnsureInputReader()
+        {
+            if (RuntimeMode.IsHeadless)
+            {
+                return;
+            }
+
+            if (FindFirstObjectByType<GodgameInputReader>() != null)
+            {
+                return;
+            }
+
+            var inputReaderGo = new GameObject("GodgameInputReader (Auto)");
+            inputReaderGo.AddComponent<GodgameInputReader>();
+            UnityEngine.Object.DontDestroyOnLoad(inputReaderGo);
+            Debug.Log("[ScenarioBootstrap] Added GodgameInputReader (Auto).");
         }
     }
 }

@@ -35,6 +35,8 @@ namespace Godgame.Runtime
         public int HeldCapacity;
         public float SiphonRate;
         public float DumpRate;
+        public float MinThrowSpeed;
+        public float MaxThrowSpeed;
     }
 
     /// <summary>
@@ -90,6 +92,7 @@ namespace Godgame.Runtime
         public Entity Entity;
         public float3 Direction;
         public float Impulse;
+        public float ChargeLevel; // 0..1 normalized charge level
     }
 }
 

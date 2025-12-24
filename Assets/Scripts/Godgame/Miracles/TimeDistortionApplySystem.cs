@@ -8,6 +8,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using EffectiveDeltaTime = PureDOTS.Runtime.Time.EffectiveDeltaTime;
 
 namespace Godgame.Miracles
 {
@@ -128,6 +129,19 @@ namespace Godgame.Miracles
                 {
                     // Only add component if time scale is not normal (optimization)
                     state.EntityManager.AddComponentData(entity, new LocalTimeScale { Value = finalTimeScale });
+                }
+
+                // Also update EffectiveDeltaTime for Phase 1 time correctness
+                var timeStateForDelta = SystemAPI.GetSingleton<TimeState>();
+                var effectiveDelta = timeStateForDelta.DeltaTime * finalTimeScale;
+                if (SystemAPI.HasComponent<EffectiveDeltaTime>(entity))
+                {
+                    var effectiveDeltaComponent = SystemAPI.GetComponentRW<EffectiveDeltaTime>(entity);
+                    effectiveDeltaComponent.ValueRW.Value = effectiveDelta;
+                }
+                else if (finalTimeScale != 1.0f)
+                {
+                    state.EntityManager.AddComponentData(entity, new EffectiveDeltaTime { Value = effectiveDelta });
                 }
             }
 

@@ -87,8 +87,7 @@ namespace Godgame.Authoring.Perception
                 FieldOfView = authoring.VisionFOV,
                 Acuity = 1f,
                 UpdateInterval = authoring.UpdateInterval,
-                MaxTrackedTargets = authoring.MaxTrackedTargets,
-                Flags = 0
+                MaxTrackedTargets = authoring.MaxTrackedTargets
             });
 
             var organs = AddBuffer<SenseOrganState>(entity);
@@ -121,7 +120,7 @@ namespace Godgame.Authoring.Perception
             });
             organs.Add(new SenseOrganState
             {
-                OrganType = SenseOrganType.ParanormalSense,
+                OrganType = SenseOrganType.ParanormalOrgan,
                 Channels = PerceptionChannel.Paranormal,
                 Gain = 1f,
                 Condition = authoring.ParanormalAcuity,

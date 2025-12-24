@@ -1,8 +1,8 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Unity.Entities;
 using Godgame.Input;
 using PureDOTS.Runtime.Camera;
+using PureDOTS.Input;
 
 namespace Godgame
 {
@@ -32,6 +32,12 @@ namespace Godgame
         [SerializeField] private float _zoomSpeed = 40f;
         [SerializeField] private float _minZoomDistance = 5f;
 
+        [Header("Y-Axis Lock")]
+        [SerializeField] private bool _yAxisLocked = true;
+
+        [Header("Input")]
+        [SerializeField] private HandCameraInputRouter _inputRouter;
+
         // Internal state
         private float _yaw;
         private float _pitch;
@@ -47,6 +53,9 @@ namespace Godgame
         private Vector3 _dragStartCameraPos;
         private Vector3 _dragStartHit;
         private bool _isDraggingPan;
+        private Plane _panPlane = new Plane(Vector3.up, Vector3.zero);
+        private Vector3 _panWorldStart;
+        private Vector3 _panPivotStart;
 
         private void Awake()
         {
@@ -71,6 +80,7 @@ namespace Godgame
             }
 
             // Camera resolution and initialization happens in OnEnable
+            EnsureInputRouter();
         }
 
         private void OnEnable()
@@ -116,6 +126,11 @@ namespace Godgame
 
         private void Update()
         {
+            if (_inputRouter == null)
+            {
+                EnsureInputRouter();
+            }
+
             // Guard against BW2StyleCameraController taking over
             // Direct call now that duplicates are unified - no reflection needed
             if (BW2StyleCameraController.HasActiveRig)
@@ -146,66 +161,58 @@ namespace Godgame
                 return; // Skip normal movement this frame
             }
 
-            // Handle zoom and drag (still using mouse directly for these)
-            var mouse = Mouse.current;
-            if (mouse != null)
+            if (cameraInput.ToggleYAxisLock == 1)
             {
-                HandleZoom(mouse, UnityEngine.Time.deltaTime);
-                HandleDragPan(mouse, UnityEngine.Time.deltaTime);
+                _yAxisLocked = !_yAxisLocked;
             }
 
             float dt = UnityEngine.Time.deltaTime;
 
-            // -------- WASD ground-plane movement from ECS input --------
-            Vector2 moveInput = new Vector2(cameraInput.Move.x, cameraInput.Move.y);
+            // -------- MMB drag rotation (yaw / pitch) --------
+            Vector2 rotateInput = new Vector2(cameraInput.Rotate.x, cameraInput.Rotate.y);
+            if (rotateInput.sqrMagnitude > 1e-4f)
+            {
+                _yaw += rotateInput.x * _rotationSpeed;
+                _yaw = NormalizeDegrees(_yaw); // Keep yaw in [-180, 180] range
 
-            // Normalize input so diagonal movement isn't faster
+                _pitch -= rotateInput.y * _rotationSpeed; // invert Y so dragging up looks down
+                _pitch = Mathf.Clamp(_pitch, _minPitch, _maxPitch);
+            }
+
+            _rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+
+            // -------- WASD movement respecting lock state --------
+            Vector2 moveInput = new Vector2(cameraInput.Move.x, cameraInput.Move.y);
             if (moveInput.sqrMagnitude > 1e-4f)
             {
                 moveInput = moveInput.normalized;
             }
 
-            // Build yaw-only rotation (ignore pitch for ground movement)
             Quaternion yawRotation = Quaternion.Euler(0f, _yaw, 0f);
+            Quaternion movementRotation = _yAxisLocked ? yawRotation : _rotation;
 
-            // Camera-relative directions on XZ plane
-            Vector3 camForward = yawRotation * Vector3.forward; // "forward" in world space
-            Vector3 camRight = yawRotation * Vector3.right;     // "right" in world space
+            Vector3 camForward = movementRotation * Vector3.forward;
+            Vector3 camRight = movementRotation * Vector3.right;
+            Vector3 worldMove = (camForward * moveInput.y + camRight * moveInput.x) * (_moveSpeed * dt);
 
-            // Compose movement
-            Vector3 worldMove = camForward * moveInput.y +     // W/S
-                               camRight * moveInput.x;         // A/D
-
-            // Apply speed & delta time
-            worldMove *= _moveSpeed * dt;
-
-            // -------- Q/E vertical movement (still using keyboard directly for now) --------
-            // TODO: Add vertical movement to CameraInput component
-            float vertical = 0f;
-            var kb = Keyboard.current;
-            if (kb != null)
-            {
-                if (kb.eKey.isPressed) vertical += 1f;
-                if (kb.qKey.isPressed) vertical -= 1f;
-            }
-
-            Vector3 verticalMove = Vector3.up * (vertical * _verticalSpeed * dt);
+            // -------- Q/E vertical movement respecting lock state --------
+            Vector3 upVector = _yAxisLocked ? Vector3.up : movementRotation * Vector3.up;
+            Vector3 verticalMove = upVector * (cameraInput.Vertical * _verticalSpeed * dt);
 
             // Apply translation to internal position
             _position += worldMove + verticalMove;
 
-            // -------- MMB drag rotation (yaw / pitch) --------
-            if (mouse.middleButton.isPressed)
+            // -------- Zoom from ECS input --------
+            if (Mathf.Abs(cameraInput.Zoom) > 0.01f)
             {
-                Vector2 delta = mouse.delta.ReadValue();
-                _yaw += delta.x * _rotationSpeed;
-                _yaw = NormalizeDegrees(_yaw); // Keep yaw in [-180, 180] range
-
-                _pitch -= delta.y * _rotationSpeed; // invert Y so dragging up looks down
-                _pitch = Mathf.Clamp(_pitch, _minPitch, _maxPitch);
+                HandleZoom(cameraInput, dt);
             }
 
-            _rotation = Quaternion.Euler(_pitch, _yaw, 0f);
+            // -------- LMB drag pan from ECS input --------
+            if (cameraInput.Pan.x != 0f || cameraInput.Pan.y != 0f)
+            {
+                HandleDragPan(cameraInput, dt);
+            }
 
             // Publish to CameraRigService (for DOTS systems to read)
             PublishCurrentState();
@@ -285,54 +292,71 @@ namespace Godgame
 #endif
         }
 
-        private void HandleZoom(Mouse mouse, float dt)
+        private void HandleZoom(in CameraInput cameraInput, float dt)
         {
-            float scroll = mouse.scroll.ReadValue().y;
+            float scroll = cameraInput.Zoom;
             if (Mathf.Abs(scroll) < 0.01f)
                 return;
+
+            var context = _inputRouter != null ? _inputRouter.CurrentContext : default;
+            if (_inputRouter != null && context.PointerOverUI)
+            {
+                return;
+            }
 
             // Pointer scroll is a per-frame delta (device units, typically ~120 per notch). Do NOT multiply by dt.
             // Convert to "notches" so zoom feels stable across framerates.
             float scrollNotches = scroll / 120f;
             float zoomAmount = scrollNotches * (_zoomSpeed * 2f);
 
-            // Ray from camera through cursor
-            Ray ray = _unityCamera.ScreenPointToRay(mouse.position.ReadValue());
-
-            if (_groundPlane.Raycast(ray, out float enter))
+            Vector3 zoomTarget;
+            if (cameraInput.HasPointerWorld != 0)
             {
-                Vector3 hit = ray.GetPoint(enter);
-                Vector3 camToHit = hit - _position;
-
-                // If we're very close, don't zoom in further
-                float dist = camToHit.magnitude;
-                if (dist < _minZoomDistance && zoomAmount > 0f)
-                    return;
-
-                Vector3 dir = camToHit.normalized;
-                _position += dir * zoomAmount;
-
-#if UNITY_EDITOR && GODGAME_DEBUG_CAMERA
-                // Debug logging for zoom
-                if (UnityEngine.Time.frameCount % 30 == 0) // Log every half second
-                {
-                    Debug.Log($"[GodgameCamera] Zoom: {zoomAmount:F2}, Hit: {hit:F1}, NewPos: {_position:F1}");
-                }
-#endif
+                zoomTarget = new Vector3(
+                    cameraInput.PointerWorldPosition.x,
+                    cameraInput.PointerWorldPosition.y,
+                    cameraInput.PointerWorldPosition.z);
+            }
+            else if (_inputRouter != null && context.HasWorldHit)
+            {
+                zoomTarget = (Vector3)context.WorldPoint;
             }
             else
             {
-                // Fallback: simple zoom along camera forward on ground plane
-                Quaternion yawRot = Quaternion.Euler(0f, _yaw, 0f);
-                Vector3 forward = yawRot * Vector3.forward;
-                _position += forward * zoomAmount;
+                // Fallback: original ground plane intersection
+                var pointer = cameraInput.PointerPosition;
+                Ray ray = _unityCamera.ScreenPointToRay(new Vector3(pointer.x, pointer.y, 0f));
+                if (_groundPlane.Raycast(ray, out float enter))
+                {
+                    zoomTarget = ray.GetPoint(enter);
+                }
+                else
+                {
+                    var yawRot = Quaternion.Euler(0f, _yaw, 0f);
+                    zoomTarget = _position + (yawRot * Vector3.forward * 10f);
+                }
             }
+
+            Vector3 camToHit = zoomTarget - _position;
+            float dist = camToHit.magnitude;
+            if (dist < _minZoomDistance && zoomAmount > 0f)
+                return;
+
+            Vector3 dir = camToHit.normalized;
+            _position += dir * zoomAmount;
         }
 
-        private void HandleDragPan(Mouse mouse, float dt)
+        private void HandleDragPan(in CameraInput cameraInput, float dt)
         {
-            // If button not held, reset state
-            if (!mouse.leftButton.isPressed)
+            var context = _inputRouter != null ? _inputRouter.CurrentContext : default;
+
+            if (_inputRouter != null && context.PointerOverUI)
+            {
+                _isDraggingPan = false;
+                return;
+            }
+
+            if (cameraInput.Pan.x == 0f && cameraInput.Pan.y == 0f)
             {
                 _isDraggingPan = false;
                 return;
@@ -342,49 +366,63 @@ namespace Godgame
             if (!_isDraggingPan)
             {
                 _isDraggingPan = true;
-                // Optional: swallow the first delta to avoid jump
+                if (context.HasWorldHit && context.HitGround)
+                {
+                    _panWorldStart = (Vector3)context.WorldPoint;
+                    _panPivotStart = _position;
+                    _panPlane = new Plane(Vector3.up, _panWorldStart);
+                }
                 return;
             }
 
-            Vector2 delta = mouse.delta.ReadValue();
-            if (delta.sqrMagnitude < 0.0001f)
-                return;
+            if (context.HasWorldHit)
+            {
+                Vector3 worldNow = (Vector3)context.WorldPoint;
+                if (_panPlane.Raycast(context.PointerRay, out float enter))
+                {
+                    worldNow = context.PointerRay.GetPoint(enter);
+                }
+                Vector3 deltaWorld = _panWorldStart - worldNow;
+                _position = _panPivotStart + deltaWorld;
+            }
+            else
+            {
+                Vector2 delta = new Vector2(cameraInput.Pan.x, cameraInput.Pan.y);
+                if (delta.sqrMagnitude < 0.0001f)
+                    return;
 
-            // We pan opposite to drag (drag right -> world goes right, camera moves left)
-            // Only use yaw so we stay on the ground plane
-            Quaternion yawRot = Quaternion.Euler(0f, _yaw, 0f);
-            Vector3 right = yawRot * Vector3.right;
-            Vector3 forward = yawRot * Vector3.forward;
+                Quaternion yawRot = Quaternion.Euler(0f, _yaw, 0f);
+                Vector3 right = yawRot * Vector3.right;
+                Vector3 forward = yawRot * Vector3.forward;
 
-            // Convert pixels to world movement
-            float scale = _panSpeedPerPixel; // no dt here: delta is per-frame already
-            Vector3 pan =
-                (-right * delta.x +   // dragging mouse right moves camera left
-                 -forward * delta.y)  // dragging mouse up moves camera forward/back
-                * scale;
+                float scale = _panSpeedPerPixel;
+                Vector3 pan =
+                    (-right * delta.x +
+                     -forward * delta.y)
+                    * scale;
 
-            _position += pan;
+                _position += pan;
 
 #if UNITY_EDITOR && GODGAME_DEBUG_CAMERA
-            // Debug logging for pan (less frequent than drag was)
-            if (UnityEngine.Time.frameCount % 30 == 0)
-            {
-                Debug.Log($"[GodgameCamera] Pan: Delta: {delta}, Pan: {pan:F2}, NewPos: {_position:F1}");
-            }
+                // Debug logging for pan (less frequent than drag was)
+                if (UnityEngine.Time.frameCount % 30 == 0)
+                {
+                    Debug.Log($"[GodgameCamera] Pan: Delta: {delta}, Pan: {pan:F2}, NewPos: {_position:F1}");
+                }
 #endif
+            }
         }
 
-        private bool TryGetGroundHit(Vector2 screenPos, out Vector3 hitPoint)
+        private void EnsureInputRouter()
         {
-            Ray ray = _unityCamera.ScreenPointToRay(screenPos);
-            if (_groundPlane.Raycast(ray, out float enter))
+            if (_inputRouter != null)
             {
-                hitPoint = ray.GetPoint(enter);
-                return true;
+                return;
             }
 
-            hitPoint = default;
-            return false;
+            _inputRouter = GetComponent<HandCameraInputRouter>() ??
+                           GetComponentInChildren<HandCameraInputRouter>() ??
+                           UnityEngine.Object.FindFirstObjectByType<HandCameraInputRouter>();
         }
 
         private void ResolveCamera()

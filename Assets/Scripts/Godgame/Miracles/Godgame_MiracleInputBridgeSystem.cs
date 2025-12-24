@@ -2,6 +2,7 @@ using Godgame.Input;
 using Godgame.Presentation;
 using PureDOTS.Input;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Miracles;
 using PureDOTS.Systems;
 using Unity.Burst;
 using Unity.Collections;
@@ -37,12 +38,15 @@ namespace Godgame.Miracles
             }
 
             // Update any existing MiracleCasterState entities with the new input
-            foreach (var (casterStateRef, slotBuffer) in SystemAPI.Query<RefRW<MiracleCasterState>, DynamicBuffer<MiracleSlotDefinition>>())
+            foreach (var (casterStateRef, slotBuffer, runtimeStateRef, selectionRef) in SystemAPI.Query<RefRW<MiracleCasterState>, DynamicBuffer<MiracleSlotDefinition>, RefRW<MiracleRuntimeStateNew>, RefRW<MiracleCasterSelection>>())
             {
                 ref var casterState = ref casterStateRef.ValueRW;
+                ref var runtimeState = ref runtimeStateRef.ValueRW;
+                ref var selection = ref selectionRef.ValueRW;
 
                 // Update selected slot from input
                 casterState.SelectedSlot = miracleInput.SelectedSlot;
+                selection.SelectedSlot = miracleInput.SelectedSlot;
 
                 // Update sustained cast state
                 casterState.SustainedCastHeld = miracleInput.SustainedCastHeld;
@@ -52,6 +56,10 @@ namespace Godgame.Miracles
                 {
                     casterState.ThrowCastTriggered = 1;
                 }
+
+                runtimeState.SelectedId = ResolveSelectedMiracleId(miracleInput.SelectedSlot, slotBuffer);
+                runtimeState.IsActivating = miracleInput.CastTriggered;
+                runtimeState.IsSustained = miracleInput.SustainedCastHeld;
             }
 
             // If there's a cast triggered and no MiracleCasterState exists, 
@@ -70,6 +78,19 @@ namespace Godgame.Miracles
                     SpawnDirectMiracle(ref state, miracleInput);
                 }
             }
+        }
+
+        private static MiracleId ResolveSelectedMiracleId(byte slot, DynamicBuffer<MiracleSlotDefinition> slots)
+        {
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i].SlotIndex == slot)
+                {
+                    return (MiracleId)slots[i].Type;
+                }
+            }
+
+            return (MiracleId)slot;
         }
 
         private void SpawnDirectMiracle(ref SystemState state, MiracleInput miracleInput)

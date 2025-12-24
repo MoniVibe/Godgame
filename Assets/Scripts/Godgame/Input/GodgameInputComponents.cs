@@ -11,6 +11,8 @@ namespace Godgame.Input
     {
         /// <summary>WASD movement input</summary>
         public float2 Move;
+        /// <summary>Vertical movement input (Q/E)</summary>
+        public float Vertical;
         /// <summary>MMB drag rotation input</summary>
         public float2 Rotate;
         /// <summary>Scroll wheel zoom input</summary>
@@ -25,6 +27,8 @@ namespace Godgame.Input
         public float3 PointerWorldPosition;
         /// <summary>Whether pointer world position is valid</summary>
         public byte HasPointerWorld; // 0 = false, 1 = true
+        /// <summary>Edge trigger for toggling Y-axis lock state</summary>
+        public byte ToggleYAxisLock;
     }
 
     /// <summary>

@@ -88,7 +88,12 @@ namespace Godgame.MoveAct
                 handEntity = entityManager.CreateEntity(
                     typeof(DivineHandTag),
                     typeof(DivineHandInput),
-                    typeof(GodIntent));
+                    typeof(GodIntent),
+                    typeof(PureDOTS.Runtime.Hand.HandState),
+                    typeof(PureDOTS.Runtime.Hand.HandHover),
+                    typeof(PureDOTS.Runtime.Hand.HandAffordances));
+                entityManager.AddBuffer<PureDOTS.Runtime.Hand.HandCommand>(handEntity);
+                entityManager.AddBuffer<PureDOTS.Runtime.Hand.HandPayload>(handEntity);
                 entityManager.SetComponentData(handEntity, new DivineHandInput
                 {
                     SampleTick = 0,
@@ -110,6 +115,7 @@ namespace Godgame.MoveAct
                 });
                 entityManager.SetComponentData(handEntity, new GodIntent());
                 entityManager.AddBuffer<HandInputEdge>(handEntity);
+                entityManager.SetComponentData(handEntity, new PureDOTS.Runtime.Hand.HandState());
             }
             else
             {
@@ -121,6 +127,31 @@ namespace Godgame.MoveAct
                 if (!entityManager.HasBuffer<HandInputEdge>(handEntity))
                 {
                     entityManager.AddBuffer<HandInputEdge>(handEntity);
+                }
+
+                if (!entityManager.HasComponent<PureDOTS.Runtime.Hand.HandState>(handEntity))
+                {
+                    entityManager.AddComponent<PureDOTS.Runtime.Hand.HandState>(handEntity);
+                }
+
+                if (!entityManager.HasBuffer<PureDOTS.Runtime.Hand.HandCommand>(handEntity))
+                {
+                    entityManager.AddBuffer<PureDOTS.Runtime.Hand.HandCommand>(handEntity);
+                }
+
+                if (!entityManager.HasBuffer<PureDOTS.Runtime.Hand.HandPayload>(handEntity))
+                {
+                    entityManager.AddBuffer<PureDOTS.Runtime.Hand.HandPayload>(handEntity);
+                }
+
+                if (!entityManager.HasComponent<PureDOTS.Runtime.Hand.HandHover>(handEntity))
+                {
+                    entityManager.AddComponent<PureDOTS.Runtime.Hand.HandHover>(handEntity);
+                }
+
+                if (!entityManager.HasComponent<PureDOTS.Runtime.Hand.HandAffordances>(handEntity))
+                {
+                    entityManager.AddComponent<PureDOTS.Runtime.Hand.HandAffordances>(handEntity);
                 }
             }
 

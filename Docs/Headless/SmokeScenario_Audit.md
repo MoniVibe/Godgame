@@ -29,3 +29,5 @@
 2. Update Scenario bootstrap defaults (Mono + ensure system) to point to the shared JSON.
 3. Align diagnostics/logging (`Godgame_RenderKeySimDebugSystem`, smoke validation systems) so their expectations match the new scenario artifact.
 
+
+

@@ -14,6 +14,7 @@ using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Pickable = PureDOTS.Runtime.Interaction.Pickable;
 
 namespace Godgame.Systems.Interaction
 {

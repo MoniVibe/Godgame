@@ -39,6 +39,8 @@ namespace Godgame.Miracles.Presentation
                     {
                         Type = trigger.Type,
                         Position = trigger.Position,
+                        Normal = new float3(0f, 1f, 0f),
+                        TargetEntity = Entity.Null,
                         Direction = new float3(0f, 1f, 0f),
                         Impulse = 1f,
                         ConfigEntity = Entity.Null

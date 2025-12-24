@@ -1,6 +1,7 @@
 using Godgame.Runtime;
 using PureDOTS.Input;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Miracles;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -22,6 +23,8 @@ namespace Godgame.Authoring
         public float cooldownAfterThrowSeconds = 0.15f;
         public float minChargeSeconds = 0.2f;
         public float maxChargeSeconds = 1.5f;
+        public float minThrowSpeed = 15f;
+        public float maxThrowSpeed = 35f;
 
         private class Baker : Baker<DivineHandAuthoring>
         {
@@ -47,7 +50,9 @@ namespace Godgame.Authoring
                     HysteresisFrames = 3,
                     HeldCapacity = math.max(1, authoring.heldCapacity),
                     SiphonRate = math.max(0f, authoring.dumpRatePerSecond),
-                    DumpRate = math.max(0f, authoring.dumpRatePerSecond)
+                    DumpRate = math.max(0f, authoring.dumpRatePerSecond),
+                    MinThrowSpeed = math.max(0.1f, authoring.minThrowSpeed),
+                    MaxThrowSpeed = math.max(math.max(0.1f, authoring.minThrowSpeed), authoring.maxThrowSpeed)
                 });
 
                 AddComponent(entity, new Godgame.Runtime.DivineHandState
@@ -142,6 +147,73 @@ namespace Godgame.Authoring
                     SelectedSlot = 0,
                     SustainedCastHeld = 0,
                     ThrowCastTriggered = 0
+                });
+
+                AddComponent(entity, new MiracleRuntimeStateNew
+                {
+                    SelectedId = MiracleId.None,
+                    IsActivating = 0,
+                    IsSustained = 0
+                });
+
+                AddComponent(entity, new MiracleChargeState
+                {
+                    Charge01 = 0f,
+                    HeldTime = 0f,
+                    TierIndex = 0,
+                    IsCharging = 0
+                });
+
+                AddComponent(entity, new MiracleChargeDisplayData
+                {
+                    ChargePercent = 0f,
+                    CurrentTier = 0,
+                    HoldTimeSeconds = 0f,
+                    IsCharging = 0
+                });
+
+                AddComponent(entity, new MiracleChannelState
+                {
+                    ActiveEffectEntity = Entity.Null,
+                    ChannelingId = MiracleId.None,
+                    ChannelStartTime = 0f
+                });
+
+                AddComponent(entity, new MiracleCasterSelection
+                {
+                    SelectedSlot = 0
+                });
+
+                AddComponent(entity, new MiracleTargetSolution
+                {
+                    TargetPoint = cursor,
+                    TargetEntity = Entity.Null,
+                    Radius = 0f,
+                    IsValid = 0,
+                    ValidityReason = MiracleTargetValidityReason.NoTargetFound,
+                    PreviewArcStart = cursor,
+                    PreviewArcEnd = cursor,
+                    SelectedMiracleId = MiracleId.None
+                });
+
+                AddComponent(entity, new MiraclePreviewData
+                {
+                    Position = cursor,
+                    Radius = 0f,
+                    IsValid = 0,
+                    ValidityReason = MiracleTargetValidityReason.NoTargetFound,
+                    SelectedMiracleId = MiracleId.None
+                });
+
+                AddComponent(entity, new MiracleRequestCreationState
+                {
+                    PreviousIsActivating = 0,
+                    PreviousIsSustained = 0
+                });
+
+                AddComponent(entity, new MiracleChargeTrackingState
+                {
+                    PreviousSelectedId = MiracleId.None
                 });
             }
         }

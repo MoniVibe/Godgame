@@ -2,6 +2,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using PureDOTS.Input;
 
 namespace Godgame.Input
 {
@@ -25,13 +26,16 @@ namespace Godgame.Input
 
         // Input actions
         private InputAction moveAction;
+        private InputAction verticalAction;
         private InputAction pointerPositionAction;
         private InputAction pointerDeltaAction;
+        private InputAction panDeltaAction;
         private InputAction scrollAction;
         private InputAction leftClickAction;
         private InputAction rightClickAction;
         private InputAction middleClickAction;
         private InputAction focusAction;
+        private InputAction yAxisLockToggleAction;
         private InputAction miracleSlot1Action;
         private InputAction miracleSlot2Action;
         private InputAction miracleSlot3Action;
@@ -44,6 +48,9 @@ namespace Godgame.Input
         private InputAction togglePresentationMetricsAction;
         private InputAction ctrlModifierAction;
         private InputAction shiftModifierAction;
+
+        [Header("Router (optional)")]
+        [SerializeField] private HandCameraInputRouter inputRouter;
 
         // State tracking for edge detection
         private bool wasLeftClickPressed;
@@ -81,6 +88,8 @@ namespace Godgame.Input
                 return;
             }
 
+            EnsureInputRouter();
+
             UpdateCameraInput();
             UpdateMiracleInput();
             UpdateSelectionInput();
@@ -113,11 +122,14 @@ namespace Godgame.Input
             if (cameraMap != null)
             {
                 moveAction = cameraMap.FindAction("Move", throwIfNotFound: false);
+                verticalAction = cameraMap.FindAction("Vertical", throwIfNotFound: false);
                 pointerPositionAction = cameraMap.FindAction("PointerPosition", throwIfNotFound: false);
                 pointerDeltaAction = cameraMap.FindAction("PointerDelta", throwIfNotFound: false);
+                panDeltaAction = cameraMap.FindAction("PanDelta", throwIfNotFound: false);
                 scrollAction = cameraMap.FindAction("Scroll", throwIfNotFound: false);
                 focusAction = cameraMap.FindAction("Focus", throwIfNotFound: false);
                 middleClickAction = cameraMap.FindAction("MiddleClick", throwIfNotFound: false);
+                yAxisLockToggleAction = cameraMap.FindAction("YAxisLockToggle", throwIfNotFound: false);
             }
 
             // Selection actions
@@ -162,13 +174,20 @@ namespace Godgame.Input
                 .With("Left", "<Keyboard>/a")
                 .With("Right", "<Keyboard>/d");
 
+            verticalAction = new InputAction("Vertical", InputActionType.Value);
+            var verticalComposite = verticalAction.AddCompositeBinding("1DAxis");
+            verticalComposite.With("Negative", "<Keyboard>/q");
+            verticalComposite.With("Positive", "<Keyboard>/e");
+
             pointerPositionAction = new InputAction("PointerPosition", InputActionType.Value, "<Mouse>/position");
             pointerDeltaAction = new InputAction("PointerDelta", InputActionType.Value, "<Mouse>/delta");
+            panDeltaAction = new InputAction("PanDelta", InputActionType.Value, "<Mouse>/delta");
             scrollAction = new InputAction("Scroll", InputActionType.Value, "<Mouse>/scroll/y");
             leftClickAction = new InputAction("LeftClick", InputActionType.Button, "<Mouse>/leftButton");
             rightClickAction = new InputAction("RightClick", InputActionType.Button, "<Mouse>/rightButton");
             middleClickAction = new InputAction("MiddleClick", InputActionType.Button, "<Mouse>/middleButton");
             focusAction = new InputAction("Focus", InputActionType.Button, "<Keyboard>/f");
+            yAxisLockToggleAction = new InputAction("YAxisLockToggle", InputActionType.Button, "<Keyboard>/y");
 
             miracleSlot1Action = new InputAction("MiracleSlot1", InputActionType.Button, "<Keyboard>/1");
             miracleSlot2Action = new InputAction("MiracleSlot2", InputActionType.Button, "<Keyboard>/2");
@@ -189,13 +208,16 @@ namespace Godgame.Input
         private void EnableActions()
         {
             moveAction?.Enable();
+            verticalAction?.Enable();
             pointerPositionAction?.Enable();
             pointerDeltaAction?.Enable();
+            panDeltaAction?.Enable();
             scrollAction?.Enable();
             leftClickAction?.Enable();
             rightClickAction?.Enable();
             middleClickAction?.Enable();
             focusAction?.Enable();
+            yAxisLockToggleAction?.Enable();
             miracleSlot1Action?.Enable();
             miracleSlot2Action?.Enable();
             miracleSlot3Action?.Enable();
@@ -213,13 +235,16 @@ namespace Godgame.Input
         private void DisableActions()
         {
             moveAction?.Disable();
+            verticalAction?.Disable();
             pointerPositionAction?.Disable();
             pointerDeltaAction?.Disable();
+            panDeltaAction?.Disable();
             scrollAction?.Disable();
             leftClickAction?.Disable();
             rightClickAction?.Disable();
             middleClickAction?.Disable();
             focusAction?.Disable();
+            yAxisLockToggleAction?.Disable();
             miracleSlot1Action?.Disable();
             miracleSlot2Action?.Disable();
             miracleSlot3Action?.Disable();
@@ -232,6 +257,16 @@ namespace Godgame.Input
             togglePresentationMetricsAction?.Disable();
             ctrlModifierAction?.Disable();
             shiftModifierAction?.Disable();
+        }
+
+        private void EnsureInputRouter()
+        {
+            if (inputRouter != null)
+            {
+                return;
+            }
+
+            inputRouter = FindFirstObjectByType<HandCameraInputRouter>();
         }
 
         private void TryInitializeECS()
@@ -273,6 +308,23 @@ namespace Godgame.Input
             var move = moveAction?.ReadValue<Vector2>() ?? Vector2.zero;
             cameraInput.Move = new float2(move.x, move.y);
 
+            // Vertical movement
+            float vertical = 0f;
+            if (verticalAction != null)
+            {
+                vertical = verticalAction.ReadValue<float>();
+            }
+            else
+            {
+                var kb = Keyboard.current;
+                if (kb != null)
+                {
+                    if (kb.eKey.isPressed) vertical += 1f;
+                    if (kb.qKey.isPressed) vertical -= 1f;
+                }
+            }
+            cameraInput.Vertical = vertical;
+
             // Pointer position
             var pointerPos = pointerPositionAction?.ReadValue<Vector2>() ?? Vector2.zero;
             cameraInput.PointerPosition = new float2(pointerPos.x, pointerPos.y);
@@ -285,32 +337,44 @@ namespace Godgame.Input
             // Zoom
             cameraInput.Zoom = scrollAction?.ReadValue<float>() ?? 0f;
 
-            // Pan (not currently used separately from rotate, but available)
-            cameraInput.Pan = float2.zero;
+            // Pan (LMB drag delta)
+            var isLeftPressed = leftClickAction?.IsPressed() ?? false;
+            var panDelta = isLeftPressed && panDeltaAction != null ? panDeltaAction.ReadValue<Vector2>() : Vector2.zero;
+            cameraInput.Pan = new float2(panDelta.x, panDelta.y);
 
             // Focus (edge trigger)
             cameraInput.Focus = (focusAction?.WasPressedThisFrame() ?? false) ? (byte)1 : (byte)0;
+            cameraInput.ToggleYAxisLock = (yAxisLockToggleAction?.WasPressedThisFrame() ?? false) ? (byte)1 : (byte)0;
 
-            // Pointer world position (raycast to ground plane)
-            var camera = UnityEngine.Camera.main;
-            if (camera != null)
+            // Pointer world position (prefer router context)
+            if (inputRouter != null && inputRouter.CurrentContext.HasWorldHit)
             {
-                var ray = camera.ScreenPointToRay(new Vector3(pointerPos.x, pointerPos.y, 0));
-                var groundPlane = new Plane(Vector3.up, Vector3.zero);
-                if (groundPlane.Raycast(ray, out float distance))
+                var worldPoint = inputRouter.CurrentContext.WorldPoint;
+                cameraInput.PointerWorldPosition = new float3(worldPoint.x, worldPoint.y, worldPoint.z);
+                cameraInput.HasPointerWorld = 1;
+            }
+            else
+            {
+                var camera = UnityEngine.Camera.main;
+                if (camera != null)
                 {
-                    var hitPoint = ray.GetPoint(distance);
-                    cameraInput.PointerWorldPosition = new float3(hitPoint.x, hitPoint.y, hitPoint.z);
-                    cameraInput.HasPointerWorld = 1;
+                    var ray = camera.ScreenPointToRay(new Vector3(pointerPos.x, pointerPos.y, 0));
+                    var groundPlane = new Plane(Vector3.up, Vector3.zero);
+                    if (groundPlane.Raycast(ray, out float distance))
+                    {
+                        var hitPoint = ray.GetPoint(distance);
+                        cameraInput.PointerWorldPosition = new float3(hitPoint.x, hitPoint.y, hitPoint.z);
+                        cameraInput.HasPointerWorld = 1;
+                    }
+                    else
+                    {
+                        cameraInput.HasPointerWorld = 0;
+                    }
                 }
                 else
                 {
                     cameraInput.HasPointerWorld = 0;
                 }
-            }
-            else
-            {
-                cameraInput.HasPointerWorld = 0;
             }
 
             em.SetComponentData(inputEntity, cameraInput);

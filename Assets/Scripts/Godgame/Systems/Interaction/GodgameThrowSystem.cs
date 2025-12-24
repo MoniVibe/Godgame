@@ -2,6 +2,7 @@ using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Interaction;
 using PureDOTS.Runtime.Physics;
 using PureDOTS.Runtime.Time;
+using PureDOTS.Runtime.Hand;
 using Godgame.Runtime.Interaction;
 using Unity.Burst;
 using Unity.Collections;
@@ -11,7 +12,6 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Godgame.Systems.Interaction
 {
@@ -37,6 +37,7 @@ namespace Godgame.Systems.Interaction
         {
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
+            state.RequireForUpdate<HandInputFrame>();
 
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
             _physicsVelocityLookup = state.GetComponentLookup<Unity.Physics.PhysicsVelocity>(false);
@@ -70,19 +71,13 @@ namespace Godgame.Systems.Interaction
             _physicsVelocityLookup.Update(ref state);
             _pickupStateLookup.Update(ref state);
 
-            // Read input
-            var mouse = Mouse.current;
-            var keyboard = Keyboard.current;
-            if (mouse == null)
-            {
-                return;
-            }
+            // Read input from HandInputFrame
+            var inputFrame = SystemAPI.GetSingleton<HandInputFrame>();
+            bool rmbDown = inputFrame.RmbHeld;
+            bool rmbWasReleased = inputFrame.RmbReleased;
+            bool shiftHeld = inputFrame.ShiftHeld;
 
-            bool rmbDown = mouse.rightButton.isPressed;
-            bool rmbWasReleased = mouse.rightButton.wasReleasedThisFrame;
-            bool shiftHeld = keyboard != null && (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed);
-
-            // Get camera for direction calculation
+            // Get camera for direction calculation (still needed for some operations)
             var camera = UnityEngine.Camera.main;
             if (camera == null)
             {
@@ -301,14 +296,10 @@ namespace Godgame.Systems.Interaction
             }
 
             // Raycast to terrain from camera
-            var mouse = Mouse.current;
-            if (mouse == null)
-            {
-                return;
-            }
-
-            var mousePosition = mouse.position.ReadValue();
-            var ray = camera.ScreenPointToRay(mousePosition);
+            var inputFrame = SystemAPI.GetSingleton<HandInputFrame>();
+            var ray = new UnityEngine.Ray(
+                new Vector3(inputFrame.RayOrigin.x, inputFrame.RayOrigin.y, inputFrame.RayOrigin.z),
+                new Vector3(inputFrame.RayDirection.x, inputFrame.RayDirection.y, inputFrame.RayDirection.z));
 
             // Use physics raycast for terrain
             if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorldSingleton))

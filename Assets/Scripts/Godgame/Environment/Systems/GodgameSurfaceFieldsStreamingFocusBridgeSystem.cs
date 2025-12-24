@@ -1,4 +1,4 @@
-using Godgame.CameraRig;
+using PureDOTS.Runtime.Camera;
 using PureDOTS.Runtime.Core;
 using PureDOTS.Runtime.Streaming;
 using PureDOTS.Runtime.WorldGen;
@@ -13,9 +13,9 @@ namespace Godgame.Environment.Systems
 
     /// <summary>
     /// Feeds the Godgame camera rig focus point into a <see cref="StreamingFocus"/> so SurfaceFields chunk streaming can follow the camera.
+    /// Reads from CameraRigService (standard pipeline) instead of ECS CameraRigState.
     /// </summary>
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(CameraRigSystem))]
     [UpdateBefore(typeof(PureDOTS.Systems.RecordSimulationSystemGroup))]
     public partial struct GodgameSurfaceFieldsStreamingFocusBridgeSystem : ISystem
     {
@@ -25,7 +25,6 @@ namespace Godgame.Environment.Systems
         {
             state.RequireForUpdate<GameWorldTag>();
             state.RequireForUpdate<SurfaceFieldsChunkRequestQueue>();
-            state.RequireForUpdate<CameraRigState>();
 
             _focusQuery = state.GetEntityQuery(
                 ComponentType.ReadOnly<GodgameSurfaceFieldsStreamingFocusTag>(),
@@ -34,8 +33,13 @@ namespace Godgame.Environment.Systems
 
         public void OnUpdate(ref SystemState state)
         {
-            var rig = SystemAPI.GetSingleton<CameraRigState>();
-            var desiredPosition = rig.FocusPoint;
+            // Read from CameraRigService instead of ECS CameraRigState
+            if (!CameraRigService.TryGetState(out var rigState))
+            {
+                return; // Camera not initialized yet
+            }
+
+            var desiredPosition = (float3)rigState.Focus;
             var deltaTime = SystemAPI.Time.DeltaTime;
 
             var entityManager = state.EntityManager;
