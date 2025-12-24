@@ -33,13 +33,12 @@ namespace Godgame.Scenario
             state.RequireForUpdate<ScenarioEntityCountElement>();
         }
 
-        private static bool ContainsSubstring(in FixedString64Bytes str, in FixedString64Bytes substring)
+        private static bool ContainsSubstring(FixedString64Bytes str, FixedString64Bytes substring)
         {
-            // FixedString.IndexOf does NOT take `ref` for the needle; `ref` here triggers CS1615.
             return str.IndexOf(substring) >= 0;
         }
 
-        private static bool MatchesRegistryId(in FixedString64Bytes registryId, in FixedString64Bytes exactMatch, in FixedString64Bytes substring)
+        private static bool MatchesRegistryId(FixedString64Bytes registryId, FixedString64Bytes exactMatch, FixedString64Bytes substring)
         {
             return registryId.Equals(exactMatch) || ContainsSubstring(registryId, substring);
         }
