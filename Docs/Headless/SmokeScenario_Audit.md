@@ -23,6 +23,7 @@
 - The headless diagnostics still reference `villager_loop_small.json`, leaving a mismatch between logs and the scene's default.
 - There is no single canonical “smoke” JSON that captures modern systems (collective aggregates, work orders, AI loops). Everything still hinges on the old small loop config.
 - SubScenes already provide `ScenarioOptions`, `TimeState`, registries, etc., so introducing a shared smoke JSON only requires updating the filenames and ensuring `ScenarioLoader` runs for both headless + presentation.
+- `VillageLoopScenarioConfig.asset` now assigns `Mode=Scenario_10k`, so `GodgameScenarioLoaderSystem` will process the smoke JSON during editor runs rather than skipping because of the old `Scenario01` default.
 
 ## Next steps (per plan)
 1. Author a new canonical JSON (e.g., `godgame_smoke.json`) that includes settlements, villagers, aggregates, and resource nodes suited for the smoke showcase.

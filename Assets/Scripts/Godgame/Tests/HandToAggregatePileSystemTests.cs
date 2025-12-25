@@ -3,6 +3,7 @@ using Godgame.Runtime;
 using Godgame.Systems.Resources;
 using NUnit.Framework;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Hand;
 using Unity.Entities;
 using Unity.Mathematics;
 using GodgameDivineHandState = Godgame.Runtime.DivineHandState;
@@ -44,6 +45,19 @@ namespace Godgame.Tests.Resources
                 ActivePiles = 0,
                 NextMergeTime = 0f
             });
+
+            var timeEntity = _entityManager.CreateEntity(typeof(TimeState));
+            _entityManager.SetComponentData(timeEntity, new TimeState
+            {
+                Tick = 0,
+                DeltaTime = 1f / 60f,
+                DeltaSeconds = 1f / 60f,
+                ElapsedTime = 0f,
+                WorldSeconds = 0f,
+                IsPaused = false,
+                FixedDeltaTime = 1f / 60f,
+                CurrentSpeedMultiplier = 1f
+            });
         }
 
         [TearDown]
@@ -60,8 +74,8 @@ namespace Godgame.Tests.Resources
         {
             var handEntity = _entityManager.CreateEntity(
                 typeof(DivineHandTag),
-                typeof(GodgameDivineHandState),
-                typeof(DivineHandCommand));
+                typeof(GodgameDivineHandState));
+            _entityManager.AddBuffer<HandCommand>(handEntity);
 
             _entityManager.SetComponentData(handEntity, new GodgameDivineHandState
             {
@@ -69,9 +83,13 @@ namespace Godgame.Tests.Resources
                 HeldResourceTypeIndex = 2,
                 CursorPosition = new float3(3f, 0f, 4f)
             });
-            _entityManager.SetComponentData(handEntity, new DivineHandCommand
+            var commandBuffer = _entityManager.GetBuffer<HandCommand>(handEntity);
+            commandBuffer.Add(new HandCommand
             {
-                Type = DivineHandCommandType.Dump
+                Tick = 0,
+                Type = HandCommandType.Dump,
+                TargetEntity = Entity.Null,
+                TargetPosition = new float3(3f, 0f, 4f)
             });
 
             UpdateSystem(_world.GetOrCreateSystem<HandToAggregatePileSystem>());
@@ -86,8 +104,8 @@ namespace Godgame.Tests.Resources
             Assert.AreEqual(0, handState.HeldAmount);
             Assert.AreEqual(DivineHandConstants.NoResourceType, handState.HeldResourceTypeIndex);
 
-            var command = _entityManager.GetComponentData<DivineHandCommand>(handEntity);
-            Assert.AreEqual(DivineHandCommandType.None, command.Type);
+            var command = _entityManager.GetBuffer<HandCommand>(handEntity);
+            Assert.AreEqual(0, command.Length);
         }
 
         private void UpdateSystem(SystemHandle handle)

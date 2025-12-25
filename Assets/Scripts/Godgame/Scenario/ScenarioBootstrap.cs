@@ -15,6 +15,7 @@ namespace Godgame.Scenario
     public class ScenarioBootstrap : MonoBehaviour
     {
         private const string LegacyDefaultScenario = "village_loop_smoke.json";
+        private const string LegacyDemoScenario = "Demo_01.json";
         private const string SharedSmokeScenario = "godgame_smoke.json";
 
         [SerializeField]
@@ -270,7 +271,8 @@ namespace Godgame.Scenario
         private string ResolveScenarioName()
         {
             if (string.IsNullOrWhiteSpace(defaultScenario) ||
-                string.Equals(defaultScenario, LegacyDefaultScenario, StringComparison.OrdinalIgnoreCase))
+                string.Equals(defaultScenario, LegacyDefaultScenario, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(defaultScenario, LegacyDemoScenario, StringComparison.OrdinalIgnoreCase))
             {
                 defaultScenario = SharedSmokeScenario;
             }

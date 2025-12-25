@@ -1,5 +1,6 @@
 ﻿#if GODGAME_TESTS && PUREDOTS_INPUT
 using Godgame.Miracles;
+using Godgame.Systems;
 using NUnit.Framework;
 using Unity.Entities;
 
@@ -39,10 +40,17 @@ namespace Godgame.Tests
         }
 
         [Test]
-        public void GodgameMiracleReleaseSystem_Exists()
+        public void MiracleReleaseSystem_Exists()
         {
-            var systemHandle = _world.GetOrCreateSystem<GodgameMiracleReleaseSystem>();
-            Assert.AreNotEqual(SystemHandle.Null, systemHandle, "GodgameMiracleReleaseSystem should exist");
+            var systemHandle = _world.GetOrCreateSystem<MiracleReleaseSystem>();
+            Assert.AreNotEqual(SystemHandle.Null, systemHandle, "MiracleReleaseSystem should exist");
+        }
+
+        [Test]
+        public void RainMiracleSystem_Exists()
+        {
+            var systemHandle = _world.GetOrCreateSystem<RainMiracleSystem>();
+            Assert.AreNotEqual(SystemHandle.Null, systemHandle, "RainMiracleSystem should exist");
         }
 
         [Test]

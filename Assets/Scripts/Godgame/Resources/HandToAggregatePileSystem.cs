@@ -1,6 +1,7 @@
 using Godgame.Resources;
 using Godgame.Systems;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Hand;
 using PureDOTS.Systems;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -19,42 +20,50 @@ namespace Godgame.Systems.Resources
             state.RequireForUpdate<AggregatePileConfig>();
             state.RequireForUpdate<AggregatePileRuntimeState>();
             state.RequireForUpdate<DivineHandState>();
-            state.RequireForUpdate<DivineHandCommand>();
+            state.RequireForUpdate<TimeState>();
         }
 
         public void OnUpdate(ref SystemState state)
         {
+            var currentTick = SystemAPI.GetSingleton<TimeState>().Tick;
             var configEntity = SystemAPI.GetSingletonEntity<AggregatePileConfig>();
             var commands = EnsureSpawnBuffer(ref state, configEntity);
             var config = SystemAPI.GetSingleton<AggregatePileConfig>();
 
-            foreach (var (handStateRef, commandRef) in SystemAPI
-                         .Query<RefRW<DivineHandState>, RefRW<DivineHandCommand>>()
+            foreach (var (handStateRef, commandBuffer) in SystemAPI
+                         .Query<RefRW<DivineHandState>, DynamicBuffer<HandCommand>>()
                          .WithAll<DivineHandTag>())
             {
                 ref var handState = ref handStateRef.ValueRW;
-                ref var command = ref commandRef.ValueRW;
 
-                bool shouldSpawn = command.Type == DivineHandCommandType.Dump &&
-                                   handState.HeldAmount > config.ConservationEpsilon &&
-                                   handState.HeldResourceTypeIndex != DivineHandConstants.NoResourceType;
-                if (!shouldSpawn)
+                for (int i = commandBuffer.Length - 1; i >= 0; i--)
                 {
-                    continue;
+                    var handCommand = commandBuffer[i];
+                    if (handCommand.Tick != currentTick ||
+                        handCommand.Type != HandCommandType.Dump ||
+                        handCommand.TargetEntity != Entity.Null)
+                    {
+                        continue;
+                    }
+
+                    if (handState.HeldAmount <= config.ConservationEpsilon ||
+                        handState.HeldResourceTypeIndex == DivineHandConstants.NoResourceType)
+                    {
+                        continue;
+                    }
+
+                    commands.Add(new AggregatePileSpawnCommand
+                    {
+                        ResourceType = handState.HeldResourceTypeIndex,
+                        Amount = handState.HeldAmount,
+                        Position = handState.CursorPosition
+                    });
+
+                    handState.HeldAmount = 0;
+                    handState.HeldResourceTypeIndex = DivineHandConstants.NoResourceType;
+                    commandBuffer.RemoveAt(i);
+                    break;
                 }
-
-                commands.Add(new AggregatePileSpawnCommand
-                {
-                    ResourceType = handState.HeldResourceTypeIndex,
-                    Amount = handState.HeldAmount,
-                    Position = handState.CursorPosition
-                });
-
-                handState.HeldAmount = 0;
-                handState.HeldResourceTypeIndex = DivineHandConstants.NoResourceType;
-                command.Type = DivineHandCommandType.None;
-                command.TargetEntity = Entity.Null;
-                command.TimeSinceIssued = 0f;
             }
         }
 

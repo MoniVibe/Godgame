@@ -48,6 +48,7 @@ namespace Godgame.Systems
                 return;
             }
 
+            state.Dependency.Complete();
             _aiStateLookup.Update(ref state);
             _entityStorageInfoLookup.Update(ref state);
 

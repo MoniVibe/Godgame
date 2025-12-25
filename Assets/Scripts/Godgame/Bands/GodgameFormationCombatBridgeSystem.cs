@@ -88,10 +88,6 @@ namespace Godgame.Bands
                 }
             }
 
-            // Playback ECB to apply structural changes
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
-
             // Phase B: Populate buffers via EntityManager (after playback)
             // 3. UPDATE: Sync FormationSlot buffer when BandMember buffer changes
             foreach (var (bandMembers, entity) in SystemAPI

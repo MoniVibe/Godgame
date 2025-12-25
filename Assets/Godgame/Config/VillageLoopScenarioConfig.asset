@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e939f4665ad49746a31d70e727dbcc0, type: 3}
   m_Name: VillageLoopScenarioConfig
   m_EditorClassIdentifier: 
-  Mode: 0
+  Mode: 1
   VillageCount: 1
   VillagersPerVillageMin: 12
   VillagersPerVillageMax: 12

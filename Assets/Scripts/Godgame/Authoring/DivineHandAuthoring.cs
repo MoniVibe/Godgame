@@ -1,6 +1,7 @@
 using Godgame.Runtime;
 using PureDOTS.Input;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Hand;
 using PureDOTS.Runtime.Miracles;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -117,15 +118,6 @@ namespace Godgame.Authoring
                     ThrowModeIsSlingshot = 1
                 });
 
-                AddComponent(entity, new DivineHandCommand
-                {
-                    Type = DivineHandCommandType.None,
-                    TargetEntity = Entity.Null,
-                    TargetPosition = cursor,
-                    TargetNormal = new float3(0f, 1f, 0f),
-                    TimeSinceIssued = 0f
-                });
-
                 AddComponent(entity, new Godgame.Runtime.DivineHandHighlight
                 {
                     Type = Godgame.Runtime.HandHighlightType.None,
@@ -138,6 +130,7 @@ namespace Godgame.Authoring
                 AddBuffer<HandInputRouteRequest>(entity);
                 AddComponent(entity, HandInputRouteResult.None);
                 AddBuffer<Godgame.Runtime.HandQueuedThrowElement>(entity);
+                AddBuffer<HandCommand>(entity);
                 AddBuffer<MiracleReleaseEvent>(entity);
                 AddBuffer<MiracleSlotDefinition>(entity);
 

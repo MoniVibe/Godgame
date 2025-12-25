@@ -1,6 +1,7 @@
 using Godgame.Resources;
 using Godgame.Systems;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Hand;
 using PureDOTS.Systems;
 using Unity.Collections;
 using Unity.Entities;
@@ -21,11 +22,12 @@ namespace Godgame.Systems.Resources
             state.RequireForUpdate<AggregatePileRuntimeState>();
             state.RequireForUpdate<ResourceTypeIndex>();
             state.RequireForUpdate<DivineHandState>();
-            state.RequireForUpdate<DivineHandCommand>();
+            state.RequireForUpdate<TimeState>();
         }
 
         public void OnUpdate(ref SystemState state)
         {
+            var currentTick = SystemAPI.GetSingleton<TimeState>().Tick;
             var configEntity = SystemAPI.GetSingletonEntity<AggregatePileConfig>();
             var pileCommands = EnsureSpawnBuffer(ref state, configEntity);
             var config = SystemAPI.GetSingleton<AggregatePileConfig>();
@@ -35,39 +37,46 @@ namespace Godgame.Systems.Resources
                 return;
             }
 
-            foreach (var (handStateRef, commandRef) in SystemAPI
-                         .Query<RefRW<DivineHandState>, RefRW<DivineHandCommand>>()
+            foreach (var (handStateRef, commandBuffer) in SystemAPI
+                         .Query<RefRW<DivineHandState>, DynamicBuffer<HandCommand>>()
                          .WithAll<DivineHandTag>())
             {
                 ref var handState = ref handStateRef.ValueRW;
-                ref var command = ref commandRef.ValueRW;
+                var commands = commandBuffer;
 
-                if (command.Type != DivineHandCommandType.Dump ||
-                    handState.HeldAmount <= config.ConservationEpsilon ||
-                    handState.HeldResourceTypeIndex == DivineHandConstants.NoResourceType ||
-                    command.TargetEntity == Entity.Null ||
-                    !SystemAPI.HasComponent<StorehouseInventory>(command.TargetEntity) ||
-                    !SystemAPI.HasComponent<LocalTransform>(command.TargetEntity))
+                for (int i = commands.Length - 1; i >= 0; i--)
                 {
-                    continue;
-                }
+                    var command = commands[i];
+                    if (command.Tick != currentTick ||
+                        command.Type != HandCommandType.Dump ||
+                        handState.HeldAmount <= config.ConservationEpsilon ||
+                        handState.HeldResourceTypeIndex == DivineHandConstants.NoResourceType ||
+                        command.TargetEntity == Entity.Null ||
+                        !SystemAPI.HasComponent<StorehouseInventory>(command.TargetEntity) ||
+                        !SystemAPI.HasComponent<LocalTransform>(command.TargetEntity))
+                    {
+                        continue;
+                    }
 
-                var capacities = SystemAPI.GetBuffer<StorehouseCapacityElement>(command.TargetEntity);
-                var items = SystemAPI.GetBuffer<StorehouseInventoryItem>(command.TargetEntity);
-                var capacity = FindCapacity(capacities, ResolveResourceId(catalogRef, handState.HeldResourceTypeIndex));
-                if (capacity <= 0f)
-                {
-                    var storeTransform = SystemAPI.GetComponent<LocalTransform>(command.TargetEntity);
-                    RedirectToPile(ref pileCommands, ref handState, ref command, config, storeTransform);
-                    continue;
-                }
+                    var capacities = SystemAPI.GetBuffer<StorehouseCapacityElement>(command.TargetEntity);
+                    var items = SystemAPI.GetBuffer<StorehouseInventoryItem>(command.TargetEntity);
+                    var capacity = FindCapacity(capacities, ResolveResourceId(catalogRef, handState.HeldResourceTypeIndex));
+                    if (capacity <= 0f)
+                    {
+                        var storeTransform = SystemAPI.GetComponent<LocalTransform>(command.TargetEntity);
+                        RedirectToPile(ref pileCommands, ref handState, ref command, config, storeTransform);
+                        commands.RemoveAt(i);
+                        continue;
+                    }
 
-                var current = FindStored(items, ResolveResourceId(catalogRef, handState.HeldResourceTypeIndex));
-                var available = capacity - current;
-                if (available <= config.ConservationEpsilon)
-                {
-                    var storeTransform = SystemAPI.GetComponent<LocalTransform>(command.TargetEntity);
-                    RedirectToPile(ref pileCommands, ref handState, ref command, config, storeTransform);
+                    var current = FindStored(items, ResolveResourceId(catalogRef, handState.HeldResourceTypeIndex));
+                    var available = capacity - current;
+                    if (available <= config.ConservationEpsilon)
+                    {
+                        var storeTransform = SystemAPI.GetComponent<LocalTransform>(command.TargetEntity);
+                        RedirectToPile(ref pileCommands, ref handState, ref command, config, storeTransform);
+                        commands.RemoveAt(i);
+                    }
                 }
             }
         }
@@ -75,7 +84,7 @@ namespace Godgame.Systems.Resources
         private static void RedirectToPile(
             ref DynamicBuffer<AggregatePileSpawnCommand> commands,
             ref DivineHandState handState,
-            ref DivineHandCommand command,
+            ref HandCommand command,
             in AggregatePileConfig config,
             in LocalTransform storeTransform)
         {
@@ -88,9 +97,14 @@ namespace Godgame.Systems.Resources
 
             handState.HeldAmount = 0;
             handState.HeldResourceTypeIndex = DivineHandConstants.NoResourceType;
-            command.Type = DivineHandCommandType.None;
+            command.Type = HandCommandType.None;
             command.TargetEntity = Entity.Null;
-            command.TimeSinceIssued = 0f;
+            command.TargetPosition = float3.zero;
+            command.Direction = float3.zero;
+            command.Speed = 0f;
+            command.ChargeLevel = 0f;
+            command.ResourceTypeIndex = DivineHandConstants.NoResourceType;
+            command.Amount = 0f;
         }
 
         private static float FindCapacity(DynamicBuffer<StorehouseCapacityElement> capacities, FixedString64Bytes resourceId)
