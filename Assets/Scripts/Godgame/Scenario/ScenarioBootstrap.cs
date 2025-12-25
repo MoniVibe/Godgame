@@ -265,7 +265,7 @@ namespace Godgame.Scenario
 
         private static FixedString64Bytes BuildScenarioPath(string scenarioName)
         {
-            return new FixedString64Bytes("Scenarios/godgame/" + scenarioName);
+            return new FixedString64Bytes("Scenarios/Godgame/" + scenarioName);
         }
 
         private string ResolveScenarioName()
