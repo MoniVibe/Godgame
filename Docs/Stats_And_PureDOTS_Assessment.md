@@ -426,7 +426,7 @@ From `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md`:
 - ✅ Telemetry implemented
 - ⚠️ **Component Integration**: PureDOTS components referenced but not fully integrated into baking
 - ⚠️ **Scenario Runner**: Stubbed but not wired (see `Docs/Guides/ScenarioRunner_Integration.md`)
-- ⚠️ **Demo Bootstrap**: Planned but not implemented (see `Docs/Guides/DemoScene_ContentPipeline.md`)
+- ⚠️ **legacy Bootstrap**: Planned but not implemented (see `Docs/Guides/DemoScene_ContentPipeline.md`)
 
 ---
 
@@ -495,7 +495,7 @@ From `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md`:
 
 - `Docs/Individual_Stats_Requirements.md` - Stat requirements specification
 - `Docs/Individual_Template_Stats.md` - Template stats schema
-- `Docs/Archive/Demo_Legacy/DemoReadiness_GapAnalysis.md` - Demo readiness gaps
+- `Docs/Archive/Demo_Legacy/DemoReadiness_GapAnalysis.md` - legacy readiness gaps
 - `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` - PureDOTS integration TODO
 - `Docs/TruthSources_Architecture.md` - Truth sources architecture
 - `Docs/TruthSources_Inventory.md` - Truth sources inventory

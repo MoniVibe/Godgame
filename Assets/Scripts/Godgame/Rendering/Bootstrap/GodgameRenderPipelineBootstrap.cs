@@ -31,7 +31,7 @@ namespace Godgame.Rendering
                 return false;
             }
 
-            if (PureDOTS.Runtime.Core.RuntimeMode.IsHeadless)
+            if (!PureDOTS.Runtime.Core.RuntimeMode.IsRenderingEnabled)
             {
                 return false;
             }

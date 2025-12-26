@@ -7,17 +7,17 @@ All debug systems have been gated with `#if GODGAME_DEBUG && UNITY_EDITOR` to pr
 ## Systems Muted
 
 ### 1. WorldSystemsDebugSystem ✅
-**File**: `Assets/Scripts/Godgame/Demo/WorldSystemsDebugSystem.cs`
+**File**: `Assets/Scripts/Godgame/legacy/WorldSystemsDebugSystem.cs`
 - Logs all ECS systems at startup
 - Now gated with `#if GODGAME_DEBUG && UNITY_EDITOR`
 
 ### 2. DebugEntitySystem ✅
-**File**: `Assets/Scripts/Godgame/Demo/DebugEntitySystem.cs`
+**File**: `Assets/Scripts/Godgame/legacy/DebugEntitySystem.cs`
 - Logs entity counts and villager debug info every frame
 - Now gated with `#if GODGAME_DEBUG && UNITY_EDITOR`
 
 ### 3. DemoRenderUtil ✅
-**File**: `Assets/Scripts/Godgame/Demo/DemoRenderUtil.cs`
+**File**: `Assets/Scripts/Godgame/legacy/DemoRenderUtil.cs`
 - Logs every `MakeRenderable()` call
 - Now gated with `#if GODGAME_DEBUG && UNITY_EDITOR`
 
@@ -32,7 +32,7 @@ All debug systems have been gated with `#if GODGAME_DEBUG && UNITY_EDITOR` to pr
 - Now gated with `#if GODGAME_DEBUG && UNITY_EDITOR`
 
 ### 6. GodgameOrbitDebugSystem ✅
-**File**: `Assets/Scripts/Godgame/Demo/GodgameOrbitDebugSystem.cs`
+**File**: `Assets/Scripts/Godgame/legacy/GodgameOrbitDebugSystem.cs`
 - Logs orbit cube info and spawns proxy GameObjects
 - Now gated with `#if GODGAME_DEBUG && UNITY_EDITOR`
 

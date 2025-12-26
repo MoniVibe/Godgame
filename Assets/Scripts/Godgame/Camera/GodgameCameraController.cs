@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
+using Unity.Mathematics;
 using Unity.Entities;
 using Godgame.Input;
 using PureDOTS.Runtime.Camera;
@@ -131,6 +133,8 @@ namespace Godgame
                 EnsureInputRouter();
             }
 
+            ResolveCamera();
+
             // Guard against BW2StyleCameraController taking over
             // Direct call now that duplicates are unified - no reflection needed
             if (BW2StyleCameraController.HasActiveRig)
@@ -140,19 +144,24 @@ namespace Godgame
 
             // Read input from ECS
             var world = World.DefaultGameObjectInjectionWorld;
-            if (world == null || !world.IsCreated)
+            CameraInput cameraInput;
+            if (world != null && world.IsCreated)
+            {
+                var em = world.EntityManager;
+                var query = em.CreateEntityQuery(typeof(CameraInput));
+                if (!query.IsEmpty)
+                {
+                    cameraInput = query.GetSingleton<CameraInput>();
+                }
+                else if (!TryReadFallbackInput(out cameraInput))
+                {
+                    return;
+                }
+            }
+            else if (!TryReadFallbackInput(out cameraInput))
             {
                 return;
             }
-
-            var em = world.EntityManager;
-            var query = em.CreateEntityQuery(typeof(CameraInput));
-            if (query.IsEmpty)
-            {
-                return;
-            }
-
-            var cameraInput = query.GetSingleton<CameraInput>();
 
             // Handle focus key (F) to reset camera to default pose
             if (cameraInput.Focus == 1)
@@ -216,6 +225,62 @@ namespace Godgame
 
             // Publish to CameraRigService (for DOTS systems to read)
             PublishCurrentState();
+        }
+
+        private bool TryReadFallbackInput(out CameraInput cameraInput)
+        {
+            cameraInput = default;
+
+            var keyboard = Keyboard.current;
+            var mouse = Mouse.current;
+            if (keyboard == null && mouse == null)
+            {
+                return false;
+            }
+
+            float moveX = 0f;
+            float moveY = 0f;
+            if (keyboard != null)
+            {
+                if (keyboard.wKey.isPressed) moveY += 1f;
+                if (keyboard.sKey.isPressed) moveY -= 1f;
+                if (keyboard.dKey.isPressed) moveX += 1f;
+                if (keyboard.aKey.isPressed) moveX -= 1f;
+            }
+            cameraInput.Move = new float2(moveX, moveY);
+
+            float vertical = 0f;
+            if (keyboard != null)
+            {
+                if (keyboard.eKey.isPressed) vertical += 1f;
+                if (keyboard.qKey.isPressed) vertical -= 1f;
+            }
+            cameraInput.Vertical = vertical;
+
+            if (mouse != null)
+            {
+                var pointerPos = mouse.position.ReadValue();
+                cameraInput.PointerPosition = new float2(pointerPos.x, pointerPos.y);
+
+                var scroll = mouse.scroll.ReadValue();
+                cameraInput.Zoom = scroll.y;
+
+                bool isMiddlePressed = mouse.middleButton.isPressed;
+                var delta = isMiddlePressed ? mouse.delta.ReadValue() : Vector2.zero;
+                cameraInput.Rotate = new float2(delta.x, delta.y);
+
+                bool isLeftPressed = mouse.leftButton.isPressed;
+                var panDelta = isLeftPressed ? mouse.delta.ReadValue() : Vector2.zero;
+                cameraInput.Pan = new float2(panDelta.x, panDelta.y);
+            }
+
+            if (keyboard != null)
+            {
+                cameraInput.Focus = keyboard.fKey.wasPressedThisFrame ? (byte)1 : (byte)0;
+                cameraInput.ToggleYAxisLock = keyboard.yKey.wasPressedThisFrame ? (byte)1 : (byte)0;
+            }
+
+            return true;
         }
 
         private void PublishCurrentState()

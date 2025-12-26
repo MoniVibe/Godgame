@@ -31,7 +31,7 @@ namespace Godgame.Scenario
 
         private void Awake()
         {
-            if (RuntimeMode.IsHeadless)
+            if (!RuntimeMode.IsRenderingEnabled)
             {
                 return;
             }
@@ -43,7 +43,7 @@ namespace Godgame.Scenario
 
         private void Start()
         {
-            if (!RuntimeMode.IsHeadless)
+            if (RuntimeMode.IsRenderingEnabled)
             {
                 EnsureInputSystemUI();
             }
@@ -90,7 +90,7 @@ namespace Godgame.Scenario
 
         private void Update()
         {
-            if (RuntimeMode.IsHeadless) return;
+            if (!RuntimeMode.IsRenderingEnabled) return;
 
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
@@ -282,7 +282,7 @@ namespace Godgame.Scenario
 
         private static void EnsureCamera()
         {
-            if (RuntimeMode.IsHeadless)
+            if (!RuntimeMode.IsRenderingEnabled)
             {
                 return;
             }
@@ -346,7 +346,7 @@ namespace Godgame.Scenario
 
         private static void EnsureInputReader()
         {
-            if (RuntimeMode.IsHeadless)
+            if (!RuntimeMode.IsRenderingEnabled)
             {
                 return;
             }

@@ -4,7 +4,7 @@
 
 Prefabs are essential for authoring game entities in Unity. They provide reusable templates with authoring components pre-configured, making it easy to place entities in scenes.
 
-## Required Prefabs for Demo
+## Required Prefabs for legacy
 
 Based on existing authoring components, create these prefabs:
 
@@ -94,7 +94,7 @@ using Godgame.Authoring;
 
 public static class PrefabCreationHelpers
 {
-    [MenuItem("Godgame/Create Prefabs/Demo Prefabs")]
+    [MenuItem("Godgame/Create Prefabs/legacy Prefabs")]
     public static void CreateDemoPrefabs()
     {
         // Create Villager prefab
@@ -121,7 +121,7 @@ public static class PrefabCreationHelpers
 2. **Use Default Values**: Set sensible defaults in authoring components
 3. **Document Variants**: Create prefab variants for different configurations (e.g., `Villager_Combat.prefab`)
 4. **No Runtime Logic**: Prefabs should only contain authoring data, not runtime systems
-5. **Placeholder Visuals**: Add primitive meshes for demo visualization (can be replaced later)
+5. **Placeholder Visuals**: Add primitive meshes for legacy visualization (can be replaced later)
 
 ## Using Prefabs in Scenes
 
@@ -129,9 +129,9 @@ public static class PrefabCreationHelpers
 2. **SubScene Authoring**: Place prefabs in SubScenes for better organization
 3. **Runtime Spawning**: Use prefabs with `EntityManager.Instantiate()` for runtime spawning
 
-## Demo Scene Setup
+## legacy Scene Setup
 
-For the demo scene (`Assets/Scenes/SampleScene.unity`):
+For the legacy scene (`Assets/Scenes/SampleScene.unity`):
 
 1. Create SubScene: `Assets/Scenes/GodgameDemoSubScene.unity`
 2. Place prefabs in SubScene:
@@ -211,6 +211,6 @@ The validation system checks:
 2. Create prefab folder structure (auto-created by tool)
 3. Generate core prefabs using the tool
 4. Add placeholder visuals (auto-added by tool)
-5. Test prefabs in demo scene
+5. Test prefabs in legacy scene
 6. Document prefab variants and configurations
 

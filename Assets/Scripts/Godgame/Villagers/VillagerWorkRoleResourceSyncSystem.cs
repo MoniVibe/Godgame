@@ -69,10 +69,10 @@ namespace Godgame.Villagers
             {
                 tuningSnapshot = new VillagerWorkTuning
                 {
-                    ForesterInputIndex = ResolveIndex(catalog, new Unity.Collections.FixedString64Bytes("wood")),
-                    ForesterOutputIndex = ResolveIndex(catalog, new Unity.Collections.FixedString64Bytes("lumber")),
-                    MinerOutputIndex = ResolveIndex(catalog, new Unity.Collections.FixedString64Bytes("ore")),
-                    FarmerOutputIndex = ResolveIndex(catalog, new Unity.Collections.FixedString64Bytes("grain"))
+                    ForesterInputIndex = ResolveIndex(catalog, BuildWoodId()),
+                    ForesterOutputIndex = ResolveIndex(catalog, BuildLumberId()),
+                    MinerOutputIndex = ResolveIndex(catalog, BuildOreId()),
+                    FarmerOutputIndex = ResolveIndex(catalog, BuildGrainId())
                 };
 
                 if (tuningSnapshot.ForesterOutputIndex == ushort.MaxValue)
@@ -173,6 +173,48 @@ namespace Godgame.Villagers
 
             var lookup = catalog.Value.LookupIndex(resourceId);
             return lookup >= 0 ? (ushort)lookup : ushort.MaxValue;
+        }
+
+        private static FixedString64Bytes BuildWoodId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('w');
+            id.Append('o');
+            id.Append('o');
+            id.Append('d');
+            return id;
+        }
+
+        private static FixedString64Bytes BuildLumberId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('l');
+            id.Append('u');
+            id.Append('m');
+            id.Append('b');
+            id.Append('e');
+            id.Append('r');
+            return id;
+        }
+
+        private static FixedString64Bytes BuildOreId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('o');
+            id.Append('r');
+            id.Append('e');
+            return id;
+        }
+
+        private static FixedString64Bytes BuildGrainId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('g');
+            id.Append('r');
+            id.Append('a');
+            id.Append('i');
+            id.Append('n');
+            return id;
         }
     }
 }

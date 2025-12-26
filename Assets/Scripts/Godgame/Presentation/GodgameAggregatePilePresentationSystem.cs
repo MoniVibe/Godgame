@@ -31,7 +31,7 @@ namespace Godgame.Presentation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            if (RuntimeMode.IsHeadless || _pileQuery.IsEmptyIgnoreFilter)
+            if (!RuntimeMode.IsRenderingEnabled || _pileQuery.IsEmptyIgnoreFilter)
             {
                 return;
             }

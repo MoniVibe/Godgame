@@ -47,7 +47,7 @@ The project follows a **truth source architecture**:
 ```
 Assets/Scripts/Godgame/
 ├── Registry/          # Registry bridge and sync systems
-├── Demo/             # Demo scene bootstrap and settlement systems
+├── legacy/             # legacy scene bootstrap and settlement systems
 ├── Villagers/        # Villager AI, jobs, personality (if exists)
 ├── Bands/            # Band formation and aggregation
 ├── Miracles/          # Miracle system (input, release, presentation)
@@ -102,11 +102,11 @@ Assets/Scripts/Godgame/
 - **MiraclePresentation**: Presentation bindings for effects
 - **Status**: Functional, syncs to PureDOTS MiracleRegistry
 
-#### ✅ Demo Systems (`Demo/`)
-- **SettlementSpawnSystem**: Spawns demo entities
-- **DemoVillagerBehaviorSystem**: Demo villager behaviors
+#### ✅ legacy Systems (`legacy/`)
+- **SettlementSpawnSystem**: Spawns legacy entities
+- **DemoVillagerBehaviorSystem**: legacy villager behaviors
 - **GroundTileSystems**: Procedural ground tile generation
-- **Status**: Functional, used in demo scenes
+- **Status**: Functional, used in legacy scenes
 
 ---
 
@@ -135,9 +135,9 @@ Assets/Scripts/Godgame/
    - Missing: Presentation bindings, aggregate AI decision-making, full registry sync
    - Location: `Bands/`, `Villages/` (if exists)
 
-3. **Demo Scene**:
+3. **legacy Scene**:
    - SubScene wizard exists
-   - Missing: Self-contained demo scene, bootstrap system, prefab pipeline
+   - Missing: Self-contained legacy scene, bootstrap system, prefab pipeline
 
 4. **Scenario Runner**:
    - Logger system exists (stub)
@@ -168,8 +168,8 @@ Assets/Scripts/Godgame/
    - Needs consumption systems
    - Utility curve integration
 
-3. **Demo Scene Bootstrap** (`Assets/Scripts/Godgame/Demo/`)
-   - Self-contained demo scene
+3. **legacy Scene Bootstrap** (`Assets/Scripts/Godgame/legacy/`)
+   - Self-contained legacy scene
    - Entity spawn/bootstrap system
    - Prefab authoring pipeline
 
@@ -226,7 +226,7 @@ Assets/Scripts/Godgame/
 - Villager AI (interrupts, needs, autonomous actions)
 - Aggregate behaviors (village AI, band formation)
 - Scenario integration (spawn, rewind determinism)
-- Demo scene (bootstrap, validation)
+- legacy scene (bootstrap, validation)
 
 ### CI Commands
 See `Docs/CI_Commands.md` for:
@@ -286,7 +286,7 @@ See `Docs/CI_Commands.md` for:
 - **Active TODOs**: `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md`
 - **Truth Sources**: `Docs/TruthSources_QuickReference.md`
 - **Progress**: `Docs/Progress.md` (session log)
-- **Demo Status**: `Docs/Archive/Demo_Legacy/DemoReadiness_Status.md`
+- **legacy Status**: `Docs/Archive/Demo_Legacy/DemoReadiness_Status.md`
 - **Gap Analysis**: `Docs/Archive/Demo_Legacy/DemoReadiness_GapAnalysis.md`
 - **System Overview**: `Docs/Archive/Demo_Legacy/DemoSystemsOverview.md`
 
@@ -359,14 +359,14 @@ See `Docs/CI_Commands.md` for:
 
 The Godgame project has a **solid foundation** with core systems (registries, time, construction, modules) implemented and tested. The main gaps are in **villager AI** (interrupts, needs, scheduling) and **aggregate behaviors** (village/band AI, presentation). The PureDOTS integration is **complete** for existing systems, providing a stable base for gameplay expansion.
 
-**Ready for**: Villager AI expansion, demo scene bootstrap, job scheduler, aggregate AI decision-making.
+**Ready for**: Villager AI expansion, legacy scene bootstrap, job scheduler, aggregate AI decision-making.
 
 **Blockers**: None identified. All core infrastructure is in place.
 
 ---
 
 **Related Documentation**:
-- `Docs/Archive/Demo_Legacy/DemoReadiness_Status.md` - Current demo status
+- `Docs/Archive/Demo_Legacy/DemoReadiness_Status.md` - Current legacy status
 - `Docs/Archive/Demo_Legacy/DemoReadiness_GapAnalysis.md` - Detailed gap analysis
 - `Docs/Archive/Demo_Legacy/DemoSystemsOverview.md` - System architecture
 - `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` - Integration TODO

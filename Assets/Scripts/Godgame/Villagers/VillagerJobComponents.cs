@@ -37,6 +37,8 @@ namespace Godgame.Villagers
         public float CarryCount;
         public float CarryMax;
         public float DropoffCooldown;
+        public float DecisionCooldown;
+        public uint LastDecisionTick;
     }
 
     public struct VillagerJob : IComponentData

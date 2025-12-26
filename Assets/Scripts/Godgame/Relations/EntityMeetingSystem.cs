@@ -172,6 +172,8 @@ namespace Godgame.Relations
             {
                 ecb.AddBuffer<EntityRelation>(owner);
                 ecb.AddComponent(owner, new HasRelationsTag());
+                ecb.AppendToBuffer(owner, EntityRelation.Create(other, relationValue, context, tick));
+                return;
             }
 
             var buffer = SystemAPI.GetBuffer<EntityRelation>(owner);
@@ -288,4 +290,3 @@ namespace Godgame.Relations
         }
     }
 }
-

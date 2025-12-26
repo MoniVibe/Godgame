@@ -3,6 +3,7 @@ using System.IO;
 using PureDOTS.Runtime.Core;
 using PureDOTS.Runtime.Scenarios;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using SystemEnv = System.Environment;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -21,7 +22,27 @@ namespace Godgame.Headless
 	        private const string PureDotsTelemetryPathEnvVar = "PUREDOTS_TELEMETRY_PATH";
 	        private const string PureDotsTelemetryEnableEnvVar = "PUREDOTS_TELEMETRY_ENABLE";
 	        private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
+	        private const string RenderingEnvVar = "PUREDOTS_RENDERING";
+	        private const string PresentationSceneName = "TRI_Godgame_Smoke";
 	        private static bool s_executed;
+
+	        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+	        static void LoadPresentationSceneIfRequested()
+	        {
+	            if (!Application.isBatchMode || !RuntimeMode.IsHeadless)
+	            {
+	                return;
+	            }
+
+	            var renderingEnabled = RuntimeMode.IsRenderingEnabled;
+	            if (!renderingEnabled)
+	            {
+	                return;
+	            }
+
+	            Debug.Log($"[GodgameScenarioEntryPoint] {RenderingEnvVar}=1 detected; loading presentation scene '{PresentationSceneName}'.");
+	            SceneManager.LoadScene(PresentationSceneName, LoadSceneMode.Single);
+	        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
         static void RunScenarioIfRequested()

@@ -9,7 +9,7 @@
 
 ### 1. GodgameDemoSpawnSystem ✅ CORRECT
 
-**File**: `Assets/Scripts/Godgame/Demo/GodgameDemoSpawnSystem.cs`
+**File**: `Assets/Scripts/Godgame/legacy/GodgameDemoSpawnSystem.cs`
 
 **Status**: ✅ **Now Enabled** (removed `[DisableAutoCreation]`)
 
@@ -35,7 +35,7 @@
 
 ### 3. TestEntitySpawnSystem ✅ CORRECT
 
-**File**: `Assets/Scripts/Godgame/Demo/TestEntitySpawnSystem.cs`
+**File**: `Assets/Scripts/Godgame/legacy/TestEntitySpawnSystem.cs`
 
 **Setup**:
 - Uses `DemoRenderUtil.MakeRenderable()` ✅
@@ -165,11 +165,11 @@ From `DemoMeshIndices` (PureDOTS convention):
 
 ## Files Modified
 
-1. ✅ `Assets/Scripts/Godgame/Demo/GodgameDemoSpawnSystem.cs`
+1. ✅ `Assets/Scripts/Godgame/legacy/GodgameDemoSpawnSystem.cs`
    - Removed `[DisableAutoCreation]` - system now runs automatically
    - Added `[UpdateAfter(typeof(SharedRenderBootstrap))]` for correct ordering
 
-2. ✅ `Assets/Scripts/Godgame/Demo/GodgameOrbitCubeRenderFixSystem.cs` (NEW)
+2. ✅ `Assets/Scripts/Godgame/legacy/GodgameOrbitCubeRenderFixSystem.cs` (NEW)
    - Adds MaterialMeshInfo/RenderBounds to orbit cubes missing them
    - Runs once in InitializationSystemGroup
 

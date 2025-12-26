@@ -32,7 +32,7 @@ namespace Godgame.Presentation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            if (RuntimeMode.IsHeadless || _missingBandQuery.IsEmptyIgnoreFilter)
+            if (!RuntimeMode.IsRenderingEnabled || _missingBandQuery.IsEmptyIgnoreFilter)
             {
                 return;
             }

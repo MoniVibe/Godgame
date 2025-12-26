@@ -6,6 +6,7 @@ using PureDOTS.Runtime.Time;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using PDTimeOfDayPhase = PureDOTS.Runtime.Time.TimeOfDayPhase;
 
 namespace Godgame.Environment
 {
@@ -60,8 +61,8 @@ namespace Godgame.Environment
             entityManager.AddComponentData(world, new TimeOfDayState
             {
                 TimeOfDayNorm = 0f,
-                Phase = TimeOfDayPhase.Night,
-                PreviousPhase = TimeOfDayPhase.Night
+                Phase = PDTimeOfDayPhase.Night,
+                PreviousPhase = PDTimeOfDayPhase.Night
             });
             entityManager.AddComponentData(world, TimeOfDayConfig.Default);
             entityManager.AddComponentData(world, new SunlightFactor { Sunlight = 1f });

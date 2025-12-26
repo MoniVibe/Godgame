@@ -86,7 +86,7 @@ private static EntityArchetype GetArchetypeForRegistryId(int registryId)
 
 **Files to Touch:**
 - New: `Assets/Scripts/Godgame/Scenario/GodgameScenarioBootstrapAdapter.cs`
-- Modify: `Assets/Scripts/Godgame/Demo/Godgame_ScenarioBootstrapSystem.cs` (support scenario mode)
+- Modify: `Assets/Scripts/Godgame/legacy/Godgame_ScenarioBootstrapSystem.cs` (support scenario mode)
 - New: `Assets/Scripts/Godgame/Tests/ScenarioBootstrapAdapterTests.cs`
 
 **Integration Points:**
@@ -276,7 +276,7 @@ Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.God
 
 ### Files to Modify
 - Delete: `Assets/Scripts/Godgame/Scenario/GodgameScenarioSpawnLoggerSystem.cs`
-- Modify: `Assets/Scripts/Godgame/Demo/Godgame_ScenarioBootstrapSystem.cs` (support scenario mode)
+- Modify: `Assets/Scripts/Godgame/legacy/Godgame_ScenarioBootstrapSystem.cs` (support scenario mode)
 - Modify: `Assets/Scripts/Godgame/Time/TimeControlSystem.cs` (ensure scenario compatibility)
 - Modify: `Assets/Scripts/Godgame/Registry/Registry/GodgameRegistryBridgeSystem.cs` (ensure scenario compatibility)
 - Modify: `ProjectSettings/EditorBuildSettings.asset` (add execute method)

@@ -6,17 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
-    path: Assets/_Archive/Scenes/Godgame_RockTest.unity
-    guid: 70e5c9d6d259b964c94b9614001f0778
-  - enabled: 1
-    path: Assets/Scenes/RenderKeyTestSubScene.unity
-    guid: adcc5b151afa11f4c8619ab144fcec60
-  - enabled: 1
-    path: Assets/Scenes/GodgameConfig.unity
-    guid: 8756ae4139528424c82ae4d27ac22feb
+    path: Assets/Scenes/TRI_Godgame_Smoke.unity
+    guid: b5ee9ee873ee7cb45bbf0ccd0a29a02e
   - enabled: 1
     path: Assets/Scenes/HeadlessBootstrap.unity
     guid: d66694c91aae68d4f9b226f97c0d0904

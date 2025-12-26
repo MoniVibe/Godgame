@@ -13,7 +13,7 @@
 ### Components Found:
 
 1. **`Space4X.Presentation.Demo01Authoring`** (MonoBehaviour)
-   - **Purpose**: Demo configuration (carrier count, crafts per carrier, asteroid count, LOD settings)
+   - **Purpose**: legacy configuration (carrier count, crafts per carrier, asteroid count, LOD settings)
    - **Namespace**: `Space4X.Presentation`
    - **Key Settings**:
      - CarrierCount: 4
@@ -133,7 +133,7 @@ The following components are **expected** but may be in a SubScene or added at r
    - Entities Graphics systems query for entities with `MaterialMeshInfo` and `RenderMeshArray`
 
 3. **Render Setup Flow**:
-   - `Shared.Demo.SharedDemoRenderBootstrap` creates `RenderMeshArray` singleton
+   - `Shared.legacy.SharedDemoRenderBootstrap` creates `RenderMeshArray` singleton
    - `Space4XPresentationLifecycleSystem` adds `MaterialMeshInfo` and `RenderMeshArray` to entities
    - Entities Graphics renders to the active camera automatically
 

@@ -1445,7 +1445,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8ad415390d3e6348a0f574abd6fa7f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Godgame.Gameplay::Godgame.Scenario.ScenarioBootstrap
-  defaultScenario: Demo_01.json
+  defaultScenario: godgame_smoke.json
   useFancyBindings: 0
 --- !u!114 &1240563580
 MonoBehaviour:
@@ -1485,6 +1485,7 @@ GameObject:
   - component: {fileID: 1353040185}
   - component: {fileID: 1353040184}
   - component: {fileID: 1353040186}
+  - component: {fileID: 1353040187}
   m_Layer: 0
   m_Name: TimeControlsPanel
   m_TagString: Untagged
@@ -1581,6 +1582,27 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &1353040187
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353040182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18c2e68239ac49729d7f869bc88bb1e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _pauseButton: {fileID: 0}
+  _rewindButton: {fileID: 0}
+  _speed1Button: {fileID: 0}
+  _speed2Button: {fileID: 0}
+  _speed3Button: {fileID: 0}
+  _speed1: 1
+  _speed2: 2
+  _speed3: 4
+  _rewindTicks: 120
 --- !u!1 &1450152504
 GameObject:
   m_ObjectHideFlags: 0

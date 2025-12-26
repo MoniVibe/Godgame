@@ -19,10 +19,10 @@ namespace Godgame.Villagers
                 var entity = state.EntityManager.CreateEntity();
                 state.EntityManager.AddComponentData(entity, new VillagerWorkTuning
                 {
-                    ForesterInputId = new FixedString64Bytes("wood"),
-                    ForesterOutputId = new FixedString64Bytes("lumber"),
-                    MinerOutputId = new FixedString64Bytes("ore"),
-                    FarmerOutputId = new FixedString64Bytes("grain"),
+                    ForesterInputId = BuildWoodId(),
+                    ForesterOutputId = BuildLumberId(),
+                    MinerOutputId = BuildOreId(),
+                    FarmerOutputId = BuildGrainId(),
                     ForesterInputIndex = ushort.MaxValue,
                     ForesterOutputIndex = ushort.MaxValue,
                     MinerOutputIndex = ushort.MaxValue,
@@ -41,6 +41,48 @@ namespace Godgame.Villagers
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+        }
+
+        private static FixedString64Bytes BuildWoodId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('w');
+            id.Append('o');
+            id.Append('o');
+            id.Append('d');
+            return id;
+        }
+
+        private static FixedString64Bytes BuildLumberId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('l');
+            id.Append('u');
+            id.Append('m');
+            id.Append('b');
+            id.Append('e');
+            id.Append('r');
+            return id;
+        }
+
+        private static FixedString64Bytes BuildOreId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('o');
+            id.Append('r');
+            id.Append('e');
+            return id;
+        }
+
+        private static FixedString64Bytes BuildGrainId()
+        {
+            FixedString64Bytes id = default;
+            id.Append('g');
+            id.Append('r');
+            id.Append('a');
+            id.Append('i');
+            id.Append('n');
+            return id;
         }
     }
 }

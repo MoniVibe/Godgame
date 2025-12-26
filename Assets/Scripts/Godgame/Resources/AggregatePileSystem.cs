@@ -25,7 +25,8 @@ namespace Godgame.Systems.Resources
         {
             var configEntity = SystemAPI.GetSingletonEntity<AggregatePileConfig>();
             var config = SystemAPI.GetSingleton<AggregatePileConfig>();
-            var runtime = SystemAPI.GetSingletonRW<AggregatePileRuntimeState>();
+            var runtimeEntity = SystemAPI.GetSingletonEntity<AggregatePileRuntimeState>();
+            var runtime = state.EntityManager.GetComponentData<AggregatePileRuntimeState>(runtimeEntity);
             var commands = EnsureSpawnBuffer(ref state, configEntity);
 
             for (int i = 0; i < commands.Length; i++)
@@ -36,18 +37,20 @@ namespace Godgame.Systems.Resources
                     continue;
                 }
 
-                SpawnOrAddPile(ref state, ref runtime.ValueRW, in config, cmd);
+                SpawnOrAddPile(ref state, ref runtime, in config, cmd);
             }
 
             commands.Clear();
 
-            if (SystemAPI.Time.ElapsedTime < runtime.ValueRW.NextMergeTime)
+            if (SystemAPI.Time.ElapsedTime < runtime.NextMergeTime)
             {
+                state.EntityManager.SetComponentData(runtimeEntity, runtime);
                 return;
             }
 
-            runtime.ValueRW.NextMergeTime = (float)(SystemAPI.Time.ElapsedTime + config.MergeCheckSeconds);
-            MergeNearbyPiles(ref state, ref runtime.ValueRW, in config);
+            runtime.NextMergeTime = (float)(SystemAPI.Time.ElapsedTime + config.MergeCheckSeconds);
+            MergeNearbyPiles(ref state, ref runtime, in config);
+            state.EntityManager.SetComponentData(runtimeEntity, runtime);
         }
 
         private void SpawnOrAddPile(ref SystemState state, ref AggregatePileRuntimeState runtime, in AggregatePileConfig config, in AggregatePileSpawnCommand cmd)

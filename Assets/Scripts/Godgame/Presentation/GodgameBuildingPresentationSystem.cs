@@ -30,7 +30,7 @@ namespace Godgame.Presentation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            if (RuntimeMode.IsHeadless)
+            if (!RuntimeMode.IsRenderingEnabled)
             {
                 return;
             }
@@ -93,10 +93,14 @@ namespace Godgame.Presentation
                 GodgamePresentationUtility.AssignRenderComponents(ref ecb, entity, semanticKey, default);
             }
 
-            if (!SystemAPI.HasComponent<RenderTint>(entity))
+            var buildingTint = GodgamePresentationColors.ForBuilding(semanticKey);
+            if (SystemAPI.HasComponent<RenderTint>(entity))
             {
-                var tint = GodgamePresentationColors.ForBuilding(semanticKey);
-                ecb.AddComponent(entity, new RenderTint { Value = tint });
+                ecb.SetComponent(entity, new RenderTint { Value = buildingTint });
+            }
+            else
+            {
+                ecb.AddComponent(entity, new RenderTint { Value = buildingTint });
             }
         }
 

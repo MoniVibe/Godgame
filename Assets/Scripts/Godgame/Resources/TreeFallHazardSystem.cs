@@ -7,6 +7,9 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using GVillagerId = Godgame.Villagers.VillagerId;
+using GVillagerCombatStats = Godgame.Villagers.VillagerCombatStats;
+using GVillagerNeeds = Godgame.Villagers.VillagerNeeds;
 
 namespace Godgame.Resources
 {
@@ -19,9 +22,9 @@ namespace Godgame.Resources
     public partial struct TreeFallHazardSystem : ISystem
     {
         private ComponentLookup<LocalTransform> _transformLookup;
-        private ComponentLookup<VillagerId> _villagerIdLookup;
-        private ComponentLookup<VillagerCombatStats> _combatLookup;
-        private ComponentLookup<VillagerNeeds> _needsLookup;
+        private ComponentLookup<GVillagerId> _villagerIdLookup;
+        private ComponentLookup<GVillagerCombatStats> _combatLookup;
+        private ComponentLookup<GVillagerNeeds> _needsLookup;
         private ComponentLookup<VillagerTreeSafetyMemory> _memoryLookup;
         private ComponentLookup<Village> _villageLookup;
         private ComponentLookup<VillageTreeSafetyMemory> _villageMemoryLookup;
@@ -33,9 +36,9 @@ namespace Godgame.Resources
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<TreeFallEventBuffer>();
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
-            _villagerIdLookup = state.GetComponentLookup<VillagerId>(true);
-            _combatLookup = state.GetComponentLookup<VillagerCombatStats>(false);
-            _needsLookup = state.GetComponentLookup<VillagerNeeds>(false);
+            _villagerIdLookup = state.GetComponentLookup<GVillagerId>(true);
+            _combatLookup = state.GetComponentLookup<GVillagerCombatStats>(false);
+            _needsLookup = state.GetComponentLookup<GVillagerNeeds>(false);
             _memoryLookup = state.GetComponentLookup<VillagerTreeSafetyMemory>(false);
             _villageLookup = state.GetComponentLookup<Village>(true);
             _villageMemoryLookup = state.GetComponentLookup<VillageTreeSafetyMemory>(false);
@@ -125,7 +128,7 @@ namespace Godgame.Resources
                 }
                 else
                 {
-                    foreach (var (transform, entity) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<VillagerId>().WithEntityAccess())
+                    foreach (var (transform, entity) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<GVillagerId>().WithEntityAccess())
                     {
                         var pos = transform.ValueRO.Position;
                         if (math.distancesq(pos, fallEvent.Position) > queryRadius * queryRadius)
@@ -139,7 +142,7 @@ namespace Godgame.Resources
 
                 if (maxSeverity > 0f)
                 {
-                    UpdateVillageMemory(fallEvent.Position, maxSeverity, tuning, timeState.Tick);
+                    UpdateVillageMemory(fallEvent.Position, maxSeverity, tuning, timeState.Tick, ref state);
                 }
             }
 
@@ -282,7 +285,7 @@ namespace Godgame.Resources
             _memoryLookup[entity] = memory;
         }
 
-        private void UpdateVillageMemory(float3 position, float severity, in TreeFellingTuning tuning, uint currentTick)
+        private void UpdateVillageMemory(float3 position, float severity, in TreeFellingTuning tuning, uint currentTick, ref SystemState state)
         {
             var bestVillage = Entity.Null;
             var bestDistSq = float.MaxValue;
