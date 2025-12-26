@@ -33,6 +33,7 @@ namespace Godgame.Villagers
         public JobPhase Phase;
         public Entity Target;
         public ushort ResourceTypeIndex;
+        public ushort OutputResourceTypeIndex;
         public float CarryCount;
         public float CarryMax;
         public float DropoffCooldown;
@@ -67,4 +68,3 @@ namespace Godgame.Villagers
         public float Speed;
     }
 }
-

@@ -445,6 +445,7 @@ namespace Godgame.Registry
     {
         private ComponentLookup<GodgameResourceNodeMirror> _resourceMirrorLookup;
         private ComponentLookup<GodgameResourceNode> _resourceNodeLookup;
+        private ComponentLookup<ResourceNodeSummary> _resourceSummaryLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -454,6 +455,7 @@ namespace Godgame.Registry
 
             _resourceMirrorLookup = state.GetComponentLookup<GodgameResourceNodeMirror>(isReadOnly: false);
             _resourceNodeLookup = state.GetComponentLookup<GodgameResourceNode>(isReadOnly: true);
+            _resourceSummaryLookup = state.GetComponentLookup<ResourceNodeSummary>(isReadOnly: false);
 
             state.RequireForUpdate(SystemAPI.QueryBuilder()
                 .WithAll<GodgameResourceNode, LocalTransform>()
@@ -464,6 +466,7 @@ namespace Godgame.Registry
         {
             _resourceMirrorLookup.Update(ref state);
             _resourceNodeLookup.Update(ref state);
+            _resourceSummaryLookup.Update(ref state);
 
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
@@ -477,6 +480,8 @@ namespace Godgame.Registry
                 var node = resourceNode.ValueRO;
                 var hasMirror = _resourceMirrorLookup.HasComponent(entity);
                 var mirror = hasMirror ? _resourceMirrorLookup[entity] : default;
+                var hasSummary = _resourceSummaryLookup.HasComponent(entity);
+                var summary = hasSummary ? _resourceSummaryLookup[entity] : default;
 
                 var remainingAmount = math.max(0f, node.RemainingAmount);
                 var maxAmount = math.max(remainingAmount, node.MaxAmount);
@@ -504,6 +509,24 @@ namespace Godgame.Registry
                 else
                 {
                     _resourceMirrorLookup[entity] = mirror;
+                }
+
+                bool summaryMutated = !hasSummary
+                                      || summary.ResourceTypeIndex != node.ResourceTypeIndex
+                                      || math.abs(summary.UnitsRemaining - remainingAmount) > 0.001f
+                                      || summary.IsDepleted != depleted;
+
+                summary.ResourceTypeIndex = node.ResourceTypeIndex;
+                summary.UnitsRemaining = remainingAmount;
+                summary.IsDepleted = depleted;
+
+                if (!hasSummary)
+                {
+                    ecb.AddComponent(entity, summary);
+                }
+                else if (summaryMutated)
+                {
+                    _resourceSummaryLookup[entity] = summary;
                 }
             }
         }

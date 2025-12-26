@@ -20,6 +20,7 @@ namespace Godgame.Tests
 
             Assert.AreEqual(0f, behavior.VengefulScore, "Neutral should have 0 vengeful score");
             Assert.AreEqual(0f, behavior.BoldScore, "Neutral should have 0 bold score");
+            Assert.AreEqual(0f, behavior.PatienceScore, "Neutral should have 0 patience score");
             Assert.AreEqual(0f, behavior.InitiativeModifier, "Neutral should have 0 initiative modifier");
         }
 
@@ -37,6 +38,8 @@ namespace Godgame.Tests
                 Assert.LessOrEqual(behavior.VengefulScore, range, "Vengeful should be <= range");
                 Assert.GreaterOrEqual(behavior.BoldScore, -range, "Bold should be >= -range");
                 Assert.LessOrEqual(behavior.BoldScore, range, "Bold should be <= range");
+                Assert.GreaterOrEqual(behavior.PatienceScore, -range, "Patience should be >= -range");
+                Assert.LessOrEqual(behavior.PatienceScore, range, "Patience should be <= range");
             }
         }
 
@@ -163,4 +166,3 @@ namespace Godgame.Tests
         #endregion
     }
 }
-

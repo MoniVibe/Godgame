@@ -39,11 +39,14 @@ namespace Godgame.Authoring
         [SerializeField]
         private float3 spawnPosition = float3.zero;
 
-        [SerializeField]
+        [SerializeField, Range(-100, 100)]
         private sbyte vengefulScore = 0; // -100 (Vengeful) to +100 (Forgiving)
 
-        [SerializeField]
+        [SerializeField, Range(-100, 100)]
         private sbyte boldScore = 0; // -100 (Craven) to +100 (Bold)
+
+        [SerializeField, Range(-100, 100)]
+        private sbyte patienceScore = 0; // -100 (Impatient) to +100 (Patient)
 
         [SerializeField]
         private bool isUndead = false;
@@ -243,6 +246,7 @@ namespace Godgame.Authoring
                     Phase = Godgame.Villagers.JobPhase.Idle,
                     Target = Entity.Null,
                     ResourceTypeIndex = 0,
+                    OutputResourceTypeIndex = ushort.MaxValue,
                     CarryCount = 0f,
                     CarryMax = 0f,
                     DropoffCooldown = 0f
@@ -271,7 +275,8 @@ namespace Godgame.Authoring
                 AddComponent(entity, new VillagerPersonality
                 {
                     VengefulScore = authoring.vengefulScore,
-                    BoldScore = authoring.boldScore
+                    BoldScore = authoring.boldScore,
+                    PatienceScore = authoring.patienceScore
                 });
 
                 // Add undead tag if flagged

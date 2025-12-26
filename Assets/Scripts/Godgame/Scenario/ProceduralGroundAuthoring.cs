@@ -1,3 +1,6 @@
+using PureDOTS.Environment;
+using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityResources = UnityEngine.Resources;
 
@@ -157,6 +160,27 @@ namespace Godgame.Scenario
             }
 
             return s_SharedMaterial;
+        }
+    }
+
+    public sealed class ProceduralGroundBaker : Baker<ProceduralGroundAuthoring>
+    {
+        public override void Bake(ProceduralGroundAuthoring authoring)
+        {
+            var entity = GetEntity(TransformUsageFlags.None);
+            var position = authoring.transform.position;
+            var scale = authoring.transform.lossyScale;
+            var halfX = authoring.sizeX * 0.5f * scale.x;
+            var halfZ = authoring.sizeZ * 0.5f * scale.z;
+            var height = position.y + authoring.height * scale.y;
+
+            AddComponent(entity, new TerrainHeightPlane
+            {
+                Height = height,
+                WorldMin = new float3(position.x - halfX, height, position.z - halfZ),
+                WorldMax = new float3(position.x + halfX, height, position.z + halfZ),
+                Enabled = 1
+            });
         }
     }
 }

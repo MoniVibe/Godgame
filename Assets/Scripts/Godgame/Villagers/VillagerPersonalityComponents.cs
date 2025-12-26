@@ -19,6 +19,11 @@ namespace Godgame.Villagers
         /// Bold (+100) ↔ Craven (-100)
         /// </summary>
         public sbyte BoldScore;
+
+        /// <summary>
+        /// Patient (+100) ↔ Impatient (-100)
+        /// </summary>
+        public sbyte PatienceScore;
     }
 
     /// <summary>
@@ -101,4 +106,3 @@ namespace Godgame.Villagers
     {
     }
 }
-

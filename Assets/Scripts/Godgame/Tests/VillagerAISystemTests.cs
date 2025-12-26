@@ -39,13 +39,15 @@ namespace Godgame.Tests
             _entityManager.AddComponentData(entity, new VillagerPersonality
             {
                 VengefulScore = -70,
-                BoldScore = 60
+                BoldScore = 60,
+                PatienceScore = 15
             });
 
             Assert.IsTrue(_entityManager.HasComponent<VillagerPersonality>(entity));
             var personality = _entityManager.GetComponentData<VillagerPersonality>(entity);
             Assert.AreEqual(-70, personality.VengefulScore);
             Assert.AreEqual(60, personality.BoldScore);
+            Assert.AreEqual(15, personality.PatienceScore);
         }
 
         [Test]
@@ -150,4 +152,3 @@ namespace Godgame.Tests
         }
     }
 }
-

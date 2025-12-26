@@ -24,6 +24,13 @@ namespace Godgame.Villagers
         public float BoldScore;
 
         /// <summary>
+        /// Patience in pacing and deliberation.
+        /// -100 (impatient: rushes tasks, prefers speed)
+        /// +100 (patient: deliberate pace, favors caution)
+        /// </summary>
+        public float PatienceScore;
+
+        /// <summary>
         /// Computed modifier applied to base initiative for autonomous decisions.
         /// Higher values = more frequent life-changing decisions.
         /// </summary>
@@ -48,6 +55,7 @@ namespace Godgame.Villagers
         {
             VengefulScore = 0f,
             BoldScore = 0f,
+            PatienceScore = 0f,
             InitiativeModifier = 0f,
             ActiveGrudgeCount = 0,
             LastMajorActionTick = 0
@@ -62,6 +70,7 @@ namespace Godgame.Villagers
             {
                 VengefulScore = random.NextFloat(-range, range),
                 BoldScore = random.NextFloat(-range, range),
+                PatienceScore = random.NextFloat(-range, range),
                 InitiativeModifier = 0f,
                 ActiveGrudgeCount = 0,
                 LastMajorActionTick = 0
@@ -167,4 +176,3 @@ namespace Godgame.Villagers
         }
     }
 }
-

@@ -788,10 +788,11 @@ namespace Godgame.Editor.PrefabTool
             
             // Personality Traits
             EditorGUILayout.LabelField("Personality Traits", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox("Vengeful/Forgiving: -100 (Vengeful) to +100 (Forgiving)\nBold/Craven: -100 (Craven) to +100 (Bold)", MessageType.Info);
+            EditorGUILayout.HelpBox("Vengeful/Forgiving: -100 (Vengeful) to +100 (Forgiving)\nBold/Craven: -100 (Craven) to +100 (Bold)\nPatience: -100 (Impatient) to +100 (Patient)", MessageType.Info);
             EditorGUI.indentLevel++;
             template.vengefulScore = (sbyte)EditorGUILayout.IntSlider("Vengeful ↔ Forgiving", template.vengefulScore, -100, 100);
             template.boldScore = (sbyte)EditorGUILayout.IntSlider("Craven ↔ Bold", template.boldScore, -100, 100);
+            template.patienceScore = (sbyte)EditorGUILayout.IntSlider("Impatient ↔ Patient", template.patienceScore, -100, 100);
             EditorGUI.indentLevel--;
             
             EditorGUILayout.Space();

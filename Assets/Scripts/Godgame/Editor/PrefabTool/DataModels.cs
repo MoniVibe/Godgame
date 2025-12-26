@@ -721,6 +721,12 @@ namespace Godgame.Editor.PrefabTool
         /// Range: -100 to +100 (sbyte)
         /// </summary>
         public sbyte boldScore = 0;
+
+        /// <summary>
+        /// Patient (+100) ↔ Impatient (-100) personality axis.
+        /// Range: -100 to +100 (sbyte)
+        /// </summary>
+        public sbyte patienceScore = 0;
         
         /// <summary>
         /// Flag indicating this individual is undead.

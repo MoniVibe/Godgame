@@ -73,6 +73,7 @@ namespace Godgame.Tests.Villagers
                 Phase = JobPhase.Idle,
                 Target = nodeEntity,
                 ResourceTypeIndex = 0,
+                OutputResourceTypeIndex = ushort.MaxValue,
                 CarryCount = 0f,
                 CarryMax = 50f
             });
@@ -107,6 +108,7 @@ namespace Godgame.Tests.Villagers
                 Phase = JobPhase.NavigateToNode,
                 Target = Entity.Null,
                 ResourceTypeIndex = 0,
+                OutputResourceTypeIndex = ushort.MaxValue,
                 CarryCount = 0f,
                 CarryMax = 50f
             });
@@ -151,6 +153,7 @@ namespace Godgame.Tests.Villagers
                 Phase = JobPhase.Gather,
                 Target = nodeEntity,
                 ResourceTypeIndex = 0,
+                OutputResourceTypeIndex = ushort.MaxValue,
                 CarryCount = 0f,
                 CarryMax = 50f
             });
@@ -182,6 +185,7 @@ namespace Godgame.Tests.Villagers
                 Phase = JobPhase.Deliver,
                 Target = storehouseEntity,
                 ResourceTypeIndex = 0,
+                OutputResourceTypeIndex = ushort.MaxValue,
                 CarryCount = 30f,
                 CarryMax = 50f
             });
@@ -218,4 +222,3 @@ namespace Godgame.Tests.Villagers
         }
     }
 }
-

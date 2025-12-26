@@ -121,7 +121,8 @@ namespace Godgame.Tests
             _entityManager.SetComponentData(entity, new VillagerJobState
             {
                 Phase = JobPhase.Gather,
-                Target = Entity.Null
+                Target = Entity.Null,
+                OutputResourceTypeIndex = ushort.MaxValue
             });
             _entityManager.SetComponentData(entity, new Navigation
             {

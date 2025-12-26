@@ -127,6 +127,7 @@ namespace Godgame.Editor.PrefabTool
                     villager.SetPrivateField("factionId", template.factionId);
                     villager.SetPrivateField("vengefulScore", template.vengefulScore);
                     villager.SetPrivateField("boldScore", template.boldScore);
+                    villager.SetPrivateField("patienceScore", template.patienceScore);
                     villager.SetPrivateField("isUndead", template.isUndead);
                     villager.SetPrivateField("isSummoned", template.isSummoned);
                     
