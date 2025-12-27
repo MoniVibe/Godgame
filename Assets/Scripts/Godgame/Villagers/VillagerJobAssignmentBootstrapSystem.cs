@@ -19,7 +19,6 @@ namespace Godgame.Villagers
         {
             _missingQuery = SystemAPI.QueryBuilder()
                 .WithAll<VillagerJobState>()
-                .WithNone<JobAssignment>()
                 .Build();
             state.RequireForUpdate(_missingQuery);
         }
@@ -27,20 +26,22 @@ namespace Godgame.Villagers
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var entities = _missingQuery.ToEntityArray(state.WorldUpdateAllocator);
-            if (entities.Length == 0)
-            {
-                return;
-            }
-
             var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var entity in entities)
+            foreach (var entity in _missingQuery.ToEntityArray(state.WorldUpdateAllocator))
             {
-                ecb.AddComponent(entity, new JobAssignment
+                if (!state.EntityManager.HasComponent<JobAssignment>(entity))
                 {
-                    Ticket = Entity.Null,
-                    CommitTick = 0
-                });
+                    ecb.AddComponent(entity, new JobAssignment
+                    {
+                        Ticket = Entity.Null,
+                        CommitTick = 0
+                    });
+                }
+
+                if (!state.EntityManager.HasBuffer<JobBatchEntry>(entity))
+                {
+                    ecb.AddBuffer<JobBatchEntry>(entity);
+                }
             }
 
             ecb.Playback(state.EntityManager);

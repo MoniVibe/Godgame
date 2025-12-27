@@ -44,7 +44,6 @@ namespace Godgame.Villagers
             }.ScheduleParallel();
         }
 
-        [BurstCompile]
         partial struct GrudgeDecayJob : IJobEntity
         {
             public float DayFraction;
@@ -73,14 +72,14 @@ namespace Godgame.Villagers
                     var grudge = grudges[i];
 
                     // Skip already resolved grudges (will be removed)
-                    if (grudge.IsResolved)
+                    if (grudge.IsResolved != 0)
                     {
                         grudges.RemoveAtSwapBack(i);
                         continue;
                     }
 
                     // Check for instant forgiveness for forgiving villagers
-                    if (isForgiving && Config.ForgivingInstantForgiveness &&
+                    if (isForgiving && Config.ForgivingInstantForgiveness != 0 &&
                         grudge.Intensity < Config.InstantForgivenessThreshold)
                     {
                         grudges.RemoveAtSwapBack(i);
@@ -172,4 +171,3 @@ namespace Godgame.Villagers
         }
     }
 }
-

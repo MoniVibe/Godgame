@@ -1,4 +1,5 @@
 using PureDOTS.Runtime;
+using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Physics;
 using Unity.Entities;
 using Unity.Collections;
@@ -88,6 +89,23 @@ namespace Godgame.Authoring
         [Tooltip("Physics processing priority (0-255)")]
         [Range(0, 255)]
         public int priority = 100;
+
+        [Header("Divine Hand Interaction")]
+        [Tooltip("Allow the divine hand to pick up and throw this rock")]
+        public bool allowDivineHandPickup = true;
+
+        [Tooltip("Hand pickable mass (used for future tuning)")]
+        public float handPickableMass = 10f;
+
+        [Tooltip("Maximum hold distance for hand pickup")]
+        public float handMaxHoldDistance = 12f;
+
+        [Tooltip("Throw impulse multiplier for hand throws")]
+        public float handThrowImpulseMultiplier = 1f;
+
+        [Tooltip("Follow lerp while held by the divine hand")]
+        [Range(0.01f, 1f)]
+        public float handFollowLerp = 0.2f;
 
         private void OnDrawGizmosSelected()
         {
@@ -215,8 +233,19 @@ namespace Godgame.Authoring
             {
                 AddBuffer<PureDOTS.Runtime.Physics.PhysicsCollisionEventElement>(entity);
             }
+
+            if (authoring.allowDivineHandPickup)
+            {
+                AddComponent<Pickable>(entity);
+                AddComponent(entity, new HandPickable
+                {
+                    Mass = math.max(0.1f, authoring.handPickableMass),
+                    MaxHoldDistance = math.max(0.1f, authoring.handMaxHoldDistance),
+                    ThrowImpulseMultiplier = math.max(0.1f, authoring.handThrowImpulseMultiplier),
+                    FollowLerp = math.clamp(authoring.handFollowLerp, 0.01f, 1f)
+                });
+            }
         }
     }
 }
-
 

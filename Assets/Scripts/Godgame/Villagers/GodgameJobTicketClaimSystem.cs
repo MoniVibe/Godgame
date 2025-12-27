@@ -1,3 +1,4 @@
+using Godgame.Registry;
 using Godgame.Resources;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
@@ -17,7 +18,6 @@ namespace Godgame.Villagers
     [UpdateBefore(typeof(VillagerJobSystem))]
     public partial struct GodgameJobTicketClaimSystem : ISystem
     {
-        private const float ClaimTTLSeconds = 6f;
 
         private ComponentLookup<JobTicket> _ticketLookup;
         private ComponentLookup<JobAssignment> _assignmentLookup;
@@ -27,6 +27,7 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerWorkRole> _roleLookup;
         private ComponentLookup<GodgameResourceNodeMirror> _nodeLookup;
         private ComponentLookup<AggregatePile> _pileLookup;
+        private BufferLookup<JobTicketGroupMember> _groupLookup;
         private EntityQuery _ticketQuery;
         private EntityQuery _villagerQuery;
 
@@ -36,6 +37,7 @@ namespace Godgame.Villagers
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<VillagerJobState>();
             state.RequireForUpdate<JobAssignment>();
+            state.RequireForUpdate<GodgameJobTicketTuning>();
             _ticketLookup = state.GetComponentLookup<JobTicket>(false);
             _assignmentLookup = state.GetComponentLookup<JobAssignment>(false);
             _jobLookup = state.GetComponentLookup<VillagerJobState>(true);
@@ -44,6 +46,7 @@ namespace Godgame.Villagers
             _roleLookup = state.GetComponentLookup<VillagerWorkRole>(true);
             _nodeLookup = state.GetComponentLookup<GodgameResourceNodeMirror>(true);
             _pileLookup = state.GetComponentLookup<AggregatePile>(true);
+            _groupLookup = state.GetBufferLookup<JobTicketGroupMember>();
 
             _ticketQuery = SystemAPI.QueryBuilder()
                 .WithAll<JobTicket>()
@@ -75,6 +78,7 @@ namespace Godgame.Villagers
             _roleLookup.Update(ref state);
             _nodeLookup.Update(ref state);
             _pileLookup.Update(ref state);
+            _groupLookup.Update(ref state);
 
             var villagerEntities = _villagerQuery.ToEntityArray(state.WorldUpdateAllocator);
             if (villagerEntities.Length == 0)
@@ -82,7 +86,8 @@ namespace Godgame.Villagers
                 return;
             }
 
-            var ttlTicks = ResolveClaimTTL(timeState);
+            var tuning = SystemAPI.GetSingleton<GodgameJobTicketTuning>();
+            var ttlTicks = ResolveClaimTTL(timeState, tuning);
 
             foreach (var ticketEntity in _ticketQuery.ToEntityArray(state.WorldUpdateAllocator))
             {
@@ -96,8 +101,12 @@ namespace Godgame.Villagers
                 {
                     continue;
                 }
+                if (ticket.WorkAmount <= 0f && (ticket.IsSingleItem == 0 || ticket.ItemMass <= 0f))
+                {
+                    continue;
+                }
 
-                if (!TryResolveTarget(ticket.TargetEntity, out var targetPosition, out var isPile))
+                if (!TryResolveTarget(ticket.TargetEntity, ticket.IsSingleItem != 0, out var targetPosition, out var isPile))
                 {
                     ticket.State = JobTicketState.Cancelled;
                     ticket.Assignee = Entity.Null;
@@ -137,14 +146,14 @@ namespace Godgame.Villagers
                     }
 
                     var roleKind = _roleLookup.HasComponent(villager) ? _roleLookup[villager].Value : VillagerWorkRoleKind.None;
-                    if (isPile)
+                    if (ticket.IsSingleItem == 0 && isPile)
                     {
                         if (roleKind != VillagerWorkRoleKind.Hauler)
                         {
                             continue;
                         }
                     }
-                    else if (roleKind == VillagerWorkRoleKind.Hauler)
+                    else if (ticket.IsSingleItem == 0 && roleKind == VillagerWorkRoleKind.Hauler)
                     {
                         continue;
                     }
@@ -183,10 +192,38 @@ namespace Godgame.Villagers
                 ticket.ClaimExpiresTick = timeState.Tick + ttlTicks;
                 ticket.LastStateTick = timeState.Tick;
                 _ticketLookup[ticketEntity] = ticket;
+
+                if (ticket.RequiredWorkers > 1 || ticket.IsSingleItem != 0)
+                {
+                    if (!_groupLookup.HasBuffer(ticketEntity))
+                    {
+                        state.EntityManager.AddBuffer<JobTicketGroupMember>(ticketEntity);
+                        _groupLookup.Update(ref state);
+                    }
+
+                    var group = _groupLookup[ticketEntity];
+                    if (!GroupContains(group, winner))
+                    {
+                        group.Add(new JobTicketGroupMember { Villager = winner });
+                    }
+                }
             }
         }
 
-        private bool TryResolveTarget(Entity target, out float3 position, out bool isPile)
+        private static bool GroupContains(DynamicBuffer<JobTicketGroupMember> group, Entity member)
+        {
+            for (int i = 0; i < group.Length; i++)
+            {
+                if (group[i].Villager == member)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool TryResolveTarget(Entity target, bool allowGeneric, out float3 position, out bool isPile)
         {
             position = float3.zero;
             isPile = false;
@@ -227,13 +264,20 @@ namespace Godgame.Villagers
                 }
             }
 
+            if (allowGeneric && _transformLookup.HasComponent(target))
+            {
+                position = _transformLookup[target].Position;
+                return true;
+            }
+
             return false;
         }
 
-        private static uint ResolveClaimTTL(in TimeState timeState)
+        private static uint ResolveClaimTTL(in TimeState timeState, in GodgameJobTicketTuning tuning)
         {
+            var ttlSeconds = tuning.ClaimTTLSeconds > 0f ? tuning.ClaimTTLSeconds : 6f;
             var secondsPerTick = math.max(timeState.FixedDeltaTime, 1e-4f);
-            return (uint)math.max(1f, math.ceil(ClaimTTLSeconds / secondsPerTick));
+            return (uint)math.max(1f, math.ceil(ttlSeconds / secondsPerTick));
         }
     }
 }

@@ -1,6 +1,7 @@
 using Godgame.Scenario;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using PureDOTS.Runtime;
+using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Physics;
 using Unity.Entities;
 using Unity.Collections;
@@ -8,6 +9,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 using Godgame.Rendering;
+using Godgame.Runtime.Interaction;
 
 namespace Godgame.Scenario
 {
@@ -52,6 +54,9 @@ namespace Godgame.Scenario
 
             var em = state.EntityManager;
             var centerPos = new float3(0f, 0f, 0f); // Village center (adjust as needed)
+            var pickableDefaults = SystemAPI.TryGetSingleton<HandPickableDefaults>(out var defaults)
+                ? defaults
+                : HandPickableDefaults.Default;
 
             for (int i = 0; i < RockCount; i++)
             {
@@ -64,7 +69,7 @@ namespace Godgame.Scenario
                     math.sin(angle) * radius
                 );
 
-                CreateRock(em, position, i);
+                CreateRock(em, position, i, pickableDefaults);
             }
 
             Debug.Log($"[GodgameRockSpawnerSystem] Spawned {RockCount} rocks with ResourceDeposit components.");
@@ -73,7 +78,7 @@ namespace Godgame.Scenario
             state.Enabled = false;
         }
 
-        private void CreateRock(EntityManager em, float3 position, int index)
+        private void CreateRock(EntityManager em, float3 position, int index, HandPickableDefaults pickableDefaults)
         {
             var rockEntity = em.CreateEntity();
 
@@ -144,6 +149,15 @@ namespace Godgame.Scenario
 
             // Add collision event buffer
             em.AddBuffer<PhysicsCollisionEventElement>(rockEntity);
+
+            em.AddComponent<Pickable>(rockEntity);
+            em.AddComponentData(rockEntity, new HandPickable
+            {
+                Mass = math.max(0.1f, pickableDefaults.Mass),
+                MaxHoldDistance = math.max(0.1f, pickableDefaults.MaxHoldDistance),
+                ThrowImpulseMultiplier = math.max(0.1f, pickableDefaults.ThrowImpulseMultiplier),
+                FollowLerp = math.clamp(pickableDefaults.FollowLerp, 0.01f, 1f)
+            });
 
             GodgamePresentationUtility.ApplyScenarioRenderContract(em, rockEntity, GodgameSemanticKeys.ResourceNode);
         }

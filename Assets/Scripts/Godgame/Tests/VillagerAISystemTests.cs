@@ -131,7 +131,7 @@ namespace Godgame.Tests
                 out var grudge);
 
             Assert.Greater(grudge.Intensity, 0);
-            Assert.IsFalse(grudge.IsResolved);
+            Assert.AreEqual(0, grudge.IsResolved);
         }
 
         [Test]

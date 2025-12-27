@@ -191,6 +191,22 @@ namespace Godgame.Authoring
         [SerializeField, Range(1, 20)]
         private int mindCadenceTicks = 5;
 
+        [Header("Divine Hand Interaction")]
+        [SerializeField]
+        private bool allowDivineHandPickup = true;
+
+        [SerializeField]
+        private float handPickableMass = 75f;
+
+        [SerializeField]
+        private float handMaxHoldDistance = 12f;
+
+        [SerializeField]
+        private float handThrowImpulseMultiplier = 1f;
+
+        [SerializeField, Range(0.01f, 1f)]
+        private float handFollowLerp = 0.25f;
+
         private sealed class Baker : Unity.Entities.Baker<VillagerAuthoring>
         {
             public override void Bake(VillagerAuthoring authoring)
@@ -475,6 +491,18 @@ namespace Godgame.Authoring
 
                 AddComponent(entity, CommDecisionConfig.Default);
                 AddComponent(entity, CommDecodeFactors.Default);
+
+                if (authoring.allowDivineHandPickup)
+                {
+                    AddComponent<Pickable>(entity);
+                    AddComponent(entity, new HandPickable
+                    {
+                        Mass = math.max(0.1f, authoring.handPickableMass),
+                        MaxHoldDistance = math.max(0.1f, authoring.handMaxHoldDistance),
+                        ThrowImpulseMultiplier = math.max(0.1f, authoring.handThrowImpulseMultiplier),
+                        FollowLerp = math.clamp(authoring.handFollowLerp, 0.01f, 1f)
+                    });
+                }
 
                 AddAISystemComponents(entity);
             }

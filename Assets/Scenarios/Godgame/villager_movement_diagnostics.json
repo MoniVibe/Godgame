@@ -1,0 +1,48 @@
+{
+  "name": "Villager Movement Diagnostics",
+  "description": "Headless stress scenario for movement diagnostics, intent tracing, and lifelike pacing.",
+  "entities": [
+    {
+      "prefab": "Villager",
+      "count": 80,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 60
+    },
+    {
+      "prefab": "Villager",
+      "count": 80,
+      "position": { "x": 140, "y": 0, "z": 90 },
+      "radius": 60
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 2,
+      "position": { "x": 12, "y": 0, "z": -18 },
+      "radius": 6
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 2,
+      "position": { "x": 152, "y": 0, "z": 98 },
+      "radius": 6
+    },
+    {
+      "prefab": "Tree",
+      "count": 120,
+      "position": { "x": 30, "y": 0, "z": 25 },
+      "radius": 70
+    },
+    {
+      "prefab": "Tree",
+      "count": 120,
+      "position": { "x": 160, "y": 0, "z": 110 },
+      "radius": 70
+    },
+    {
+      "prefab": "ResourceNode",
+      "count": 36,
+      "position": { "x": 80, "y": 0, "z": 55 },
+      "radius": 60
+    }
+  ]
+}

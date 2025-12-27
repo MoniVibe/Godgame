@@ -12,13 +12,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Emits lightweight chatter events when villagers are near trusted neighbors.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillagerChatterSystem : ISystem
     {
         private BufferLookup<EntityRelation> _relationLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerSpeechChannel>();
@@ -26,7 +24,6 @@ namespace Godgame.Villagers
             _relationLookup = state.GetBufferLookup<EntityRelation>(true);
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             if (SystemAPI.TryGetSingleton<RewindState>(out var rewind) && rewind.Mode != RewindMode.Record)

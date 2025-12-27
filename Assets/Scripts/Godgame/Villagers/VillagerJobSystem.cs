@@ -32,6 +32,7 @@ namespace Godgame.Villagers
         private EntityQuery _resourceNodeQuery;
         private EntityQuery _storehouseQuery;
         private EntityQuery _pileQuery;
+        private EntityQuery _ticketQuery;
         private ComponentLookup<VillagerGoalState> _goalLookup;
         private ComponentLookup<HazardAvoidanceState> _hazardLookup;
         private ComponentLookup<VillagerResourceAwareness> _resourceAwarenessLookup;
@@ -47,7 +48,12 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerDerivedAttributes> _derivedLookup;
         private ComponentLookup<GodgameVillagerCombatStats> _combatLookup;
         private ComponentLookup<VillagerNeedState> _needStateLookup;
+        private ComponentLookup<VillagerNeedTuning> _needTuningLookup;
         private ComponentLookup<JobTicket> _ticketLookup;
+        private BufferLookup<JobTicketGroupMember> _groupLookup;
+        private ComponentLookup<LocalTransform> _transformLookup;
+        private ComponentLookup<VillagerCarryCapacity> _carryLookup;
+        private ComponentLookup<VillagerPonderState> _ponderLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -57,6 +63,7 @@ namespace Godgame.Villagers
             state.RequireForUpdate<BehaviorConfigRegistry>();
             state.RequireForUpdate<VillagerScheduleConfig>();
             state.RequireForUpdate<JobAssignment>();
+            state.RequireForUpdate<GodgameJobTicketTuning>();
             _resourceNodeLookup = state.GetComponentLookup<GodgameResourceNodeMirror>(false);
             _storehouseLookup = state.GetComponentLookup<GodgameStorehouse>(isReadOnly: true);
             _inventoryLookup = state.GetBufferLookup<StorehouseInventoryItem>(false);
@@ -76,7 +83,12 @@ namespace Godgame.Villagers
             _derivedLookup = state.GetComponentLookup<VillagerDerivedAttributes>(true);
             _combatLookup = state.GetComponentLookup<GodgameVillagerCombatStats>(false);
             _needStateLookup = state.GetComponentLookup<VillagerNeedState>(false);
+            _needTuningLookup = state.GetComponentLookup<VillagerNeedTuning>(true);
             _ticketLookup = state.GetComponentLookup<JobTicket>(false);
+            _groupLookup = state.GetBufferLookup<JobTicketGroupMember>(true);
+            _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+            _carryLookup = state.GetComponentLookup<VillagerCarryCapacity>(true);
+            _ponderLookup = state.GetComponentLookup<VillagerPonderState>(false);
 
             _resourceNodeQuery = SystemAPI.QueryBuilder()
                 .WithAll<GodgameResourceNodeMirror, LocalTransform>()
@@ -88,6 +100,10 @@ namespace Godgame.Villagers
 
             _pileQuery = SystemAPI.QueryBuilder()
                 .WithAll<AggregatePile, LocalTransform>()
+                .Build();
+
+            _ticketQuery = SystemAPI.QueryBuilder()
+                .WithAll<JobTicket>()
                 .Build();
         }
 
@@ -123,7 +139,12 @@ namespace Godgame.Villagers
             _derivedLookup.Update(ref state);
             _combatLookup.Update(ref state);
             _needStateLookup.Update(ref state);
+            _needTuningLookup.Update(ref state);
             _ticketLookup.Update(ref state);
+            _groupLookup.Update(ref state);
+            _transformLookup.Update(ref state);
+            _carryLookup.Update(ref state);
+            _ponderLookup.Update(ref state);
 
             var catalog = SystemAPI.GetSingleton<ResourceTypeIndex>().Catalog;
             if (!catalog.IsCreated)
@@ -152,10 +173,15 @@ namespace Godgame.Villagers
             var movementTuning = SystemAPI.TryGetSingleton<VillagerMovementTuning>(out var movementTuningValue)
                 ? movementTuningValue
                 : VillagerMovementTuning.Default;
+            var separationRadius = math.max(0f, movementTuning.SeparationRadius);
+            var separationWeight = math.max(0f, movementTuning.SeparationWeight);
+            var separationMaxPush = math.max(0f, movementTuning.SeparationMaxPush);
+            var separationCellSize = math.max(0.1f, movementTuning.SeparationCellSize);
 
             var scheduleConfig = SystemAPI.HasSingleton<VillagerScheduleConfig>()
                 ? SystemAPI.GetSingleton<VillagerScheduleConfig>()
                 : VillagerScheduleConfig.Default;
+            var jobTicketTuning = SystemAPI.GetSingleton<GodgameJobTicketTuning>();
 
             var hasWorkTuning = SystemAPI.HasSingleton<VillagerWorkTuning>();
             var workTuning = hasWorkTuning ? SystemAPI.GetSingleton<VillagerWorkTuning>() : default;
@@ -206,6 +232,31 @@ namespace Godgame.Villagers
             var pileTransforms = _pileQuery.ToComponentDataArray<LocalTransform>(state.WorldUpdateAllocator);
             var pileData = _pileQuery.ToComponentDataArray<AggregatePile>(state.WorldUpdateAllocator);
 
+            var villagerQuery = SystemAPI.QueryBuilder()
+                .WithAll<VillagerJobState, LocalTransform>()
+                .WithNone<HandHeldTag, Godgame.Runtime.HandQueuedTag>()
+                .Build();
+            var villagerEntities = villagerQuery.ToEntityArray(state.WorldUpdateAllocator);
+            var villagerTransforms = villagerQuery.ToComponentDataArray<LocalTransform>(state.WorldUpdateAllocator);
+            var villagerSpatialMap = new NativeParallelMultiHashMap<int, int>(math.max(1, villagerEntities.Length * 2), Allocator.TempJob);
+            BuildSeparationMap(villagerTransforms, separationCellSize, villagerSpatialMap);
+
+            var ticketCount = math.max(1, _ticketQuery.CalculateEntityCount());
+            var targetPositions = new NativeParallelHashMap<Entity, float3>(ticketCount * 2, Allocator.TempJob);
+            foreach (var ticket in SystemAPI.Query<RefRO<JobTicket>>())
+            {
+                var target = ticket.ValueRO.TargetEntity;
+                if (target == Entity.Null || targetPositions.ContainsKey(target))
+                {
+                    continue;
+                }
+
+                if (_transformLookup.HasComponent(target))
+                {
+                    targetPositions.TryAdd(target, _transformLookup[target].Position);
+                }
+            }
+
             state.Dependency = new StepJob
             {
                 Delta = deltaTime,
@@ -246,7 +297,12 @@ namespace Godgame.Villagers
                 DerivedLookup = _derivedLookup,
                 CombatLookup = _combatLookup,
                 NeedLookup = _needStateLookup,
+                NeedTuningLookup = _needTuningLookup,
                 TicketLookup = _ticketLookup,
+                GroupLookup = _groupLookup,
+                TargetPositions = targetPositions,
+                CarryLookup = _carryLookup,
+                PonderLookup = _ponderLookup,
                 MovementTuning = movementTuning,
                 HasTreeTuning = hasTreeTuning ? (byte)1 : (byte)0,
                 TreeTuning = hasTreeTuning ? treeTuning : TreeFellingTuning.Default,
@@ -260,11 +316,30 @@ namespace Godgame.Villagers
                 PileSearchRadiusSq = pileSearchRadiusSq,
                 PileMinSpawnAmount = pileMinSpawnAmount,
                 WorkSatisfactionPerDelivery = math.max(0f, scheduleConfig.WorkSatisfactionPerDelivery),
+                WorkCompletionWorkDrop = math.max(0f, scheduleConfig.WorkCompletionWorkDrop),
+                WorkCompletionRestBoost = math.max(0f, scheduleConfig.WorkCompletionRestBoost),
+                WorkCompletionSocialBoost = math.max(0f, scheduleConfig.WorkCompletionSocialBoost),
+                WorkCompletionFaithBoost = math.max(0f, scheduleConfig.WorkCompletionFaithBoost),
                 DeliberationMinSeconds = math.max(0f, scheduleConfig.DeliberationMinSeconds),
                 DeliberationMaxSeconds = math.max(0f, scheduleConfig.DeliberationMaxSeconds),
+                GroupCohesionBase = jobTicketTuning.GroupCohesionBase,
+                GroupCohesionOrderWeight = jobTicketTuning.GroupCohesionOrderWeight,
+                GroupCohesionMin = jobTicketTuning.GroupCohesionMin,
+                GroupCohesionMax = jobTicketTuning.GroupCohesionMax,
                 CurrentTick = timeState.Tick,
-                FixedDeltaTime = timeState.FixedDeltaTime
+                FixedDeltaTime = timeState.FixedDeltaTime,
+                WorldSeconds = timeState.WorldSeconds,
+                VillagerEntities = villagerEntities,
+                VillagerTransforms = villagerTransforms,
+                VillagerSpatialMap = villagerSpatialMap,
+                SeparationRadius = separationRadius,
+                SeparationWeight = separationWeight,
+                SeparationMaxPush = separationMaxPush,
+                SeparationCellSize = separationCellSize
             }.Schedule(state.Dependency);
+
+            state.Dependency = targetPositions.Dispose(state.Dependency);
+            state.Dependency = villagerSpatialMap.Dispose(state.Dependency);
 
             state.Dependency.Complete();
 
@@ -289,7 +364,7 @@ namespace Godgame.Villagers
         }
 
         [BurstCompile]
-        [WithNone(typeof(LogisticsHaulerTag))]
+        [WithNone(typeof(LogisticsHaulerTag), typeof(HandHeldTag), typeof(Godgame.Runtime.HandQueuedTag))]
         public partial struct StepJob : IJobEntity
         {
             public const float DefaultGatherRate = 8f;
@@ -343,7 +418,12 @@ namespace Godgame.Villagers
             [ReadOnly] public ComponentLookup<VillagerDerivedAttributes> DerivedLookup;
             [NativeDisableParallelForRestriction] public ComponentLookup<GodgameVillagerCombatStats> CombatLookup;
             public ComponentLookup<VillagerNeedState> NeedLookup;
+            [ReadOnly] public ComponentLookup<VillagerNeedTuning> NeedTuningLookup;
             [NativeDisableParallelForRestriction] public ComponentLookup<JobTicket> TicketLookup;
+            [ReadOnly] public BufferLookup<JobTicketGroupMember> GroupLookup;
+            [ReadOnly] public NativeParallelHashMap<Entity, float3> TargetPositions;
+            [ReadOnly] public ComponentLookup<VillagerCarryCapacity> CarryLookup;
+            public ComponentLookup<VillagerPonderState> PonderLookup;
             public VillagerMovementTuning MovementTuning;
             public TreeFellingTuning TreeTuning;
             public byte HasTreeTuning;
@@ -357,23 +437,55 @@ namespace Godgame.Villagers
             public float PileSearchRadiusSq;
             public float PileMinSpawnAmount;
             public float WorkSatisfactionPerDelivery;
+            public float WorkCompletionWorkDrop;
+            public float WorkCompletionRestBoost;
+            public float WorkCompletionSocialBoost;
+            public float WorkCompletionFaithBoost;
             public float DeliberationMinSeconds;
             public float DeliberationMaxSeconds;
+            public float GroupCohesionBase;
+            public float GroupCohesionOrderWeight;
+            public float GroupCohesionMin;
+            public float GroupCohesionMax;
             public uint CurrentTick;
             public float FixedDeltaTime;
+            public float WorldSeconds;
+            [ReadOnly] public NativeArray<Entity> VillagerEntities;
+            [ReadOnly] public NativeArray<LocalTransform> VillagerTransforms;
+            [ReadOnly] public NativeParallelMultiHashMap<int, int> VillagerSpatialMap;
+            public float SeparationRadius;
+            public float SeparationWeight;
+            public float SeparationMaxPush;
+            public float SeparationCellSize;
 
             [BurstCompile]
-            void Execute([ChunkIndexInQuery] int ciq, Entity e, ref VillagerJobState job, ref JobAssignment assignment, ref LocalTransform tx, ref Navigation nav, ref GatherDeliverTelemetry telemetry)
+            void Execute([ChunkIndexInQuery] int ciq, Entity e, ref VillagerJobState job, ref JobAssignment assignment, DynamicBuffer<JobBatchEntry> batch,
+                ref LocalTransform tx, ref Navigation nav, ref GatherDeliverTelemetry telemetry, ref MoveIntent moveIntent, ref MovePlan movePlan)
             {
                 var patienceScore = BehaviorLookup.HasComponent(e) ? BehaviorLookup[e].PatienceScore : 0f;
+
+                if (assignment.Ticket == Entity.Null && batch.Length > 0)
+                {
+                    var nextTicket = batch[0].Ticket;
+                    batch.RemoveAt(0);
+                    assignment.Ticket = nextTicket;
+                    assignment.CommitTick = CurrentTick;
+                }
 
                 if (GoalLookup.HasComponent(e))
                 {
                     var goal = GoalLookup[e];
                     if (goal.CurrentGoal != VillagerGoal.Work)
                     {
-                        ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                        ResetJob(ref job, e, patienceScore);
+                        ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                        ResetJob(ref job, e, patienceScore, tx.Position);
+                        moveIntent = new MoveIntent
+                        {
+                            TargetEntity = Entity.Null,
+                            TargetPosition = tx.Position,
+                            IntentType = MoveIntentType.None
+                        };
+                        movePlan = default;
                         return;
                     }
                 }
@@ -388,6 +500,13 @@ namespace Godgame.Villagers
                     job.Phase = JobPhase.Idle;
                     job.Target = Entity.Null;
                     assignment.CommitTick = 0;
+                    moveIntent = new MoveIntent
+                    {
+                        TargetEntity = Entity.Null,
+                        TargetPosition = tx.Position,
+                        IntentType = MoveIntentType.None
+                    };
+                    movePlan = default;
                     return;
                 }
 
@@ -395,23 +514,44 @@ namespace Godgame.Villagers
                 {
                     assignment.Ticket = Entity.Null;
                     assignment.CommitTick = 0;
-                    ResetJob(ref job, e, patienceScore);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
+                    moveIntent = new MoveIntent
+                    {
+                        TargetEntity = Entity.Null,
+                        TargetPosition = tx.Position,
+                        IntentType = MoveIntentType.None
+                    };
+                    movePlan = default;
                     return;
                 }
 
                 ticket = TicketLookup[assignment.Ticket];
-                if (ticket.Assignee != e)
+                if (!IsTicketAssignedToEntity(assignment.Ticket, ticket, e))
                 {
                     assignment.Ticket = Entity.Null;
                     assignment.CommitTick = 0;
-                    ResetJob(ref job, e, patienceScore);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
+                    moveIntent = new MoveIntent
+                    {
+                        TargetEntity = Entity.Null,
+                        TargetPosition = tx.Position,
+                        IntentType = MoveIntentType.None
+                    };
+                    movePlan = default;
                     return;
                 }
 
                 if (ticket.State == JobTicketState.Cancelled || ticket.State == JobTicketState.Done)
                 {
-                    ReleaseTicket(ref assignment, e, ticket.State);
-                    ResetJob(ref job, e, patienceScore);
+                    ReleaseTicket(ref assignment, batch, e, ticket.State);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
+                    moveIntent = new MoveIntent
+                    {
+                        TargetEntity = Entity.Null,
+                        TargetPosition = tx.Position,
+                        IntentType = MoveIntentType.None
+                    };
+                    movePlan = default;
                     return;
                 }
 
@@ -419,15 +559,22 @@ namespace Godgame.Villagers
                     && ticket.ClaimExpiresTick != 0
                     && ticket.ClaimExpiresTick <= CurrentTick)
                 {
-                    ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                    ResetJob(ref job, e, patienceScore);
+                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
+                    return;
+                }
+
+                if (ticket.IsSingleItem == 0 && ticket.WorkAmount <= 0f)
+                {
+                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Done);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
                 }
 
                 if (job.Type == JobType.None)
                 {
-                    ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                    ResetJob(ref job, e, patienceScore);
+                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
                 }
 
@@ -446,53 +593,54 @@ namespace Godgame.Villagers
                 var ticketTarget = ticket.TargetEntity;
                 var hasNodeTarget = ticketTarget != Entity.Null && ResourceNodeLookup.HasComponent(ticketTarget);
                 var hasPileTarget = ticketTarget != Entity.Null && PileLookup.HasComponent(ticketTarget);
-                if (!hasNodeTarget && !hasPileTarget)
+                var hasGenericTarget = ticket.IsSingleItem != 0 && ticketTarget != Entity.Null && TargetPositions.ContainsKey(ticketTarget);
+                if (!hasNodeTarget && !hasPileTarget && !hasGenericTarget)
                 {
-                    ReleaseTicket(ref assignment, e, JobTicketState.Cancelled);
-                    ResetJob(ref job, e, patienceScore);
+                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Cancelled);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
                 }
 
-                if (hasNodeTarget)
+                if (hasNodeTarget && ticket.IsSingleItem == 0)
                 {
                     var node = ResourceNodeLookup[ticketTarget];
                     if (node.IsDepleted != 0 || node.RemainingAmount <= 0f)
                     {
-                        ReleaseTicket(ref assignment, e, JobTicketState.Done);
-                        ResetJob(ref job, e, patienceScore);
+                        ReleaseTicket(ref assignment, batch, e, JobTicketState.Done);
+                        ResetJob(ref job, e, patienceScore, tx.Position);
                         return;
                     }
                 }
 
-                if (hasPileTarget)
+                if (hasPileTarget && ticket.IsSingleItem == 0)
                 {
                     var pile = PileLookup[ticketTarget];
                     if (pile.Amount <= 0f)
                     {
-                        ReleaseTicket(ref assignment, e, JobTicketState.Done);
-                        ResetJob(ref job, e, patienceScore);
+                        ReleaseTicket(ref assignment, batch, e, JobTicketState.Done);
+                        ResetJob(ref job, e, patienceScore, tx.Position);
                         return;
                     }
                 }
 
-                if (hasPileTarget && !isHauler)
+                if (ticket.IsSingleItem == 0 && hasPileTarget && !isHauler)
                 {
-                    ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                    ResetJob(ref job, e, patienceScore);
+                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
                 }
 
-                if (!hasPileTarget && isHauler)
+                if (ticket.IsSingleItem == 0 && !hasPileTarget && isHauler)
                 {
-                    ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                    ResetJob(ref job, e, patienceScore);
+                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
                 }
 
-                if (!isHauler && job.ResourceTypeIndex != ticket.ResourceTypeIndex)
+                if (ticket.IsSingleItem == 0 && !isHauler && job.ResourceTypeIndex != ticket.ResourceTypeIndex)
                 {
-                    ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                    ResetJob(ref job, e, patienceScore);
+                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
                 }
 
@@ -508,6 +656,7 @@ namespace Godgame.Villagers
                         job.OutputResourceTypeIndex = ticket.ResourceTypeIndex;
                     }
                 }
+                var groupReady = IsGroupReady(assignment.Ticket, ticket);
                 var hasHaulPreference = HaulLookup.HasComponent(e);
                 var haulPreference = hasHaulPreference ? HaulLookup[e] : default;
                 if (!hasHaulPreference)
@@ -515,10 +664,10 @@ namespace Godgame.Villagers
                     haulPreference.ForceHaul = 1;
                 }
 
-                if (job.ResourceTypeIndex == ushort.MaxValue && !isHauler)
+                if (ticket.IsSingleItem == 0 && job.ResourceTypeIndex == ushort.MaxValue && !isHauler)
                 {
-                    ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                    ResetJob(ref job, e, patienceScore);
+                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                    ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
                 }
 
@@ -526,6 +675,11 @@ namespace Godgame.Villagers
                 var carryCapacity = job.CarryMax > 0f
                     ? job.CarryMax
                     : (CarryCapacityOverride > 0f ? CarryCapacityOverride : DefaultCarryCapacity);
+                if (CarryLookup.HasComponent(e))
+                {
+                    var modifier = CarryLookup[e];
+                    carryCapacity = carryCapacity * math.max(0.1f, modifier.Multiplier) + modifier.Bonus;
+                }
                 if (job.CarryMax <= 0f)
                 {
                     job.CarryMax = carryCapacity;
@@ -536,6 +690,12 @@ namespace Godgame.Villagers
                 var returnThreshold = ReturnThresholdPercent > 0f
                     ? math.clamp(ReturnThresholdPercent, 0.1f, 1f)
                     : DefaultReturnThreshold;
+                var ticketCarryTarget = ResolveTicketCarryTarget(ticket, carryCapacity);
+                var returnCarryThreshold = carryCapacity * returnThreshold;
+                if (ticketCarryTarget > 0f)
+                {
+                    returnCarryThreshold = math.min(returnCarryThreshold, ticketCarryTarget);
+                }
                 var storehouseRadiusSq = StorehouseSearchRadius > 0f
                     ? StorehouseSearchRadius * StorehouseSearchRadius
                     : float.PositiveInfinity;
@@ -584,20 +744,20 @@ namespace Godgame.Villagers
                         }
                         if (!TryResolveTicketTargetPosition(ticket.TargetEntity, out var ticketTargetPosition))
                         {
-                            ReleaseTicket(ref assignment, e, JobTicketState.Cancelled);
-                            EnterIdle(ref job, e, patienceScore, 0f);
+                            ReleaseTicket(ref assignment, batch, e, JobTicketState.Cancelled);
+                            EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
                             break;
                         }
 
                         job.Target = ticket.TargetEntity;
-                        var offset = useCooperation
+                        var nodeOffset = useCooperation
                             ? BuildCooperationOffset(ticket.TargetEntity, e, DefaultCooperationNodeSpacing)
                             : float3.zero;
-                        nav.Destination = ticketTargetPosition + offset;
+                        nav.Destination = ticketTargetPosition + nodeOffset;
                         nav.Speed = moveSpeed;
                         job.Phase = JobPhase.NavigateToNode;
 
-                        if (ticket.State == JobTicketState.Claimed)
+                        if (ticket.State == JobTicketState.Claimed && groupReady)
                         {
                             ticket.State = JobTicketState.InProgress;
                             ticket.LastStateTick = CurrentTick;
@@ -611,48 +771,97 @@ namespace Godgame.Villagers
                         if (distance > arrivalDistance)
                         {
                             var moveDir = VillagerSteeringMath.BlendDirection(direction, hazardVector, hazardUrgency);
-                            var moveDelta = moveDir * nav.Speed * Delta;
+                            var separation = ResolveSeparation(e, tx.Position);
+                            moveDir = math.normalizesafe(moveDir + separation);
+                            var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance);
+                            var moveDelta = moveDir * travelSpeed * Delta;
                             tx.Position += moveDelta;
                             movedThisTick = true;
                         }
-                        else
+                        else if (groupReady)
                         {
                             job.Phase = JobPhase.Gather;
                         }
                         break;
 
                     case JobPhase.Gather:
+                        if (ticket.IsSingleItem != 0 && ticket.ItemMass > 0f)
+                        {
+                            if (ticket.Assignee == e)
+                            {
+                                job.CarryCount = math.max(job.CarryCount, ticket.ItemMass);
+                            }
+                            else
+                            {
+                                job.CarryCount = 0f;
+                            }
+
+                            if (TryFindStorehouse(tx.Position, useCooperation, in cooperation, hasAwareness, in awareness, storehouseRadiusSq,
+                                    out var nearestStorehouse, out var nearestStorehousePosition))
+                            {
+                                job.Target = nearestStorehouse;
+                                var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
+                                    ? BuildCooperationOffset(nearestStorehouse, e, DefaultCooperationStorehouseSpacing)
+                                    : float3.zero;
+                                nav.Destination = nearestStorehousePosition + storehouseOffset;
+                                nav.Speed = moveSpeed;
+                                job.Phase = JobPhase.NavigateToStorehouse;
+                            }
+                            else
+                            {
+                                job.CarryCount = 0f;
+                                ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                                EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
+                            }
+                            break;
+                        }
+
                         if (job.Target != Entity.Null && HasPileConfig != 0 && PileLookup.HasComponent(job.Target))
                         {
                             var pile = PileLookup[job.Target];
                             if (pile.Amount > 0f && job.CarryCount < carryCapacity)
                             {
                                 var pickupAmount = math.min(pile.Amount, carryCapacity - job.CarryCount);
-                                job.CarryCount = math.min(carryCapacity, job.CarryCount + pickupAmount);
-                                pile.Amount = math.max(0f, pile.Amount - pickupAmount);
+                                if (ticket.WorkAmount > 0f)
+                                {
+                                    pickupAmount = math.min(pickupAmount, ticket.WorkAmount);
+                                }
+
+                                if (pickupAmount > 0f)
+                                {
+                                    job.CarryCount = math.min(carryCapacity, job.CarryCount + pickupAmount);
+                                    pile.Amount = math.max(0f, pile.Amount - pickupAmount);
+                                    if (ticket.WorkAmount > 0f && ticket.Assignee == e)
+                                    {
+                                        ticket.WorkAmount = math.max(0f, ticket.WorkAmount - pickupAmount);
+                                        TicketLookup[assignment.Ticket] = ticket;
+                                    }
+                                }
                                 pile.UpdateVisualSize();
                                 PileLookup[job.Target] = pile;
                                 telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
                             }
 
-                            if (job.CarryCount > 0f || pile.Amount <= 0f)
+                            if ((ticketCarryTarget > 0f && job.CarryCount >= ticketCarryTarget)
+                                || (ticketCarryTarget <= 0f && job.CarryCount > 0f)
+                                || pile.Amount <= 0f)
                             {
                                 if (TryFindStorehouse(tx.Position, useCooperation, in cooperation, hasAwareness, in awareness, storehouseRadiusSq,
                                         out var nearestStorehouse, out var nearestStorehousePosition))
                                 {
                                     job.Target = nearestStorehouse;
-                                    var offset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
+                                    var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
                                         ? BuildCooperationOffset(nearestStorehouse, e, DefaultCooperationStorehouseSpacing)
                                         : float3.zero;
-                                    nav.Destination = nearestStorehousePosition + offset;
+                                    nav.Destination = nearestStorehousePosition + storehouseOffset;
                                     nav.Speed = moveSpeed;
                                     job.Phase = JobPhase.NavigateToStorehouse;
                                 }
                                 else
                                 {
                                     job.CarryCount = 0f;
-                                    ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                                    EnterIdle(ref job, e, patienceScore, 0f);
+                                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                                    EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
                                 }
                             }
                             break;
@@ -688,11 +897,20 @@ namespace Godgame.Villagers
                                 if (node.RemainingAmount > 0f && job.CarryCount < carryCapacity)
                                 {
                                     var gatherAmount = math.min(effectiveGatherRate * Delta, math.min(node.RemainingAmount, carryCapacity - job.CarryCount));
+                                    if (ticket.WorkAmount > 0f)
+                                    {
+                                        gatherAmount = math.min(gatherAmount, ticket.WorkAmount);
+                                    }
                                     job.CarryCount = math.min(carryCapacity, job.CarryCount + gatherAmount);
                                     if (gatherAmount > 0f)
                                     {
                                         telemetry.MinedAmountMilliInterval += BehaviorTelemetryMath.ToMilli(gatherAmount);
                                         telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
+                                        if (ticket.WorkAmount > 0f && ticket.Assignee == e)
+                                        {
+                                            ticket.WorkAmount = math.max(0f, ticket.WorkAmount - gatherAmount);
+                                            TicketLookup[assignment.Ticket] = ticket;
+                                        }
                                     }
                                     node.RemainingAmount = math.max(0f, node.RemainingAmount - gatherAmount);
                                     if (node.RemainingAmount <= 0f)
@@ -729,7 +947,7 @@ namespace Godgame.Villagers
                                     }
                                 }
 
-                                if (job.CarryCount >= carryCapacity * returnThreshold || node.RemainingAmount <= 0f)
+                                if (job.CarryCount >= returnCarryThreshold || node.RemainingAmount <= 0f)
                                 {
                                     var outputResourceIndex = ResolveOutputIndex(job);
                                     var shouldHaul = isHauler || haulPreference.ForceHaul != 0;
@@ -771,8 +989,8 @@ namespace Godgame.Villagers
                                         });
                                         job.CarryCount = 0f;
                                         telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
-                                        ReleaseTicket(ref assignment, e, ResolveCompletionState(ticket.TargetEntity));
-                                        EnterIdle(ref job, e, patienceScore, DropoffCooldownSeconds);
+                                        ReleaseTicket(ref assignment, batch, e, ResolveCompletionState(ticket.TargetEntity, ticket));
+                                        EnterIdle(ref job, e, patienceScore, DropoffCooldownSeconds, tx.Position);
                                         ApplyWorkSatisfaction(e);
                                         break;
                                     }
@@ -781,18 +999,18 @@ namespace Godgame.Villagers
                                             out var nearestStorehouse, out var nearestStorehousePosition))
                                     {
                                         job.Target = nearestStorehouse;
-                                        var offset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
+                                        var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
                                             ? BuildCooperationOffset(nearestStorehouse, e, DefaultCooperationStorehouseSpacing)
                                             : float3.zero;
-                                        nav.Destination = nearestStorehousePosition + offset;
+                                        nav.Destination = nearestStorehousePosition + storehouseOffset;
                                         nav.Speed = moveSpeed;
                                         job.Phase = JobPhase.NavigateToStorehouse;
                                     }
                                 else
                                 {
                                     job.CarryCount = 0f;
-                                    ReleaseTicket(ref assignment, e, JobTicketState.Open);
-                                    EnterIdle(ref job, e, patienceScore, 0f);
+                                    ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                                    EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
                                 }
                                 }
                             }
@@ -805,7 +1023,10 @@ namespace Godgame.Villagers
                         if (distance > deliverDistance)
                         {
                             var moveDir = VillagerSteeringMath.BlendDirection(direction, hazardVector, hazardUrgency);
-                            var moveDelta = moveDir * nav.Speed * Delta;
+                            var separation = ResolveSeparation(e, tx.Position);
+                            moveDir = math.normalizesafe(moveDir + separation);
+                            var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance);
+                            var moveDelta = moveDir * travelSpeed * Delta;
                             tx.Position += moveDelta;
                             movedThisTick = true;
                         }
@@ -855,11 +1076,13 @@ namespace Godgame.Villagers
 
                         telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
 
-                        ReleaseTicket(ref assignment, e, ResolveCompletionState(ticket.TargetEntity));
-                        EnterIdle(ref job, e, patienceScore, DropoffCooldownSeconds);
+                        ReleaseTicket(ref assignment, batch, e, ResolveCompletionState(ticket.TargetEntity, ticket));
+                        EnterIdle(ref job, e, patienceScore, DropoffCooldownSeconds, tx.Position);
                         ApplyWorkSatisfaction(e);
                         break;
                 }
+
+                UpdateMovementDebug(ref moveIntent, ref movePlan, in job, in nav, in tx);
 
                 if (hasStamina)
                 {
@@ -867,6 +1090,68 @@ namespace Godgame.Villagers
                     combatStats.CurrentStamina = (byte)math.round(currentStamina);
                     CombatLookup[e] = combatStats;
                 }
+            }
+
+            private const float DeltaTimeEpsilon = 0.0001f;
+
+            private void UpdateMovementDebug(ref MoveIntent moveIntent, ref MovePlan movePlan, in VillagerJobState job, in Navigation nav, in LocalTransform tx)
+            {
+                if (job.Phase == JobPhase.Idle || job.Target == Entity.Null)
+                {
+                    moveIntent = new MoveIntent
+                    {
+                        TargetEntity = Entity.Null,
+                        TargetPosition = tx.Position,
+                        IntentType = MoveIntentType.None
+                    };
+                    movePlan = default;
+                    return;
+                }
+
+                var intentType = MoveIntentType.Work;
+                moveIntent = new MoveIntent
+                {
+                    TargetEntity = job.Target,
+                    TargetPosition = nav.Destination,
+                    IntentType = intentType
+                };
+
+                var toTarget = nav.Destination - tx.Position;
+                toTarget.y = 0f;
+                var distance = math.length(toTarget);
+                var speed = math.max(0f, nav.Speed);
+                var travelSpeed = ApplyArriveSlowdown(speed, distance);
+                var desiredVel = distance > 0.01f && travelSpeed > 0f
+                    ? math.normalizesafe(toTarget) * travelSpeed
+                    : float3.zero;
+
+                var mode = job.Phase == JobPhase.NavigateToNode || job.Phase == JobPhase.NavigateToStorehouse
+                    ? MovePlanMode.Approach
+                    : job.Phase == JobPhase.Deliver || job.Phase == JobPhase.Gather
+                        ? MovePlanMode.Latch
+                        : MovePlanMode.None;
+
+                movePlan = new MovePlan
+                {
+                    Mode = mode,
+                    DesiredVelocity = desiredVel,
+                    MaxAccel = speed / math.max(DeltaTimeEpsilon, Delta),
+                    EtaSeconds = travelSpeed > 0f ? distance / travelSpeed : 0f
+                };
+            }
+
+            private float ApplyArriveSlowdown(float speed, float distance)
+            {
+                var radius = math.max(0f, MovementTuning.ArriveSlowdownRadius);
+                if (radius <= 0f || speed <= 0f)
+                {
+                    return speed;
+                }
+
+                var minMultiplier = math.clamp(MovementTuning.ArriveMinSpeedMultiplier, 0.1f, 1f);
+                var t = math.saturate(distance / radius);
+                var scale = math.lerp(minMultiplier, 1f, t);
+                return speed * scale;
             }
 
             private static ushort ResolveOutputIndex(in VillagerJobState job)
@@ -884,7 +1169,113 @@ namespace Godgame.Villagers
                 return job.OutputResourceTypeIndex;
             }
 
-            private void ReleaseTicket(ref JobAssignment assignment, Entity entity, JobTicketState nextState)
+            private static float ResolveTicketCarryTarget(in JobTicket ticket, float carryCapacity)
+            {
+                if (ticket.IsSingleItem != 0 && ticket.ItemMass > 0f)
+                {
+                    return ticket.ItemMass;
+                }
+
+                if (ticket.WorkAmount <= 0f)
+                {
+                    return carryCapacity;
+                }
+
+                return math.min(carryCapacity, ticket.WorkAmount);
+            }
+
+            private bool IsTicketAssignedToEntity(Entity ticketEntity, in JobTicket ticket, Entity entity)
+            {
+                if (ticket.Assignee == entity)
+                {
+                    return true;
+                }
+
+                if (ticket.RequiredWorkers > 1 && GroupLookup.HasBuffer(ticketEntity))
+                {
+                    var group = GroupLookup[ticketEntity];
+                    for (int i = 0; i < group.Length; i++)
+                    {
+                        if (group[i].Villager == entity)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            private bool IsGroupReady(Entity ticketEntity, in JobTicket ticket)
+            {
+                if (ticket.IsSingleItem != 0 && ticket.ItemMass > 0f)
+                {
+                    if (!GroupLookup.HasBuffer(ticketEntity))
+                    {
+                        return false;
+                    }
+
+                    var groupBuffer = GroupLookup[ticketEntity];
+                    return ResolveGroupCarryCapacity(groupBuffer) >= ticket.ItemMass;
+                }
+
+                if (ticket.RequiredWorkers <= 1)
+                {
+                    return true;
+                }
+
+                if (!GroupLookup.HasBuffer(ticketEntity))
+                {
+                    return false;
+                }
+
+                var groupMembers = GroupLookup[ticketEntity];
+                var minWorkers = math.max(1, ticket.MinWorkers);
+                return groupMembers.Length >= minWorkers;
+            }
+
+            private float ResolveGroupCarryCapacity(DynamicBuffer<JobTicketGroupMember> group)
+            {
+                float totalCapacity = 0f;
+                float orderSum = 0f;
+                int count = 0;
+
+                for (int i = 0; i < group.Length; i++)
+                {
+                    var member = group[i].Villager;
+                    var capacity = CarryCapacityOverride > 0f ? CarryCapacityOverride : DefaultCarryCapacity;
+                    if (CarryLookup.HasComponent(member))
+                    {
+                        var modifier = CarryLookup[member];
+                        capacity = capacity * math.max(0.1f, modifier.Multiplier) + modifier.Bonus;
+                    }
+
+                    if (capacity <= 0f)
+                    {
+                        continue;
+                    }
+
+                    totalCapacity += capacity;
+                    if (AlignmentLookup.HasComponent(member))
+                    {
+                        orderSum += AlignmentLookup[member].OrderAxis;
+                    }
+                    count++;
+                }
+
+                if (count == 0 || totalCapacity <= 0f)
+                {
+                    return 0f;
+                }
+
+                var orderAvg = (orderSum / count) / 100f;
+                var cohesion = math.clamp(GroupCohesionBase + orderAvg * GroupCohesionOrderWeight,
+                    GroupCohesionMin,
+                    GroupCohesionMax);
+                return totalCapacity * math.max(0.1f, 1f + cohesion);
+            }
+
+            private void ReleaseTicket(ref JobAssignment assignment, DynamicBuffer<JobBatchEntry> batch, Entity entity, JobTicketState nextState)
             {
                 if (assignment.Ticket == Entity.Null)
                 {
@@ -906,10 +1297,27 @@ namespace Godgame.Villagers
 
                 assignment.Ticket = Entity.Null;
                 assignment.CommitTick = 0;
+                if (batch.Length > 0)
+                {
+                    var nextTicket = batch[0].Ticket;
+                    batch.RemoveAt(0);
+                    assignment.Ticket = nextTicket;
+                    assignment.CommitTick = CurrentTick;
+                }
             }
 
-            private JobTicketState ResolveCompletionState(Entity target)
+            private JobTicketState ResolveCompletionState(Entity target, in JobTicket ticket)
             {
+                if (ticket.IsSingleItem != 0 && ticket.ItemMass > 0f)
+                {
+                    return JobTicketState.Done;
+                }
+
+                if (ticket.WorkAmount <= 0f)
+                {
+                    return JobTicketState.Done;
+                }
+
                 if (target != Entity.Null)
                 {
                     if (ResourceNodeLookup.HasComponent(target))
@@ -957,6 +1365,12 @@ namespace Godgame.Villagers
                 if (pileIndex >= 0)
                 {
                     position = PileTransforms[pileIndex].Position;
+                    return true;
+                }
+
+                if (TargetPositions.TryGetValue(target, out var cachedPosition))
+                {
+                    position = cachedPosition;
                     return true;
                 }
 
@@ -1146,18 +1560,26 @@ namespace Godgame.Villagers
                 return storehouse != Entity.Null;
             }
 
-            private void ResetJob(ref VillagerJobState job, Entity entity, float patienceScore)
+            private void ResetJob(ref VillagerJobState job, Entity entity, float patienceScore, float3 position)
             {
-                EnterIdle(ref job, entity, patienceScore, 0f);
+                EnterIdle(ref job, entity, patienceScore, 0f, position);
             }
 
-            private void EnterIdle(ref VillagerJobState job, Entity entity, float patienceScore, float dropoffCooldown)
+            private void EnterIdle(ref VillagerJobState job, Entity entity, float patienceScore, float dropoffCooldown, float3 position)
             {
                 job.Phase = JobPhase.Idle;
                 job.Target = Entity.Null;
                 job.DropoffCooldown = dropoffCooldown > 0f ? dropoffCooldown : 0f;
                 job.DecisionCooldown = ResolveDeliberationSeconds(entity, patienceScore);
                 job.LastDecisionTick = CurrentTick;
+
+                if (PonderLookup.HasComponent(entity))
+                {
+                    var ponder = PonderLookup[entity];
+                    ponder.RemainingSeconds = job.DecisionCooldown;
+                    ponder.AnchorPosition = position;
+                    PonderLookup[entity] = ponder;
+                }
             }
 
             private float ResolveDeliberationSeconds(Entity entity, float patienceScore)
@@ -1178,13 +1600,36 @@ namespace Godgame.Villagers
 
             private void ApplyWorkSatisfaction(Entity entity)
             {
-                if (WorkSatisfactionPerDelivery <= 0f || !NeedLookup.HasComponent(entity))
+                if (!NeedLookup.HasComponent(entity))
                 {
                     return;
                 }
 
                 var needs = NeedLookup[entity];
-                needs.WorkUrgency = math.max(0f, needs.WorkUrgency - WorkSatisfactionPerDelivery);
+                var maxUrgency = 1f;
+                if (NeedTuningLookup.HasComponent(entity))
+                {
+                    maxUrgency = math.max(0.01f, NeedTuningLookup[entity].MaxUrgency);
+                }
+
+                var workDrop = math.max(WorkSatisfactionPerDelivery, WorkCompletionWorkDrop);
+                if (workDrop > 0f)
+                {
+                    needs.WorkUrgency = math.max(0f, needs.WorkUrgency - workDrop);
+                }
+
+                if (WorkCompletionRestBoost > 0f)
+                {
+                    needs.RestUrgency = math.min(maxUrgency, needs.RestUrgency + WorkCompletionRestBoost);
+                }
+                if (WorkCompletionSocialBoost > 0f)
+                {
+                    needs.SocialUrgency = math.min(maxUrgency, needs.SocialUrgency + WorkCompletionSocialBoost);
+                }
+                if (WorkCompletionFaithBoost > 0f)
+                {
+                    needs.FaithUrgency = math.min(maxUrgency, needs.FaithUrgency + WorkCompletionFaithBoost);
+                }
                 NeedLookup[entity] = needs;
             }
 
@@ -1237,6 +1682,7 @@ namespace Godgame.Villagers
             private float ResolveMoveSpeed(Entity entity, float baseSpeed, float hazardUrgency, float statAverage,
                 float staminaRatio, out float runIntensity)
             {
+                baseSpeed *= math.max(0.1f, MovementTuning.BaseMoveSpeedMultiplier);
                 var walkMultiplier = math.max(0.05f, MovementTuning.WalkSpeedMultiplier);
                 var runMultiplier = math.max(walkMultiplier, MovementTuning.RunSpeedMultiplier);
                 var statMultiplier = math.max(0.1f, 1f + (statAverage - 50f) * MovementTuning.StatSpeedScalar);
@@ -1262,6 +1708,7 @@ namespace Godgame.Villagers
                 }
 
                 var moveSpeed = math.lerp(walkSpeed, runSpeed, speedBlend);
+                moveSpeed = ApplySpeedVariance(entity, moveSpeed);
                 runIntensity = runSpeed > walkSpeed
                     ? math.saturate((moveSpeed - walkSpeed) / math.max(0.001f, runSpeed - walkSpeed))
                     : 0f;
@@ -1289,6 +1736,108 @@ namespace Godgame.Villagers
                 var angle = random.NextFloat(0f, math.PI * 2f);
                 var radius = random.NextFloat(0.4f, 1f) * spacing;
                 return new float3(math.cos(angle) * radius, 0f, math.sin(angle) * radius);
+            }
+
+            private float ApplySpeedVariance(Entity entity, float baseSpeed)
+            {
+                var amplitude = math.max(0f, MovementTuning.SpeedVarianceAmplitude);
+                var periodSeconds = math.max(0f, MovementTuning.SpeedVariancePeriodSeconds);
+                if (amplitude <= 0f || periodSeconds <= 0f || baseSpeed <= 0f)
+                {
+                    return baseSpeed;
+                }
+
+                var seed = math.hash(new uint2((uint)(entity.Index + 1), 0x5f21u));
+                var phase01 = (seed & 0xffffu) / 65535f;
+                var angle = (WorldSeconds / periodSeconds + phase01) * math.PI * 2f;
+                var variance = 1f + math.sin(angle) * amplitude;
+                return baseSpeed * math.max(0.1f, variance);
+            }
+
+            private float3 ResolveSeparation(Entity self, float3 position)
+            {
+                if (SeparationRadius <= 0f || SeparationWeight <= 0f || VillagerEntities.Length == 0)
+                {
+                    return float3.zero;
+                }
+
+                var radiusSq = SeparationRadius * SeparationRadius;
+                var baseCell = CellCoord(position, SeparationCellSize);
+                float3 separation = float3.zero;
+
+                for (int x = -1; x <= 1; x++)
+                {
+                    for (int z = -1; z <= 1; z++)
+                    {
+                        var neighborCell = baseCell + new int2(x, z);
+                        var key = HashCell(neighborCell);
+                        if (!VillagerSpatialMap.TryGetFirstValue(key, out var index, out var iterator))
+                        {
+                            continue;
+                        }
+
+                        do
+                        {
+                            if (VillagerEntities[index] == self)
+                            {
+                                continue;
+                            }
+
+                            var other = VillagerTransforms[index].Position;
+                            var diff = position - other;
+                            diff.y = 0f;
+                            var distSq = math.lengthsq(diff);
+                            if (distSq <= 1e-4f || distSq >= radiusSq)
+                            {
+                                continue;
+                            }
+
+                            var dist = math.sqrt(distSq);
+                            var push = (SeparationRadius - dist) / SeparationRadius;
+                            separation += diff / math.max(dist, 1e-4f) * push;
+                        } while (VillagerSpatialMap.TryGetNextValue(out index, ref iterator));
+                    }
+                }
+
+                var magnitude = math.length(separation);
+                if (magnitude <= 1e-4f)
+                {
+                    return float3.zero;
+                }
+
+                var scaled = math.min(SeparationMaxPush, magnitude * SeparationWeight);
+                return separation / magnitude * scaled;
+            }
+
+            private static int2 CellCoord(float3 position, float cellSize)
+            {
+                if (cellSize <= 0f)
+                {
+                    return int2.zero;
+                }
+
+                return (int2)math.floor(position.xz / cellSize);
+            }
+
+            private static int HashCell(int2 cell)
+            {
+                return (int)math.hash(cell);
+            }
+        }
+
+        private static void BuildSeparationMap(NativeArray<LocalTransform> transforms, float cellSize, NativeParallelMultiHashMap<int, int> map)
+        {
+            map.Clear();
+            if (cellSize <= 0f)
+            {
+                return;
+            }
+
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                var cell = (int2)math.floor(transforms[i].Position.xz / cellSize);
+                var key = (int)math.hash(cell);
+                map.Add(key, i);
             }
         }
     }

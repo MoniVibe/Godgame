@@ -39,7 +39,6 @@ namespace Godgame.Villagers
             state.Dependency = noGrudgeJob.ScheduleParallel(state.Dependency);
         }
 
-        [BurstCompile]
         public partial struct ProcessPersonalityWithGrudgeJob : IJobEntity
         {
             public uint Tick;
@@ -61,7 +60,7 @@ namespace Godgame.Villagers
                 for (int i = 0; i < grudges.Length; i++)
                 {
                     var grudge = grudges[i];
-                    if (!grudge.IsResolved && grudge.Intensity > 0f)
+                    if (grudge.IsResolved == 0 && grudge.Intensity > 0f)
                     {
                         totalGrudgeIntensity += grudge.Intensity;
                     }
@@ -85,7 +84,6 @@ namespace Godgame.Villagers
             }
         }
 
-        [BurstCompile]
         [WithNone(typeof(VillagerGrudge))]
         public partial struct ProcessPersonalityNoGrudgeJob : IJobEntity
         {
@@ -113,7 +111,6 @@ namespace Godgame.Villagers
         /// Note: This creates a grudge element that should be added to the DynamicBuffer.
         /// The actual buffer addition should be done by the caller using an EntityCommandBuffer.
         /// </summary>
-        [BurstCompile]
         public static void GenerateGrudge(
             in Entity targetEntity,
             GrudgeOffenseType offenseType,
@@ -128,7 +125,6 @@ namespace Godgame.Villagers
         /// <summary>
         /// Get combat stance modifiers based on personality.
         /// </summary>
-        [BurstCompile]
         public static void GetCombatStanceModifiers(ref VillagerPersonality personality, ref CombatStanceModifiers modifiers)
         {
             var boldModifier = personality.BoldScore / 100f; // -1 to +1
@@ -153,4 +149,3 @@ namespace Godgame.Villagers
         }
     }
 }
-

@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -62,8 +61,7 @@ namespace Godgame.Villagers
         /// If true, grudge has been satisfied (revenge taken or forgiven).
         /// Will be cleaned up by decay system.
         /// </summary>
-        [MarshalAs(UnmanagedType.U1)]
-        public bool IsResolved;
+        public byte IsResolved;
 
         /// <summary>
         /// Gets the base severity for an offense type.
@@ -105,7 +103,7 @@ namespace Godgame.Villagers
                 Intensity = baseSeverity * intensityMultiplier,
                 OccurredTick = currentTick,
                 RetaliationAttempts = 0,
-                IsResolved = false
+                IsResolved = 0
             };
         }
     }
@@ -134,7 +132,7 @@ namespace Godgame.Villagers
         /// <summary>
         /// If true, forgiving villagers (VengefulScore < -40) instantly forgive minor offenses.
         /// </summary>
-        public bool ForgivingInstantForgiveness;
+        public byte ForgivingInstantForgiveness;
 
         /// <summary>
         /// Threshold below which forgiving villagers instantly forgive.
@@ -146,7 +144,7 @@ namespace Godgame.Villagers
             MinIntensityThreshold = 1f,
             MaxGrudgesPerVillager = 8,
             TicksPerDay = 1200, // Assuming 20 ticks/second, 60 seconds/day
-            ForgivingInstantForgiveness = true,
+            ForgivingInstantForgiveness = 1,
             InstantForgivenessThreshold = 20f
         };
     }
@@ -162,7 +160,6 @@ namespace Godgame.Villagers
         public GrudgeOffenseType OffenseType;
         public float Intensity;
         public uint Tick;
-        public bool WasInstantlyForgiven;
+        public byte WasInstantlyForgiven;
     }
 }
-

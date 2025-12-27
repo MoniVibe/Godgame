@@ -1,3 +1,4 @@
+using Godgame.Registry;
 using Godgame.Resources;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
@@ -20,11 +21,13 @@ namespace Godgame.Villagers
         private EntityQuery _ticketQuery;
         private EntityQuery _nodeQuery;
         private EntityQuery _pileQuery;
+        private EntityArchetype _ticketArchetype;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
+            state.RequireForUpdate<GodgameJobTicketTuning>();
+            _ticketArchetype = state.EntityManager.CreateArchetype(typeof(JobTicket));
             _ticketQuery = SystemAPI.QueryBuilder()
                 .WithAll<JobTicket>()
                 .Build();
@@ -49,20 +52,32 @@ namespace Godgame.Villagers
                 return;
             }
 
-            var tickets = _ticketQuery.ToComponentDataArray<JobTicket>(state.WorldUpdateAllocator);
-            var existingKeys = new NativeParallelHashMap<ulong, byte>(
-                math.max(1, tickets.Length),
+            var tuning = SystemAPI.GetSingleton<GodgameJobTicketTuning>();
+            var activeTicketCounts = new NativeParallelHashMap<Entity, int>(
+                math.max(1, _ticketQuery.CalculateEntityCount()),
                 Allocator.Temp);
 
-            for (int i = 0; i < tickets.Length; i++)
+            foreach (var ticket in SystemAPI.Query<RefRO<JobTicket>>())
             {
-                var ticket = tickets[i];
-                if (ticket.JobKey == 0 || ticket.State == JobTicketState.Done || ticket.State == JobTicketState.Cancelled)
+                if (ticket.ValueRO.State == JobTicketState.Done || ticket.ValueRO.State == JobTicketState.Cancelled)
                 {
                     continue;
                 }
 
-                existingKeys.TryAdd(ticket.JobKey, 0);
+                var target = ticket.ValueRO.TargetEntity;
+                if (target == Entity.Null)
+                {
+                    continue;
+                }
+
+                if (activeTicketCounts.TryGetValue(target, out var count))
+                {
+                    activeTicketCounts[target] = count + 1;
+                }
+                else
+                {
+                    activeTicketCounts[target] = 1;
+                }
             }
 
             var nodeEntities = _nodeQuery.ToEntityArray(state.WorldUpdateAllocator);
@@ -75,25 +90,45 @@ namespace Godgame.Villagers
                     continue;
                 }
 
-                var key = BuildJobKey(JobTicketType.Gather, nodeEntities[i], mirror.ResourceTypeIndex);
-                if (existingKeys.ContainsKey(key))
+                var maxTickets = math.max(0, tuning.MaxConcurrentNodeTickets + tuning.OpenTicketBuffer);
+                if (maxTickets <= 0)
                 {
                     continue;
                 }
 
-                var ticketEntity = state.EntityManager.CreateEntity(typeof(JobTicket));
-                state.EntityManager.SetComponentData(ticketEntity, new JobTicket
+                var activeCount = activeTicketCounts.TryGetValue(nodeEntities[i], out var currentCount)
+                    ? currentCount
+                    : 0;
+                var chunk = ResolveChunkAmount(mirror.RemainingAmount, tuning);
+                var maxByRemaining = ResolveTicketsByRemaining(mirror.RemainingAmount, chunk, tuning);
+                var desiredTotal = math.min(maxTickets, maxByRemaining);
+                var toSpawn = math.max(0, desiredTotal - activeCount);
+                for (int spawnIndex = 0; spawnIndex < toSpawn; spawnIndex++)
                 {
-                    Type = JobTicketType.Gather,
-                    State = JobTicketState.Open,
-                    TargetEntity = nodeEntities[i],
-                    Assignee = Entity.Null,
-                    ResourceTypeIndex = mirror.ResourceTypeIndex,
-                    ClaimExpiresTick = 0,
-                    LastStateTick = timeState.Tick,
-                    JobKey = key
-                });
-                existingKeys.TryAdd(key, 0);
+                    var workAmount = ResolveWorkAmount(mirror.RemainingAmount, chunk, tuning);
+                    var requiredWorkers = ResolveRequiredWorkers(workAmount, tuning);
+                    var minWorkers = ResolveMinWorkers(requiredWorkers, tuning);
+                    var ticketEntity = state.EntityManager.CreateEntity(_ticketArchetype);
+                    state.EntityManager.SetComponentData(ticketEntity, new JobTicket
+                    {
+                        Type = JobTicketType.Gather,
+                        State = JobTicketState.Open,
+                        SourceEntity = nodeEntities[i],
+                        TargetEntity = nodeEntities[i],
+                        DestinationEntity = Entity.Null,
+                        Assignee = Entity.Null,
+                        ResourceTypeIndex = mirror.ResourceTypeIndex,
+                        WorkAmount = workAmount,
+                        RequiredWorkers = requiredWorkers,
+                        MinWorkers = minWorkers,
+                        IsSingleItem = 0,
+                        ItemMass = 0f,
+                        ClaimExpiresTick = 0,
+                        LastStateTick = timeState.Tick,
+                        BatchKey = 0u,
+                        JobKey = BuildJobKey(JobTicketType.Gather, nodeEntities[i], mirror.ResourceTypeIndex, (uint)spawnIndex, timeState.Tick)
+                    });
+                }
             }
 
             var pileEntities = _pileQuery.ToEntityArray(state.WorldUpdateAllocator);
@@ -106,36 +141,132 @@ namespace Godgame.Villagers
                     continue;
                 }
 
-                var key = BuildJobKey(JobTicketType.Gather, pileEntities[i], pile.ResourceTypeIndex);
-                if (existingKeys.ContainsKey(key))
+                var maxTickets = math.max(0, tuning.MaxConcurrentPileTickets + tuning.OpenTicketBuffer);
+                if (maxTickets <= 0)
                 {
                     continue;
                 }
 
-                var ticketEntity = state.EntityManager.CreateEntity(typeof(JobTicket));
-                state.EntityManager.SetComponentData(ticketEntity, new JobTicket
+                var activeCount = activeTicketCounts.TryGetValue(pileEntities[i], out var currentCount)
+                    ? currentCount
+                    : 0;
+                var chunk = ResolveChunkAmount(pile.Amount, tuning);
+                var maxByRemaining = ResolveTicketsByRemaining(pile.Amount, chunk, tuning);
+                var desiredTotal = math.min(maxTickets, maxByRemaining);
+                var toSpawn = math.max(0, desiredTotal - activeCount);
+                for (int spawnIndex = 0; spawnIndex < toSpawn; spawnIndex++)
                 {
-                    Type = JobTicketType.Gather,
-                    State = JobTicketState.Open,
-                    TargetEntity = pileEntities[i],
-                    Assignee = Entity.Null,
-                    ResourceTypeIndex = pile.ResourceTypeIndex,
-                    ClaimExpiresTick = 0,
-                    LastStateTick = timeState.Tick,
-                    JobKey = key
-                });
-                existingKeys.TryAdd(key, 0);
+                    var workAmount = ResolveWorkAmount(pile.Amount, chunk, tuning);
+                    var requiredWorkers = ResolveRequiredWorkers(workAmount, tuning);
+                    var minWorkers = ResolveMinWorkers(requiredWorkers, tuning);
+                    var ticketEntity = state.EntityManager.CreateEntity(_ticketArchetype);
+                    state.EntityManager.SetComponentData(ticketEntity, new JobTicket
+                    {
+                        Type = JobTicketType.Gather,
+                        State = JobTicketState.Open,
+                        SourceEntity = pileEntities[i],
+                        TargetEntity = pileEntities[i],
+                        DestinationEntity = Entity.Null,
+                        Assignee = Entity.Null,
+                        ResourceTypeIndex = pile.ResourceTypeIndex,
+                        WorkAmount = workAmount,
+                        RequiredWorkers = requiredWorkers,
+                        MinWorkers = minWorkers,
+                        IsSingleItem = 0,
+                        ItemMass = 0f,
+                        ClaimExpiresTick = 0,
+                        LastStateTick = timeState.Tick,
+                        BatchKey = 0u,
+                        JobKey = BuildJobKey(JobTicketType.Gather, pileEntities[i], pile.ResourceTypeIndex, (uint)spawnIndex, timeState.Tick)
+                    });
+                }
             }
 
-            existingKeys.Dispose();
+            activeTicketCounts.Dispose();
         }
 
-        private static ulong BuildJobKey(JobTicketType type, Entity target, ushort resourceTypeIndex)
+        private static ulong BuildJobKey(JobTicketType type, Entity target, ushort resourceTypeIndex, uint spawnIndex, uint tick)
         {
-            ulong key = ((ulong)(uint)target.Index << 32) | (uint)target.Version;
-            key ^= ((ulong)resourceTypeIndex << 8);
-            key ^= (ulong)type;
-            return key;
+            return math.hash(new uint4((uint)target.Index, (uint)target.Version, resourceTypeIndex, tick + spawnIndex)) ^ (ulong)type;
+        }
+
+        private static float ResolveChunkAmount(float remaining, in GodgameJobTicketTuning tuning)
+        {
+            if (remaining <= 0f)
+            {
+                return 0f;
+            }
+
+            var min = math.max(0f, tuning.ChunkMinUnits);
+            var max = math.max(min, tuning.ChunkMaxUnits);
+            if (max <= 0f && tuning.ChunkDefaultUnits <= 0f)
+            {
+                return 0f;
+            }
+            var chunk = math.clamp(tuning.ChunkDefaultUnits, min > 0f ? min : 0f, max > 0f ? max : tuning.ChunkDefaultUnits);
+            return math.max(0.01f, chunk);
+        }
+
+        private static int ResolveTicketsByRemaining(float remaining, float chunk, in GodgameJobTicketTuning tuning)
+        {
+            if (remaining <= 0f || chunk <= 0f)
+            {
+                return 0;
+            }
+
+            var count = (int)math.floor(remaining / chunk);
+            var remainder = remaining - count * chunk;
+            var remainderThreshold = math.max(0f, tuning.ChunkMinUnits);
+            if (remainder >= remainderThreshold && remainder > 0f)
+            {
+                count += 1;
+            }
+
+            if (count == 0)
+            {
+                count = 1;
+            }
+
+            return count;
+        }
+
+        private static float ResolveWorkAmount(float remaining, float chunk, in GodgameJobTicketTuning tuning)
+        {
+            if (remaining <= 0f)
+            {
+                return 0f;
+            }
+
+            var min = math.max(0f, tuning.ChunkMinUnits);
+            var max = math.max(min, tuning.ChunkMaxUnits);
+            var clamped = math.clamp(chunk, min > 0f ? min : 0f, max > 0f ? max : chunk);
+            var amount = math.min(remaining, clamped);
+            if (amount <= 0f && remaining > 0f)
+            {
+                amount = remaining;
+            }
+
+            return amount;
+        }
+
+        private static byte ResolveRequiredWorkers(float workAmount, in GodgameJobTicketTuning tuning)
+        {
+            if (tuning.HeavyCarryThresholdUnits > 0f && workAmount >= tuning.HeavyCarryThresholdUnits)
+            {
+                return (byte)math.clamp(tuning.HeavyCarryRequiredWorkers, 2, 16);
+            }
+
+            return 1;
+        }
+
+        private static byte ResolveMinWorkers(byte requiredWorkers, in GodgameJobTicketTuning tuning)
+        {
+            if (requiredWorkers <= 1)
+            {
+                return 1;
+            }
+
+            return (byte)math.clamp(tuning.HeavyCarryMinWorkers, 1, requiredWorkers);
         }
     }
 }

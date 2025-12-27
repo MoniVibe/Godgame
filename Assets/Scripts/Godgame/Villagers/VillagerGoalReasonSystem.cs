@@ -43,8 +43,8 @@ namespace Godgame.Villagers
             _threatLookup.Update(ref state);
             _focusLookup.Update(ref state);
 
-            foreach (var (reason, goal, needs, entity) in SystemAPI
-                         .Query<RefRW<VillagerGoalReason>, RefRO<VillagerGoalState>, RefRO<VillagerNeedState>>()
+            foreach (var (reason, goal, needs, trace, traceEvents, entity) in SystemAPI
+                         .Query<RefRW<VillagerGoalReason>, RefRO<VillagerGoalState>, RefRO<VillagerNeedState>, RefRW<DecisionTrace>, DynamicBuffer<DecisionTraceEvent>>()
                          .WithEntityAccess())
             {
                 var next = reason.ValueRO;
@@ -61,7 +61,7 @@ namespace Godgame.Villagers
                         next.Kind = VillagerGoalReasonKind.FocusLocked;
                         next.Urgency = 0f;
                         next.SetTick = timeState.Tick;
-                        ApplyIfChanged(ref reason.ValueRW, next);
+                        ApplyIfChanged(ref reason.ValueRW, ref trace.ValueRW, traceEvents, next, timeState.Tick);
                         continue;
                     }
                 }
@@ -103,11 +103,11 @@ namespace Godgame.Villagers
                         break;
                 }
 
-                ApplyIfChanged(ref reason.ValueRW, next);
+                ApplyIfChanged(ref reason.ValueRW, ref trace.ValueRW, traceEvents, next, timeState.Tick);
             }
         }
 
-        private static void ApplyIfChanged(ref VillagerGoalReason current, in VillagerGoalReason next)
+        private static void ApplyIfChanged(ref VillagerGoalReason current, ref DecisionTrace trace, DynamicBuffer<DecisionTraceEvent> events, in VillagerGoalReason next, uint tick)
         {
             if (current.Kind != next.Kind ||
                 current.Urgency != next.Urgency ||
@@ -115,6 +115,27 @@ namespace Godgame.Villagers
                 current.SetTick != next.SetTick)
             {
                 current = next;
+                trace.ReasonCode = (byte)next.Kind;
+                trace.ChosenTarget = next.SourceEntity;
+                trace.Score = next.Urgency;
+                trace.BlockerEntity = Entity.Null;
+                trace.SinceTick = tick;
+
+                if (events.IsCreated)
+                {
+                    events.Add(new DecisionTraceEvent
+                    {
+                        Tick = tick,
+                        ReasonCode = (byte)next.Kind,
+                        Score = next.Urgency,
+                        TargetEntity = next.SourceEntity
+                    });
+
+                    if (events.Length > 16)
+                    {
+                        events.RemoveAt(0);
+                    }
+                }
             }
         }
     }
