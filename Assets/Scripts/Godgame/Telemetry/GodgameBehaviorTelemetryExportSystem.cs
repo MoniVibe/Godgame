@@ -31,8 +31,6 @@ namespace Godgame.Telemetry
 
         public void OnDestroy(ref SystemState state)
         {
-            _lineWriter?.Dispose();
-            _lineWriter = null;
         }
 
         public void OnUpdate(ref SystemState state)
@@ -100,8 +98,6 @@ namespace Godgame.Telemetry
     [UpdateAfter(typeof(TelemetryExportSystemGroup))]
     public partial struct GodgameAIAuditExportSystem : ISystem
     {
-        private StringBuilder _lineBuilder;
-        private StringWriter _lineWriter;
         private bool _capRecordWritten;
 
         public void OnCreate(ref SystemState state)
@@ -109,8 +105,6 @@ namespace Godgame.Telemetry
             state.RequireForUpdate<BehaviorTelemetryState>();
             state.RequireForUpdate<TelemetryExportConfig>();
             EnsureExportStateExists(ref state);
-            _lineBuilder = new StringBuilder(512);
-            _lineWriter = new StringWriter(_lineBuilder, CultureInfo.InvariantCulture) { NewLine = "\n" };
         }
 
         public void OnDestroy(ref SystemState state)
@@ -176,14 +170,15 @@ namespace Godgame.Telemetry
             var runId = config.RunId.ToString();
             var outputPath = config.OutputPath.ToString();
             ulong maxBytes = config.MaxOutputBytes;
-            var tick = GetCurrentTick();
-            ResolveScenarioMetadata(out var scenarioId, out var scenarioSeed);
+            var tick = GetCurrentTick(ref state);
+            ResolveScenarioMetadata(ref state, out var scenarioId, out var scenarioSeed);
 
+            LineBuffer.Get(out var lineBuilder, out var lineWriter);
             string truncatedRecord = null;
             ulong reserveBytes = 0;
             if (maxBytes > 0)
             {
-                truncatedRecord = BuildTruncatedRecord(runId, scenarioId, scenarioSeed, tick, maxBytes);
+                truncatedRecord = BuildTruncatedRecord(lineBuilder, lineWriter, runId, scenarioId, scenarioSeed, tick, maxBytes);
                 reserveBytes = (ulong)Encoding.UTF8.GetByteCount(truncatedRecord);
                 if (reserveBytes >= maxBytes)
                 {
@@ -197,15 +192,24 @@ namespace Godgame.Telemetry
             try
             {
                 EnsureDirectory(outputPath);
-                using var stream = new FileStream(outputPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
-                stream.Position = stream.Length;
+                ulong bytesWritten = exportState.ValueRO.BytesWritten;
+                var fileMode = bytesWritten == 0 ? FileMode.Create : FileMode.OpenOrCreate;
+                using var stream = new FileStream(outputPath, fileMode, FileAccess.Write, FileShare.Read);
+                if (bytesWritten > 0)
+                {
+                    stream.Position = stream.Length;
+                    if ((ulong)stream.Position != bytesWritten)
+                    {
+                        bytesWritten = (ulong)stream.Position;
+                    }
+                }
+                else
+                {
+                    stream.Position = 0;
+                }
+
                 using var writer = new StreamWriter(stream, Encoding.UTF8) { NewLine = "\n" };
                 var culture = CultureInfo.InvariantCulture;
-                ulong bytesWritten = exportState.ValueRO.BytesWritten;
-                if ((ulong)stream.Position > bytesWritten)
-                {
-                    bytesWritten = (ulong)stream.Position;
-                }
 
                 if (maxBytes > 0 && bytesWritten >= maxBytes)
                 {
@@ -217,7 +221,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < decisionBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteDecisionRecord(recordWriter, runId, decisionBuffer[i], culture)))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -231,7 +235,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < traceBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteDecisionTraceRecord(recordWriter, runId, traceBuffer[i], culture)))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -245,7 +249,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < actionBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteActionRecord(recordWriter, runId, actionBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -259,7 +263,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < effectBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteActionEffectRecord(recordWriter, runId, effectBuffer[i], culture)))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -273,7 +277,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < livelinessBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteLivelinessRecord(recordWriter, runId, livelinessBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -287,7 +291,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < capabilityGrantBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteCapabilityGrantRecord(recordWriter, runId, capabilityGrantBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -301,7 +305,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < capabilityRevokeBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteCapabilityRevokeRecord(recordWriter, runId, capabilityRevokeBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -315,7 +319,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < capabilitySnapshotBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteCapabilitySnapshotRecord(recordWriter, runId, capabilitySnapshotBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -329,7 +333,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < capabilityUsageBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteCapabilityUsageRecord(recordWriter, runId, capabilityUsageBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -343,7 +347,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < queueBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteQueueRecord(recordWriter, runId, queueBuffer[i], culture)))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -357,7 +361,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < logicBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteLogicRecord(recordWriter, runId, logicBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -371,7 +375,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < ticketBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteTicketRecord(recordWriter, runId, ticketBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -385,7 +389,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < gatherAttemptBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteGatherAttemptRecord(recordWriter, runId, gatherAttemptBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -399,7 +403,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < gatherYieldBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteGatherYieldRecord(recordWriter, runId, gatherYieldBuffer[i], culture)))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -413,7 +417,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < gatherFailureBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteGatherFailureRecord(recordWriter, runId, gatherFailureBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -427,7 +431,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < haulTripBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteHaulTripRecord(recordWriter, runId, haulTripBuffer[i], culture)))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -441,7 +445,7 @@ namespace Godgame.Telemetry
                 {
                     for (int i = 0; i < actionFailureBuffer.Length; i++)
                     {
-                        if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                        if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                             WriteActionFailureSample(recordWriter, runId, actionFailureBuffer[i])))
                         {
                             HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -453,7 +457,7 @@ namespace Godgame.Telemetry
 
                 if (summaryDirty)
                 {
-                    if (!TryWriteRecord(writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
+                    if (!TryWriteRecord(lineBuilder, lineWriter, writer, ref bytesWritten, maxBytes, reserveBytes, recordWriter =>
                         WriteSummaryRecord(recordWriter, runId, summary, culture)))
                     {
                         HandleCapReached(writer, ref bytesWritten, maxBytes, truncatedRecord, reserveBytes, ref exportState.ValueRW);
@@ -504,11 +508,11 @@ namespace Godgame.Telemetry
             state.CapReached = 0;
         }
 
-        private bool TryWriteRecord(StreamWriter writer, ref ulong bytesWritten, ulong maxBytes, ulong reserveBytes, Action<TextWriter> writeRecord)
+        private static bool TryWriteRecord(StringBuilder lineBuilder, StringWriter lineWriter, StreamWriter writer, ref ulong bytesWritten, ulong maxBytes, ulong reserveBytes, Action<TextWriter> writeRecord)
         {
-            _lineBuilder.Clear();
-            writeRecord(_lineWriter);
-            var line = _lineBuilder.ToString();
+            lineBuilder.Clear();
+            writeRecord(lineWriter);
+            var line = lineBuilder.ToString();
             var recordBytes = (ulong)Encoding.UTF8.GetByteCount(line);
             if (maxBytes > 0 && bytesWritten + recordBytes + reserveBytes > maxBytes)
             {
@@ -520,21 +524,21 @@ namespace Godgame.Telemetry
             return true;
         }
 
-        private string BuildTruncatedRecord(string runId, string scenarioId, uint scenarioSeed, uint tick, ulong maxBytes)
+        private static string BuildTruncatedRecord(StringBuilder lineBuilder, StringWriter lineWriter, string runId, string scenarioId, uint scenarioSeed, uint tick, ulong maxBytes)
         {
-            _lineBuilder.Clear();
-            _lineWriter.Write("{\"type\":\"telemetryTruncated\",\"runId\":\"");
-            WriteEscapedString(_lineWriter, runId);
-            _lineWriter.Write("\",\"scenario\":\"");
-            WriteEscapedString(_lineWriter, scenarioId);
-            _lineWriter.Write("\",\"seed\":");
-            _lineWriter.Write(scenarioSeed);
-            _lineWriter.Write(",\"tick\":");
-            _lineWriter.Write(tick);
-            _lineWriter.Write(",\"maxBytes\":");
-            _lineWriter.Write(maxBytes);
-            _lineWriter.WriteLine("}");
-            return _lineBuilder.ToString();
+            lineBuilder.Clear();
+            lineWriter.Write("{\"type\":\"telemetryTruncated\",\"runId\":\"");
+            WriteEscapedString(lineWriter, runId);
+            lineWriter.Write("\",\"scenario\":\"");
+            WriteEscapedString(lineWriter, scenarioId);
+            lineWriter.Write("\",\"seed\":");
+            lineWriter.Write(scenarioSeed);
+            lineWriter.Write(",\"tick\":");
+            lineWriter.Write(tick);
+            lineWriter.Write(",\"maxBytes\":");
+            lineWriter.Write(maxBytes);
+            lineWriter.WriteLine("}");
+            return lineBuilder.ToString();
         }
 
         private void HandleCapReached(StreamWriter writer, ref ulong bytesWritten, ulong maxBytes, string truncatedRecord, ulong truncatedBytes, ref TelemetryExportState exportState)
@@ -561,7 +565,7 @@ namespace Godgame.Telemetry
             exportState.CapReached = 1;
         }
 
-        private static uint GetCurrentTick()
+        private uint GetCurrentTick(ref SystemState state)
         {
             if (SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenarioTick) && scenarioTick.Tick > 0)
             {
@@ -616,7 +620,7 @@ namespace Godgame.Telemetry
             return 0;
         }
 
-        private static void ResolveScenarioMetadata(out string scenarioId, out uint scenarioSeed)
+        private void ResolveScenarioMetadata(ref SystemState state, out string scenarioId, out uint scenarioSeed)
         {
             scenarioSeed = 0;
             scenarioId = string.Empty;
@@ -1142,6 +1146,18 @@ namespace Godgame.Telemetry
                         }
                         break;
                 }
+            }
+        }
+
+        private static class LineBuffer
+        {
+            [ThreadStatic] private static StringBuilder _builder;
+            [ThreadStatic] private static StringWriter _writer;
+
+            public static void Get(out StringBuilder builder, out StringWriter writer)
+            {
+                builder = _builder ??= new StringBuilder(512);
+                writer = _writer ??= new StringWriter(builder, CultureInfo.InvariantCulture) { NewLine = "\n" };
             }
         }
     }
