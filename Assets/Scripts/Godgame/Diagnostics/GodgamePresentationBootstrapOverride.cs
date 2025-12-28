@@ -25,7 +25,7 @@ namespace Godgame.Diagnostics
                 return;
             }
 
-            RuntimeMode.ForceRenderingEnabled(true, $"Editor smoke scene '{scene.name}'");
+            global::PureDOTS.Runtime.Core.RuntimeMode.ForceRenderingEnabled(true, $"Editor smoke scene '{scene.name}'");
         }
 
         private static bool IsTruthy(string value)

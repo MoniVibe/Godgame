@@ -35,11 +35,11 @@ namespace Godgame.Presentation
                 return;
             }
 
-            _layerLookup.Update(ref state);
-            var config = EnsureConfig(ref state);
-
             var endEcb = state.World.GetOrCreateSystemManaged<EndPresentationECBSystem>();
             var ecb = endEcb.CreateCommandBuffer();
+
+            var config = EnsureConfig(ref state, ref ecb);
+            _layerLookup.Update(ref state);
 
             foreach (var (_, _, entity) in SystemAPI
                          .Query<RefRO<VillagerJobState>, RefRO<LocalTransform>>()
@@ -87,17 +87,19 @@ namespace Godgame.Presentation
             }
         }
 
-        private GodgameCarriedResourcePresentationConfig EnsureConfig(ref SystemState state)
+        private GodgameCarriedResourcePresentationConfig EnsureConfig(ref SystemState state, ref EntityCommandBuffer ecb)
         {
             if (SystemAPI.TryGetSingleton<GodgameCarriedResourcePresentationConfig>(out var config))
             {
                 return config;
             }
 
-            var entity = state.EntityManager.CreateEntity();
             var defaults = GodgameCarriedResourcePresentationConfig.Default;
-            state.EntityManager.AddComponentData(entity, defaults);
-            state.EntityManager.SetName(entity, "GodgameCarriedResourcePresentationConfig");
+            var entity = ecb.CreateEntity();
+            ecb.AddComponent(entity, defaults);
+#if UNITY_EDITOR
+            ecb.SetName(entity, "GodgameCarriedResourcePresentationConfig");
+#endif
             return defaults;
         }
     }
