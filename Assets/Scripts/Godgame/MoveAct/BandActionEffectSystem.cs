@@ -10,12 +10,10 @@ namespace Godgame.MoveAct
     /// <summary>
     /// Emits a ping effect request against the current selection when the hotkey is triggered.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(BandSpawnSystem))]
     public partial struct BandActionEffectSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BandActionHotkeyState>();

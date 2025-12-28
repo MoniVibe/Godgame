@@ -152,7 +152,6 @@ namespace Godgame.Miracles
     /// Presentation system for miracle effects.
     /// Reads miracle effects and updates visual state, spawns AOE rings, and tags affected entities.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(EntitiesPresentationSystemGroup))]
     public partial struct Godgame_MiraclePresentationSystem : ISystem
     {
@@ -333,7 +332,6 @@ namespace Godgame.Miracles
     /// System that applies visual tinting to entities with MiracleAffectedTag.
     /// Updates VillagerVisualState and ResourceChunkVisualState with miracle tint overlay.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(EntitiesPresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_MiraclePresentationSystem))]
     public partial struct Godgame_MiracleTintingSystem : ISystem

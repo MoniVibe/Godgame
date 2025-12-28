@@ -10,11 +10,9 @@ namespace Godgame.Motivation
     /// Stub system that fills empty dream slots based on VillagerMood and VillagerNeeds.
     /// Example: "Craft rare item" dream when mood/needs align.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameVillagerDreamGeneratorSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

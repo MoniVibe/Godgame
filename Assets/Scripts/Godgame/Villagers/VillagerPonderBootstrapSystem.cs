@@ -7,13 +7,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures villagers have ponder state for work evaluation pauses.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerPonderBootstrapSystem : ISystem
     {
         private EntityQuery _missingQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _missingQuery = SystemAPI.QueryBuilder()

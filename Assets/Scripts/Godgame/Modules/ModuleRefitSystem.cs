@@ -13,7 +13,6 @@ namespace Godgame.Modules
     /// <summary>
     /// Resolves refit and repair work against modules, applying maintainer skill multipliers and emitting telemetry.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(ModuleDegradationSystem))]
     public partial struct ModuleRefitSystem : ISystem
@@ -23,7 +22,6 @@ namespace Godgame.Modules
         private ComponentLookup<ModuleHostReference> _hostLookup;
         private ComponentLookup<ModuleResourceWallet> _walletLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<ModuleRefitRequest>();

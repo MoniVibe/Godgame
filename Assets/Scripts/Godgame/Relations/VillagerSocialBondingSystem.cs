@@ -12,7 +12,6 @@ namespace Godgame.Relations
     /// <summary>
     /// Applies small relation adjustments when villagers work or socialize in close proximity.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(EntityMeetingSystem))]
     public partial struct VillagerSocialBondingSystem : ISystem

@@ -12,7 +12,6 @@ namespace Godgame.Registry
     /// Coordinates all sync systems and ensures registries appear inside the shared directory so
     /// telemetry/UI layers can discover them.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
     public partial struct GodgameRegistryCoordinatorSystem : ISystem
     {

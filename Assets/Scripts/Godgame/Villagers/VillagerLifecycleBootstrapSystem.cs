@@ -9,14 +9,12 @@ namespace Godgame.Villagers
     /// <summary>
     /// Adds default lifecycle and reproduction state to villagers if missing.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerLifecycleBootstrapSystem : ISystem
     {
         private EntityQuery _missingLifecycle;
         private EntityQuery _missingReproduction;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerId>();

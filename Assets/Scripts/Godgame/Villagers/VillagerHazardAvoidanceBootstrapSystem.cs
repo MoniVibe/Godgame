@@ -15,12 +15,10 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures every baked villager has the shared hazard avoidance components used by PureDOTS.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(BehaviorConfigBootstrapSystem))]
     public partial struct VillagerHazardAvoidanceBootstrapSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameWorldTag>();

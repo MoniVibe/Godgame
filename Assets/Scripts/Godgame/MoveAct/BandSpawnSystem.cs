@@ -14,12 +14,10 @@ namespace Godgame.MoveAct
     /// <summary>
     /// Materialises band spawn requests into minimal registry-compatible entities.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(BandSpawnInputSystem))]
     public partial struct BandSpawnSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BandSpawnConfig>();

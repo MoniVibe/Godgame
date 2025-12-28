@@ -10,7 +10,6 @@ namespace Godgame.Combat
     /// Updates profession focus modifiers based on active focus abilities.
     /// Job systems should read ProfessionFocusModifiers to adjust their outcomes.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(FocusAbilitySystem))]
     public partial struct ProfessionFocusModifierSystem : ISystem
@@ -240,7 +239,6 @@ namespace Godgame.Combat
     /// Validates profession focus ability requests against skill requirements.
     /// Filters out ability requests that the entity doesn't have the skill for.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(FocusAbilitySystem))]
     public partial struct ProfessionFocusValidationSystem : ISystem

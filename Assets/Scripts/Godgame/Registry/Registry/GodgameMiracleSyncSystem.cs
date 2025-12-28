@@ -12,7 +12,6 @@ namespace Godgame.Registry
     /// Normalizes miracle data before the registry bridge builds its snapshot.
     /// Keeps values finite and non-negative so the PureDOTS registry can operate headless.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(GameplaySystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
@@ -20,7 +19,6 @@ namespace Godgame.Registry
     {
         private ComponentLookup<MiracleTarget> _targetLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<MiracleRegistry>();

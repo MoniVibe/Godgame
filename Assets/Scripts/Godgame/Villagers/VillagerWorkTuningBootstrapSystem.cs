@@ -7,11 +7,9 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures a default work tuning singleton exists for villager roles.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerWorkTuningBootstrapSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             if (!SystemAPI.HasSingleton<VillagerWorkTuning>())

@@ -7,13 +7,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures crowding state exists for movement-aware villagers.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerCrowdingBootstrapSystem : ISystem
     {
         private EntityQuery _missingQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _missingQuery = SystemAPI.QueryBuilder()

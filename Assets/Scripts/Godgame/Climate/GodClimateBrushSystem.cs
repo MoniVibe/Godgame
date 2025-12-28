@@ -11,11 +11,9 @@ namespace Godgame.Climate.Systems
     /// <summary>
     /// Processes god climate brush commands and creates/updates climate control sources.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(GameplaySystemGroup))]
     public partial struct GodClimateBrushSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<ClimateBrushCommand>();

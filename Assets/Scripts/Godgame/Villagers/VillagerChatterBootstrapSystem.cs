@@ -7,13 +7,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures chatter config, event buffer, and speech channels exist.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerChatterBootstrapSystem : ISystem
     {
         private EntityQuery _missingSpeech;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerId>();

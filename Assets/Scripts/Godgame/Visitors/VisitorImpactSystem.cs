@@ -25,7 +25,6 @@ namespace Godgame.Visitors
     /// Detects when thrown visitors hit terrain and creates impact events.
     /// Also handles impact effects on climate and environment.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct VisitorImpactSystem : ISystem
     {
@@ -33,7 +32,6 @@ namespace Godgame.Visitors
         private const float IMPACT_RADIUS_BASE = 10f; // Base impact radius
         private const float IMPACT_ENERGY_BASE = 100f; // Base impact energy
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VisitorTag>();

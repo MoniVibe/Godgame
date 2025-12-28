@@ -7,11 +7,9 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures a default cooldown profile exists when no authoring is present.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerCooldownProfileBootstrapSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             if (SystemAPI.HasSingleton<VillagerCooldownProfile>())

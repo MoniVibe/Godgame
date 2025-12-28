@@ -12,12 +12,10 @@ namespace Godgame.Registry
     /// Follows projection pattern: if entity has PureDOTS MiracleDefinition/MiracleRuntimeState, leave it alone.
     /// If entity has Godgame miracle components but not canonical, project/add canonical components.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GameplaySystemGroup))]
     public partial struct GodgameMiracleSyncSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             // Require PureDOTS registry and time state

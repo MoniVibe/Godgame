@@ -12,12 +12,10 @@ namespace Godgame.Registry
     /// Follows projection pattern: if entity has PureDOTS SpawnerId/SpawnerConfig/SpawnerState, leave it alone.
     /// If entity has Godgame spawner components but not canonical, project/add canonical components.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(EnvironmentSystemGroup))]
     public partial struct GodgameSpawnerSyncSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             // Require PureDOTS registry and time state

@@ -8,7 +8,6 @@ using Unity.Transforms;
 
 namespace Godgame.Presentation
 {
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_PresentationLayerBootstrapSystem))]
     [UpdateBefore(typeof(Godgame_PresentationScaleSystem))]
@@ -65,7 +64,6 @@ namespace Godgame.Presentation
         }
     }
 
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_PresentationLODSystem))]
     public partial struct Godgame_PresentationScaleSystem : ISystem

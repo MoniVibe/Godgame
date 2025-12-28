@@ -8,13 +8,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures villagers have leisure cadence state.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerLeisureBootstrapSystem : ISystem
     {
         private EntityQuery _missingQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _missingQuery = SystemAPI.QueryBuilder()

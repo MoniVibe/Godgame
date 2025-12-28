@@ -6,7 +6,6 @@ namespace Godgame.Resources
     /// <summary>
     /// Ensures aggregate pile config and runtime singletons exist in headless runs.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct AggregatePileBootstrapSystem : ISystem
     {

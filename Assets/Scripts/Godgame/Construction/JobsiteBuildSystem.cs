@@ -12,11 +12,9 @@ namespace Godgame.Construction
     /// <summary>
     /// Advances ghost jobsite progress until completion and marks entities for telemetry/effect emission.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(ConstructionSystemGroup))]
     public partial struct JobsiteBuildSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<JobsitePlacementConfig>();

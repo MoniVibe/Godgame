@@ -11,7 +11,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Chooses a routine directive per villager and emits directive bias for goal selection.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(VillagerMindSystemGroup))]
     [UpdateBefore(typeof(VillagerScheduleBiasSystem))]
     public partial struct VillagerDirectiveSystem : ISystem
@@ -19,7 +18,6 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerDirectiveProfile> _villagerProfileLookup;
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

@@ -11,12 +11,10 @@ namespace Godgame.Adapters.Physics
     /// Selects physics provider via config and subscribes to collision events.
     /// This adapter does NOT fork PureDOTS systems - it only configures and consumes.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PhysicsPostEventSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Systems.Physics.PhysicsEventSystem))]
     public partial struct GodgamePhysicsAdapter : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PhysicsConfig>();

@@ -9,13 +9,11 @@ namespace Godgame.Telemetry
     /// <summary>
     /// Ensures every villager participating in the gather/deliver loop has telemetry attached.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct GodgameVillagerTelemetryBootstrapSystem : ISystem
     {
         private EntityQuery _missingTelemetryQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _missingTelemetryQuery = SystemAPI.QueryBuilder()

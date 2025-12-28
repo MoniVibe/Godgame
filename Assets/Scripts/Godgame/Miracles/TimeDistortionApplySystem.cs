@@ -16,14 +16,12 @@ namespace Godgame.Miracles
     /// Applies local time scales to entities based on TimeDistortion bubbles.
     /// Entities inside time distortion bubbles get LocalTimeScale component.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(MiracleEffectSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Systems.Miracles.MiracleActivationSystem))]
     public partial struct TimeDistortionApplySystem : ISystem
     {
         private TimeAwareController _controller;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

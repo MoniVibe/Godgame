@@ -9,11 +9,9 @@ namespace Godgame.Environment
     /// Adapter system that maps PureDOTS environment to Godgame-specific visuals and mechanics.
     /// Reads shared environment state and applies it to Godgame systems.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameEnvironmentAdapter : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

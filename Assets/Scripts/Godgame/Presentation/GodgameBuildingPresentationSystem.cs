@@ -15,7 +15,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Ensures storehouse/housing/worship entities have presentation tags and baseline render state.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateBefore(typeof(GodgamePresentationRegistryIdentitySystem))]
     public partial struct Godgame_BuildingPresentationSystem : ISystem

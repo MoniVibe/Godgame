@@ -19,7 +19,6 @@ namespace Godgame.Modules
     {
         private EntityQuery _moduleQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

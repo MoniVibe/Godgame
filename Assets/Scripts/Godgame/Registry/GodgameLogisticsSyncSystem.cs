@@ -13,12 +13,10 @@ namespace Godgame.Registry
     /// Follows projection pattern: if entity has PureDOTS LogisticsRequest, leave it alone.
     /// If entity has Godgame logistics components but not canonical, project/add canonical components.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(TransportPhaseGroup))]
     public partial struct GodgameLogisticsSyncSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             // Require PureDOTS registry and time state

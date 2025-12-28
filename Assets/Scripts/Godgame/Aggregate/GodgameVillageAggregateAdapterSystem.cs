@@ -11,14 +11,12 @@ namespace Godgame.Aggregate
     /// Bridges existing Village entities to the generic aggregate system.
     /// Creates aggregate entities for villages and links them via VillageAggregateAdapter.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct GodgameVillageAggregateAdapterSystem : ISystem
     {
         // Type ID constant for Village aggregate type
         private const ushort VillageTypeId = 100; // Game-specific type ID
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

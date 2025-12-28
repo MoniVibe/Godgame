@@ -12,12 +12,10 @@ namespace Godgame.Registry
     /// <summary>
     /// Clamps and timestamps logistics requests before the shared registry builds entries.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(TransportPhaseGroup))]
     [UpdateBefore(typeof(LogisticsRequestRegistrySystem))]
     public partial struct GodgameLogisticsRegistryMirrorSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<LogisticsRequestRegistry>();

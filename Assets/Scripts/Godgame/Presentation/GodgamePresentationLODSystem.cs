@@ -9,11 +9,9 @@ using Unity.Transforms;
 
 namespace Godgame.Presentation
 {
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup), OrderFirst = true)]
     public partial struct Godgame_PresentationLayerBootstrapSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PresentationLODState>();
@@ -87,7 +85,6 @@ namespace Godgame.Presentation
         }
     }
 
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_PresentationLayerBootstrapSystem))]
     public partial struct Godgame_PresentationLODSystem : ISystem
@@ -95,7 +92,6 @@ namespace Godgame.Presentation
         private ComponentLookup<PresentationLayer> _layerLookup;
         private ComponentLookup<RenderKey> _renderKeyLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<PresentationLODState>();

@@ -12,7 +12,6 @@ using PureDOTS.Rendering;
 
 namespace Godgame.Scenario
 {
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct GodgameScenario01BootstrapSystem : ISystem
     {

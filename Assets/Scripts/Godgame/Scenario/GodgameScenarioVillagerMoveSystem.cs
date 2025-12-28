@@ -13,7 +13,6 @@ namespace Godgame.Scenario
     /// Moves villagers toward the current VillagerAIState.TargetEntity so the scenario has visible motion
     /// and headless runs generate meaningful time-driven state changes.
     /// </summary>
-    [BurstCompile]
     [DisableAutoCreation]
     [UpdateInGroup(typeof(VillagerSystemGroup))]
     [UpdateAfter(typeof(GodgameScenarioVillagerBehaviorSystem))]
@@ -23,7 +22,6 @@ namespace Godgame.Scenario
         private byte _tickInitialized;
         private ComponentLookup<LocalTransform> _transformLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             // Hard-disabled: scenario loop should not simulate missing behaviors.

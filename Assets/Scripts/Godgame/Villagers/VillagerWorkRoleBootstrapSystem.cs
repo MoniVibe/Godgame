@@ -7,14 +7,12 @@ namespace Godgame.Villagers
     /// <summary>
     /// Adds default work role and hauling preference components to villagers.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerWorkRoleBootstrapSystem : ISystem
     {
         private EntityQuery _missingRole;
         private EntityQuery _missingHaul;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerId>();

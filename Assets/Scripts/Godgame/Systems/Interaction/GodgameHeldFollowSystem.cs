@@ -16,7 +16,6 @@ namespace Godgame.Systems.Interaction
     /// Updates held entity positions to follow the god hand/camera for Godgame.
     /// Handles different states: Holding, AboutToPick, PrimedToThrow
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(GodgamePickupSystem))]
     public partial struct GodgameHeldFollowSystem : ISystem
@@ -26,7 +25,6 @@ namespace Godgame.Systems.Interaction
         private ComponentLookup<CameraTransform> _cameraTransformLookup;
         private ComponentLookup<Unity.Physics.PhysicsVelocity> _physicsVelocityLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

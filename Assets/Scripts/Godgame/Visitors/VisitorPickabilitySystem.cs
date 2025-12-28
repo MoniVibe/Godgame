@@ -11,14 +11,12 @@ namespace Godgame.Visitors
     /// Updates visitor pickability based on proximity to player world.
     /// Sets IsPickable and adds PickableTag when visitor is near the playable region.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct VisitorPickabilitySystem : ISystem
     {
         private const float PICKABLE_THRESHOLD_DISTANCE = 100f; // Distance threshold for pickability
         private const float PICKABLE_HEIGHT_THRESHOLD = 50f; // Height above biome region
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VisitorTag>();

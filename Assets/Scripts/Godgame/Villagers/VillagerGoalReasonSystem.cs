@@ -8,7 +8,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Derives a gameplay-friendly reason for the current villager goal.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(VillagerMindSystemGroup))]
     [UpdateAfter(typeof(VillagerGoalSelectionSystem))]
     public partial struct VillagerGoalReasonSystem : ISystem
@@ -16,7 +15,6 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerThreatState> _threatLookup;
         private ComponentLookup<FocusBudget> _focusLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerGoalState>();

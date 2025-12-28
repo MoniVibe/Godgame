@@ -17,14 +17,12 @@ namespace Godgame.Bands
     /// Follows projection pattern: if entity has PureDOTS FormationState, leave alone.
     /// If entity has BandFormation but not FormationState, project/add PureDOTS components.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(PureDOTS.Systems.Combat.FormationCombatSystem))]
     public partial struct GodgameFormationCombatBridgeSystem : ISystem
     {
         private ComponentLookup<LocalTransform> _transformLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

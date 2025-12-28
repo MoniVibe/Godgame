@@ -9,7 +9,6 @@ namespace Godgame.Villages
     /// Syncs the village executive seat occupant from the current "influence" entity.
     /// This is the initial bridge from existing village leadership heuristics into the shared authority-seat model.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillageNeedAwarenessSystem))]
     [UpdateBefore(typeof(VillageAIDecisionSystem))]
@@ -17,7 +16,6 @@ namespace Godgame.Villages
     {
         private ComponentLookup<AuthoritySeatOccupant> _occupantLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

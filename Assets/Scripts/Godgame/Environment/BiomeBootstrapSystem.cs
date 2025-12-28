@@ -11,7 +11,6 @@ namespace Godgame.Environment
     /// Runs early in initialization to set up the environment state.
     /// </summary>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [BurstCompile]
     public partial struct BiomeBootstrapSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

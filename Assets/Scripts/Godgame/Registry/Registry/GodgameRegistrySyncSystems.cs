@@ -13,7 +13,6 @@ namespace Godgame.Registry
     /// Mirrors PureDOTS villager gameplay data into the Godgame-specific registry component.
     /// Ensures <see cref="GodgameVillager"/> reflects live state prior to bridge execution.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
     public partial struct GodgameVillagerRegistryMirrorSystem : ISystem
@@ -187,7 +186,6 @@ namespace Godgame.Registry
     /// Mirrors PureDOTS storehouse gameplay data into <see cref="GodgameStorehouse"/> components.
     /// Keeps per-resource summaries aligned with inventory and reservations.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
     public partial struct GodgameStorehouseRegistryMirrorSystem : ISystem
@@ -438,7 +436,6 @@ namespace Godgame.Registry
     /// <summary>
     /// Mirrors resource node gameplay data so the registry bridge can build ResourceRegistry entries.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
     public partial struct GodgameResourceNodeSyncSystem : ISystem
@@ -535,7 +532,6 @@ namespace Godgame.Registry
     /// <summary>
     /// Mirrors villager spawner configuration so the registry bridge can export spawner entries.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
     public partial struct GodgameSpawnerRegistryMirrorSystem : ISystem
@@ -641,7 +637,6 @@ namespace Godgame.Registry
     /// <summary>
     /// Mirrors shared band components into <see cref="GodgameBand"/> summaries so the registry bridge can publish band data.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameRegistryBridgeSystem))]
     public partial struct GodgameBandRegistryMirrorSystem : ISystem

@@ -7,13 +7,11 @@ namespace Godgame.Villages
     /// <summary>
     /// Adds tree safety memory to villages for aggregate learning.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillageTreeSafetyBootstrapSystem : ISystem
     {
         private EntityQuery _missingMemory;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<Village>();

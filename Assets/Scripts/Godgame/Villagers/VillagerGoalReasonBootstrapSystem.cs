@@ -7,13 +7,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Adds goal reason tracking to villagers if missing.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerGoalReasonBootstrapSystem : ISystem
     {
         private EntityQuery _missingReasons;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerId>();

@@ -10,7 +10,6 @@ namespace Godgame.Villages
     /// <summary>
     /// Aggregates villager need pressures into a village-level awareness signal used by macro decisions.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Runtime.AI.VillagerMindSystemGroup))]
     [UpdateBefore(typeof(VillageAIDecisionSystem))]
@@ -23,7 +22,6 @@ namespace Godgame.Villages
         private ComponentLookup<VillagerNeedState> _needLookup;
         private ComponentLookup<LocalTransform> _transformLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

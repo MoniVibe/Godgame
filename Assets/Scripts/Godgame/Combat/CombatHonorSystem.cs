@@ -10,7 +10,6 @@ namespace Godgame.Combat
     /// <summary>
     /// Tracks honor ledger, dual rank ladders, and promotion history for military bands.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct CombatHonorSystem : ISystem
     {

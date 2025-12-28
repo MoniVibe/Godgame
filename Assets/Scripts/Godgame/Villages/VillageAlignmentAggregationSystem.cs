@@ -11,7 +11,6 @@ namespace Godgame.Villages
     /// Aggregates member alignment/outlook into a village-level alignment state.
     /// Micro → macro: members (and especially leadership) bias the village profile.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillageNeedAwarenessSystem))]
     [UpdateBefore(typeof(VillageInitiativeSystem))]
@@ -22,7 +21,6 @@ namespace Godgame.Villages
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
         private ComponentLookup<VillagerOutlook> _outlookLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

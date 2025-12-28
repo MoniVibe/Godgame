@@ -10,7 +10,6 @@ namespace Godgame.Villages
     /// <summary>
     /// Assigns villager work roles using a village workforce profile.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillageNeedAwarenessSystem))]
     public partial struct VillageWorkforceAssignmentSystem : ISystem
@@ -19,7 +18,6 @@ namespace Godgame.Villages
         private ComponentLookup<VillagerWorkRoleOverride> _overrideLookup;
         private ComponentLookup<VillagerLifecycleState> _lifecycleLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

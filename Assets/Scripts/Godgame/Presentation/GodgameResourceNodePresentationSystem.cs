@@ -15,7 +15,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Adds presentation components to resource nodes so villagers have visible destinations.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(StructuralChangePresentationSystemGroup))]
     public partial struct Godgame_ResourceNodePresentationSystem : ISystem
     {

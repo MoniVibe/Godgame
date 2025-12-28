@@ -11,7 +11,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Updates vegetation tint based on health and growth stage.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_VegetationPresentationSystem))]
     public partial struct Godgame_VegetationTintSystem : ISystem

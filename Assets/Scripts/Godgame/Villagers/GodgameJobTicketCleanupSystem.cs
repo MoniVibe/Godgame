@@ -12,7 +12,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Clears expired or invalid job ticket claims and closes tickets for depleted targets.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameJobTicketSpawnSystem))]
     public partial struct GodgameJobTicketCleanupSystem : ISystem
@@ -22,7 +21,6 @@ namespace Godgame.Villagers
         private BufferLookup<JobTicketGroupMember> _groupLookup;
         private ComponentLookup<LocalTransform> _transformLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

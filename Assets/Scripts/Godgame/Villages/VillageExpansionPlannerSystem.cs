@@ -11,7 +11,6 @@ namespace Godgame.Villages
     /// Plans village expansion based on alignment/outlook priorities and initiative.
     /// Consumes surplus resources and schedules expansion projects.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillageInitiativeSystem))]
     public partial struct VillageExpansionPlannerSystem : ISystem

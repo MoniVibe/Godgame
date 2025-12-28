@@ -17,10 +17,8 @@ namespace Godgame.Environment.Systems
     /// Rain/Fire miracles create climate control sources that affect local climate.
     /// </summary>
     [UpdateInGroup(typeof(GameplaySystemGroup))]
-    [BurstCompile]
     public partial struct MiracleBiomeIntegrationSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GodgameMiracleToken>();

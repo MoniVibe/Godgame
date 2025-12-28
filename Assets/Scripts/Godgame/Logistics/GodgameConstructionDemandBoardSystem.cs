@@ -13,11 +13,9 @@ namespace Godgame.Logistics
     /// <summary>
     /// Populates logistics board demand entries from active construction ghosts.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(ConstructionSystemGroup))]
     public partial struct GodgameConstructionDemandBoardSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<LogisticsBoard>();

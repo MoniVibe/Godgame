@@ -10,7 +10,6 @@ namespace Godgame.AI
     /// Updates villager initiative based on personality, mood, and grudges.
     /// Initiative controls how frequently villagers make autonomous decisions.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillagerInitiativeSystem : ISystem
     {

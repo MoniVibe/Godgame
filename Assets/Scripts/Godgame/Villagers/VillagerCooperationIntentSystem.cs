@@ -12,14 +12,12 @@ namespace Godgame.Villagers
     /// <summary>
     /// Assigns lightweight cooperation intents so villagers cluster around shared work targets.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateBefore(typeof(VillagerJobSystem))]
     public partial struct VillagerCooperationIntentSystem : ISystem
     {
         private EntityQuery _storehouseQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

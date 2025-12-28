@@ -10,13 +10,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Holds villagers in place while they ponder work decisions.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerJobSystem))]
     [UpdateBefore(typeof(VillagerNeedMovementSystem))]
     public partial struct VillagerPonderSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

@@ -11,7 +11,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Drives URP base/emission colors from RenderTint so presentation palettes are visible.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct Godgame_RenderTintSyncSystem : ISystem
     {

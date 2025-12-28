@@ -24,7 +24,6 @@ namespace Godgame.Resources
     /// System that spawns aggregate piles and handles pile requests.
     /// Implements v1.0 (spawn/grow) from Aggregate_Piles.md iteration plan.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct AggregatePileSpawnSystem : ISystem
     {
@@ -208,7 +207,6 @@ namespace Godgame.Resources
     /// <summary>
     /// System that updates pile visual scale when amount changes.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(AggregatePileSpawnSystem))]
     public partial struct AggregatePileVisualSystem : ISystem
@@ -232,7 +230,6 @@ namespace Godgame.Resources
     /// <summary>
     /// System that cleans up empty piles.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(AggregatePileVisualSystem))]
     public partial struct AggregatePileCleanupSystem : ISystem

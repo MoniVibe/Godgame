@@ -9,11 +9,9 @@ namespace Godgame.Motivation
     /// Stub system that detects goal completion and adds GoalCompleted buffer elements.
     /// Example: Adds GoalCompleted when villager crafts rare item.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameMotivationCompletionSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

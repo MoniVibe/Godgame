@@ -13,14 +13,12 @@ namespace Godgame.Villagers
     /// <summary>
     /// Bridges PureDOTS villager intents into Godgame's body/job systems while respecting cadence gates.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateBefore(typeof(VillagerJobSystem))]
     public partial struct VillagerIntentBridgeSystem : ISystem
     {
         private ComponentLookup<HazardAvoidanceState> _hazardLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameWorldTag>();

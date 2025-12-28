@@ -14,14 +14,12 @@ namespace Godgame.Environment
     /// Derives global weather state from climate, moisture grids, and queued requests.
     /// Emits weather events that presentation and audio stacks can consume.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(EnvironmentSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Systems.Environment.ClimateStateUpdateSystem))]
     public partial struct WeatherControllerSystem : ISystem
     {
         private EntityQuery _groundQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<WeatherState>();

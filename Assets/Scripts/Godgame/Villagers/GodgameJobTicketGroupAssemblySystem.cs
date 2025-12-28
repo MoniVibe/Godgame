@@ -13,7 +13,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Assembles helpers for group tickets and gates execution until quorum is met.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(GodgameJobTicketClaimSystem))]
     [UpdateBefore(typeof(GodgameJobTicketBatchSystem))]
@@ -32,7 +31,6 @@ namespace Godgame.Villagers
         private ComponentLookup<AggregatePile> _pileLookup;
         private ComponentLookup<LocalTransform> _transformLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

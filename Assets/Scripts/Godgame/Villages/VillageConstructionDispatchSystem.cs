@@ -21,7 +21,6 @@ namespace Godgame.Villages
     /// Turns village build requests into a single jobsite + a single assigned builder.
     /// Presentation-first: disabled in headless by default.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillageAIDecisionSystem))]
     [UpdateBefore(typeof(GameplaySystemGroup))]
@@ -43,7 +42,6 @@ namespace Godgame.Villages
         private BufferLookup<AuthorityDelegation> _authorityDelegationLookup;
         private ComponentLookup<AuthoritySeatOccupant> _authorityOccupantLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

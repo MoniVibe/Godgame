@@ -10,7 +10,6 @@ namespace Godgame.Villagers
     /// Decreases food, rest, sleep, and general health based on time and activity.
     /// Future systems can hook into this to replenish needs (eating, sleeping, etc.).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerStatCalculationSystem))]
     public partial struct VillagerNeedsSystem : ISystem

@@ -16,7 +16,6 @@ namespace Godgame.Combat
     /// - Reduced ability effectiveness
     /// At maximum exhaustion with zero focus = coma state.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(FocusAbilitySystem))]
     public partial struct FocusExhaustionSystem : ISystem
@@ -202,7 +201,6 @@ namespace Godgame.Combat
     /// <summary>
     /// Applies exhaustion effects to other systems (mood, ability effectiveness).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(FocusExhaustionSystem))]
     public partial struct FocusExhaustionEffectsSystem : ISystem

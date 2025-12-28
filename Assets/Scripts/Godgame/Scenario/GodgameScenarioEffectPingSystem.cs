@@ -7,7 +7,6 @@ namespace Godgame.Scenario
     /// <summary>
     /// Stubbed out while core FX pipeline is not wired to PureDOTS.
     /// </summary>
-    [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameScenarioEffectPingSystem : ISystem

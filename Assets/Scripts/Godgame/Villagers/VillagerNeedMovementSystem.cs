@@ -13,7 +13,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Moves villagers toward non-work goals (eat, rest, pray, socialize, shelter, flee).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerJobSystem))]
     public partial struct VillagerNeedMovementSystem : ISystem
@@ -28,7 +27,6 @@ namespace Godgame.Villagers
         private BufferLookup<VillagerCooldownOutlookRule> _cooldownOutlookLookup;
         private BufferLookup<VillagerCooldownArchetypeModifier> _cooldownArchetypeLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

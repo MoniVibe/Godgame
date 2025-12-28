@@ -12,14 +12,12 @@ namespace Godgame.Miracles
     /// <summary>
     /// Tracks temporal lashback risk and applies penalties for excessive Temporal Veil usage.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(MiracleEffectSystemGroup))]
     [UpdateAfter(typeof(TimeDistortionApplySystem))]
     public partial struct TemporalLashbackSystem : ISystem
     {
         private TimeAwareController _controller;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

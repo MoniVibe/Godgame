@@ -9,7 +9,6 @@ namespace Godgame.Prayer
     /// System that sums all prayer generators and updates the global prayer pool.
     /// Runs every frame to maintain smooth prayer accumulation.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct PrayerGenerationSystem : ISystem
     {
@@ -95,7 +94,6 @@ namespace Godgame.Prayer
     /// System that handles prayer consumption for miracles.
     /// Processes consumption requests and deducts from the pool.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(PrayerGenerationSystem))]
     public partial struct PrayerConsumptionSystem : ISystem

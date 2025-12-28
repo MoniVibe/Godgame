@@ -14,7 +14,6 @@ namespace Godgame.Villages
     /// Village-level AI decision-making system.
     /// Makes autonomous decisions about resource allocation, building expansion, and crisis response.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillageAIDecisionSystem : ISystem
     {

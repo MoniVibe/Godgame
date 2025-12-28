@@ -10,14 +10,12 @@ namespace Godgame.Villagers
     /// <summary>
     /// Advances villager age, life stage, and pregnancy progress.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(VillageWorkforceAssignmentSystem))]
     public partial struct VillagerLifecycleSystem : ISystem
     {
         private ComponentLookup<VillagerReproductionState> _reproductionLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

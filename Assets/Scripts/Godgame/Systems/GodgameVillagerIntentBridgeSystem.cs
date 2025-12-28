@@ -17,7 +17,6 @@ namespace Godgame.Systems
     /// Note: QueuedIntent buffer support is optional. Entities can opt-in by adding
     /// DynamicBuffer&lt;QueuedIntent&gt; to enable queued intent promotion via IntentProcessingSystem.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(VillagerSystemGroup))]
     [UpdateAfter(typeof(InterruptSystemGroup))]
     public partial struct GodgameVillagerIntentBridgeSystem : ISystem
@@ -25,7 +24,6 @@ namespace Godgame.Systems
         private ComponentLookup<VillagerAIState> _aiStateLookup;
         private EntityStorageInfoLookup _entityStorageInfoLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

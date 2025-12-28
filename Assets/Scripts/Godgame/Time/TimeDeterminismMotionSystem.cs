@@ -11,11 +11,9 @@ namespace Godgame.Time
     /// <summary>
     /// Advances the determinism actor in record mode so rewind playback has deterministic state transitions.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(RecordSimulationSystemGroup))]
     public partial struct TimeDeterminismMotionSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeDeterminismTag>();

@@ -32,7 +32,6 @@ namespace Godgame.Systems.Interaction
         // Base throw force
         private const float BaseThrowForce = 10f;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

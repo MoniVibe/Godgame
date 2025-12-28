@@ -13,7 +13,6 @@ namespace Godgame.Relations
     /// and creates initial relations based on alignment/personality/context.
     /// Rate-limited and entity-budget-capped to prevent O(n²) freeze on large populations.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct EntityMeetingSystem : ISystem
     {
@@ -184,7 +183,6 @@ namespace Godgame.Relations
     /// <summary>
     /// System that processes relation modification requests.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(EntityMeetingSystem))]
     public partial struct RelationModificationSystem : ISystem

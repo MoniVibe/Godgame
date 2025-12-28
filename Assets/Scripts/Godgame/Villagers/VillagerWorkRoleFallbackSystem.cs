@@ -8,13 +8,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Maps render role to work role when no explicit assignment is present.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillagerWorkRoleFallbackSystem : ISystem
     {
         private ComponentLookup<VillagerWorkRoleOverride> _overrideLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerWorkRole>();

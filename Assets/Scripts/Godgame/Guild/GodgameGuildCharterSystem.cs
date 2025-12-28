@@ -9,12 +9,10 @@ namespace Godgame.Guild
     /// Godgame-specific charter formation logic.
     /// Handles education checks, charter fees, signature windows, and signature motivation calculation.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Systems.Guild.GuildCharterFormationSystem))]
     public partial struct GodgameGuildCharterSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

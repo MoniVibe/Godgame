@@ -8,7 +8,6 @@ namespace Godgame.Environment.Systems
     /// Updates global climate state with simple deterministic oscillation.
     /// </summary>
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [BurstCompile]
     public partial struct ClimateSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

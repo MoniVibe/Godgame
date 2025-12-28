@@ -13,7 +13,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Spawns job tickets for resource nodes and aggregate piles.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateBefore(typeof(GodgameJobTicketClaimSystem))]
     public partial struct GodgameJobTicketSpawnSystem : ISystem

@@ -13,7 +13,6 @@ namespace Godgame.Miracles
     /// System that applies region miracles to biome/vegetation.
     /// Updates BiomePresentationData (fertility, moisture) and VegetationVisualState (health).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(Unity.Entities.PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_MiraclePresentationSystem))]
     public partial struct Godgame_RegionMiracleSystem : ISystem

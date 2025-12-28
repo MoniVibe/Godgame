@@ -10,7 +10,6 @@ namespace Godgame.AI
     /// <summary>
     /// Configures shared Mind cadence values for Godgame worlds using the behavior registry.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateAfter(typeof(BehaviorConfigBootstrapSystem))]
     public partial struct GodgameMindCadenceSetupSystem : ISystem
@@ -18,7 +17,6 @@ namespace Godgame.AI
         private const int DefaultMindCadenceTicks = 5;
         private const int DefaultAggregateCadenceTicks = 25;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameWorldTag>();

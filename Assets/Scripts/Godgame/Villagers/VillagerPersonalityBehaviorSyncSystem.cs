@@ -8,11 +8,9 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures VillagerPersonality and VillagerBehavior coexist with consistent sign conventions.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerPersonalityBehaviorSyncSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerId>();

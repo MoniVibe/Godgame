@@ -26,7 +26,6 @@ namespace Godgame.Time
     {
         private static readonly float[] SpeedTiers = { 0f, 0.25f, 0.5f, 1f, 2f, 4f, 8f };
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

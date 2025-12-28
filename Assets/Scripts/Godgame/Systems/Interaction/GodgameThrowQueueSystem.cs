@@ -29,7 +29,6 @@ namespace Godgame.Systems.Interaction
         private const Key ReleaseOneKey = Key.Digit1;
         private const Key ReleaseAllKey = Key.Digit2;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

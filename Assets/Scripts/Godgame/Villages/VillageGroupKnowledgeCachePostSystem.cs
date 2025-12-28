@@ -12,7 +12,6 @@ namespace Godgame.Villages
     /// <summary>
     /// Posts micro-level perception signals into the village-level group cache (communications MVP).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(Godgame.Headless.GodgameHeadlessCombatLoopSystem))]
     [UpdateBefore(typeof(VillageAIDecisionSystem))]
@@ -25,7 +24,6 @@ namespace Godgame.Villages
         private ComponentLookup<GroupKnowledgeConfig> _configLookup;
         private ComponentLookup<LocalTransform> _transformLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

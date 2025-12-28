@@ -10,7 +10,6 @@ namespace Godgame.Environment.Systems
     /// Uses best-match scoring to select the most appropriate biome.
     /// </summary>
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [BurstCompile]
     public partial struct BiomeResolveSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

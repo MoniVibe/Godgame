@@ -11,7 +11,6 @@ namespace Godgame.Environment.Systems
     /// Future: Expand to spatial grid with propagation.
     /// </summary>
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [BurstCompile]
     public partial struct MoistureGridSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

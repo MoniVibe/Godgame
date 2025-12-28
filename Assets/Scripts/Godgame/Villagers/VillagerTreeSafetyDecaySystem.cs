@@ -10,12 +10,10 @@ namespace Godgame.Villagers
     /// <summary>
     /// Gradually decays tree safety memories for villagers and villages.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(Godgame.Resources.TreeFallHazardSystem))]
     public partial struct VillagerTreeSafetyDecaySystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

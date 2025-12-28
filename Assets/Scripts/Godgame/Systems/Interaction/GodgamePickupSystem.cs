@@ -35,7 +35,6 @@ namespace Godgame.Systems.Interaction
         // Cursor movement threshold in world space units (3 pixels converted)
         private const float CursorMovementThreshold = 0.1f;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

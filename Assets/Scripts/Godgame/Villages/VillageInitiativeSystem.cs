@@ -11,7 +11,6 @@ namespace Godgame.Villages
     /// Processes village initiative budgeting and project scheduling.
     /// Consumes blob data from InitiativeBandLookup.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillageInitiativeSystem : ISystem
     {

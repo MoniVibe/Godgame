@@ -10,7 +10,6 @@ namespace Godgame.Villagers
     /// Forgiving villagers forget faster; vengeful villagers hold grudges longer.
     /// Also handles grudge cleanup and ActiveGrudgeCount updates.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillagerGrudgeDecaySystem : ISystem
     {
@@ -128,7 +127,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// System that randomizes behavior traits on spawn for entities with RandomizeBehaviorOnSpawn.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillagerBehaviorRandomizationSystem : ISystem
     {

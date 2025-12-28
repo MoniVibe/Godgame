@@ -13,7 +13,6 @@ namespace Godgame.Villages
     /// <summary>
     /// Executes village-issued construction orders: travel to the jobsite, then advance progress until completion.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(VillagerSystemGroup), OrderLast = true)]
     public partial struct VillageConstructionWorkerSystem : ISystem
     {
@@ -27,7 +26,6 @@ namespace Godgame.Villages
         private ComponentLookup<VillageConstructionRuntime> _constructionLookup;
         private ComponentLookup<VillagerAvailability> _availabilityLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

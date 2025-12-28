@@ -14,7 +14,6 @@ namespace Godgame.Visitors
     /// Spawns visitor objects (comets, asteroids, etc.) periodically orbiting the world.
     /// Uses seeded RNG for deterministic spawns.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct VisitorSpawnerSystem : ISystem
     {
@@ -22,7 +21,6 @@ namespace Godgame.Visitors
         private const float SPAWN_INTERVAL_SECONDS = SPAWN_INTERVAL_MINUTES * 60f;
         private float _lastSpawnTime;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TickTimeState>();

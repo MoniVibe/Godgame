@@ -11,7 +11,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Applies time-of-day schedule bias to villager need weights.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(VillagerMindSystemGroup))]
     [UpdateBefore(typeof(VillagerGoalSelectionSystem))]
     public partial struct VillagerScheduleBiasSystem : ISystem
@@ -20,7 +19,6 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
         private ComponentLookup<VillagerDirectiveBias> _directiveBiasLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

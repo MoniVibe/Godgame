@@ -11,7 +11,6 @@ namespace Godgame.Scenario
     /// the scenario JSON loader has not yet populated metadata.
     /// </summary>
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [BurstCompile]
     public partial struct GodgameSmokeScenarioSelectorSystem : ISystem
     {
         private const string ScenarioIdText = "scenario.godgame.smoke";

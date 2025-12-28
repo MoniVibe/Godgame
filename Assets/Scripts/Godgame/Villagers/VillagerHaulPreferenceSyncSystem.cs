@@ -7,7 +7,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Applies global hauling defaults to villagers unless explicitly overridden.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerWorkRoleResourceSyncSystem))]
     [UpdateBefore(typeof(VillagerJobSystem))]
@@ -15,7 +14,6 @@ namespace Godgame.Villagers
     {
         private ComponentLookup<VillagerHaulPreferenceOverride> _overrideLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerHaulPreference>();

@@ -8,7 +8,6 @@ namespace Godgame.Villagers
     /// Syncs Godgame stat components to PureDOTS components for registry compatibility.
     /// Keeps PureDOTS VillagerNeeds, VillagerMood, and VillagerCombatStats in sync with Godgame components.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerNeedsSystem))]
     [UpdateAfter(typeof(VillagerStatCalculationSystem))]

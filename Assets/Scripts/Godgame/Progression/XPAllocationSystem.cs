@@ -10,7 +10,6 @@ namespace Godgame.Progression
     /// Allocates XP to skill domains based on actions performed.
     /// Preordained paths receive XP multipliers for their domains.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct XPAllocationSystem : ISystem
     {
@@ -153,7 +152,6 @@ namespace Godgame.Progression
     /// Helper system to award XP from various game actions.
     /// Other systems call these helpers to award XP without directly manipulating components.
     /// </summary>
-    [BurstCompile]
     public partial struct XPAwardHelper : ISystem
     {
         /// <summary>

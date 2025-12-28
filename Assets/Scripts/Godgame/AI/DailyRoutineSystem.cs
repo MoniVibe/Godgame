@@ -10,7 +10,6 @@ namespace Godgame.AI
     /// Manages daily phase transitions and villager routine states.
     /// Tracks Dawn/Noon/Dusk/Midnight milestones and sleep patterns.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct DailyRoutineSystem : ISystem
     {
@@ -152,7 +151,6 @@ namespace Godgame.AI
     /// <summary>
     /// Helper system to apply routine-based modifiers to work and other activities.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(DailyRoutineSystem))]
     public partial struct RoutineModifierSystem : ISystem

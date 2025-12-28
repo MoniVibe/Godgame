@@ -13,7 +13,6 @@ namespace Godgame.Environment.Vegetation.Systems
     /// Applies stress from drought/fire and enqueues reproduction requests.
     /// </summary>
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [BurstCompile]
     public partial struct VegetationGrowthSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

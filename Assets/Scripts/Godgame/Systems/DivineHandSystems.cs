@@ -42,7 +42,6 @@ namespace Godgame.Systems
         public readonly RefRO<GodIntent> Intent;
     }
 
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateBefore(typeof(HandCommandEmitterSystem))]
     public partial struct DivineHandSystem : ISystem
@@ -62,7 +61,6 @@ namespace Godgame.Systems
         private ComponentLookup<StorehouseInventory> _storehouseInventoryLookup;
         private BufferLookup<StorehouseInventoryItem> _storeItemsLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _handQuery = SystemAPI.QueryBuilder()

@@ -15,7 +15,6 @@ namespace Godgame.Combat
     /// - Combat state (slower regen)
     /// - Active abilities draining focus
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct FocusRegenSystem : ISystem
     {

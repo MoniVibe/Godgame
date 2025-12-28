@@ -9,11 +9,9 @@ namespace Godgame.Environment
     /// Integrates Godgame miracles (Rain, Fire) with shared environment systems.
     /// Rain miracle increases moisture, Fire miracle increases temperature and decreases moisture.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameMiracleEnvironmentIntegration : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

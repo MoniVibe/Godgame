@@ -14,12 +14,10 @@ namespace Godgame.Construction
     /// <summary>
     /// Emits presentation requests and telemetry when construction sites finish.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(ConstructionSystemGroup))]
     [UpdateAfter(typeof(JobsiteBuildSystem))]
     public partial struct JobsiteCompletionSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<JobsiteMetrics>();

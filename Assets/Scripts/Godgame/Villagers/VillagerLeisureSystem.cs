@@ -14,7 +14,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Routes villagers into leisure goals while a work cooldown is active.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerJobSystem))]
     [UpdateAfter(typeof(VillagerWorkCooldownSystem))]
@@ -34,7 +33,6 @@ namespace Godgame.Villagers
         private BufferLookup<VillagerCooldownOutlookRule> _cooldownOutlookLookup;
         private BufferLookup<VillagerCooldownArchetypeModifier> _cooldownArchetypeLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

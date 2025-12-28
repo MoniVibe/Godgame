@@ -9,12 +9,10 @@ namespace Godgame.Villagers
     /// <summary>
     /// Scales mind cadence per villager using patience to introduce deliberation.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(VillagerMindSystemGroup))]
     [UpdateBefore(typeof(VillagerGoalSelectionSystem))]
     public partial struct VillagerMindCadencePatienceSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<MindCadenceSettings>();

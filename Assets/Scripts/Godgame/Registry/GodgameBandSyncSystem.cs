@@ -16,12 +16,10 @@ namespace Godgame.Registry
     /// Follows projection pattern: if entity has PureDOTS BandId/BandStats, leave it alone.
     /// If entity has Godgame band components but not canonical, project/add canonical components.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(SpatialSystemGroup))]
     public partial struct GodgameBandSyncSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             // Require PureDOTS registry and time state

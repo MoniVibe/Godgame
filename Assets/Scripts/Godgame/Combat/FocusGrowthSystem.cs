@@ -10,7 +10,6 @@ namespace Godgame.Combat
     /// Tracks focus usage and awards XP/wisdom bonuses.
     /// Entities who push themselves grow faster than those who relax.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(FocusAbilitySystem))]
     public partial struct FocusGrowthSystem : ISystem
@@ -79,7 +78,6 @@ namespace Godgame.Combat
     /// Determines entity motivation based on their situation.
     /// Runs less frequently than growth tracking.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
     public partial struct FocusMotivationSystem : ISystem
     {

@@ -13,7 +13,6 @@ namespace Godgame.Time
     /// <summary>
     /// Records determinism actor snapshots and restores them during rewind playback/catch-up.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(HistorySystemGroup))]
     public partial struct TimeDeterminismHistorySystem : ISystem
     {
@@ -22,7 +21,6 @@ namespace Godgame.Time
         private uint _lastRecordedTick;
         private uint _horizonTicks;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _history = new TimeStreamHistory(512, 256, Allocator.Persistent);

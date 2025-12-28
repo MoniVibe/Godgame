@@ -11,7 +11,6 @@ namespace Godgame.Environment.Systems
     /// Reads current biome from BiomeGrid and applies modifiers via VillagerBiomeModifiers component.
     /// </summary>
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [BurstCompile]
     public partial struct VillagerBiomeModifiersSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

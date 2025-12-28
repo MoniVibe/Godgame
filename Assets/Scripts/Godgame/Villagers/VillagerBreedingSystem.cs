@@ -12,7 +12,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Handles villager conception checks and pregnancy starts.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerLifecycleSystem))]
     public partial struct VillagerBreedingSystem : ISystem
@@ -22,7 +21,6 @@ namespace Godgame.Villagers
         private ComponentLookup<LocalTransform> _transformLookup;
         private BufferLookup<EntityRelation> _relationLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

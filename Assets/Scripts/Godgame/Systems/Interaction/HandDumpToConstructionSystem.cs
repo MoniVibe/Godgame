@@ -14,14 +14,12 @@ namespace Godgame.Systems.Interaction
     /// <summary>
     /// Handles dump commands targeting construction sites by feeding ConstructionIntake.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(HandCommandEmitterSystem))]
     public partial struct HandDumpToConstructionSystem : ISystem
     {
         private ComponentLookup<ConstructionIntake> _intakeLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<Godgame.Runtime.DivineHandState>();

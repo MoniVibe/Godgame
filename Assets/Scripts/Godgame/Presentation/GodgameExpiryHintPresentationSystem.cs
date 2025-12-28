@@ -10,7 +10,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Presentation-only expiry hints for perishable resources (stubbed until data is wired).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_ResourceNodePresentationSystem))]
     [UpdateAfter(typeof(Godgame_AggregatePilePresentationEnsureSystem))]

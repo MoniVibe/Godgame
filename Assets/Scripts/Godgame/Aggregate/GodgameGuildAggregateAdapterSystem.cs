@@ -9,14 +9,12 @@ namespace Godgame.Aggregate
     /// <summary>
     /// Stub adapter for guild entities (when guild system is implemented).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct GodgameGuildAggregateAdapterSystem : ISystem
     {
         // Type ID constant for Guild aggregate type
         private const ushort GuildTypeId = 101; // Game-specific type ID
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             // Stub - no implementation yet

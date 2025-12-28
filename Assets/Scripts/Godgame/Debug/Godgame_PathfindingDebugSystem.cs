@@ -21,7 +21,6 @@ namespace Godgame.Debugging
     /// System that shows pathfinding debug visualization (lines/arrows from villagers to targets).
     /// Toggle with P key (DebugInput.TogglePathfinding).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(Unity.Entities.PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_VillagerPresentationSystem))]
     public partial struct Godgame_PathfindingDebugSystem : ISystem

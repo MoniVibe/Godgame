@@ -9,7 +9,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Processes grudge generation/decay, patriotism drift, mood modifiers, and combat stance overrides.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerUtilityScheduler))]
     public partial struct VillagerPersonalitySystem : ISystem

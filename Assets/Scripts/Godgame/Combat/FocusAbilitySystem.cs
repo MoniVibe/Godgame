@@ -13,7 +13,6 @@ namespace Godgame.Combat
     /// - Draining focus for active abilities
     /// - Deactivating abilities when focus depletes or duration expires
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(FocusRegenSystem))]
     public partial struct FocusAbilitySystem : ISystem
@@ -219,7 +218,6 @@ namespace Godgame.Combat
     /// Helper system to apply focus ability effects to combat/stats.
     /// This provides example integration points for other systems.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(FocusAbilitySystem))]
     public partial struct FocusEffectApplicationSystem : ISystem

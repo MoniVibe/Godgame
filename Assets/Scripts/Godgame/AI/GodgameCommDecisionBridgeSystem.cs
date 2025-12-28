@@ -11,11 +11,9 @@ namespace Godgame.AI
     /// <summary>
     /// Bridges CommDecision entries into Godgame order intents.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(AISystemGroup))]
     public partial struct GodgameCommDecisionBridgeSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameWorldTag>();

@@ -10,7 +10,6 @@ namespace Godgame.Villagers
     /// Ensures all stats have valid default values and converts template floats to runtime byte ranges.
     /// Runs once after entities are created.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerStatInitializationSystem : ISystem
     {

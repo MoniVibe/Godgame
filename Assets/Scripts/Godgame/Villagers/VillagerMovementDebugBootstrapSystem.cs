@@ -9,13 +9,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures movement debug components exist for villagers.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerMovementDebugBootstrapSystem : ISystem
     {
         private EntityQuery _missingQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _missingQuery = SystemAPI.QueryBuilder()

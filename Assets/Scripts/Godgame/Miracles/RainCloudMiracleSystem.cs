@@ -15,14 +15,12 @@ namespace Godgame.Miracles
     /// Bridges new miracle system with existing rain cloud systems.
     /// When Rain miracle is activated, adds RainCloud component and converts to existing rain cloud format.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(MiracleEffectSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Systems.Miracles.MiracleActivationSystem))]
     public partial struct RainCloudMiracleSystem : ISystem
     {
         private TimeAwareController _controller;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

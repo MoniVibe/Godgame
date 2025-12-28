@@ -15,7 +15,6 @@ using RainMiracleCommand = Godgame.Miracles.RainMiracleCommand;
 
 namespace Godgame.Systems
 {
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct RainMiracleCommandBootstrapSystem : ISystem
     {
@@ -44,14 +43,12 @@ namespace Godgame.Systems
         public void OnUpdate(ref SystemState state) { }
     }
 
-    [BurstCompile]
     [UpdateInGroup(typeof(HandSystemGroup))]
     public partial struct RainMiracleSystem : ISystem
     {
         private EntityQuery _commandQuery;
         private TimeAwareController _controller;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _commandQuery = state.GetEntityQuery(new EntityQueryBuilder(Allocator.Temp)

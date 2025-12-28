@@ -6,7 +6,6 @@ namespace Godgame.Resources
     /// <summary>
     /// Ensures tree felling tuning and event buffers exist in headless runs.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct TreeFellingBootstrapSystem : ISystem
     {

@@ -8,13 +8,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures cooldown pressure state exists for villagers with work cooldowns.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerCooldownPressureBootstrapSystem : ISystem
     {
         private EntityQuery _missingQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _missingQuery = SystemAPI.QueryBuilder()

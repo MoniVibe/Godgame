@@ -9,11 +9,9 @@ namespace Godgame.Motivation
     /// Stub system that reads MotivationIntent and translates into concrete actions.
     /// Example: Boosts crafting job priority when intent is "craft rare item" (SpecId=1001).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameVillagerGoalExecutionSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

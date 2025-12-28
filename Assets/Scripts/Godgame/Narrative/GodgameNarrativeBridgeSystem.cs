@@ -11,11 +11,9 @@ namespace Godgame.Narrative
     /// <summary>
     /// Bridge system that reads PureDOTS narrative signals and maps them to Godgame-specific behaviors.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameNarrativeBridgeSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

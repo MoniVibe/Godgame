@@ -14,12 +14,10 @@ namespace Godgame.Adapters.Launch
     /// Reads Godgame input state and writes LaunchRequest entries.
     /// Also processes collision events for launched projectiles.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(PureDOTS.Systems.Launch.LaunchRequestIntakeSystem))]
     public partial struct GodgameSlingshotInputAdapter : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
@@ -92,12 +90,10 @@ namespace Godgame.Adapters.Launch
     /// Processes collision events for launched projectiles in Godgame.
     /// Translates generic collision events to Godgame-specific effects.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Systems.Launch.LaunchExecutionSystem))]
     public partial struct GodgameSlingshotCollisionAdapter : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

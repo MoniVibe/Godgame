@@ -19,7 +19,6 @@ namespace Godgame.Debugging
     /// System that shows markers above rendered entities for density sampling visualization.
     /// Toggle with D key (DebugInput.ToggleDensity).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(Unity.Entities.PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_VillagerPresentationSystem))]
     [UpdateAfter(typeof(Godgame_ResourceChunkPresentationSystem))]

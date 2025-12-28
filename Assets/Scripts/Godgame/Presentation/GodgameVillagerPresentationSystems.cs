@@ -14,7 +14,6 @@ using Unity.Transforms;
 
 namespace Godgame.Presentation
 {
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct Godgame_VillagerPresentationSystem : ISystem
     {
@@ -153,7 +152,6 @@ namespace Godgame.Presentation
     /// Fallback villager behavior → visuals mapping for non-scenario villagers.
     /// Uses <see cref="VillagerAIState"/> / <see cref="VillagerJob"/> when <see cref="SettlementVillagerState"/> is not present.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_VillagerPresentationSystem))]
     public partial struct Godgame_VillagerBehaviorVisualFallbackSystem : ISystem
@@ -407,7 +405,6 @@ namespace Godgame.Presentation
         public void OnDestroy(ref SystemState state) { }
     }
 
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct Godgame_VillageCenterPresentationSystem : ISystem
     {
@@ -511,7 +508,6 @@ namespace Godgame.Presentation
         public void OnDestroy(ref SystemState state) { }
     }
 
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct Godgame_ResourceChunkPresentationSystem : ISystem
     {

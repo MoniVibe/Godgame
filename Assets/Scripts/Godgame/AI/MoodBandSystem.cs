@@ -9,7 +9,6 @@ namespace Godgame.AI
     /// Classifies villager morale into mood bands and applies modifiers.
     /// Mood recalculates at Dawn and Midnight milestones, or when morale changes significantly.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillagerMoodBandSystem : ISystem
     {

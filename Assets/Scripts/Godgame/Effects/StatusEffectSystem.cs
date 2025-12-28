@@ -10,7 +10,6 @@ namespace Godgame.Effects
     /// System that processes status effects: ticks durations, applies periodic damage/healing,
     /// removes expired effects, and computes modifier totals.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct StatusEffectSystem : ISystem
     {
@@ -220,7 +219,6 @@ namespace Godgame.Effects
     /// <summary>
     /// System that processes apply/remove status effect requests.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(StatusEffectSystem))]
     public partial struct StatusEffectRequestSystem : ISystem

@@ -13,7 +13,6 @@ namespace Godgame.Registry
     /// Syncs Godgame villager entities to the shared PureDOTS villager registry so telemetry & HUD flows
     /// can discover them while we exercise the gathering loop.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(GodgameRegistryCoordinatorSystem))]
     public partial struct GodgameVillagerSyncSystem : ISystem

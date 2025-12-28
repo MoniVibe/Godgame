@@ -7,13 +7,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Adds tree safety memory to villagers so incidents can be tracked headlessly.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerTreeSafetyBootstrapSystem : ISystem
     {
         private EntityQuery _missingMemory;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerId>();

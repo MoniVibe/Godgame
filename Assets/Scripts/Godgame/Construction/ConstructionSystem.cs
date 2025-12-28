@@ -24,7 +24,6 @@ namespace Godgame.Construction
         private BufferLookup<StorehouseInventoryItem> _inventoryLookup;
         private BufferLookup<StorehouseCapacityElement> _capacityLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<ConstructionGhost>();

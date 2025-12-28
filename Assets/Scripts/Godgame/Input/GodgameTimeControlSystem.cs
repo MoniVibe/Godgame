@@ -11,7 +11,6 @@ namespace Godgame.Input
     /// System that reads input and writes TimeControlCommand to PureDOTS time system.
     /// Integrates with PureDOTS TimeControlCommand for deterministic rewind support.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct GodgameTimeControlSystem : ISystem
     {

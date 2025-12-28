@@ -22,7 +22,6 @@ namespace Godgame.Villagers
     /// Villager job system handling Idle→Navigate→Gather→Deliver state machine.
     /// Runs in FixedStep group with parallel IJobEntity execution.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct VillagerJobSystem : ISystem
     {
@@ -61,7 +60,6 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerCarryCapacity> _carryLookup;
         private ComponentLookup<VillagerPonderState> _ponderLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerJobState>();

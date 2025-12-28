@@ -8,13 +8,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures villagers have a job assignment component for shared ticket flow.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerJobAssignmentBootstrapSystem : ISystem
     {
         private EntityQuery _missingQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _missingQuery = SystemAPI.QueryBuilder()

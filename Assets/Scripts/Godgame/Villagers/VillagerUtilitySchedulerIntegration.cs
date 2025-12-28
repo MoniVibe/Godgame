@@ -9,7 +9,6 @@ namespace Godgame.Villagers
     /// Integrates villager needs into utility calculations for job selection.
     /// Extends PureDOTS utility scheduler with needs-based priority weighting.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerNeedsSystem))]
     public partial struct VillagerUtilitySchedulerIntegration : ISystem

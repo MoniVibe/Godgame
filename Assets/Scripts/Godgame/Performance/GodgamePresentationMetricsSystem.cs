@@ -13,7 +13,6 @@ namespace Godgame.Performance
         public int ChunksRendered;
     }
 
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct Godgame_PresentationMetricsSystem : ISystem
     {

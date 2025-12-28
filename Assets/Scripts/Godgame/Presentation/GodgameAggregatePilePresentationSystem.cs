@@ -13,7 +13,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Adds presentation components to aggregate piles so they render as resource spheres.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(StructuralChangePresentationSystemGroup))]
     public partial struct Godgame_AggregatePilePresentationEnsureSystem : ISystem
     {

@@ -11,7 +11,6 @@ namespace Godgame.Environment.Vegetation.Systems
     /// Respects hazard flags and spoilage.
     /// </summary>
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
-    [BurstCompile]
     public partial struct VegetationHarvestSystem : ISystem
     {
         public void OnCreate(ref SystemState state)

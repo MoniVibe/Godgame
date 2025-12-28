@@ -16,7 +16,6 @@ namespace Godgame.Features.Planets
     // Removed invalid UpdateAfter attributes: PlanetAppealSystem and SpeciesPreferenceMatchingSystem run in SpaceSystemGroup, so cross-group ordering is not supported.
     public partial struct GodgamePlanetSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

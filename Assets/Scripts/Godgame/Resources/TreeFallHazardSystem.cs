@@ -16,7 +16,6 @@ namespace Godgame.Resources
     /// <summary>
     /// Resolves tree fall hazards, applies damage, and updates safety learning.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(Godgame.Villagers.VillagerJobSystem))]
     public partial struct TreeFallHazardSystem : ISystem
@@ -30,7 +29,6 @@ namespace Godgame.Resources
         private ComponentLookup<VillageTreeSafetyMemory> _villageMemoryLookup;
         private ComponentLookup<LocalTransform> _villageTransformLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

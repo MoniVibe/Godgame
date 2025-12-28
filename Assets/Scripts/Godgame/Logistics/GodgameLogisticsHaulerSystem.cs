@@ -15,7 +15,6 @@ namespace Godgame.Logistics
     /// <summary>
     /// Simple hauling loop: claim reservation -> pickup from storehouse -> deliver to site.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct GodgameLogisticsHaulerSystem : ISystem
     {
@@ -23,7 +22,6 @@ namespace Godgame.Logistics
         private BufferLookup<StorehouseInventoryItem> _inventoryLookup;
         private ComponentLookup<ConstructionGhost> _constructionLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<LogisticsHauler>();

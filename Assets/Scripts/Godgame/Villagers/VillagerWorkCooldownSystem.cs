@@ -8,13 +8,11 @@ namespace Godgame.Villagers
     /// <summary>
     /// Clears expired work cooldowns.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerJobSystem))]
     [UpdateBefore(typeof(VillagerSocialFocusSystem))]
     public partial struct VillagerWorkCooldownSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

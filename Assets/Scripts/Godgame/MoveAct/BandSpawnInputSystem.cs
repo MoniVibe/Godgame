@@ -11,11 +11,9 @@ namespace Godgame.MoveAct
     /// <summary>
     /// Converts selection input into deterministic band spawn requests.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
     public partial struct BandSpawnInputSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<BandSpawnConfig>();

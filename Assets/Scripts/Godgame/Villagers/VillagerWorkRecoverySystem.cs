@@ -12,7 +12,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Lets work urgency cool down when villagers are off-duty.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerNeedSatisfactionSystem))]
     public partial struct VillagerWorkRecoverySystem : ISystem
@@ -20,7 +19,6 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerScheduleProfile> _villagerScheduleLookup;
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

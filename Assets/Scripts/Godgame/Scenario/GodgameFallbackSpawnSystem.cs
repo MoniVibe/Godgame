@@ -19,7 +19,6 @@ namespace Godgame.Scenario
     /// Headless/dev fallback that seeds a minimal village so smoketests never start empty.
     /// Only runs when explicitly enabled via scripting define or when in batchmode.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct GodgameFallbackSpawnSystem : ISystem
     {

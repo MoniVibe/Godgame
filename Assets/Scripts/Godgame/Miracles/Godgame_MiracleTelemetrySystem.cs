@@ -41,7 +41,6 @@ namespace Godgame.Miracles
     /// System that tracks miracle casts and captures before/after metrics.
     /// Cheap and aggregated: Only tracks village-level stats, not per-villager.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_MiraclePresentationSystem))]
     public partial struct Godgame_MiracleTelemetrySystem : ISystem

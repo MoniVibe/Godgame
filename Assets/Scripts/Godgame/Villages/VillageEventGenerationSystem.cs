@@ -10,7 +10,6 @@ namespace Godgame.Villages
     /// Generates deterministic village events (seasonal, social, crisis, miracle, threat).
     /// Evaluates thresholds and enqueues events into VillageEvent buffers.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillageInitiativeSystem))]
     public partial struct VillageEventGenerationSystem : ISystem

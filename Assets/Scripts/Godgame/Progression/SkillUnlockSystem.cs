@@ -10,7 +10,6 @@ namespace Godgame.Progression
     /// Unlocks skills when XP thresholds are reached.
     /// Prioritizes skills on the preordained path.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(XPAllocationSystem))]
     public partial struct SkillUnlockSystem : ISystem
@@ -132,7 +131,6 @@ namespace Godgame.Progression
     /// <summary>
     /// Initializes skill XP buffers when CharacterProgression is added.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct SkillXPInitializationSystem : ISystem
     {

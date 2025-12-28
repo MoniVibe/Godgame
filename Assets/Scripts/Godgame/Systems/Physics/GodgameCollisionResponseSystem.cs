@@ -12,7 +12,6 @@ namespace Godgame.Systems.Physics
     /// Processes physics collision events for Godgame and applies damage based on impulse.
     /// Handles villagers, buildings, and other game entities.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PhysicsPostEventSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Systems.Physics.PhysicsEventSystem))]
     public partial struct GodgameCollisionResponseSystem : ISystem
@@ -20,7 +19,6 @@ namespace Godgame.Systems.Physics
         // Damage per unit of impulse
         private const float DamagePerImpulse = 0.1f;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

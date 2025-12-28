@@ -11,7 +11,6 @@ namespace Godgame.Villagers
     /// Handles villager interrupts (hand pickup, path blocked, combat, etc.)
     /// and manages state transitions between normal job behavior and interrupt handling.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerNeedsSystem))]
     public partial struct VillagerInterruptSystem : ISystem

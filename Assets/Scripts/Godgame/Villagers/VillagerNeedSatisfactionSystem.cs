@@ -11,14 +11,12 @@ namespace Godgame.Villagers
     /// <summary>
     /// Reduces need urgencies when villagers reach goal targets in non-headless gameplay.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillagerNeedMovementSystem))]
     public partial struct VillagerNeedSatisfactionSystem : ISystem
     {
         private ComponentLookup<LocalTransform> _transformLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

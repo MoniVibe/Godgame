@@ -9,7 +9,6 @@ namespace Godgame.Villagers
     /// Utility-based scheduler for villager needs and job priorities.
     /// Influenced by initiative bands and personality weights.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct VillagerUtilityScheduler : ISystem
     {

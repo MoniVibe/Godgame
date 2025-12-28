@@ -10,7 +10,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Maps villager work roles to gather job resource targets.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillageWorkforceAssignmentSystem))]
     [UpdateAfter(typeof(VillagerWorkRoleFallbackSystem))]
@@ -19,7 +18,6 @@ namespace Godgame.Villagers
     {
         private ComponentLookup<VillagerResourceNeed> _resourceNeedLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<VillagerJobState>();

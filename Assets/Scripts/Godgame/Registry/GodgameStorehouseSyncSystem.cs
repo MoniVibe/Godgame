@@ -15,7 +15,6 @@ namespace Godgame.Registry
     /// <summary>
     /// Syncs Godgame storehouses into the shared storehouse registry so HUD/telemetry has live inventory data.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(GodgameRegistryCoordinatorSystem))]
     public partial struct GodgameStorehouseSyncSystem : ISystem

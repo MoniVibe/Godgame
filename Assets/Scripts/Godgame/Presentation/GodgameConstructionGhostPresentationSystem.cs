@@ -12,7 +12,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Adds presentation components to construction ghost entities so placement is visible.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateBefore(typeof(GodgamePresentationRegistryIdentitySystem))]
     public partial struct Godgame_ConstructionGhostPresentationSystem : ISystem

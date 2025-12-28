@@ -11,12 +11,10 @@ namespace Godgame.Modules
     /// <summary>
     /// Applies explicit damage events to modules and queues refit/repair work as needed.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(ModuleDegradationSystem))]
     public partial struct ModuleDamageSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<ModuleDamageRequest>();

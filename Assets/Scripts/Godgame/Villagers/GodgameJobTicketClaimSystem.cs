@@ -13,7 +13,6 @@ namespace Godgame.Villagers
     /// <summary>
     /// Assigns open job tickets to the most suitable nearby villager.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateBefore(typeof(VillagerJobSystem))]
     public partial struct GodgameJobTicketClaimSystem : ISystem
@@ -32,7 +31,6 @@ namespace Godgame.Villagers
         private EntityQuery _ticketQuery;
         private EntityQuery _villagerQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

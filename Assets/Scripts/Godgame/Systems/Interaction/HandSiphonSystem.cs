@@ -15,14 +15,12 @@ namespace Godgame.Systems.Interaction
     /// <summary>
     /// Consumes HandCommand.Siphon commands and transfers resources from SiphonSource entities into the hand payload.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(HandCommandEmitterSystem))]
     public partial struct HandSiphonSystem : ISystem
     {
         private ComponentLookup<SiphonSource> _siphonLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<DivineHandState>();

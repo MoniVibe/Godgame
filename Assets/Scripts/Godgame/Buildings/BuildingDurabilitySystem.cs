@@ -8,7 +8,6 @@ namespace Godgame.Buildings
     /// <summary>
     /// System that manages building durability: natural decay, fire damage, and status updates.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct BuildingDurabilitySystem : ISystem
     {
@@ -140,7 +139,6 @@ namespace Godgame.Buildings
     /// <summary>
     /// System that handles fire spread between adjacent buildings.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(BuildingDurabilitySystem))]
     public partial struct BuildingFireSpreadSystem : ISystem
@@ -161,7 +159,6 @@ namespace Godgame.Buildings
     /// <summary>
     /// System that extinguishes fires from rain/weather events.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(BuildingFireSpreadSystem))]
     public partial struct BuildingFireExtinguishSystem : ISystem

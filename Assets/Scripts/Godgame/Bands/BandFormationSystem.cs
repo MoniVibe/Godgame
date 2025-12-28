@@ -12,7 +12,6 @@ namespace Godgame.Bands
     /// <summary>
     /// Detects band formation candidates and creates bands based on alignment/outlook/initiative rules and patriotism thresholds.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct BandFormationSystem : ISystem
     {

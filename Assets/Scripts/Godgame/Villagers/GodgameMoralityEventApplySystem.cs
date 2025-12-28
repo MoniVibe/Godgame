@@ -13,14 +13,12 @@ namespace Godgame.Villagers
     /// Godgame adapter: applies MoralityEvent effects onto villager alignment axes.
     /// Event-driven and rewind-safe; later iterations should incorporate culture/stance tables.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(VillageAIDecisionSystem))]
     public partial struct GodgameMoralityEventApplySystem : ISystem
     {
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();

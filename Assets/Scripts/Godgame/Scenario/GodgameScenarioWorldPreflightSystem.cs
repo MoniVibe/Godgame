@@ -8,7 +8,6 @@ namespace Godgame.Scenario
     /// Stub preflight config system; real implementation will be
     /// reattached to the current PureDOTS config types later.
     /// </summary>
-    [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct GodgameScenarioWorldPreflightSystem : ISystem

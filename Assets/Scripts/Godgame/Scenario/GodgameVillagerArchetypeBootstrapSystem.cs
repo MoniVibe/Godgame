@@ -12,7 +12,6 @@ namespace Godgame.Scenario
     /// Ensures every villager has a VillagerArchetypeResolved component so PureDOTS AI systems can evaluate goals.
     /// Legacy authoring data may predate this requirement, so we attach a fallback record at runtime.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(AISystemGroup), OrderFirst = true)]
     public partial struct GodgameVillagerArchetypeBootstrapSystem : ISystem
     {

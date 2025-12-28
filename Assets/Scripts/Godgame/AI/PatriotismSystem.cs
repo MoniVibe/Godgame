@@ -11,7 +11,6 @@ namespace Godgame.AI
     /// Updates villager patriotism based on time served, family, assets, and alignment.
     /// Low patriotism triggers migration consideration; very low triggers desertion.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct PatriotismUpdateSystem : ISystem
     {
@@ -116,7 +115,6 @@ namespace Godgame.AI
     /// <summary>
     /// Applies patriotism changes from events (victories, defeats, leadership actions).
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(PatriotismUpdateSystem))]
     public partial struct PatriotismEventSystem : ISystem

@@ -8,14 +8,12 @@ namespace Godgame.Villagers
     /// <summary>
     /// Ensures directive state and bias exist for villagers.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct VillagerDirectiveBootstrapSystem : ISystem
     {
         private EntityQuery _missingStateQuery;
         private EntityQuery _missingBiasQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _missingStateQuery = SystemAPI.QueryBuilder()

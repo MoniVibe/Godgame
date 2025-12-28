@@ -10,7 +10,6 @@ namespace Godgame.Registry
     /// <summary>
     /// Publishes village AI telemetry (initiative, alignment, events) to shared telemetry stream.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct VillageAITelemetrySystem : ISystem
     {

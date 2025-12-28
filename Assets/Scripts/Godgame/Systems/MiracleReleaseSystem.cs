@@ -16,7 +16,6 @@ namespace Godgame.Systems
     /// appropriate effect queues (e.g., rain miracle commands).
     /// Runs after DivineHandSystem so it can react to events in the same frame.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(HandSystemGroup))]
     [UpdateAfter(typeof(DivineHandSystem))]
     public partial struct MiracleReleaseSystem : ISystem
@@ -24,7 +23,6 @@ namespace Godgame.Systems
         private EntityQuery _releaseQuery;
         private EntityQuery _rainQueueQuery;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             _releaseQuery = state.GetEntityQuery(new EntityQueryBuilder(Allocator.Temp)

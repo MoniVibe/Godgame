@@ -16,7 +16,6 @@ namespace Godgame.Systems.Interaction
     /// <summary>
     /// Handles dump commands targeting storehouses by depositing the hand's payload.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [UpdateAfter(typeof(HandCommandEmitterSystem))]
     public partial struct HandDumpToStorehouseSystem : ISystem
@@ -25,7 +24,6 @@ namespace Godgame.Systems.Interaction
         private BufferLookup<StorehouseInventoryItem> _itemsLookup;
         private BufferLookup<StorehouseCapacityElement> _capacityLookup;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<DivineHandState>();

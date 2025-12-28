@@ -53,7 +53,7 @@ namespace Godgame.Debugging
     [UpdateInGroup(typeof(Unity.Entities.PresentationSystemGroup))]
     public partial struct Godgame_LODVisualizationSystem : ISystem
     {
-        [BurstCompile] public void OnCreate(ref SystemState state) {}
+        public void OnCreate(ref SystemState state) {}
         [BurstCompile] public void OnDestroy(ref SystemState state) {}
 
         [BurstCompile]

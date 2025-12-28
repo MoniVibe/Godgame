@@ -13,7 +13,6 @@ namespace Godgame.Construction
     /// Godgame-specific build need signal generation.
     /// Uses VillagerNeeds component to emit BuildNeedSignals to village/guild buffers.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(Unity.Entities.SimulationSystemGroup))]
     [UpdateAfter(typeof(PureDOTS.Systems.Construction.BuildNeedSignalSystem))]
     public partial struct GodgameBuildNeedSignalSystem : ISystem
@@ -23,7 +22,6 @@ namespace Godgame.Construction
         private const float WorshipMoraleThreshold = 40f; // Morale < 40% triggers worship need
         private const float StorageFillThreshold = 0.8f; // Storage > 80% triggers storage need
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
