@@ -22,7 +22,7 @@ namespace Godgame.Headless
 	        private const string PureDotsTelemetryPathEnvVar = "PUREDOTS_TELEMETRY_PATH";
 	        private const string PureDotsTelemetryEnableEnvVar = "PUREDOTS_TELEMETRY_ENABLE";
 	        private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
-	        private const string RenderingEnvVar = "PUREDOTS_RENDERING";
+	        private const string HeadlessPresentationEnvVar = "PUREDOTS_HEADLESS_PRESENTATION";
 	        private const string PresentationSceneName = "TRI_Godgame_Smoke";
 	        private static bool s_executed;
 
@@ -34,13 +34,18 @@ namespace Godgame.Headless
 	                return;
 	            }
 
+	            if (!EnvIsTruthy(HeadlessPresentationEnvVar))
+	            {
+	                return;
+	            }
+
 	            var renderingEnabled = RuntimeMode.IsRenderingEnabled;
 	            if (!renderingEnabled)
 	            {
 	                return;
 	            }
 
-	            Debug.Log($"[GodgameScenarioEntryPoint] {RenderingEnvVar}=1 detected; loading presentation scene '{PresentationSceneName}'.");
+	            Debug.Log($"[GodgameScenarioEntryPoint] {HeadlessPresentationEnvVar}=1 detected; loading presentation scene '{PresentationSceneName}'.");
 	            SceneManager.LoadScene(PresentationSceneName, LoadSceneMode.Single);
 	        }
 
@@ -212,6 +217,13 @@ namespace Godgame.Headless
 	            {
 	                SystemEnv.SetEnvironmentVariable(key, value);
 	            }
+	        }
+
+	        private static bool EnvIsTruthy(string key)
+	        {
+	            var value = SystemEnv.GetEnvironmentVariable(key);
+	            return string.Equals(value, "1", StringComparison.OrdinalIgnoreCase)
+	                || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
 	        }
 
         private static void Quit(int exitCode)

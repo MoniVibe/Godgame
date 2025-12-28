@@ -1,0 +1,46 @@
+#if UNITY_EDITOR
+using System;
+using PureDOTS.Runtime.Core;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace Godgame.Diagnostics
+{
+    internal static class GodgamePresentationBootstrapOverride
+    {
+        private const string SmokeSceneName = "TRI_Godgame_Smoke";
+        private const string ForceRenderEnvVar = "PUREDOTS_FORCE_RENDER";
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void EnsurePresentationForSmokeScene()
+        {
+            var scene = SceneManager.GetActiveScene();
+            if (!scene.IsValid() || !string.Equals(scene.name, SmokeSceneName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            if (IsTruthy(global::System.Environment.GetEnvironmentVariable(ForceRenderEnvVar)))
+            {
+                return;
+            }
+
+            RuntimeMode.ForceRenderingEnabled(true, $"Editor smoke scene '{scene.name}'");
+        }
+
+        private static bool IsTruthy(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return false;
+            }
+
+            value = value.Trim();
+            return value.Equals("1", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("true", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                || value.Equals("on", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+}
+#endif

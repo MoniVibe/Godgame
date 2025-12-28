@@ -42,18 +42,23 @@ namespace Godgame.Headless
 
             foreach (var request in SystemAPI.Query<RefRO<GodgameHeadlessExitRequest>>())
             {
-                if (Application.isEditor)
-                {
-                    UnityDebug.Log($"[GodgameHeadlessExitSystem] Quit requested (code={request.ValueRO.ExitCode}, tick={request.ValueRO.RequestedTick}) but running in editor; ignoring.");
-                    _quitIssued = 1;
-                    break;
-                }
-
                 _quitIssued = 1;
                 UnityDebug.Log($"[GodgameHeadlessExitSystem] Quit requested (code={request.ValueRO.ExitCode}, tick={request.ValueRO.RequestedTick}); quitting.");
-                Application.Quit(request.ValueRO.ExitCode);
+                Quit(request.ValueRO.ExitCode);
                 break;
             }
+        }
+
+        private static void Quit(int exitCode)
+        {
+#if UNITY_EDITOR
+            if (Application.isEditor && Application.isBatchMode)
+            {
+                UnityEditor.EditorApplication.Exit(exitCode);
+                return;
+            }
+#endif
+            Application.Quit(exitCode);
         }
 
         public static void Request(ref SystemState state, uint tick, int exitCode)
