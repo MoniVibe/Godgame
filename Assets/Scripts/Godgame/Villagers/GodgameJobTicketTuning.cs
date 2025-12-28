@@ -18,6 +18,7 @@ namespace Godgame.Villagers
         public float MaxBatchWorkUnits;
         public float AttachRadius;
         public float ClaimTTLSeconds;
+        public float MinCommitSeconds;
         public float HeavyCarryThresholdUnits;
         public int HeavyCarryRequiredWorkers;
         public int HeavyCarryMinWorkers;
@@ -40,6 +41,7 @@ namespace Godgame.Villagers
             MaxBatchWorkUnits = 110f,
             AttachRadius = 18f,
             ClaimTTLSeconds = 6f,
+            MinCommitSeconds = 2f,
             HeavyCarryThresholdUnits = 200f,
             HeavyCarryRequiredWorkers = 3,
             HeavyCarryMinWorkers = 2,

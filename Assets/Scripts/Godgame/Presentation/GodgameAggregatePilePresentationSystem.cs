@@ -2,6 +2,7 @@ using Godgame.Rendering;
 using Godgame.Resources;
 using PureDOTS.Rendering;
 using PureDOTS.Runtime.Core;
+using PureDOTS.Systems;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -13,8 +14,8 @@ namespace Godgame.Presentation
     /// Adds presentation components to aggregate piles so they render as resource spheres.
     /// </summary>
     [BurstCompile]
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
-    public partial struct Godgame_AggregatePilePresentationSystem : ISystem
+    [UpdateInGroup(typeof(StructuralChangePresentationSystemGroup))]
+    public partial struct Godgame_AggregatePilePresentationEnsureSystem : ISystem
     {
         private EntityQuery _pileQuery;
 
@@ -22,7 +23,7 @@ namespace Godgame.Presentation
         {
             _pileQuery = SystemAPI.QueryBuilder()
                 .WithAll<AggregatePile, AggregatePileTag, LocalTransform>()
-                .WithNone<ResourceChunkPresentationTag>()
+                .WithNone<AggregatePilePresentationTag>()
                 .Build();
 
             state.RequireForUpdate(_pileQuery);
@@ -40,9 +41,10 @@ namespace Godgame.Presentation
             foreach (var (pile, entity) in SystemAPI
                          .Query<RefRO<AggregatePile>>()
                          .WithAll<AggregatePileTag, LocalTransform>()
-                         .WithNone<ResourceChunkPresentationTag>()
+                         .WithNone<AggregatePilePresentationTag>()
                          .WithEntityAccess())
             {
+                ecb.AddComponent<AggregatePilePresentationTag>(entity);
                 ecb.AddComponent<ResourceChunkPresentationTag>(entity);
                 ecb.AddComponent(entity, new PresentationLODState
                 {

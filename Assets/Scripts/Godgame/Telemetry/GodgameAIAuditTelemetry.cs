@@ -1,3 +1,4 @@
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Telemetry;
 using Unity.Collections;
 using Unity.Entities;
@@ -51,6 +52,29 @@ namespace Godgame.Telemetry
         InvalidTarget = 3,
         Cooldown = 4,
         Cancelled = 5
+    }
+
+    public enum GodgameVillagerLivelinessEvent : byte
+    {
+        StartedWork = 0,
+        CooldownStart = 1,
+        WanderStart = 2,
+        SocializeStart = 3,
+        CooldownCleared = 4
+    }
+
+    [InternalBufferCapacity(64)]
+    public struct GodgameVillagerLivelinessRecord : IBufferElementData
+    {
+        public uint Tick;
+        public FixedString64Bytes AgentId;
+        public GodgameVillagerLivelinessEvent Event;
+        public Entity Target;
+        public VillagerWorkCooldownMode CooldownMode;
+        public uint CooldownRemainingTicks;
+        public VillagerWorkCooldownMode LeisureAction;
+        public Entity LeisureTarget;
+        public VillagerCooldownClearReason CooldownClearReason;
     }
 
     [InternalBufferCapacity(64)]
@@ -152,6 +176,7 @@ namespace Godgame.Telemetry
             EnsureBuffer<GodgameQueuePressureRecord>(entityManager, telemetryEntity);
             EnsureBuffer<GodgameLogicAuditRecord>(entityManager, telemetryEntity);
             EnsureBuffer<GodgameTicketClaimRecord>(entityManager, telemetryEntity);
+            EnsureBuffer<GodgameVillagerLivelinessRecord>(entityManager, telemetryEntity);
             EnsureBuffer<GodgameCapabilityGrantedRecord>(entityManager, telemetryEntity);
             EnsureBuffer<GodgameCapabilityRevokedRecord>(entityManager, telemetryEntity);
             EnsureBuffer<GodgameCapabilitySnapshotRecord>(entityManager, telemetryEntity);

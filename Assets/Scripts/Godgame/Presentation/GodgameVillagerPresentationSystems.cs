@@ -4,6 +4,7 @@ using LocalNavigation = Godgame.Villagers.Navigation;
 using LocalJobPhase = Godgame.Villagers.JobPhase;
 using LocalVillagerJobState = Godgame.Villagers.VillagerJobState;
 using PureDOTS.Rendering;
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
 using Unity.Burst;
@@ -20,6 +21,7 @@ namespace Godgame.Presentation
         private uint _lastTick;
         private byte _tickInitialized;
         private ComponentLookup<LocalTransform> _transformLookup;
+        private ComponentLookup<VillagerWorkCooldown> _cooldownLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -31,6 +33,7 @@ namespace Godgame.Presentation
             _tickInitialized = 0;
             _lastTick = 0;
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+            _cooldownLookup = state.GetComponentLookup<VillagerWorkCooldown>(true);
         }
 
         [BurstCompile]
@@ -55,10 +58,8 @@ namespace Godgame.Presentation
             }
 
             _transformLookup.Update(ref state);
+            _cooldownLookup.Update(ref state);
 
-            const float pulseSpeed = 6f;
-            const float pulseAmplitude = 0.25f;
-            const float pulseBase = 0.85f;
             const float minDirectionSq = 0.0001f;
             var timeSeconds = timeState.WorldSeconds;
 
@@ -114,15 +115,12 @@ namespace Godgame.Presentation
                          .WithAll<VillagerPresentationTag>()
                          .WithEntityAccess())
             {
-                bool moving = settlementState.ValueRO.Phase == SettlementVillagerPhase.ToResource
-                    || settlementState.ValueRO.Phase == SettlementVillagerPhase.ToDepot;
-
                 var baseTint = visualState.ValueRO.AlignmentTint;
-                var pulse = moving
-                    ? pulseBase + pulseAmplitude * math.sin(timeSeconds * pulseSpeed + entity.Index * 0.1f)
-                    : 1f;
-
-                renderTint.ValueRW.Value = new float4(baseTint.xyz * pulse, baseTint.w);
+                var cooldownMode = _cooldownLookup.HasComponent(entity)
+                    ? _cooldownLookup[entity].Mode
+                    : VillagerWorkCooldownMode.None;
+                var cue = VillagerTaskCueUtility.ResolveCue(settlementState.ValueRO.Phase, cooldownMode);
+                renderTint.ValueRW.Value = VillagerTaskCueUtility.ApplyCue(baseTint, cue, timeSeconds, entity.Index);
             }
         }
 
@@ -163,6 +161,7 @@ namespace Godgame.Presentation
         private uint _lastTick;
         private byte _tickInitialized;
         private ComponentLookup<LocalTransform> _transformLookup;
+        private ComponentLookup<VillagerWorkCooldown> _cooldownLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -173,6 +172,7 @@ namespace Godgame.Presentation
             _tickInitialized = 0;
             _lastTick = 0;
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+            _cooldownLookup = state.GetComponentLookup<VillagerWorkCooldown>(true);
         }
 
         [BurstCompile]
@@ -197,6 +197,7 @@ namespace Godgame.Presentation
             }
 
             _transformLookup.Update(ref state);
+            _cooldownLookup.Update(ref state);
 
             foreach (var (job, visual) in SystemAPI
                          .Query<RefRO<VillagerJob>, RefRW<VillagerVisualState>>()
@@ -276,15 +277,43 @@ namespace Godgame.Presentation
             }
 
             var timeSeconds = timeState.WorldSeconds;
-            foreach (var (visual, renderTint, entity) in SystemAPI
-                         .Query<RefRO<VillagerVisualState>, RefRW<RenderTint>>()
+            foreach (var (job, visual, renderTint, entity) in SystemAPI
+                         .Query<RefRO<VillagerJob>, RefRO<VillagerVisualState>, RefRW<RenderTint>>()
+                         .WithAll<VillagerPresentationTag>()
+                         .WithNone<SettlementVillagerState, VillagerAIState, LocalVillagerJobState>()
+                         .WithEntityAccess())
+            {
+                var baseTint = visual.ValueRO.AlignmentTint;
+                var cooldownMode = _cooldownLookup.HasComponent(entity)
+                    ? _cooldownLookup[entity].Mode
+                    : VillagerWorkCooldownMode.None;
+                var cue = VillagerTaskCueUtility.ResolveCue(job.ValueRO, cooldownMode);
+                renderTint.ValueRW.Value = VillagerTaskCueUtility.ApplyCue(baseTint, cue, timeSeconds, entity.Index);
+            }
+
+            foreach (var (jobState, visual, renderTint, entity) in SystemAPI
+                         .Query<RefRO<LocalVillagerJobState>, RefRO<VillagerVisualState>, RefRW<RenderTint>>()
+                         .WithAll<VillagerPresentationTag>()
+                         .WithNone<SettlementVillagerState, VillagerAIState, VillagerJob>()
+                         .WithEntityAccess())
+            {
+                var baseTint = visual.ValueRO.AlignmentTint;
+                var cooldownMode = _cooldownLookup.HasComponent(entity)
+                    ? _cooldownLookup[entity].Mode
+                    : VillagerWorkCooldownMode.None;
+                var cue = VillagerTaskCueUtility.ResolveCue(jobState.ValueRO, cooldownMode);
+                renderTint.ValueRW.Value = VillagerTaskCueUtility.ApplyCue(baseTint, cue, timeSeconds, entity.Index);
+            }
+
+            foreach (var (ai, visual, renderTint, entity) in SystemAPI
+                         .Query<RefRO<VillagerAIState>, RefRO<VillagerVisualState>, RefRW<RenderTint>>()
                          .WithAll<VillagerPresentationTag>()
                          .WithNone<SettlementVillagerState>()
                          .WithEntityAccess())
             {
                 var baseTint = visual.ValueRO.AlignmentTint;
-                var pulse = ResolvePulse(visual.ValueRO.TaskState, timeSeconds, entity.Index);
-                renderTint.ValueRW.Value = new float4(baseTint.xyz * pulse, baseTint.w);
+                var cue = VillagerTaskCueUtility.ResolveCue(ai.ValueRO);
+                renderTint.ValueRW.Value = VillagerTaskCueUtility.ApplyCue(baseTint, cue, timeSeconds, entity.Index);
             }
         }
 
@@ -351,25 +380,6 @@ namespace Godgame.Presentation
                     : (int)VillagerTaskState.Idle;
 
             visualState.AnimationState = traveling ? 1 : working ? 2 : 0;
-        }
-
-        private static float ResolvePulse(int taskState, float timeSeconds, int entityIndex)
-        {
-            const float pulseSpeed = 5.5f;
-            const float pulseAmplitude = 0.18f;
-            const float pulseBase = 0.90f;
-
-            if (taskState == (int)VillagerTaskState.Traveling)
-            {
-                return pulseBase + pulseAmplitude * math.sin(timeSeconds * pulseSpeed + entityIndex * 0.1f);
-            }
-
-            if (taskState == (int)VillagerTaskState.Working)
-            {
-                return 0.95f + 0.07f * math.sin(timeSeconds * (pulseSpeed * 0.6f) + entityIndex * 0.05f);
-            }
-
-            return 1f;
         }
 
         private float ResolveDeltaTime(in TimeState timeState)
@@ -517,5 +527,114 @@ namespace Godgame.Presentation
         }
 
         public void OnDestroy(ref SystemState state) { }
+    }
+
+    internal enum VillagerTaskCue : byte
+    {
+        Idle = 0,
+        Social = 1,
+        HeadingToWork = 2,
+        Working = 3,
+        Delivering = 4
+    }
+
+    internal static class VillagerTaskCueUtility
+    {
+        public static VillagerTaskCue ResolveCue(SettlementVillagerPhase phase, VillagerWorkCooldownMode cooldownMode)
+        {
+            return phase switch
+            {
+                SettlementVillagerPhase.ToResource => VillagerTaskCue.HeadingToWork,
+                SettlementVillagerPhase.Harvest => VillagerTaskCue.Working,
+                SettlementVillagerPhase.ToDepot => VillagerTaskCue.Delivering,
+                SettlementVillagerPhase.Resting => ResolveIdleCue(cooldownMode),
+                SettlementVillagerPhase.Idle => ResolveIdleCue(cooldownMode),
+                _ => VillagerTaskCue.Idle
+            };
+        }
+
+        public static VillagerTaskCue ResolveCue(in LocalVillagerJobState job, VillagerWorkCooldownMode cooldownMode)
+        {
+            return job.Phase switch
+            {
+                LocalJobPhase.NavigateToNode => VillagerTaskCue.HeadingToWork,
+                LocalJobPhase.Gather => VillagerTaskCue.Working,
+                LocalJobPhase.NavigateToStorehouse => VillagerTaskCue.Delivering,
+                LocalJobPhase.Deliver => VillagerTaskCue.Delivering,
+                LocalJobPhase.Idle => ResolveIdleCue(cooldownMode),
+                _ => VillagerTaskCue.Idle
+            };
+        }
+
+        public static VillagerTaskCue ResolveCue(in VillagerJob job, VillagerWorkCooldownMode cooldownMode)
+        {
+            return job.Phase switch
+            {
+                VillagerJob.JobPhase.Assigned => VillagerTaskCue.HeadingToWork,
+                VillagerJob.JobPhase.Gathering => VillagerTaskCue.HeadingToWork,
+                VillagerJob.JobPhase.Delivering => VillagerTaskCue.Delivering,
+                VillagerJob.JobPhase.Building => VillagerTaskCue.Working,
+                VillagerJob.JobPhase.Crafting => VillagerTaskCue.Working,
+                VillagerJob.JobPhase.Fighting => VillagerTaskCue.Working,
+                VillagerJob.JobPhase.Idle => ResolveIdleCue(cooldownMode),
+                _ => VillagerTaskCue.Idle
+            };
+        }
+
+        public static VillagerTaskCue ResolveCue(in VillagerAIState ai)
+        {
+            return ai.CurrentState switch
+            {
+                VillagerAIState.State.Travelling => VillagerTaskCue.HeadingToWork,
+                VillagerAIState.State.Working => VillagerTaskCue.Working,
+                VillagerAIState.State.Fighting => VillagerTaskCue.Working,
+                VillagerAIState.State.Fleeing => VillagerTaskCue.HeadingToWork,
+                VillagerAIState.State.Idle => ai.CurrentGoal == VillagerAIState.Goal.Socialize
+                    ? VillagerTaskCue.Social
+                    : VillagerTaskCue.Idle,
+                VillagerAIState.State.Eating => VillagerTaskCue.Idle,
+                VillagerAIState.State.Sleeping => VillagerTaskCue.Idle,
+                _ => VillagerTaskCue.Idle
+            };
+        }
+
+        public static float4 ApplyCue(float4 baseTint, VillagerTaskCue cue, float timeSeconds, int entityIndex)
+        {
+            var cueTint = ResolveCueTint(cue);
+            var pulse = ResolveCuePulse(cue, timeSeconds, entityIndex);
+            var blended = baseTint.xyz * (0.4f + 0.6f * cueTint.xyz);
+            return new float4(blended * pulse, baseTint.w);
+        }
+
+        private static VillagerTaskCue ResolveIdleCue(VillagerWorkCooldownMode cooldownMode)
+        {
+            return cooldownMode == VillagerWorkCooldownMode.Socialize
+                ? VillagerTaskCue.Social
+                : VillagerTaskCue.Idle;
+        }
+
+        private static float4 ResolveCueTint(VillagerTaskCue cue)
+        {
+            return cue switch
+            {
+                VillagerTaskCue.HeadingToWork => new float4(0.35f, 0.85f, 1f, 1f),
+                VillagerTaskCue.Working => new float4(0.35f, 1f, 0.45f, 1f),
+                VillagerTaskCue.Delivering => new float4(1f, 0.85f, 0.25f, 1f),
+                VillagerTaskCue.Social => new float4(0.95f, 0.6f, 0.95f, 1f),
+                _ => new float4(0.85f, 0.85f, 0.9f, 1f)
+            };
+        }
+
+        private static float ResolveCuePulse(VillagerTaskCue cue, float timeSeconds, int entityIndex)
+        {
+            return cue switch
+            {
+                VillagerTaskCue.HeadingToWork => 0.88f + 0.18f * math.sin(timeSeconds * 5.4f + entityIndex * 0.1f),
+                VillagerTaskCue.Delivering => 0.90f + 0.16f * math.sin(timeSeconds * 4.2f + entityIndex * 0.08f),
+                VillagerTaskCue.Working => 0.95f + 0.08f * math.sin(timeSeconds * 3.2f + entityIndex * 0.05f),
+                VillagerTaskCue.Social => 0.92f + 0.14f * math.sin(timeSeconds * 2.6f + entityIndex * 0.07f),
+                _ => 1f
+            };
+        }
     }
 }

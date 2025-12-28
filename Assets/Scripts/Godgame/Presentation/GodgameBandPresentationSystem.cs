@@ -2,7 +2,6 @@ using Godgame.Rendering;
 using PureDOTS.Rendering;
 using PureDOTS.Runtime.Bands;
 using PureDOTS.Runtime.Core;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
@@ -12,7 +11,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Adds presentation components to band entities so groups are visible.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateBefore(typeof(GodgamePresentationRegistryIdentitySystem))]
     public partial struct Godgame_BandPresentationSystem : ISystem
@@ -29,7 +27,6 @@ namespace Godgame.Presentation
             state.RequireForUpdate(_missingBandQuery);
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             if (!RuntimeMode.IsRenderingEnabled || _missingBandQuery.IsEmptyIgnoreFilter)

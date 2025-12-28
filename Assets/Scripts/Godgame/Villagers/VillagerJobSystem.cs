@@ -9,6 +9,7 @@ using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Combat;
 using PureDOTS.Runtime.Resource;
 using PureDOTS.Runtime.Telemetry;
+using PureDOTS.Runtime.Villagers;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -44,6 +45,11 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerTreeSafetyMemory> _treeSafetyLookup;
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
         private ComponentLookup<VillagerBehavior> _behaviorLookup;
+        private ComponentLookup<VillagerNeedBias> _needBiasLookup;
+        private ComponentLookup<VillagerArchetypeResolved> _archetypeLookup;
+        private ComponentLookup<VillagerOutlook> _outlookLookup;
+        private BufferLookup<VillagerCooldownOutlookRule> _cooldownOutlookLookup;
+        private BufferLookup<VillagerCooldownArchetypeModifier> _cooldownArchetypeLookup;
         private ComponentLookup<GodgameVillagerAttributes> _attributesLookup;
         private ComponentLookup<VillagerDerivedAttributes> _derivedLookup;
         private ComponentLookup<GodgameVillagerCombatStats> _combatLookup;
@@ -64,6 +70,7 @@ namespace Godgame.Villagers
             state.RequireForUpdate<VillagerScheduleConfig>();
             state.RequireForUpdate<JobAssignment>();
             state.RequireForUpdate<GodgameJobTicketTuning>();
+            state.RequireForUpdate<VillagerCooldownProfile>();
             _resourceNodeLookup = state.GetComponentLookup<GodgameResourceNodeMirror>(false);
             _storehouseLookup = state.GetComponentLookup<GodgameStorehouse>(isReadOnly: true);
             _inventoryLookup = state.GetBufferLookup<StorehouseInventoryItem>(false);
@@ -79,6 +86,11 @@ namespace Godgame.Villagers
             _treeSafetyLookup = state.GetComponentLookup<VillagerTreeSafetyMemory>(true);
             _alignmentLookup = state.GetComponentLookup<VillagerAlignment>(true);
             _behaviorLookup = state.GetComponentLookup<VillagerBehavior>(true);
+            _needBiasLookup = state.GetComponentLookup<VillagerNeedBias>(true);
+            _archetypeLookup = state.GetComponentLookup<VillagerArchetypeResolved>(true);
+            _outlookLookup = state.GetComponentLookup<VillagerOutlook>(true);
+            _cooldownOutlookLookup = state.GetBufferLookup<VillagerCooldownOutlookRule>(true);
+            _cooldownArchetypeLookup = state.GetBufferLookup<VillagerCooldownArchetypeModifier>(true);
             _attributesLookup = state.GetComponentLookup<GodgameVillagerAttributes>(true);
             _derivedLookup = state.GetComponentLookup<VillagerDerivedAttributes>(true);
             _combatLookup = state.GetComponentLookup<GodgameVillagerCombatStats>(false);
@@ -135,6 +147,11 @@ namespace Godgame.Villagers
             _treeSafetyLookup.Update(ref state);
             _alignmentLookup.Update(ref state);
             _behaviorLookup.Update(ref state);
+            _needBiasLookup.Update(ref state);
+            _archetypeLookup.Update(ref state);
+            _outlookLookup.Update(ref state);
+            _cooldownOutlookLookup.Update(ref state);
+            _cooldownArchetypeLookup.Update(ref state);
             _attributesLookup.Update(ref state);
             _derivedLookup.Update(ref state);
             _combatLookup.Update(ref state);
@@ -182,6 +199,11 @@ namespace Godgame.Villagers
                 ? SystemAPI.GetSingleton<VillagerScheduleConfig>()
                 : VillagerScheduleConfig.Default;
             var jobTicketTuning = SystemAPI.GetSingleton<GodgameJobTicketTuning>();
+            var minCommitSeconds = math.max(0f, jobTicketTuning.MinCommitSeconds);
+            var secondsPerTick = math.max(timeState.FixedDeltaTime, 1e-4f);
+            var minCommitTicks = (uint)math.max(0f, math.ceil(minCommitSeconds / secondsPerTick));
+            var cooldownProfile = SystemAPI.GetSingleton<VillagerCooldownProfile>();
+            var cooldownProfileEntity = SystemAPI.GetSingletonEntity<VillagerCooldownProfile>();
 
             var hasWorkTuning = SystemAPI.HasSingleton<VillagerWorkTuning>();
             var workTuning = hasWorkTuning ? SystemAPI.GetSingleton<VillagerWorkTuning>() : default;
@@ -293,6 +315,13 @@ namespace Godgame.Villagers
                 TreeSafetyLookup = _treeSafetyLookup,
                 AlignmentLookup = _alignmentLookup,
                 BehaviorLookup = _behaviorLookup,
+                NeedBiasLookup = _needBiasLookup,
+                ArchetypeLookup = _archetypeLookup,
+                OutlookLookup = _outlookLookup,
+                CooldownOutlookLookup = _cooldownOutlookLookup,
+                CooldownArchetypeLookup = _cooldownArchetypeLookup,
+                CooldownProfile = cooldownProfile,
+                CooldownProfileEntity = cooldownProfileEntity,
                 AttributesLookup = _attributesLookup,
                 DerivedLookup = _derivedLookup,
                 CombatLookup = _combatLookup,
@@ -326,6 +355,7 @@ namespace Godgame.Villagers
                 GroupCohesionOrderWeight = jobTicketTuning.GroupCohesionOrderWeight,
                 GroupCohesionMin = jobTicketTuning.GroupCohesionMin,
                 GroupCohesionMax = jobTicketTuning.GroupCohesionMax,
+                MinCommitTicks = minCommitTicks,
                 CurrentTick = timeState.Tick,
                 FixedDeltaTime = timeState.FixedDeltaTime,
                 WorldSeconds = timeState.WorldSeconds,
@@ -414,6 +444,13 @@ namespace Godgame.Villagers
             [ReadOnly] public ComponentLookup<VillagerTreeSafetyMemory> TreeSafetyLookup;
             [ReadOnly] public ComponentLookup<VillagerAlignment> AlignmentLookup;
             [ReadOnly] public ComponentLookup<VillagerBehavior> BehaviorLookup;
+            [ReadOnly] public ComponentLookup<VillagerNeedBias> NeedBiasLookup;
+            [ReadOnly] public ComponentLookup<VillagerArchetypeResolved> ArchetypeLookup;
+            [ReadOnly] public ComponentLookup<VillagerOutlook> OutlookLookup;
+            [ReadOnly] public BufferLookup<VillagerCooldownOutlookRule> CooldownOutlookLookup;
+            [ReadOnly] public BufferLookup<VillagerCooldownArchetypeModifier> CooldownArchetypeLookup;
+            public VillagerCooldownProfile CooldownProfile;
+            public Entity CooldownProfileEntity;
             [ReadOnly] public ComponentLookup<GodgameVillagerAttributes> AttributesLookup;
             [ReadOnly] public ComponentLookup<VillagerDerivedAttributes> DerivedLookup;
             [NativeDisableParallelForRestriction] public ComponentLookup<GodgameVillagerCombatStats> CombatLookup;
@@ -447,6 +484,7 @@ namespace Godgame.Villagers
             public float GroupCohesionOrderWeight;
             public float GroupCohesionMin;
             public float GroupCohesionMax;
+            public uint MinCommitTicks;
             public uint CurrentTick;
             public float FixedDeltaTime;
             public float WorldSeconds;
@@ -459,7 +497,8 @@ namespace Godgame.Villagers
             public float SeparationCellSize;
 
             [BurstCompile]
-            void Execute([ChunkIndexInQuery] int ciq, Entity e, ref VillagerJobState job, ref JobAssignment assignment, DynamicBuffer<JobBatchEntry> batch,
+            void Execute([ChunkIndexInQuery] int ciq, Entity e, ref VillagerJobState job, ref VillagerWorkCooldown workCooldown, ref JobAssignment assignment,
+                DynamicBuffer<JobBatchEntry> batch,
                 ref LocalTransform tx, ref Navigation nav, ref GatherDeliverTelemetry telemetry, ref MoveIntent moveIntent, ref MovePlan movePlan)
             {
                 var patienceScore = BehaviorLookup.HasComponent(e) ? BehaviorLookup[e].PatienceScore : 0f;
@@ -477,16 +516,27 @@ namespace Godgame.Villagers
                     var goal = GoalLookup[e];
                     if (goal.CurrentGoal != VillagerGoal.Work)
                     {
-                        ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
-                        ResetJob(ref job, e, patienceScore, tx.Position);
-                        moveIntent = new MoveIntent
+                        var committedTicks = CurrentTick > assignment.CommitTick
+                            ? CurrentTick - assignment.CommitTick
+                            : 0u;
+                        if (assignment.Ticket != Entity.Null && MinCommitTicks > 0 && committedTicks < MinCommitTicks)
                         {
-                            TargetEntity = Entity.Null,
-                            TargetPosition = tx.Position,
-                            IntentType = MoveIntentType.None
-                        };
-                        movePlan = default;
-                        return;
+                            // Honor short commitment window to avoid thrash on goal flips.
+                        }
+                        else
+                        {
+                            ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                            ResetJob(ref job, e, patienceScore, tx.Position);
+                            nav.Velocity = float3.zero;
+                            moveIntent = new MoveIntent
+                            {
+                                TargetEntity = Entity.Null,
+                                TargetPosition = tx.Position,
+                                IntentType = MoveIntentType.None
+                            };
+                            movePlan = default;
+                            return;
+                        }
                     }
                 }
 
@@ -500,6 +550,7 @@ namespace Godgame.Villagers
                     job.Phase = JobPhase.Idle;
                     job.Target = Entity.Null;
                     assignment.CommitTick = 0;
+                    nav.Velocity = float3.zero;
                     moveIntent = new MoveIntent
                     {
                         TargetEntity = Entity.Null,
@@ -515,6 +566,7 @@ namespace Godgame.Villagers
                     assignment.Ticket = Entity.Null;
                     assignment.CommitTick = 0;
                     ResetJob(ref job, e, patienceScore, tx.Position);
+                    nav.Velocity = float3.zero;
                     moveIntent = new MoveIntent
                     {
                         TargetEntity = Entity.Null,
@@ -531,6 +583,7 @@ namespace Godgame.Villagers
                     assignment.Ticket = Entity.Null;
                     assignment.CommitTick = 0;
                     ResetJob(ref job, e, patienceScore, tx.Position);
+                    nav.Velocity = float3.zero;
                     moveIntent = new MoveIntent
                     {
                         TargetEntity = Entity.Null,
@@ -545,6 +598,7 @@ namespace Godgame.Villagers
                 {
                     ReleaseTicket(ref assignment, batch, e, ticket.State);
                     ResetJob(ref job, e, patienceScore, tx.Position);
+                    nav.Velocity = float3.zero;
                     moveIntent = new MoveIntent
                     {
                         TargetEntity = Entity.Null,
@@ -706,6 +760,9 @@ namespace Godgame.Villagers
                 var hasStamina = TryGetStamina(e, out var combatStats, out var currentStamina, out var maxStamina, out var staminaRatio);
                 var moveSpeed = ResolveMoveSpeed(e, baseMoveSpeed, hazardUrgency, statAverage, staminaRatio, out var runIntensity);
                 nav.Speed = moveSpeed;
+                var accelMultiplier = math.max(0.1f, MovementTuning.AccelerationMultiplier);
+                var decelMultiplier = math.max(0.1f, MovementTuning.DecelerationMultiplier);
+                var turnBlendSpeed = math.max(0.1f, MovementTuning.TurnBlendSpeed);
                 var movedThisTick = false;
 
                 if (job.DropoffCooldown > 0f)
@@ -774,12 +831,36 @@ namespace Godgame.Villagers
                             var separation = ResolveSeparation(e, tx.Position);
                             moveDir = math.normalizesafe(moveDir + separation);
                             var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance);
-                            var moveDelta = moveDir * travelSpeed * Delta;
-                            tx.Position += moveDelta;
-                            movedThisTick = true;
+                            var currentVelocity = nav.Velocity;
+                            currentVelocity.y = 0f;
+                            if (math.lengthsq(currentVelocity) > 1e-4f)
+                            {
+                                var currentDir = math.normalizesafe(currentVelocity);
+                                var turnLerp = math.saturate(Delta * turnBlendSpeed);
+                                moveDir = math.normalizesafe(math.lerp(currentDir, moveDir, turnLerp), moveDir);
+                            }
+
+                            var desiredVelocity = moveDir * travelSpeed;
+                            var currentSpeed = math.length(currentVelocity);
+                            var acceleration = math.max(0.1f, nav.Speed * accelMultiplier);
+                            var deceleration = math.max(0.1f, nav.Speed * decelMultiplier);
+                            var accelLimit = math.length(desiredVelocity) > currentSpeed ? acceleration : deceleration;
+                            var maxDelta = accelLimit * Delta;
+                            var deltaV = desiredVelocity - currentVelocity;
+                            var deltaSq = math.lengthsq(deltaV);
+                            if (maxDelta > 0f && deltaSq > maxDelta * maxDelta)
+                            {
+                                deltaV = math.normalizesafe(deltaV) * maxDelta;
+                            }
+
+                            currentVelocity += deltaV;
+                            nav.Velocity = currentVelocity;
+                            tx.Position += currentVelocity * Delta;
+                            movedThisTick = math.lengthsq(currentVelocity) > 1e-5f;
                         }
                         else if (groupReady)
                         {
+                            nav.Velocity = float3.zero;
                             job.Phase = JobPhase.Gather;
                         }
                         break;
@@ -991,6 +1072,7 @@ namespace Godgame.Villagers
                                         telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
                                         ReleaseTicket(ref assignment, batch, e, ResolveCompletionState(ticket.TargetEntity, ticket));
                                         EnterIdle(ref job, e, patienceScore, DropoffCooldownSeconds, tx.Position);
+                                        StartWorkCooldown(ref workCooldown, e, job.Type, patienceScore);
                                         ApplyWorkSatisfaction(e);
                                         break;
                                     }
@@ -1026,12 +1108,36 @@ namespace Godgame.Villagers
                             var separation = ResolveSeparation(e, tx.Position);
                             moveDir = math.normalizesafe(moveDir + separation);
                             var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance);
-                            var moveDelta = moveDir * travelSpeed * Delta;
-                            tx.Position += moveDelta;
-                            movedThisTick = true;
+                            var currentVelocity = nav.Velocity;
+                            currentVelocity.y = 0f;
+                            if (math.lengthsq(currentVelocity) > 1e-4f)
+                            {
+                                var currentDir = math.normalizesafe(currentVelocity);
+                                var turnLerp = math.saturate(Delta * turnBlendSpeed);
+                                moveDir = math.normalizesafe(math.lerp(currentDir, moveDir, turnLerp), moveDir);
+                            }
+
+                            var desiredVelocity = moveDir * travelSpeed;
+                            var currentSpeed = math.length(currentVelocity);
+                            var acceleration = math.max(0.1f, nav.Speed * accelMultiplier);
+                            var deceleration = math.max(0.1f, nav.Speed * decelMultiplier);
+                            var accelLimit = math.length(desiredVelocity) > currentSpeed ? acceleration : deceleration;
+                            var maxDelta = accelLimit * Delta;
+                            var deltaV = desiredVelocity - currentVelocity;
+                            var deltaSq = math.lengthsq(deltaV);
+                            if (maxDelta > 0f && deltaSq > maxDelta * maxDelta)
+                            {
+                                deltaV = math.normalizesafe(deltaV) * maxDelta;
+                            }
+
+                            currentVelocity += deltaV;
+                            nav.Velocity = currentVelocity;
+                            tx.Position += currentVelocity * Delta;
+                            movedThisTick = math.lengthsq(currentVelocity) > 1e-5f;
                         }
                         else
                         {
+                            nav.Velocity = float3.zero;
                             job.Phase = JobPhase.Deliver;
                         }
                         break;
@@ -1078,8 +1184,14 @@ namespace Godgame.Villagers
 
                         ReleaseTicket(ref assignment, batch, e, ResolveCompletionState(ticket.TargetEntity, ticket));
                         EnterIdle(ref job, e, patienceScore, DropoffCooldownSeconds, tx.Position);
+                        StartWorkCooldown(ref workCooldown, e, job.Type, patienceScore);
                         ApplyWorkSatisfaction(e);
                         break;
+                }
+
+                if (job.Phase == JobPhase.Idle)
+                {
+                    nav.Velocity = float3.zero;
                 }
 
                 UpdateMovementDebug(ref moveIntent, ref movePlan, in job, in nav, in tx);
@@ -1091,8 +1203,6 @@ namespace Godgame.Villagers
                     CombatLookup[e] = combatStats;
                 }
             }
-
-            private const float DeltaTimeEpsilon = 0.0001f;
 
             private void UpdateMovementDebug(ref MoveIntent moveIntent, ref MovePlan movePlan, in VillagerJobState job, in Navigation nav, in LocalTransform tx)
             {
@@ -1124,6 +1234,7 @@ namespace Godgame.Villagers
                 var desiredVel = distance > 0.01f && travelSpeed > 0f
                     ? math.normalizesafe(toTarget) * travelSpeed
                     : float3.zero;
+                var accelLimit = math.max(0.1f, speed * math.max(0.1f, MovementTuning.AccelerationMultiplier));
 
                 var mode = job.Phase == JobPhase.NavigateToNode || job.Phase == JobPhase.NavigateToStorehouse
                     ? MovePlanMode.Approach
@@ -1135,7 +1246,7 @@ namespace Godgame.Villagers
                 {
                     Mode = mode,
                     DesiredVelocity = desiredVel,
-                    MaxAccel = speed / math.max(DeltaTimeEpsilon, Delta),
+                    MaxAccel = accelLimit,
                     EtaSeconds = travelSpeed > 0f ? distance / travelSpeed : 0f
                 };
             }
@@ -1580,6 +1691,286 @@ namespace Godgame.Villagers
                     ponder.AnchorPosition = position;
                     PonderLookup[entity] = ponder;
                 }
+            }
+
+            private void StartWorkCooldown(ref VillagerWorkCooldown cooldown, Entity entity, JobType jobType, float patienceScore)
+            {
+                var ticks = ResolveWorkCooldownTicks(entity, jobType);
+                if (ticks == 0)
+                {
+                    cooldown = default;
+                    return;
+                }
+
+                cooldown.StartTick = CurrentTick;
+                cooldown.EndTick = CurrentTick + ticks;
+                cooldown.Mode = ResolveCooldownMode(entity, patienceScore);
+            }
+
+            private uint ResolveWorkCooldownTicks(Entity entity, JobType jobType)
+            {
+                var maxTicks = math.max(CooldownProfile.MaxCooldownTicks, CooldownProfile.MinCooldownTicks);
+                if (maxTicks == 0)
+                {
+                    return 0;
+                }
+
+                var workBias01 = ResolveWorkBias01(entity, jobType);
+                var cooldownScale = ResolveOutlookCooldownScale(entity) * ResolveArchetypeCooldownScale(entity);
+                return VillagerCooldownProfile.ResolveCooldownTicks(CooldownProfile, workBias01, cooldownScale);
+            }
+
+            private float ResolveWorkBias01(Entity entity, JobType jobType)
+            {
+                if (!NeedBiasLookup.HasComponent(entity))
+                {
+                    return 0.5f;
+                }
+
+                var bias = NeedBiasLookup[entity];
+                var workWeight = math.max(0f, bias.WorkWeight);
+                var offWeight = math.max(0f, bias.RestWeight)
+                                + math.max(0f, bias.SocialWeight)
+                                + math.max(0f, bias.FaithWeight);
+
+                var archetypeWeight01 = ResolveArchetypeWorkWeight01(entity, jobType);
+                if (archetypeWeight01 > 0f)
+                {
+                    workWeight += archetypeWeight01;
+                }
+
+                var total = workWeight + offWeight;
+                if (total <= 0f)
+                {
+                    return 0.5f;
+                }
+
+                return math.saturate(workWeight / total);
+            }
+
+            private float ResolveArchetypeWorkWeight01(Entity entity, JobType jobType)
+            {
+                if (!ArchetypeLookup.HasComponent(entity))
+                {
+                    return 0f;
+                }
+
+                var data = ArchetypeLookup[entity].Data;
+                byte weight = jobType switch
+                {
+                    JobType.Gather => data.GatherJobWeight,
+                    _ => (byte)0
+                };
+                return math.saturate(weight / 100f);
+            }
+
+            private float ResolveArchetypeLoyalty01(Entity entity)
+            {
+                if (!ArchetypeLookup.HasComponent(entity))
+                {
+                    return 0.5f;
+                }
+
+                var data = ArchetypeLookup[entity].Data;
+                return math.saturate(data.BaseLoyalty / 100f);
+            }
+
+            private float ResolveOutlookCooldownScale(Entity entity)
+            {
+                if (CooldownProfileEntity == Entity.Null ||
+                    !CooldownOutlookLookup.HasBuffer(CooldownProfileEntity) ||
+                    !OutlookLookup.HasComponent(entity))
+                {
+                    return 1f;
+                }
+
+                var rules = CooldownOutlookLookup[CooldownProfileEntity];
+                var outlook = OutlookLookup[entity];
+                var slotCount = math.min(outlook.OutlookTypes.Length, outlook.OutlookValues.Length);
+                if (slotCount == 0 || rules.Length == 0)
+                {
+                    return 1f;
+                }
+
+                float weightedDelta = 0f;
+                float weight = 0f;
+                for (int i = 0; i < slotCount; i++)
+                {
+                    var typeId = outlook.OutlookTypes[i];
+                    if (typeId == 0)
+                    {
+                        continue;
+                    }
+
+                    if (!TryGetOutlookRule(typeId, rules, out var rule))
+                    {
+                        continue;
+                    }
+
+                    var value01 = math.abs(outlook.OutlookValues[i]) / 100f;
+                    if (value01 <= 0f)
+                    {
+                        continue;
+                    }
+
+                    var scale = rule.CooldownScale;
+                    if (scale <= 0f)
+                    {
+                        continue;
+                    }
+
+                    weightedDelta += (scale - 1f) * value01;
+                    weight += value01;
+                }
+
+                if (weight <= 0f)
+                {
+                    return 1f;
+                }
+
+                return math.max(0f, 1f + (weightedDelta / weight));
+            }
+
+            private float ResolveArchetypeCooldownScale(Entity entity)
+            {
+                if (CooldownProfileEntity == Entity.Null ||
+                    !CooldownArchetypeLookup.HasBuffer(CooldownProfileEntity) ||
+                    !ArchetypeLookup.HasComponent(entity))
+                {
+                    return 1f;
+                }
+
+                var modifiers = CooldownArchetypeLookup[CooldownProfileEntity];
+                if (modifiers.Length == 0)
+                {
+                    return 1f;
+                }
+
+                var archetypeName = ArchetypeLookup[entity].Data.ArchetypeName;
+                if (archetypeName.Length == 0)
+                {
+                    return 1f;
+                }
+
+                for (int i = 0; i < modifiers.Length; i++)
+                {
+                    if (modifiers[i].ArchetypeName.Equals(archetypeName))
+                    {
+                        return math.max(0f, modifiers[i].CooldownScale);
+                    }
+                }
+
+                return 1f;
+            }
+
+            private VillagerWorkCooldownMode ResolveCooldownMode(Entity entity, float patienceScore)
+            {
+                var wanderWeight = math.max(0.01f, CooldownProfile.BaseWanderWeight);
+                var socializeWeight = math.max(0.01f, CooldownProfile.BaseSocializeWeight);
+
+                if (NeedBiasLookup.HasComponent(entity))
+                {
+                    var bias = NeedBiasLookup[entity];
+                    var socialNeed = math.max(0f, bias.SocialWeight);
+                    var restNeed = math.max(0f, bias.RestWeight);
+                    var faithNeed = math.max(0f, bias.FaithWeight);
+                    var total = socialNeed + restNeed + faithNeed;
+                    if (total > 0f)
+                    {
+                        var socialBias = math.saturate(socialNeed / total);
+                        var biasWeight = math.max(0f, CooldownProfile.NeedBiasWeight);
+                        socializeWeight += socialBias * biasWeight;
+                        wanderWeight += (1f - socialBias) * biasWeight;
+                    }
+                }
+
+                if (AlignmentLookup.HasComponent(entity))
+                {
+                    var order01 = math.saturate((AlignmentLookup[entity].OrderAxis + 100f) * 0.005f);
+                    var orderWeight = math.max(0f, CooldownProfile.OrderAxisWeight);
+                    socializeWeight += order01 * orderWeight;
+                    wanderWeight += (1f - order01) * orderWeight;
+                }
+
+                var loyalty01 = ResolveArchetypeLoyalty01(entity);
+                var loyaltyWeight = math.max(0f, CooldownProfile.LoyaltyWeight);
+                socializeWeight += loyalty01 * loyaltyWeight;
+                wanderWeight += (1f - loyalty01) * loyaltyWeight;
+
+                var patience01 = math.saturate((patienceScore + 100f) * 0.005f);
+                var patienceWeight = math.max(0f, CooldownProfile.PatienceWeight);
+                socializeWeight += patience01 * patienceWeight;
+                wanderWeight += (1f - patience01) * patienceWeight;
+
+                ApplyOutlookLeisureWeights(entity, ref socializeWeight, ref wanderWeight);
+
+                socializeWeight = math.max(0.01f, socializeWeight);
+                wanderWeight = math.max(0.01f, wanderWeight);
+                var combined = socializeWeight + wanderWeight;
+                var socializeChance = combined > 0f ? socializeWeight / combined : 0.5f;
+
+                var seed = math.hash(new uint2((uint)(entity.Index + 1), CurrentTick + 101u));
+                var random = Unity.Mathematics.Random.CreateFromIndex(seed == 0u ? 1u : seed);
+                return random.NextFloat() < socializeChance
+                    ? VillagerWorkCooldownMode.Socialize
+                    : VillagerWorkCooldownMode.Wander;
+            }
+
+            private void ApplyOutlookLeisureWeights(Entity entity, ref float socializeWeight, ref float wanderWeight)
+            {
+                if (CooldownProfileEntity == Entity.Null ||
+                    !CooldownOutlookLookup.HasBuffer(CooldownProfileEntity) ||
+                    !OutlookLookup.HasComponent(entity))
+                {
+                    return;
+                }
+
+                var rules = CooldownOutlookLookup[CooldownProfileEntity];
+                if (rules.Length == 0)
+                {
+                    return;
+                }
+
+                var outlook = OutlookLookup[entity];
+                var slotCount = math.min(outlook.OutlookTypes.Length, outlook.OutlookValues.Length);
+                for (int i = 0; i < slotCount; i++)
+                {
+                    var typeId = outlook.OutlookTypes[i];
+                    if (typeId == 0)
+                    {
+                        continue;
+                    }
+
+                    if (!TryGetOutlookRule(typeId, rules, out var rule))
+                    {
+                        continue;
+                    }
+
+                    var value01 = outlook.OutlookValues[i] / 100f;
+                    if (math.abs(value01) <= 1e-4f)
+                    {
+                        continue;
+                    }
+
+                    socializeWeight += rule.SocializeWeight * value01;
+                    wanderWeight += rule.WanderWeight * value01;
+                }
+            }
+
+            private static bool TryGetOutlookRule(byte outlookType, in DynamicBuffer<VillagerCooldownOutlookRule> rules,
+                out VillagerCooldownOutlookRule rule)
+            {
+                for (int i = 0; i < rules.Length; i++)
+                {
+                    if (rules[i].OutlookType == outlookType)
+                    {
+                        rule = rules[i];
+                        return true;
+                    }
+                }
+
+                rule = default;
+                return false;
             }
 
             private float ResolveDeliberationSeconds(Entity entity, float patienceScore)

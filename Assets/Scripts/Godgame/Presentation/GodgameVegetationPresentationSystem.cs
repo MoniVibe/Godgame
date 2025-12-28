@@ -1,7 +1,6 @@
 using Godgame.Environment.Vegetation;
 using Godgame.Rendering;
 using PureDOTS.Runtime.Core;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -12,7 +11,6 @@ namespace Godgame.Presentation
     /// <summary>
     /// Adds presentation components to vegetation entities so stands are visible.
     /// </summary>
-    [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateBefore(typeof(GodgamePresentationRegistryIdentitySystem))]
     public partial struct Godgame_VegetationPresentationSystem : ISystem
@@ -29,7 +27,6 @@ namespace Godgame.Presentation
             state.RequireForUpdate(_missingVegetationPresentationQuery);
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             if (!RuntimeMode.IsRenderingEnabled || _missingVegetationPresentationQuery.IsEmptyIgnoreFilter)

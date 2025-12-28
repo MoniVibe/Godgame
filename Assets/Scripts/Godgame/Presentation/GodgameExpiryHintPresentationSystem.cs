@@ -13,7 +13,7 @@ namespace Godgame.Presentation
     [BurstCompile]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(Godgame_ResourceNodePresentationSystem))]
-    [UpdateAfter(typeof(Godgame_AggregatePilePresentationSystem))]
+    [UpdateAfter(typeof(Godgame_AggregatePilePresentationEnsureSystem))]
     public partial struct Godgame_ExpiryHintPresentationSystem : ISystem
     {
         private EntityQuery _baseTintQuery;

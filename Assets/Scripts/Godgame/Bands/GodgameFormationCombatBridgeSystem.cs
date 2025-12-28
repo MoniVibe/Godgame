@@ -22,10 +22,13 @@ namespace Godgame.Bands
     [UpdateBefore(typeof(PureDOTS.Systems.Combat.FormationCombatSystem))]
     public partial struct GodgameFormationCombatBridgeSystem : ISystem
     {
+        private ComponentLookup<LocalTransform> _transformLookup;
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
+            _transformLookup = state.GetComponentLookup<LocalTransform>(true);
         }
 
         [BurstCompile]
@@ -38,8 +41,7 @@ namespace Godgame.Bands
                 .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged);
 
-            var transformLookup = SystemAPI.GetComponentLookup<LocalTransform>(true);
-            transformLookup.Update(ref state);
+            _transformLookup.Update(ref state);
 
             // Phase A: Add components and buffers via ECB
             // 1. PROJECT: Query bands with BandFormation but no FormationState
@@ -294,4 +296,3 @@ namespace Godgame.Bands
         }
     }
 }
-

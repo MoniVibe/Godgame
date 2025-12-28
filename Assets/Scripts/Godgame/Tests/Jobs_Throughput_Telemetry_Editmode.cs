@@ -1,5 +1,6 @@
 using Godgame.Villagers;
 using NUnit.Framework;
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Resource;
 using PureDOTS.Runtime.Telemetry;
@@ -33,6 +34,11 @@ namespace Godgame.Tests.Villagers
             var catalog = BuildCatalog(new[] { "wood" });
             var catalogEntity = _entityManager.CreateEntity(typeof(ResourceTypeIndex));
             _entityManager.SetComponentData(catalogEntity, new ResourceTypeIndex { Catalog = catalog });
+
+            var cooldownEntity = _entityManager.CreateEntity(typeof(VillagerCooldownProfile));
+            _entityManager.SetComponentData(cooldownEntity, VillagerCooldownProfile.Default);
+            _entityManager.AddBuffer<VillagerCooldownOutlookRule>(cooldownEntity);
+            _entityManager.AddBuffer<VillagerCooldownArchetypeModifier>(cooldownEntity);
         }
 
         [TearDown]
@@ -48,7 +54,7 @@ namespace Godgame.Tests.Villagers
         public void JobSystem_EmitsTelemetry_WhenJobsComplete()
         {
             // Create villager with job
-            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(LocalTransform), typeof(Navigation));
+            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(VillagerWorkCooldown), typeof(LocalTransform), typeof(Navigation));
             _entityManager.SetComponentData(villagerEntity, LocalTransform.FromPosition(float3.zero));
             _entityManager.SetComponentData(villagerEntity, new VillagerJobState
             {
@@ -77,7 +83,7 @@ namespace Godgame.Tests.Villagers
             // Create multiple villagers
             for (int i = 0; i < 5; i++)
             {
-                var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(LocalTransform), typeof(Navigation));
+                var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(VillagerWorkCooldown), typeof(LocalTransform), typeof(Navigation));
                 _entityManager.SetComponentData(villagerEntity, LocalTransform.FromPosition(new float3(i * 5f, 0f, 0f)));
                 _entityManager.SetComponentData(villagerEntity, new VillagerJobState
                 {

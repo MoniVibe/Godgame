@@ -160,7 +160,6 @@ namespace Godgame.Environment.Vegetation.Systems
             }
         }
 
-        [BurstCompile]
         private static int FindPlantSpecIndex(ref BlobAssetReference<PlantSpecBlob> specs, ref FixedString64Bytes plantId)
         {
             if (!specs.IsCreated)

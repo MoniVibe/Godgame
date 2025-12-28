@@ -66,7 +66,6 @@ namespace Godgame.Environment.Systems
             biomeGrid.BiomeIds = newBlob;
         }
 
-        [BurstCompile]
         internal static uint ChooseBiomeId(
             in BlobAssetReference<BiomeDefinitionBlob> definitions,
             float tempC,
@@ -155,4 +154,3 @@ namespace Godgame.Environment.Systems
         }
     }
 }
-

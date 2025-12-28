@@ -1,6 +1,7 @@
 using Godgame.Registry;
 using Godgame.Villagers;
 using NUnit.Framework;
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Resource;
 using PureDOTS.Systems;
@@ -34,6 +35,11 @@ namespace Godgame.Tests.Villagers
             _catalog = BuildCatalog(new[] { "wood" });
             var catalogEntity = _entityManager.CreateEntity(typeof(ResourceTypeIndex));
             _entityManager.SetComponentData(catalogEntity, new ResourceTypeIndex { Catalog = _catalog });
+
+            var cooldownEntity = _entityManager.CreateEntity(typeof(VillagerCooldownProfile));
+            _entityManager.SetComponentData(cooldownEntity, VillagerCooldownProfile.Default);
+            _entityManager.AddBuffer<VillagerCooldownOutlookRule>(cooldownEntity);
+            _entityManager.AddBuffer<VillagerCooldownArchetypeModifier>(cooldownEntity);
         }
 
         [TearDown]
@@ -65,7 +71,7 @@ namespace Godgame.Tests.Villagers
             });
 
             // Create villager at origin
-            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(LocalTransform), typeof(Navigation));
+            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(VillagerWorkCooldown), typeof(LocalTransform), typeof(Navigation));
             _entityManager.SetComponentData(villagerEntity, LocalTransform.FromPosition(float3.zero));
             _entityManager.SetComponentData(villagerEntity, new VillagerJobState
             {
@@ -98,7 +104,7 @@ namespace Godgame.Tests.Villagers
         public void Navigation_MovesTowardDestination()
         {
             // Create villager with navigation target
-            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(LocalTransform), typeof(Navigation));
+            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(VillagerWorkCooldown), typeof(LocalTransform), typeof(Navigation));
             var startPos = new float3(0f, 0f, 0f);
             var targetPos = new float3(10f, 0f, 0f);
             _entityManager.SetComponentData(villagerEntity, LocalTransform.FromPosition(startPos));
@@ -145,7 +151,7 @@ namespace Godgame.Tests.Villagers
             });
 
             // Create villager at node position (within gather distance)
-            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(LocalTransform), typeof(Navigation));
+            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(VillagerWorkCooldown), typeof(LocalTransform), typeof(Navigation));
             _entityManager.SetComponentData(villagerEntity, LocalTransform.FromPosition(new float3(0f, 0f, 0f)));
             _entityManager.SetComponentData(villagerEntity, new VillagerJobState
             {
@@ -177,7 +183,7 @@ namespace Godgame.Tests.Villagers
             _entityManager.AddBuffer<StorehouseCapacityElement>(storehouseEntity);
 
             // Create villager at storehouse position with resources
-            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(LocalTransform), typeof(Navigation));
+            var villagerEntity = _entityManager.CreateEntity(typeof(VillagerJobState), typeof(VillagerWorkCooldown), typeof(LocalTransform), typeof(Navigation));
             _entityManager.SetComponentData(villagerEntity, LocalTransform.FromPosition(new float3(0f, 0f, 0f)));
             _entityManager.SetComponentData(villagerEntity, new VillagerJobState
             {

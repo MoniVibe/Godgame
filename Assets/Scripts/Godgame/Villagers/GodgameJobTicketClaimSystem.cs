@@ -25,6 +25,7 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerGoalState> _goalLookup;
         private ComponentLookup<LocalTransform> _transformLookup;
         private ComponentLookup<VillagerWorkRole> _roleLookup;
+        private ComponentLookup<VillagerWorkCooldown> _cooldownLookup;
         private ComponentLookup<GodgameResourceNodeMirror> _nodeLookup;
         private ComponentLookup<AggregatePile> _pileLookup;
         private BufferLookup<JobTicketGroupMember> _groupLookup;
@@ -44,6 +45,7 @@ namespace Godgame.Villagers
             _goalLookup = state.GetComponentLookup<VillagerGoalState>(true);
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
             _roleLookup = state.GetComponentLookup<VillagerWorkRole>(true);
+            _cooldownLookup = state.GetComponentLookup<VillagerWorkCooldown>(true);
             _nodeLookup = state.GetComponentLookup<GodgameResourceNodeMirror>(true);
             _pileLookup = state.GetComponentLookup<AggregatePile>(true);
             _groupLookup = state.GetBufferLookup<JobTicketGroupMember>();
@@ -76,6 +78,7 @@ namespace Godgame.Villagers
             _goalLookup.Update(ref state);
             _transformLookup.Update(ref state);
             _roleLookup.Update(ref state);
+            _cooldownLookup.Update(ref state);
             _nodeLookup.Update(ref state);
             _pileLookup.Update(ref state);
             _groupLookup.Update(ref state);
@@ -87,7 +90,10 @@ namespace Godgame.Villagers
             }
 
             var tuning = SystemAPI.GetSingleton<GodgameJobTicketTuning>();
-            var ttlTicks = ResolveClaimTTL(timeState, tuning);
+            var movementTuning = SystemAPI.TryGetSingleton<VillagerMovementTuning>(out var movementTuningValue)
+                ? movementTuningValue
+                : VillagerMovementTuning.Default;
+            var expectedSpeed = ResolveExpectedMoveSpeed(movementTuning);
 
             foreach (var ticketEntity in _ticketQuery.ToEntityArray(state.WorldUpdateAllocator))
             {
@@ -145,6 +151,11 @@ namespace Godgame.Villagers
                         continue;
                     }
 
+                    if (_cooldownLookup.HasComponent(villager) && _cooldownLookup[villager].EndTick > timeState.Tick)
+                    {
+                        continue;
+                    }
+
                     var roleKind = _roleLookup.HasComponent(villager) ? _roleLookup[villager].Value : VillagerWorkRoleKind.None;
                     if (ticket.IsSingleItem == 0 && isPile)
                     {
@@ -189,6 +200,7 @@ namespace Godgame.Villagers
 
                 ticket.State = JobTicketState.Claimed;
                 ticket.Assignee = winner;
+                var ttlTicks = ResolveClaimTTLTicks(timeState, tuning, bestDistanceSq, expectedSpeed);
                 ticket.ClaimExpiresTick = timeState.Tick + ttlTicks;
                 ticket.LastStateTick = timeState.Tick;
                 _ticketLookup[ticketEntity] = ticket;
@@ -273,9 +285,20 @@ namespace Godgame.Villagers
             return false;
         }
 
-        private static uint ResolveClaimTTL(in TimeState timeState, in GodgameJobTicketTuning tuning)
+        private static float ResolveExpectedMoveSpeed(in VillagerMovementTuning movementTuning)
         {
-            var ttlSeconds = tuning.ClaimTTLSeconds > 0f ? tuning.ClaimTTLSeconds : 6f;
+            var baseSpeed = VillagerJobSystem.StepJob.DefaultMoveSpeed;
+            var baseMultiplier = math.max(0.05f, movementTuning.BaseMoveSpeedMultiplier);
+            var walkMultiplier = math.max(0.05f, movementTuning.WalkSpeedMultiplier);
+            return math.max(0.05f, baseSpeed * baseMultiplier * walkMultiplier);
+        }
+
+        private static uint ResolveClaimTTLTicks(in TimeState timeState, in GodgameJobTicketTuning tuning, float distanceSq, float expectedSpeed)
+        {
+            var baseTtlSeconds = tuning.ClaimTTLSeconds > 0f ? tuning.ClaimTTLSeconds : 6f;
+            var clampedSpeed = math.max(0.05f, expectedSpeed);
+            var travelSeconds = math.sqrt(math.max(0f, distanceSq)) / clampedSpeed;
+            var ttlSeconds = math.max(baseTtlSeconds, travelSeconds * 1.3f + 2f);
             var secondsPerTick = math.max(timeState.FixedDeltaTime, 1e-4f);
             return (uint)math.max(1f, math.ceil(ttlSeconds / secondsPerTick));
         }

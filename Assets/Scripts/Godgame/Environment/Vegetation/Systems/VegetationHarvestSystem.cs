@@ -41,7 +41,6 @@ namespace Godgame.Environment.Vegetation.Systems
         /// <summary>
         /// Calculates harvest yields for a plant based on its spec and current state.
         /// </summary>
-        [BurstCompile]
         public static void CalculateHarvestYields(
             ref PlantSpec plantSpec,
             ref PlantState plantState,

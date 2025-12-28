@@ -1,4 +1,3 @@
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -9,7 +8,6 @@ namespace Godgame.Environment.Systems
     /// Helper utilities for biome-based resource seeding.
     /// Provides methods to get resource bias weights from current biome.
     /// </summary>
-    [BurstCompile]
     public static class BiomeResourceSeedingHelper
     {
         /// <summary>
@@ -19,7 +17,6 @@ namespace Godgame.Environment.Systems
         /// <param name="biomeGrid">Current biome grid</param>
         /// <param name="resourceTypeIndex">Resource type index (1=Wood, 2=Ore, etc.)</param>
         /// <returns>Bias weight (0-1000), or 500 if biome not found (neutral)</returns>
-        [BurstCompile]
         public static ushort GetResourceBias(
             in BiomeDefinitionSingleton biomeDefs,
             in BiomeGrid biomeGrid,
@@ -68,7 +65,6 @@ namespace Godgame.Environment.Systems
         /// <param name="bias">Resource bias weight (0-1000)</param>
         /// <param name="baseProbability">Base spawn probability (0-1)</param>
         /// <returns>Adjusted probability (0-1)</returns>
-        [BurstCompile]
         public static float CalculateSpawnProbability(ushort bias, float baseProbability)
         {
             // Convert bias (0-1000) to multiplier (0.0-2.0)
@@ -78,4 +74,3 @@ namespace Godgame.Environment.Systems
         }
     }
 }
-

@@ -93,7 +93,6 @@ namespace Godgame.Villagers
         /// <summary>
         /// Calculate utility for a specific need type.
         /// </summary>
-        [BurstCompile]
         public static float CalculateNeedUtility(
             float needValue,
             float threshold,
@@ -111,7 +110,6 @@ namespace Godgame.Villagers
         /// <summary>
         /// Calculate utility for a specific job type based on outlook and alignment.
         /// </summary>
-        [BurstCompile]
         public static float CalculateJobUtility(
             in VillagerOutlook outlook,
             in VillagerAlignment alignment,
@@ -142,7 +140,6 @@ namespace Godgame.Villagers
         /// <summary>
         /// Weighted decision table for autonomous villager actions.
         /// </summary>
-        [BurstCompile]
         public static byte SelectAutonomousAction(
             in VillagerPersonality personality,
             in VillagerAlignment alignment,
@@ -216,4 +213,3 @@ namespace Godgame.Villagers
         }
     }
 }
-

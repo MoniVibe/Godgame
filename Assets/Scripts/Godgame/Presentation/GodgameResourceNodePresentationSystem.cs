@@ -4,6 +4,7 @@ using Godgame.Resources;
 using Godgame.Scenario;
 using PureDOTS.Rendering;
 using PureDOTS.Runtime.Core;
+using PureDOTS.Systems;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -15,7 +16,7 @@ namespace Godgame.Presentation
     /// Adds presentation components to resource nodes so villagers have visible destinations.
     /// </summary>
     [BurstCompile]
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(StructuralChangePresentationSystemGroup))]
     public partial struct Godgame_ResourceNodePresentationSystem : ISystem
     {
         private EntityQuery _nodeQuery;
@@ -53,7 +54,8 @@ namespace Godgame.Presentation
                     DistanceToCamera = 0f
                 });
 
-                GodgamePresentationUtility.AssignRenderComponents(ref ecb, entity, GodgameSemanticKeys.ResourceNode, default);
+                ushort semanticKey = ResolveSemanticKey(node.ValueRO.ResourceTypeIndex);
+                GodgamePresentationUtility.AssignRenderComponents(ref ecb, entity, semanticKey, default);
 
                 var tint = GodgamePresentationColors.ForResourceTypeIndex(node.ValueRO.ResourceTypeIndex);
                 ecb.SetComponent(entity, new RenderTint { Value = tint });
@@ -77,7 +79,8 @@ namespace Godgame.Presentation
                     DistanceToCamera = 0f
                 });
 
-                GodgamePresentationUtility.AssignRenderComponents(ref ecbSecondary, entity, GodgameSemanticKeys.ResourceNode, default);
+                ushort semanticKey = ResolveSemanticKey(config.ValueRO.ResourceTypeId);
+                GodgamePresentationUtility.AssignRenderComponents(ref ecbSecondary, entity, semanticKey, default);
 
                 var tint = GodgamePresentationColors.ForResourceId(config.ValueRO.ResourceTypeId);
                 ecbSecondary.SetComponent(entity, new RenderTint { Value = tint });
@@ -88,5 +91,54 @@ namespace Godgame.Presentation
         }
 
         public void OnDestroy(ref SystemState state) { }
+
+        private static ushort ResolveSemanticKey(ushort resourceTypeIndex)
+        {
+            return IsWoodType(resourceTypeIndex)
+                ? GodgameSemanticKeys.Vegetation
+                : GodgameSemanticKeys.ResourceNode;
+        }
+
+        private static ushort ResolveSemanticKey(in FixedString64Bytes resourceId)
+        {
+            return IsWoodId(resourceId)
+                ? GodgameSemanticKeys.Vegetation
+                : GodgameSemanticKeys.ResourceNode;
+        }
+
+        private static bool IsWoodType(ushort resourceTypeIndex)
+        {
+            return resourceTypeIndex >= 10 && resourceTypeIndex <= 14;
+        }
+
+        private static bool IsWoodId(in FixedString64Bytes resourceId)
+        {
+            return resourceId.Equals(WoodId) || resourceId.Equals(TimberId);
+        }
+
+        private static readonly FixedString64Bytes WoodId = CreateId('w', 'o', 'o', 'd');
+        private static readonly FixedString64Bytes TimberId = CreateId('t', 'i', 'm', 'b', 'e', 'r');
+
+        private static FixedString64Bytes CreateId(char c0, char c1, char c2, char c3)
+        {
+            var id = new FixedString64Bytes();
+            id.Append(c0);
+            id.Append(c1);
+            id.Append(c2);
+            id.Append(c3);
+            return id;
+        }
+
+        private static FixedString64Bytes CreateId(char c0, char c1, char c2, char c3, char c4, char c5)
+        {
+            var id = new FixedString64Bytes();
+            id.Append(c0);
+            id.Append(c1);
+            id.Append(c2);
+            id.Append(c3);
+            id.Append(c4);
+            id.Append(c5);
+            return id;
+        }
     }
 }

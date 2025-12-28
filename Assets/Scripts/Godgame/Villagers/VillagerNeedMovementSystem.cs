@@ -1,6 +1,7 @@
 using Godgame.Scenario;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Villagers;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -19,6 +20,13 @@ namespace Godgame.Villagers
     {
         private ComponentLookup<LocalTransform> _transformLookup;
         private ComponentLookup<VillagerSocialFocus> _socialFocusLookup;
+        private ComponentLookup<VillagerWorkCooldown> _cooldownLookup;
+        private ComponentLookup<VillagerOutlook> _outlookLookup;
+        private ComponentLookup<VillagerArchetypeResolved> _archetypeLookup;
+        private ComponentLookup<VillagerBehavior> _behaviorLookup;
+        private ComponentLookup<VillagerLeisureState> _leisureLookup;
+        private BufferLookup<VillagerCooldownOutlookRule> _cooldownOutlookLookup;
+        private BufferLookup<VillagerCooldownArchetypeModifier> _cooldownArchetypeLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -29,6 +37,13 @@ namespace Godgame.Villagers
             state.RequireForUpdate<VillagerNeedMovementState>();
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
             _socialFocusLookup = state.GetComponentLookup<VillagerSocialFocus>(true);
+            _cooldownLookup = state.GetComponentLookup<VillagerWorkCooldown>(true);
+            _outlookLookup = state.GetComponentLookup<VillagerOutlook>(true);
+            _archetypeLookup = state.GetComponentLookup<VillagerArchetypeResolved>(true);
+            _behaviorLookup = state.GetComponentLookup<VillagerBehavior>(true);
+            _leisureLookup = state.GetComponentLookup<VillagerLeisureState>(true);
+            _cooldownOutlookLookup = state.GetBufferLookup<VillagerCooldownOutlookRule>(true);
+            _cooldownArchetypeLookup = state.GetBufferLookup<VillagerCooldownArchetypeModifier>(true);
         }
 
         [BurstCompile]
@@ -46,10 +61,21 @@ namespace Godgame.Villagers
 
             _transformLookup.Update(ref state);
             _socialFocusLookup.Update(ref state);
+            _cooldownLookup.Update(ref state);
+            _outlookLookup.Update(ref state);
+            _archetypeLookup.Update(ref state);
+            _behaviorLookup.Update(ref state);
+            _leisureLookup.Update(ref state);
+            _cooldownOutlookLookup.Update(ref state);
+            _cooldownArchetypeLookup.Update(ref state);
+            var tick = timeState.Tick;
             var schedule = SystemAPI.GetSingleton<VillagerScheduleConfig>();
             var movementTuning = SystemAPI.TryGetSingleton<VillagerMovementTuning>(out var tuningValue)
                 ? tuningValue
                 : VillagerMovementTuning.Default;
+            var cooldownProfile = SystemAPI.TryGetSingleton<VillagerCooldownProfile>(out var cooldownValue)
+                ? cooldownValue
+                : VillagerCooldownProfile.Default;
             var moveSpeedBase = math.max(0.1f, schedule.NeedMoveSpeed);
             var wanderRadius = math.max(0f, schedule.NeedWanderRadius);
             var socialRadius = math.max(wanderRadius, schedule.NeedSocialRadius);
@@ -57,6 +83,14 @@ namespace Godgame.Villagers
             var lingerMax = math.max(lingerMin, schedule.NeedLingerMaxSeconds);
             var repathMin = math.max(0f, schedule.NeedRepathMinSeconds);
             var repathMax = math.max(repathMin, schedule.NeedRepathMaxSeconds);
+            var leisureMoveSpeedMultiplier = math.max(0f, cooldownProfile.LeisureMoveSpeedMultiplier);
+            var leisureWanderMultiplier = math.max(0f, cooldownProfile.LeisureWanderRadiusMultiplier);
+            var leisureSocialMultiplier = math.max(0f, cooldownProfile.LeisureSocialRadiusMultiplier);
+            var leisureLingerMinMultiplier = math.max(0f, cooldownProfile.LeisureLingerMinMultiplier);
+            var leisureLingerMaxMultiplier = math.max(0f, cooldownProfile.LeisureLingerMaxMultiplier);
+            var leisureRepathMinMultiplier = math.max(0f, cooldownProfile.LeisureRepathMinMultiplier);
+            var leisureRepathMaxMultiplier = math.max(0f, cooldownProfile.LeisureRepathMaxMultiplier);
+            var baseCrowdingNeighborCap = math.max(0f, cooldownProfile.LeisureCrowdingNeighborCap);
             var baseMoveMultiplier = math.max(0.1f, movementTuning.BaseMoveSpeedMultiplier);
             var varianceAmplitude = math.max(0f, movementTuning.SpeedVarianceAmplitude);
             var variancePeriod = math.max(0f, movementTuning.SpeedVariancePeriodSeconds);
@@ -66,9 +100,19 @@ namespace Godgame.Villagers
             var separationCellSize = math.max(0.1f, movementTuning.SeparationCellSize);
             var arriveSlowdownRadius = math.max(0f, movementTuning.ArriveSlowdownRadius);
             var arriveMinMultiplier = math.clamp(movementTuning.ArriveMinSpeedMultiplier, 0.1f, 1f);
+            var accelMultiplier = math.max(0.1f, movementTuning.AccelerationMultiplier);
+            var decelMultiplier = math.max(0.1f, movementTuning.DecelerationMultiplier);
+            var turnBlendSpeed = math.max(0.1f, movementTuning.TurnBlendSpeed);
 
             var hasSettlement = TryGetSettlementRuntime(ref state, out var runtime);
             var deltaTime = SystemAPI.Time.DeltaTime;
+            var cooldownProfileEntity = SystemAPI.HasSingleton<VillagerCooldownProfile>()
+                ? SystemAPI.GetSingletonEntity<VillagerCooldownProfile>()
+                : Entity.Null;
+            var hasOutlookRules = cooldownProfileEntity != Entity.Null && _cooldownOutlookLookup.HasBuffer(cooldownProfileEntity);
+            var hasArchetypeRules = cooldownProfileEntity != Entity.Null && _cooldownArchetypeLookup.HasBuffer(cooldownProfileEntity);
+            var outlookRules = hasOutlookRules ? _cooldownOutlookLookup[cooldownProfileEntity] : default;
+            var archetypeRules = hasArchetypeRules ? _cooldownArchetypeLookup[cooldownProfileEntity] : default;
 
             var villagerQuery = SystemAPI.QueryBuilder()
                 .WithAll<VillagerGoalState, LocalTransform>()
@@ -79,11 +123,13 @@ namespace Godgame.Villagers
             var separationMap = new NativeParallelMultiHashMap<int, int>(math.max(1, villagerEntities.Length * 2), Allocator.Temp);
             BuildSeparationMap(villagerTransforms, separationCellSize, separationMap);
 
-            foreach (var (goal, behavior, nav, transform, movementState, moveIntent, movePlan, entity) in SystemAPI
-                         .Query<RefRO<VillagerGoalState>, RefRO<VillagerBehavior>, RefRW<Navigation>, RefRW<LocalTransform>, RefRW<VillagerNeedMovementState>, RefRW<MoveIntent>, RefRW<MovePlan>>()
+            foreach (var (goal, nav, transform, movementState, moveIntent, movePlan, crowding, entity) in SystemAPI
+                         .Query<RefRO<VillagerGoalState>, RefRW<Navigation>, RefRW<LocalTransform>, RefRW<VillagerNeedMovementState>, RefRW<MoveIntent>, RefRW<MovePlan>, RefRW<VillagerCrowdingState>>()
+                         .WithAll<VillagerBehavior, VillagerLeisureState>()
                          .WithNone<HandHeldTag, Godgame.Runtime.HandQueuedTag>()
                          .WithEntityAccess())
             {
+                var behavior = _behaviorLookup[entity];
                 var currentGoal = goal.ValueRO.CurrentGoal;
                 if (currentGoal == VillagerGoal.Work)
                 {
@@ -93,10 +139,47 @@ namespace Godgame.Villagers
                 if (movementState.ValueRW.LingerSeconds > 0f)
                 {
                     movementState.ValueRW.LingerSeconds = math.max(0f, movementState.ValueRW.LingerSeconds - deltaTime);
+                    nav.ValueRW.Velocity = float3.zero;
+                    movePlan.ValueRW = new MovePlan
+                    {
+                        Mode = MovePlanMode.Arrive,
+                        DesiredVelocity = float3.zero,
+                        MaxAccel = 0f,
+                        EtaSeconds = 0f
+                    };
                     continue;
                 }
 
-                float3 targetPosition;
+                var isLeisure = false;
+                if (_cooldownLookup.HasComponent(entity))
+                {
+                    var cooldown = _cooldownLookup[entity];
+                    isLeisure = cooldown.EndTick > timeState.Tick &&
+                                (currentGoal == VillagerGoal.Idle || currentGoal == VillagerGoal.Socialize);
+                }
+
+                var activeMoveSpeedBase = moveSpeedBase;
+                var activeWanderRadius = wanderRadius;
+                var activeSocialRadius = socialRadius;
+                var activeLingerMin = lingerMin;
+                var activeLingerMax = lingerMax;
+                var activeRepathMin = repathMin;
+                var activeRepathMax = repathMax;
+
+                if (isLeisure)
+                {
+                    activeMoveSpeedBase *= leisureMoveSpeedMultiplier;
+                    activeWanderRadius *= leisureWanderMultiplier;
+                    activeSocialRadius *= leisureSocialMultiplier;
+                    activeLingerMin *= leisureLingerMinMultiplier;
+                    activeLingerMax *= leisureLingerMaxMultiplier;
+                    activeRepathMin *= leisureRepathMinMultiplier;
+                    activeRepathMax *= leisureRepathMaxMultiplier;
+                }
+
+                activeSocialRadius = math.max(activeSocialRadius, activeWanderRadius);
+
+                var targetPosition = transform.ValueRO.Position;
                 Entity targetEntity = Entity.Null;
                 if (currentGoal == VillagerGoal.Flee)
                 {
@@ -105,20 +188,44 @@ namespace Godgame.Villagers
                     movementState.ValueRW.AnchorOffset = float3.zero;
                     movementState.ValueRW.NextRepathTick = timeState.Tick;
                 }
-                else if (!TryResolveNeedTarget(ref state, currentGoal, hasSettlement, runtime, transform.ValueRO.Position, entity, out targetEntity, out targetPosition))
+                else
                 {
-                    continue;
+                    var resolvedTarget = false;
+                    if (isLeisure && currentGoal == VillagerGoal.Idle && _leisureLookup.HasComponent(entity))
+                    {
+                        var leisure = _leisureLookup[entity];
+                        targetEntity = leisure.ActionTarget;
+                        resolvedTarget = TryGetTargetPosition(targetEntity, ref state, out targetPosition);
+                        if (!resolvedTarget)
+                        {
+                            targetEntity = Entity.Null;
+                        }
+                    }
+
+                    if (!resolvedTarget && !TryResolveNeedTarget(ref state, currentGoal, hasSettlement, runtime, transform.ValueRO.Position,
+                            entity, out targetEntity, out targetPosition))
+                    {
+                        nav.ValueRW.Velocity = float3.zero;
+                        movePlan.ValueRW = new MovePlan
+                        {
+                            Mode = MovePlanMode.Arrive,
+                            DesiredVelocity = float3.zero,
+                            MaxAccel = 0f,
+                            EtaSeconds = 0f
+                        };
+                        continue;
+                    }
                 }
 
-                var patience01 = math.saturate((behavior.ValueRO.PatienceScore + 100f) * 0.005f);
+                var patience01 = math.saturate((behavior.PatienceScore + 100f) * 0.005f);
                 var arrivalDistance = 0.6f;
-                var radius = currentGoal == VillagerGoal.Socialize ? socialRadius : wanderRadius;
+                var radius = currentGoal == VillagerGoal.Socialize ? activeSocialRadius : activeWanderRadius;
                 if (currentGoal != VillagerGoal.Flee
                     && (timeState.Tick >= movementState.ValueRO.NextRepathTick
                         || math.lengthsq(movementState.ValueRO.AnchorOffset) <= 1e-4f))
                 {
                     movementState.ValueRW.AnchorOffset = BuildWanderOffset(entity, timeState.Tick, radius);
-                    movementState.ValueRW.NextRepathTick = timeState.Tick + ResolveRepathTicks(repathMin, repathMax, patience01, timeState.FixedDeltaTime, entity);
+                    movementState.ValueRW.NextRepathTick = timeState.Tick + ResolveRepathTicks(activeRepathMin, activeRepathMax, patience01, timeState.FixedDeltaTime, entity);
                 }
 
                 var destination = targetPosition + movementState.ValueRO.AnchorOffset;
@@ -139,7 +246,7 @@ namespace Godgame.Villagers
                 };
 
                 var speedScale = math.lerp(1.15f, 0.65f, patience01);
-                var moveSpeed = math.max(0.05f, moveSpeedBase * speedScale * baseMoveMultiplier);
+                var moveSpeed = math.max(0.05f, activeMoveSpeedBase * speedScale * baseMoveMultiplier);
                 moveSpeed = ApplySpeedVariance(entity, moveSpeed, timeState.WorldSeconds, varianceAmplitude, variancePeriod);
                 nav.ValueRW.Speed = moveSpeed;
 
@@ -150,31 +257,57 @@ namespace Godgame.Villagers
                 {
                     if (currentGoal != VillagerGoal.Flee)
                     {
-                        movementState.ValueRW.LingerSeconds = ResolveLingerSeconds(lingerMin, lingerMax, patience01, currentGoal, entity);
+                        movementState.ValueRW.LingerSeconds = ResolveLingerSeconds(activeLingerMin, activeLingerMax, patience01, currentGoal, entity);
                     }
+                    nav.ValueRW.Velocity = float3.zero;
                     movePlan.ValueRW = new MovePlan
                     {
                         Mode = MovePlanMode.Arrive,
                         DesiredVelocity = float3.zero,
-                        MaxAccel = moveSpeed / math.max(DeltaTimeEpsilon, deltaTime),
+                        MaxAccel = 0f,
                         EtaSeconds = 0f
                     };
                     continue;
                 }
 
-                var move = math.min(distance, moveSpeed * deltaTime);
                 var dir = toTarget / math.max(distance, 1e-4f);
                 var separation = ResolveSeparation(entity, transform.ValueRO.Position, villagerEntities, villagerTransforms,
-                    separationMap, separationCellSize, separationRadius, separationWeight, separationMaxPush);
+                    separationMap, separationCellSize, separationRadius, separationWeight, separationMaxPush, out var neighborCount);
+                var crowdingNeighborCap = baseCrowdingNeighborCap
+                                          * ResolveOutlookCrowdingNeighborCapScale(entity, hasOutlookRules, outlookRules, _outlookLookup)
+                                          * ResolveArchetypeCrowdingNeighborCapScale(entity, hasArchetypeRules, archetypeRules, _archetypeLookup);
+                crowding.ValueRW.Pressure = ResolveCrowdingPressure(neighborCount, crowdingNeighborCap);
+                crowding.ValueRW.LastSampleTick = tick;
                 dir = math.normalizesafe(dir + separation);
+                var currentVelocity = nav.ValueRO.Velocity;
+                currentVelocity.y = 0f;
+                if (math.lengthsq(currentVelocity) > 1e-4f)
+                {
+                    var currentDir = math.normalizesafe(currentVelocity);
+                    var turnLerp = math.saturate(deltaTime * turnBlendSpeed);
+                    dir = math.normalizesafe(math.lerp(currentDir, dir, turnLerp), dir);
+                }
                 var arriveSpeed = ApplyArriveSlowdown(moveSpeed, distance, arriveSlowdownRadius, arriveMinMultiplier);
-                move = math.min(distance, arriveSpeed * deltaTime);
-                transform.ValueRW.Position += dir * move;
+                var desiredVelocity = dir * arriveSpeed;
+                var currentSpeed = math.length(currentVelocity);
+                var acceleration = math.max(0.1f, moveSpeed * accelMultiplier);
+                var deceleration = math.max(0.1f, moveSpeed * decelMultiplier);
+                var accelLimit = math.length(desiredVelocity) > currentSpeed ? acceleration : deceleration;
+                var maxDelta = accelLimit * deltaTime;
+                var deltaV = desiredVelocity - currentVelocity;
+                var deltaSq = math.lengthsq(deltaV);
+                if (maxDelta > 0f && deltaSq > maxDelta * maxDelta)
+                {
+                    deltaV = math.normalizesafe(deltaV) * maxDelta;
+                }
+                currentVelocity += deltaV;
+                nav.ValueRW.Velocity = currentVelocity;
+                transform.ValueRW.Position += currentVelocity * deltaTime;
                 movePlan.ValueRW = new MovePlan
                 {
                     Mode = MovePlanMode.Approach,
-                    DesiredVelocity = dir * arriveSpeed,
-                    MaxAccel = moveSpeed / math.max(DeltaTimeEpsilon, deltaTime),
+                    DesiredVelocity = desiredVelocity,
+                    MaxAccel = accelLimit,
                     EtaSeconds = arriveSpeed > 0f ? distance / arriveSpeed : 0f
                 };
             }
@@ -284,8 +417,9 @@ namespace Godgame.Villagers
         }
 
         private static float3 ResolveSeparation(Entity self, float3 position, NativeArray<Entity> entities, NativeArray<LocalTransform> transforms,
-            NativeParallelMultiHashMap<int, int> map, float cellSize, float radius, float weight, float maxPush)
+            NativeParallelMultiHashMap<int, int> map, float cellSize, float radius, float weight, float maxPush, out int neighborCount)
         {
+            neighborCount = 0;
             if (radius <= 0f || weight <= 0f || entities.Length == 0)
             {
                 return float3.zero;
@@ -325,6 +459,7 @@ namespace Godgame.Villagers
                         var dist = math.sqrt(distSq);
                         var push = (radius - dist) / radius;
                         separation += diff / math.max(dist, 1e-4f) * push;
+                        neighborCount++;
                     } while (map.TryGetNextValue(out index, ref iterator));
                 }
             }
@@ -337,6 +472,98 @@ namespace Godgame.Villagers
 
             var scaled = math.min(maxPush, magnitude * weight);
             return separation / magnitude * scaled;
+        }
+
+        private static float ResolveCrowdingPressure(int neighborCount, float neighborCap)
+        {
+            if (neighborCap <= 0f || neighborCount <= 0)
+            {
+                return 0f;
+            }
+
+            return math.saturate(neighborCount / math.max(1f, neighborCap));
+        }
+
+        private static float ResolveOutlookCrowdingNeighborCapScale(Entity entity, bool hasRules,
+            DynamicBuffer<VillagerCooldownOutlookRule> rules, ComponentLookup<VillagerOutlook> outlookLookup)
+        {
+            if (!hasRules || !outlookLookup.HasComponent(entity))
+            {
+                return 1f;
+            }
+
+            var outlook = outlookLookup[entity];
+            var slotCount = math.min(outlook.OutlookTypes.Length, outlook.OutlookValues.Length);
+            var scale = 1f;
+            for (var i = 0; i < slotCount; i++)
+            {
+                var typeId = outlook.OutlookTypes[i];
+                if (!TryGetOutlookRule(typeId, rules, out var rule))
+                {
+                    continue;
+                }
+
+                var value01 = math.abs(outlook.OutlookValues[i]) / 100f;
+                var target = rule.CrowdingNeighborCapScale <= 0f ? 1f : rule.CrowdingNeighborCapScale;
+                scale *= math.lerp(1f, target, value01);
+            }
+
+            return math.max(0.1f, scale);
+        }
+
+        private static float ResolveArchetypeCrowdingNeighborCapScale(Entity entity, bool hasRules,
+            DynamicBuffer<VillagerCooldownArchetypeModifier> modifiers, ComponentLookup<VillagerArchetypeResolved> archetypeLookup)
+        {
+            if (!hasRules || !archetypeLookup.HasComponent(entity))
+            {
+                return 1f;
+            }
+
+            var data = archetypeLookup[entity].Data;
+            var archetypeName = data.ArchetypeName;
+            if (archetypeName.IsEmpty)
+            {
+                return 1f;
+            }
+
+            if (!TryGetArchetypeModifier(archetypeName, modifiers, out var modifier))
+            {
+                return 1f;
+            }
+
+            return modifier.CrowdingNeighborCapScale <= 0f ? 1f : modifier.CrowdingNeighborCapScale;
+        }
+
+        private static bool TryGetOutlookRule(byte outlookType, in DynamicBuffer<VillagerCooldownOutlookRule> rules,
+            out VillagerCooldownOutlookRule rule)
+        {
+            for (var i = 0; i < rules.Length; i++)
+            {
+                if (rules[i].OutlookType == outlookType)
+                {
+                    rule = rules[i];
+                    return true;
+                }
+            }
+
+            rule = default;
+            return false;
+        }
+
+        private static bool TryGetArchetypeModifier(in FixedString64Bytes archetypeName,
+            in DynamicBuffer<VillagerCooldownArchetypeModifier> modifiers, out VillagerCooldownArchetypeModifier modifier)
+        {
+            for (var i = 0; i < modifiers.Length; i++)
+            {
+                if (modifiers[i].ArchetypeName.Equals(archetypeName))
+                {
+                    modifier = modifiers[i];
+                    return true;
+                }
+            }
+
+            modifier = default;
+            return false;
         }
 
         private static int HashCell(float3 position, float cellSize)
@@ -369,8 +596,10 @@ namespace Godgame.Villagers
                 switch (goal)
                 {
                     case VillagerGoal.Idle:
-                        targetEntity = runtime.VillageCenterInstance;
-                        return TryGetTargetPosition(runtime.VillageCenterInstance, ref state, out targetPosition)
+                        targetEntity = runtime.VillageCenterInstance != Entity.Null
+                            ? runtime.VillageCenterInstance
+                            : runtime.StorehouseInstance;
+                        return TryGetTargetPosition(targetEntity, ref state, out targetPosition)
                                || UseFallbackAnchor(origin, out targetPosition);
                     case VillagerGoal.Eat:
                         targetEntity = runtime.StorehouseInstance;
@@ -393,8 +622,11 @@ namespace Godgame.Villagers
                             }
                         }
 
-                        targetEntity = runtime.VillageCenterInstance;
-                        return TryGetTargetPosition(runtime.VillageCenterInstance, ref state, out targetPosition);
+                        targetEntity = runtime.VillageCenterInstance != Entity.Null
+                            ? runtime.VillageCenterInstance
+                            : runtime.StorehouseInstance;
+                        return TryGetTargetPosition(targetEntity, ref state, out targetPosition)
+                               || UseFallbackAnchor(origin, out targetPosition);
                 }
             }
 
@@ -405,8 +637,6 @@ namespace Godgame.Villagers
 
             return false;
         }
-
-        private const float DeltaTimeEpsilon = 0.0001f;
 
         private static bool UseFallbackAnchor(float3 origin, out float3 targetPosition)
         {

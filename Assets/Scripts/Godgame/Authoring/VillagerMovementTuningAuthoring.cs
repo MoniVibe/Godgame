@@ -37,6 +37,11 @@ namespace Godgame.Authoring
         [Range(0f, 8f)] public float arriveSlowdownRadius = 2.4f;
         [Range(0.1f, 1f)] public float arriveMinSpeedMultiplier = 0.35f;
 
+        [Header("Kinematics")]
+        [Range(0.5f, 12f)] public float accelerationMultiplier = 4f;
+        [Range(0.5f, 12f)] public float decelerationMultiplier = 6f;
+        [Range(1f, 20f)] public float turnBlendSpeed = 8f;
+
         [Header("Separation")]
         [Range(0f, 4f)] public float separationRadius = 1.2f;
         [Range(0f, 2f)] public float separationWeight = 0.65f;
@@ -63,6 +68,9 @@ namespace Godgame.Authoring
                     SpeedVariancePeriodSeconds = Mathf.Max(0f, authoring.speedVariancePeriodSeconds),
                     ArriveSlowdownRadius = Mathf.Max(0f, authoring.arriveSlowdownRadius),
                     ArriveMinSpeedMultiplier = Mathf.Clamp(authoring.arriveMinSpeedMultiplier, 0.1f, 1f),
+                    AccelerationMultiplier = Mathf.Max(0.1f, authoring.accelerationMultiplier),
+                    DecelerationMultiplier = Mathf.Max(0.1f, authoring.decelerationMultiplier),
+                    TurnBlendSpeed = Mathf.Max(0.1f, authoring.turnBlendSpeed),
                     SeparationRadius = Mathf.Max(0f, authoring.separationRadius),
                     SeparationWeight = Mathf.Max(0f, authoring.separationWeight),
                     SeparationMaxPush = Mathf.Max(0f, authoring.separationMaxPush),

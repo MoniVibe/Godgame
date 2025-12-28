@@ -53,6 +53,10 @@ namespace Godgame.Villagers
             _transformLookup.Update(ref state);
 
             var tuning = SystemAPI.GetSingleton<GodgameJobTicketTuning>();
+            var movementTuning = SystemAPI.TryGetSingleton<VillagerMovementTuning>(out var movementTuningValue)
+                ? movementTuningValue
+                : VillagerMovementTuning.Default;
+            var expectedSpeed = ResolveExpectedMoveSpeed(movementTuning);
             var maxBatchTickets = math.max(1, tuning.MaxBatchTickets);
             if (maxBatchTickets <= 1 || tuning.MaxAttachPerTick <= 0 || tuning.AttachRadius <= 0f)
             {
@@ -60,7 +64,6 @@ namespace Godgame.Villagers
             }
 
             var attachRadiusSq = tuning.AttachRadius * tuning.AttachRadius;
-            var ttlTicks = ResolveClaimTTL(timeState, tuning);
             var maxBatchWork = tuning.MaxBatchWorkUnits;
 
             var openTickets = new NativeList<OpenTicket>(Allocator.Temp);
@@ -96,10 +99,11 @@ namespace Godgame.Villagers
                 return;
             }
 
-            foreach (var (job, assignment, batch, entity) in SystemAPI
-                         .Query<RefRO<VillagerJobState>, RefRW<JobAssignment>, DynamicBuffer<JobBatchEntry>>()
+            foreach (var (job, assignment, batch, transform, entity) in SystemAPI
+                         .Query<RefRO<VillagerJobState>, RefRW<JobAssignment>, DynamicBuffer<JobBatchEntry>, RefRO<LocalTransform>>()
                          .WithEntityAccess())
             {
+                var workerPosition = transform.ValueRO.Position;
                 if (assignment.ValueRO.Ticket == Entity.Null)
                 {
                     continue;
@@ -155,6 +159,7 @@ namespace Godgame.Villagers
                     var ticket = candidate.Ticket;
                     ticket.State = JobTicketState.Claimed;
                     ticket.Assignee = entity;
+                    var ttlTicks = ResolveClaimTTLTicks(timeState, tuning, math.distancesq(workerPosition, candidate.Position), expectedSpeed);
                     ticket.ClaimExpiresTick = timeState.Tick + ttlTicks;
                     ticket.LastStateTick = timeState.Tick;
                     _ticketLookup[candidate.TicketEntity] = ticket;
@@ -292,9 +297,20 @@ namespace Godgame.Villagers
             return true;
         }
 
-        private static uint ResolveClaimTTL(in TimeState timeState, in GodgameJobTicketTuning tuning)
+        private static float ResolveExpectedMoveSpeed(in VillagerMovementTuning movementTuning)
         {
-            var ttlSeconds = tuning.ClaimTTLSeconds > 0f ? tuning.ClaimTTLSeconds : 6f;
+            var baseSpeed = VillagerJobSystem.StepJob.DefaultMoveSpeed;
+            var baseMultiplier = math.max(0.05f, movementTuning.BaseMoveSpeedMultiplier);
+            var walkMultiplier = math.max(0.05f, movementTuning.WalkSpeedMultiplier);
+            return math.max(0.05f, baseSpeed * baseMultiplier * walkMultiplier);
+        }
+
+        private static uint ResolveClaimTTLTicks(in TimeState timeState, in GodgameJobTicketTuning tuning, float distanceSq, float expectedSpeed)
+        {
+            var baseTtlSeconds = tuning.ClaimTTLSeconds > 0f ? tuning.ClaimTTLSeconds : 6f;
+            var clampedSpeed = math.max(0.05f, expectedSpeed);
+            var travelSeconds = math.sqrt(math.max(0f, distanceSq)) / clampedSpeed;
+            var ttlSeconds = math.max(baseTtlSeconds, travelSeconds * 1.3f + 2f);
             var secondsPerTick = math.max(timeState.FixedDeltaTime, 1e-4f);
             return (uint)math.max(1f, math.ceil(ttlSeconds / secondsPerTick));
         }

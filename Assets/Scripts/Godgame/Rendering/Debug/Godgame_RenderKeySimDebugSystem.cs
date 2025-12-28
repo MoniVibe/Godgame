@@ -22,17 +22,12 @@ namespace Godgame.Rendering.Debug
             int count = _renderSemanticKeyQuery.CalculateEntityCount();
             
             // Track expected entities from headless scenario vision via semantic keys.
-            var semanticQuery = state.GetEntityQuery(new Unity.Entities.EntityQueryDesc
-            {
-                All = new[] { ComponentType.ReadOnly<RenderSemanticKey>() }
-            });
-
             var villagerCount = 0;
             var villageCount = 0;
             var bandCount = 0;
-            if (!semanticQuery.IsEmptyIgnoreFilter)
+            if (!_renderSemanticKeyQuery.IsEmptyIgnoreFilter)
             {
-                using var keys = semanticQuery.ToComponentDataArray<RenderSemanticKey>(Unity.Collections.Allocator.Temp);
+                using var keys = _renderSemanticKeyQuery.ToComponentDataArray<RenderSemanticKey>(Unity.Collections.Allocator.Temp);
                 foreach (var key in keys)
                 {
                     var value = key.Value;

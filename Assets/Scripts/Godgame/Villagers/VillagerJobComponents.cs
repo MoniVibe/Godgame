@@ -68,5 +68,6 @@ namespace Godgame.Villagers
     {
         public float3 Destination;
         public float Speed;
+        public float3 Velocity;
     }
 }

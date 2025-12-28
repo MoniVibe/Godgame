@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using Godgame.Villagers;
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Telemetry;
 using Unity.Collections;
 using Unity.Entities;
@@ -133,6 +135,7 @@ namespace Godgame.Telemetry
             var hasCapabilitySnapshots = TryGetNonEmptyBuffer<GodgameCapabilitySnapshotRecord>(telemetryEntity, entityManager, out var capabilitySnapshotBuffer);
             var hasCapabilityUsage = TryGetNonEmptyBuffer<GodgameCapabilityUsageSample>(telemetryEntity, entityManager, out var capabilityUsageBuffer);
             var hasActionFailureSamples = TryGetNonEmptyBuffer<GodgameActionFailureSample>(telemetryEntity, entityManager, out var actionFailureBuffer);
+            var hasLiveliness = TryGetNonEmptyBuffer<GodgameVillagerLivelinessRecord>(telemetryEntity, entityManager, out var livelinessBuffer);
 
             var summaryAvailable = entityManager.HasComponent<GodgameTelemetrySummary>(telemetryEntity);
             var summary = summaryAvailable ? entityManager.GetComponentData<GodgameTelemetrySummary>(telemetryEntity) : default;
@@ -141,7 +144,8 @@ namespace Godgame.Telemetry
             if (!hasDecisions && !hasActions && !hasDecisionTraces && !hasActionEffects && !hasQueues &&
                 !hasLogicAudits && !hasTicketAudits && !hasGatherAttempts && !hasGatherYields &&
                 !hasGatherFailures && !hasHaulTrips && !hasCapabilityGrants && !hasCapabilityRevokes &&
-                !hasCapabilitySnapshots && !hasCapabilityUsage && !hasActionFailureSamples && !summaryDirty)
+                !hasCapabilitySnapshots && !hasCapabilityUsage && !hasActionFailureSamples &&
+                !hasLiveliness && !summaryDirty)
             {
                 return;
             }
@@ -190,6 +194,15 @@ namespace Godgame.Telemetry
                         WriteActionEffectRecord(writer, runId, effectBuffer[i], culture);
                     }
                     effectBuffer.Clear();
+                }
+
+                if (hasLiveliness)
+                {
+                    for (int i = 0; i < livelinessBuffer.Length; i++)
+                    {
+                        WriteLivelinessRecord(writer, runId, livelinessBuffer[i]);
+                    }
+                    livelinessBuffer.Clear();
                 }
 
                 if (hasCapabilityGrants)
@@ -392,6 +405,64 @@ namespace Godgame.Telemetry
             {
                 writer.Write(",\"failureReason\":\"");
                 WriteEscapedString(writer, record.FailureReason.ToString());
+                writer.Write("\"");
+            }
+
+            var targetLabel = BuildEntityLabel(record.Target);
+            if (!string.IsNullOrEmpty(targetLabel))
+            {
+                writer.Write(",\"targetEntityId\":\"");
+                WriteEscapedString(writer, targetLabel);
+                writer.Write("\"");
+            }
+
+            writer.WriteLine("}");
+        }
+
+        private static void WriteLivelinessRecord(StreamWriter writer, string runId, in GodgameVillagerLivelinessRecord record)
+        {
+            writer.Write("{\"type\":\"aiLiveliness\",\"runId\":\"");
+            WriteEscapedString(writer, runId);
+            writer.Write("\",\"tick\":");
+            writer.Write(record.Tick);
+            writer.Write(",\"agentId\":\"");
+            WriteEscapedString(writer, record.AgentId.ToString());
+            writer.Write("\",\"event\":\"");
+            WriteEscapedString(writer, record.Event.ToString());
+            writer.Write("\"");
+
+            if (record.CooldownMode != VillagerWorkCooldownMode.None)
+            {
+                writer.Write(",\"cooldownMode\":\"");
+                WriteEscapedString(writer, record.CooldownMode.ToString());
+                writer.Write("\"");
+            }
+
+            if (record.CooldownRemainingTicks > 0)
+            {
+                writer.Write(",\"cooldownRemainingTicks\":");
+                writer.Write(record.CooldownRemainingTicks);
+            }
+
+            if (record.CooldownClearReason != VillagerCooldownClearReason.None)
+            {
+                writer.Write(",\"cooldownClearReason\":\"");
+                WriteEscapedString(writer, record.CooldownClearReason.ToString());
+                writer.Write("\"");
+            }
+
+            if (record.LeisureAction != VillagerWorkCooldownMode.None)
+            {
+                writer.Write(",\"leisureAction\":\"");
+                WriteEscapedString(writer, record.LeisureAction.ToString());
+                writer.Write("\"");
+            }
+
+            var leisureTargetLabel = BuildEntityLabel(record.LeisureTarget);
+            if (!string.IsNullOrEmpty(leisureTargetLabel))
+            {
+                writer.Write(",\"leisureTargetEntityId\":\"");
+                WriteEscapedString(writer, leisureTargetLabel);
                 writer.Write("\"");
             }
 

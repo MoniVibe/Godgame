@@ -74,7 +74,6 @@ namespace Godgame.Villagers
         /// Calculates utility score for a job based on needs and job type.
         /// Higher utility = more likely to be selected.
         /// </summary>
-        [BurstCompile]
         public static float CalculateJobUtility(
             VillagerJob.JobType jobType,
             float energyPercent,
@@ -108,4 +107,3 @@ namespace Godgame.Villagers
         }
     }
 }
-

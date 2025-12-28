@@ -26,6 +26,7 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerGoalState> _goalLookup;
         private ComponentLookup<VillagerWorkRole> _roleLookup;
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
+        private ComponentLookup<VillagerWorkCooldown> _cooldownLookup;
         private ComponentLookup<VillagerCarryCapacity> _carryLookup;
         private ComponentLookup<GodgameResourceNodeMirror> _nodeLookup;
         private ComponentLookup<AggregatePile> _pileLookup;
@@ -45,6 +46,7 @@ namespace Godgame.Villagers
             _goalLookup = state.GetComponentLookup<VillagerGoalState>(true);
             _roleLookup = state.GetComponentLookup<VillagerWorkRole>(true);
             _alignmentLookup = state.GetComponentLookup<VillagerAlignment>(true);
+            _cooldownLookup = state.GetComponentLookup<VillagerWorkCooldown>(true);
             _carryLookup = state.GetComponentLookup<VillagerCarryCapacity>(true);
             _nodeLookup = state.GetComponentLookup<GodgameResourceNodeMirror>(true);
             _pileLookup = state.GetComponentLookup<AggregatePile>(true);
@@ -71,6 +73,7 @@ namespace Godgame.Villagers
             _goalLookup.Update(ref state);
             _roleLookup.Update(ref state);
             _alignmentLookup.Update(ref state);
+            _cooldownLookup.Update(ref state);
             _carryLookup.Update(ref state);
             _nodeLookup.Update(ref state);
             _pileLookup.Update(ref state);
@@ -102,6 +105,11 @@ namespace Godgame.Villagers
                 }
 
                 if (job.ValueRO.Type != JobType.Gather || job.ValueRO.Phase != JobPhase.Idle || job.ValueRO.DecisionCooldown > 0f)
+                {
+                    continue;
+                }
+
+                if (_cooldownLookup.HasComponent(entity) && _cooldownLookup[entity].EndTick > timeState.Tick)
                 {
                     continue;
                 }

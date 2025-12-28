@@ -12,7 +12,7 @@ namespace Godgame.Debugging
         /// <summary>Currently inspected entity</summary>
         public Entity InspectedEntity;
         /// <summary>Summary text with key sim data</summary>
-        public FixedString128Bytes Summary;
+        public FixedString512Bytes Summary;
         /// <summary>Whether inspection data is valid (0/1)</summary>
         public byte IsValid;
     }
@@ -22,4 +22,3 @@ namespace Godgame.Debugging
     /// </summary>
     public struct EntityInspectionSingleton : IComponentData { }
 }
-

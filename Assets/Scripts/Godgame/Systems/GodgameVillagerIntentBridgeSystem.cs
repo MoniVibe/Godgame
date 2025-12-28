@@ -122,7 +122,6 @@ namespace Godgame.Systems
         /// <summary>
         /// Maps IntentMode to VillagerAIState.Goal.
         /// </summary>
-        [BurstCompile]
         private static VillagerAIState.Goal MapIntentToGoal(in EntityIntent intent)
         {
             return intent.Mode switch
@@ -152,7 +151,6 @@ namespace Godgame.Systems
         /// <summary>
         /// Maps VillagerAIState.Goal to VillagerAIState.State.
         /// </summary>
-        [BurstCompile]
         private static VillagerAIState.State GoalToState(VillagerAIState.Goal goal)
         {
             return goal switch
@@ -171,7 +169,6 @@ namespace Godgame.Systems
         /// <summary>
         /// Determines if intent should be cleared (goal completed or invalid).
         /// </summary>
-        [BurstCompile]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool ShouldClearIntent(in EntityIntent intent, in VillagerAIState aiState, ref EntityStorageInfoLookup entityStorageInfoLookup)
         {
@@ -192,4 +189,3 @@ namespace Godgame.Systems
         }
     }
 }
-

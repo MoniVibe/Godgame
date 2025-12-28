@@ -215,11 +215,8 @@ namespace Godgame.Resources
     {
         public void OnUpdate(ref SystemState state)
         {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-
-            foreach (var (pile, transform, entity) in SystemAPI
-                         .Query<RefRO<AggregatePile>, RefRW<LocalTransform>>()
-                         .WithEntityAccess())
+            foreach (var (pile, transform, tint) in SystemAPI
+                         .Query<RefRO<AggregatePile>, RefRW<LocalTransform>, RefRW<RenderTint>>())
             {
                 float expectedScale = pile.ValueRO.GetVisualScale();
                 if (math.abs(transform.ValueRO.Scale - expectedScale) > 0.01f)
@@ -227,19 +224,8 @@ namespace Godgame.Resources
                     transform.ValueRW.Scale = expectedScale;
                 }
 
-                var tint = GodgamePresentationColors.ForResourceTypeIndex(pile.ValueRO.ResourceTypeIndex);
-                if (state.EntityManager.HasComponent<RenderTint>(entity))
-                {
-                    state.EntityManager.SetComponentData(entity, new RenderTint { Value = tint });
-                }
-                else
-                {
-                    ecb.AddComponent(entity, new RenderTint { Value = tint });
-                }
+                tint.ValueRW.Value = GodgamePresentationColors.ForResourceTypeIndex(pile.ValueRO.ResourceTypeIndex);
             }
-
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
         }
     }
 

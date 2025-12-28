@@ -19,6 +19,9 @@ namespace Godgame.Modules
     public partial struct ModuleRefitSystem : ISystem
     {
         private ComponentLookup<SkillSet> _skillLookup;
+        private ComponentLookup<ModuleMaintainerAssignment> _maintainerLookup;
+        private ComponentLookup<ModuleHostReference> _hostLookup;
+        private ComponentLookup<ModuleResourceWallet> _walletLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -27,12 +30,18 @@ namespace Godgame.Modules
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
             _skillLookup = state.GetComponentLookup<SkillSet>(true);
+            _maintainerLookup = state.GetComponentLookup<ModuleMaintainerAssignment>(true);
+            _hostLookup = state.GetComponentLookup<ModuleHostReference>(true);
+            _walletLookup = state.GetComponentLookup<ModuleResourceWallet>(false);
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             _skillLookup.Update(ref state);
+            _maintainerLookup.Update(ref state);
+            _hostLookup.Update(ref state);
+            _walletLookup.Update(ref state);
 
             var timeState = SystemAPI.GetSingleton<TimeState>();
             var rewindState = SystemAPI.GetSingleton<RewindState>();
@@ -54,13 +63,6 @@ namespace Godgame.Modules
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter();
 
-            var maintainerLookup = state.GetComponentLookup<ModuleMaintainerAssignment>(isReadOnly: true);
-            var hostLookup = state.GetComponentLookup<ModuleHostReference>(isReadOnly: true);
-            var walletLookup = state.GetComponentLookup<ModuleResourceWallet>(false);
-            maintainerLookup.Update(ref state);
-            hostLookup.Update(ref state);
-            walletLookup.Update(ref state);
-
             var completedRefits = new NativeArray<int>(1, Allocator.TempJob);
             var completedRepairs = new NativeArray<int>(1, Allocator.TempJob);
 
@@ -69,9 +71,9 @@ namespace Godgame.Modules
                 Delta = deltaSeconds,
                 Config = config,
                 SkillLookup = _skillLookup,
-                MaintainerLookup = maintainerLookup,
-                HostLookup = hostLookup,
-                WalletLookup = walletLookup,
+                MaintainerLookup = _maintainerLookup,
+                HostLookup = _hostLookup,
+                WalletLookup = _walletLookup,
                 Ecb = ecb,
                 CurrentTick = timeState.Tick,
                 CompletedRefits = completedRefits,

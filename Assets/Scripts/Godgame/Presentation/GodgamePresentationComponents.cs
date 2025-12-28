@@ -9,6 +9,8 @@ namespace Godgame.Presentation
     public struct VillagerPresentationTag : IComponentData { }
     public struct VillageCenterPresentationTag : IComponentData { }
     public struct ResourceChunkPresentationTag : IComponentData { }
+    public struct AggregatePilePresentationTag : IComponentData { }
+    public struct CarriedResourcePresentationTag : IComponentData { }
     public struct ResourceNodePresentationTag : IComponentData { }
     public struct VegetationPresentationTag : IComponentData { }
     public struct StorehousePresentationTag : IComponentData { }
@@ -40,6 +42,16 @@ namespace Godgame.Presentation
     {
         public float3 Position;
         public quaternion Rotation;
+    }
+
+    public struct CarriedResourceLink : IComponentData
+    {
+        public Entity VisualEntity;
+    }
+
+    public struct CarriedResourceParent : IComponentData
+    {
+        public Entity Value;
     }
 
     // VISUAL STATE / LOD

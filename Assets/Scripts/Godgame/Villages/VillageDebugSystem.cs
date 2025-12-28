@@ -21,6 +21,19 @@ namespace Godgame.Villages
     public partial class VillageDebugSystemClass : SystemBase
     {
         private float _nextLogTime;
+        private EntityQuery _villageQuery;
+        private EntityQuery _villagerQuery;
+        private EntityQuery _puredotsVillageQuery;
+        private EntityQuery _puredotsVillagerQuery;
+
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+            _villageQuery = GetEntityQuery(ComponentType.ReadOnly<Village>());
+            _villagerQuery = GetEntityQuery(ComponentType.ReadOnly<SettlementVillagerState>());
+            _puredotsVillageQuery = GetEntityQuery(ComponentType.ReadOnly<VillageTag>());
+            _puredotsVillagerQuery = GetEntityQuery(ComponentType.ReadOnly<VillagerTag>());
+        }
 
         protected override void OnUpdate()
         {
@@ -31,16 +44,12 @@ namespace Godgame.Villages
             }
             _nextLogTime = (float)SystemAPI.Time.ElapsedTime + 2.0f; // Log every 2 seconds
 
-            var villageQuery = GetEntityQuery(ComponentType.ReadOnly<Village>());
             // Use SettlementVillagerState as a proxy for villagers in the scenario bootstrap
-            var villagerQuery = GetEntityQuery(ComponentType.ReadOnly<SettlementVillagerState>());
+            var puredotsVillageCount = _puredotsVillageQuery.CalculateEntityCount();
+            var puredotsVillagerCount = _puredotsVillagerQuery.CalculateEntityCount();
 
-            // PureDOTS legacy scenario components
-            var puredotsVillageCount = SystemAPI.QueryBuilder().WithAll<VillageTag>().Build().CalculateEntityCount();
-            var puredotsVillagerCount = SystemAPI.QueryBuilder().WithAll<VillagerTag>().Build().CalculateEntityCount();
-
-            var villageCount = villageQuery.CalculateEntityCount();
-            var villagerCount = villagerQuery.CalculateEntityCount();
+            var villageCount = _villageQuery.CalculateEntityCount();
+            var villagerCount = _villagerQuery.CalculateEntityCount();
 
             Godgame.GodgameDebug.Log($"[VillageDebugSystem] Godgame Villages: {villageCount}, Godgame Villagers: {villagerCount}, PureDOTS Villages: {puredotsVillageCount}, PureDOTS Villagers: {puredotsVillagerCount}");
 #endif

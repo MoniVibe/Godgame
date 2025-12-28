@@ -1616,6 +1616,521 @@ Narrative: "Kael worshiped the god as he worshiped gold. Useful, but not sacred.
 
 ---
 
+## Item Borrowing & Lending System
+
+**Core Concept:** Entities can borrow tools, weapons, items, and equipment from each other to fulfill intents and goals. Borrowing requires successful communication, cooperation willingness, and either high relations OR successful charisma checks (if relations are low) OR hierarchical authority (if hierarchy allows it).
+
+**Status:** Concept Design
+**Category:** Social | Economic | Cooperation
+**Complexity:** Moderate
+**Scope:** All entities with agency
+
+---
+
+### Borrowing Mechanics
+
+**Borrowable Items:**
+- **Ranged Weapons:** Bows, crossbows, firearms, spell staves
+- **Melee Weapons:** Swords, axes, hammers, spears, daggers
+- **Tools:** Hammers, saws, pickaxes, shovels, crafting tools
+- **Equipment:** Armor, shields, backpacks, lanterns, ropes
+- **Consumables:** Potions, food, ammunition (if applicable)
+- **Any Item:** Entities can borrow anything if conditions are met
+
+**Borrowing Requirements:**
+1. **Communication:** Entities must be able to communicate (shared language OR general signs)
+2. **Cooperation:** Lender must be willing to cooperate (based on relations, alignment, outlook)
+3. **Intent/Goal:** Borrower must have a valid intent or goal that requires the item
+4. **Item Availability:** Lender must own/possess the item and not need it immediately
+
+---
+
+### Borrowing Permission Checks
+
+**Three Paths to Borrowing Permission:**
+
+#### 1. High Relations (Automatic Permission)
+
+**Relation Thresholds:**
+```
+Relation ≥ +50 (Close Friends/Strong Allies):
+  → Automatic permission (no charisma check needed)
+  → Lender trusts borrower completely
+  → "Of course, take it!"
+
+Relation +25 to +49 (Friendly):
+  → Automatic permission for common items (tools, basic weapons)
+  → Charisma check for valuable items (rare weapons, expensive equipment)
+  → "Sure, just bring it back."
+
+Relation +10 to +24 (Neutral-Friendly):
+  → Charisma check required (moderate difficulty)
+  → "I guess, but be careful with it."
+```
+
+**Example:**
+```
+Entity A (Borrower) has +60 relation with Entity B (Lender)
+Entity A needs a sword for combat intent
+Entity B owns a sword
+
+Result: Automatic permission granted
+Narrative: "Erik asked Marcus for his sword. 'Of course, my friend!' Marcus handed it over without hesitation."
+```
+
+#### 2. Charisma Check (Low Relations)
+
+**When Relations Are Low:**
+```
+Relation -24 to +9 (Neutral to Unfriendly):
+  → Charisma check required
+  → Check difficulty based on relation value and item value
+  → Success: Permission granted
+  → Failure: Permission denied, relation may decrease
+
+Relation -25 to -49 (Unfriendly):
+  → Charisma check required (hard difficulty)
+  → High charisma needed to overcome distrust
+  → Failure: Permission denied, -5 relation penalty
+
+Relation -50 to -100 (Hostile to Mortal Enemies):
+  → Charisma check impossible (or extremely difficult)
+  → Only possible if borrower has very high charisma AND item is critical for shared goal
+  → Failure: Permission denied, -10 relation penalty
+```
+
+**Charisma Check Formula:**
+```
+CharismaCheckSuccess = 
+  Borrower.CharismaStat +
+  (RelationValue × 0.5) +  // Higher relations = easier check
+  (ItemValueModifier) +    // Valuable items = harder check
+  (SharedGoalBonus) +      // If both entities share same goal/intent
+  RandomFactor(-10, +10)
+
+Difficulty Thresholds:
+  Easy:    ≥ 40 (common items, neutral relations)
+  Medium:  ≥ 60 (valuable items, unfriendly relations)
+  Hard:    ≥ 80 (rare items, hostile relations)
+  Extreme: ≥ 100 (legendary items, mortal enemies)
+```
+
+**Item Value Modifiers:**
+```
+Common Tools:        +0 (no modifier)
+Basic Weapons:     -5 (easier to borrow)
+Valuable Equipment: -15 (harder to borrow)
+Rare Weapons:       -25 (much harder)
+Legendary Items:    -40 (extremely hard)
+```
+
+**Shared Goal Bonus:**
+```
+If Borrower.Intent == Lender.Intent:
+  → +20 bonus (both need item for same purpose)
+  → "We're both fighting the same enemy, of course you can use it!"
+
+If Borrower.Intent aligns with Lender's goals:
+  → +10 bonus (complementary goals)
+  → "Your goal helps mine, here you go."
+```
+
+**Example:**
+```
+Entity A (Borrower): Charisma 70, Relation -15 (Unfriendly)
+Entity B (Lender): Owns rare sword
+Entity A needs sword for combat intent
+Entity B's intent: Defend village (same goal)
+
+CharismaCheck = 70 + (-15 × 0.5) + (-25) + (20) + Random(-10, +10)
+              = 70 - 7.5 - 25 + 20 + 5
+              = 62.5
+
+Difficulty: Medium (≥ 60)
+Result: Success! Permission granted
+Narrative: "Despite their strained relationship, Marcus saw the wisdom in lending Erik the sword. 'We both need to defend the village,' he said. 'Just don't break it.'"
+```
+
+#### 3. Hierarchical Authority (Command-Based)
+
+**Hierarchy Allows Borrowing:**
+```
+If Borrower has authority over Lender:
+  → Automatic permission (no check needed)
+  → Based on hierarchy level and entity roles
+  → "I must obey, here is the item."
+
+Hierarchy Examples:
+  - Military: Officer borrows from soldier
+  - Guild: Guild master borrows from member
+  - Village: Village leader borrows from villager
+  - Family: Parent borrows from child
+  - Organization: Leader borrows from subordinate
+```
+
+**Hierarchy Levels:**
+```
+Same Level:     No automatic permission (use relations/charisma)
+One Level Up:   Automatic permission for common items
+                Charisma check for valuable items
+Two+ Levels Up: Automatic permission for all items
+                "I must obey my superior."
+```
+
+**Hierarchy Override:**
+```
+Even with hierarchy, some entities may resist:
+  - Chaotic entities: -20 to hierarchy authority (resist orders)
+  - Corrupt entities: May demand payment
+  - High relation: Hierarchy unnecessary (already friendly)
+  - Low relation + hierarchy: May cause resentment (-5 relation)
+```
+
+**Example:**
+```
+Entity A (Borrower): Village leader (hierarchy level 3)
+Entity B (Lender): Villager (hierarchy level 1)
+Entity A needs tool for construction intent
+Entity B owns tool
+
+Hierarchy Difference: 3 - 1 = 2 levels
+Result: Automatic permission (hierarchy allows it)
+Narrative: "The village leader asked for the tool. The villager handed it over without question. 'Of course, my lord.'"
+```
+
+---
+
+### Communication Requirements
+
+**Borrowing Requires Communication:**
+```
+1. Borrower must communicate intent to borrow
+2. Lender must understand the request
+3. Lender must communicate acceptance/refusal
+
+Communication Methods:
+  - Native Language: Perfect clarity (100%)
+  - Known Language: Clarity based on proficiency (40-80%)
+  - General Signs: Low clarity (30-50%), prone to miscommunication
+```
+
+**Communication Failure:**
+```
+If communication fails:
+  → Borrower cannot make request
+  → OR request is misread (lender thinks borrower wants to trade/buy)
+  → Miscommunication may affect relations (-5 if interpreted as theft attempt)
+```
+
+**Communication Success:**
+```
+If communication succeeds:
+  → Borrower makes clear request
+  → Lender understands and responds
+  → Permission check proceeds
+```
+
+**Example:**
+```
+Entity A (Borrower): Speaks Common (native)
+Entity B (Lender): Speaks Elvish (native), knows Common (basic proficiency)
+
+Entity A: "May I borrow your sword?" (Common)
+Entity B: Understands (60% clarity from basic proficiency)
+Entity B: "Yes, you may." (Common, basic proficiency)
+
+Communication: Success
+Permission Check: Proceeds (relation +30, automatic permission)
+```
+
+---
+
+### Cooperation Willingness
+
+**Lender Must Be Willing to Cooperate:**
+```
+CooperationWillingness =
+  BaseWillingness (based on alignment/outlook) +
+  RelationModifier +
+  IntentAlignment +
+  ItemNecessity +
+  PersonalNeed
+
+Base Willingness:
+  - Cooperative outlook: +20
+  - Competitive outlook: -10
+  - Peaceful outlook: +15 (if borrower's intent is peaceful)
+  - Warlike outlook: +10 (if borrower's intent is combat)
+  - Materialistic outlook: -5 (values possessions)
+  - Spiritual outlook: +5 (sharing is virtue)
+
+Relation Modifier:
+  - High relation (+50+): +30
+  - Friendly (+25 to +49): +15
+  - Neutral (0 to +24): 0
+  - Unfriendly (-25 to -1): -15
+  - Hostile (-50 to -100): -30
+
+Intent Alignment:
+  - Same intent/goal: +20
+  - Complementary intent: +10
+  - Opposing intent: -20
+
+Item Necessity:
+  - Borrower clearly needs item for critical goal: +15
+  - Borrower wants item for convenience: -5
+
+Personal Need:
+  - Lender needs item immediately: -30 (won't lend)
+  - Lender doesn't need item: +10 (willing to lend)
+```
+
+**Cooperation Threshold:**
+```
+Willingness ≥ 40: Willing to lend
+Willingness < 40: Unwilling to lend (even with permission)
+```
+
+**Example:**
+```
+Entity A (Borrower): Needs sword for combat intent
+Entity B (Lender): Peaceful outlook, relation +20, owns sword, doesn't need it
+
+CooperationWillingness =
+  Base (Peaceful, but borrower's intent is combat): +5
+  Relation (+20): +15
+  Intent Alignment (opposing - borrower wants combat, lender is peaceful): -20
+  Item Necessity (borrower needs it for critical goal): +15
+  Personal Need (lender doesn't need it): +10
+
+Total: 5 + 15 - 20 + 15 + 10 = 25
+
+Threshold: 40
+Result: Unwilling to lend (despite permission, lender refuses due to moral opposition)
+Narrative: "Erik asked for the sword. Marcus shook his head. 'I cannot help you wage war. I'm sorry.'"
+```
+
+---
+
+### Borrowing Process Flow
+
+**Step-by-Step Process:**
+```
+1. Borrower has intent/goal requiring item
+2. Borrower identifies potential lender (owns item, nearby)
+3. Borrower attempts communication
+4. If communication succeeds:
+   a. Borrower makes borrowing request
+   b. Lender evaluates cooperation willingness
+   c. If willing:
+      - Check permission (relation/hierarchy/charisma)
+      - If permission granted: Item transferred
+      - If permission denied: Request refused
+   d. If unwilling: Request refused (no permission check)
+5. If communication fails:
+   - Borrower cannot make request
+   - OR miscommunication occurs (may affect relations)
+```
+
+**Item Transfer:**
+```
+If borrowing succeeds:
+  - Item ownership temporarily transferred to borrower
+  - Lender tracks borrowed item (knows who has it)
+  - Borrower can use item for intent/goal
+  - Return expected (based on agreement or default duration)
+```
+
+**Return Mechanics:**
+```
+Default Return Duration:
+  - Tools: Until task complete OR 1 day (whichever first)
+  - Weapons: Until combat complete OR 1 day
+  - Equipment: Until goal achieved OR 3 days
+  - Consumables: No return (consumed)
+
+Return Conditions:
+  - Task/Intent complete: Automatic return
+  - Duration expired: Borrower should return (may keep if relations high)
+  - Lender requests return: Borrower must return (or face relation penalty)
+  - Item damaged/lost: Relation penalty (-10 to -30 based on item value)
+```
+
+---
+
+### Relation Impact
+
+**Successful Borrowing:**
+```
+If borrowing succeeds:
+  - Low relations (-25 to +9): +2 to +5 relation boost (trust building)
+  - Neutral relations (+10 to +24): +1 to +3 relation boost
+  - High relations (+25+): No change (already friendly)
+
+If item returned in good condition:
+  - Additional +2 to +5 relation boost
+  - "Thank you for returning it safely."
+```
+
+**Failed Borrowing:**
+```
+If borrowing fails (permission denied):
+  - Low relations: -2 to -5 relation penalty
+  - Neutral relations: -1 to -3 relation penalty
+  - High relations: Usually no penalty (understood refusal)
+
+If item damaged/lost:
+  - -10 to -30 relation penalty (based on item value)
+  - "You broke my sword! I trusted you!"
+```
+
+**Repeated Borrowing:**
+```
+If borrower repeatedly borrows and returns successfully:
+  - Builds trust (+1 relation per successful return)
+  - Lender becomes more willing to lend in future
+  - May reach automatic permission threshold (+50 relation)
+
+If borrower repeatedly fails to return:
+  - Builds distrust (-5 relation per failure)
+  - Lender becomes unwilling to lend
+  - May reach hostile threshold (-50 relation)
+```
+
+---
+
+### Examples
+
+#### Example 1: High Relations (Automatic Permission)
+```
+Entity A (Borrower): Erik, relation +65 with Marcus
+Entity B (Lender): Marcus, owns hammer
+Erik's Intent: Construction (build house)
+Communication: Native language (perfect)
+
+Process:
+  1. Erik communicates: "May I borrow your hammer?"
+  2. Marcus understands: "Of course!"
+  3. Permission check: +65 relation ≥ +50 → Automatic permission
+  4. Cooperation: Marcus willing (high relation)
+  5. Item transferred: Erik receives hammer
+
+Result: Success
+Relation Impact: +0 (already high)
+Narrative: "Erik asked Marcus for his hammer. 'Of course, my friend!' Marcus handed it over immediately. They were close friends, and Marcus trusted Erik completely."
+```
+
+#### Example 2: Charisma Check (Low Relations)
+```
+Entity A (Borrower): Shade, Charisma 85, relation -10 with Aldric
+Entity B (Lender): Aldric, owns rare bow
+Shade's Intent: Combat (defend village from bandits)
+Aldric's Intent: Defend village (same goal)
+Communication: Known language (60% clarity)
+
+Process:
+  1. Shade communicates: "I need your bow to fight the bandits."
+  2. Aldric understands (60% clarity): "You want to borrow my bow?"
+  3. Permission check: -10 relation → Charisma check required
+  4. Charisma check: 85 + (-10 × 0.5) + (-25 rare item) + (20 shared goal) + 5 random = 80
+  5. Difficulty: Hard (≥ 80) → Success!
+  6. Cooperation: Aldric willing (shared goal overrides low relation)
+  7. Item transferred: Shade receives bow
+
+Result: Success
+Relation Impact: +5 (trust building through cooperation)
+Narrative: "Despite their strained relationship, Aldric saw the wisdom in lending Shade his bow. 'We both need to defend the village,' he said. 'Just don't break it.' Shade nodded. 'I'll return it when the bandits are gone.'"
+```
+
+#### Example 3: Hierarchy Authority
+```
+Entity A (Borrower): Village Leader (hierarchy level 3)
+Entity B (Lender): Villager (hierarchy level 1), relation +5
+Village Leader's Intent: Construction (build defensive wall)
+Communication: Native language (perfect)
+
+Process:
+  1. Village Leader: "I need your pickaxe for the wall construction."
+  2. Villager understands: "Yes, my lord."
+  3. Permission check: Hierarchy difference 2 levels → Automatic permission
+  4. Cooperation: Villager willing (hierarchy + shared goal)
+  5. Item transferred: Village Leader receives pickaxe
+
+Result: Success
+Relation Impact: +0 (hierarchy-based, no relation change)
+Narrative: "The village leader asked for the pickaxe. The villager handed it over without question. 'Of course, my lord. The wall protects us all.'"
+```
+
+#### Example 4: Communication Failure
+```
+Entity A (Borrower): Human, speaks Common only
+Entity B (Lender): Elf, speaks Elvish only, no Common
+Human's Intent: Combat (needs sword)
+Communication: General signs only (30% clarity)
+
+Process:
+  1. Human attempts communication: Points at sword, makes "borrow" gesture
+  2. Elf misreads: Thinks human wants to trade/buy sword
+  3. Communication failure: Misunderstanding
+  4. Permission check: Never reached (communication failed)
+  5. Result: Borrowing fails
+
+Narrative: "The human pointed at the elf's sword and made gestures. The elf shook their head, confused. 'I don't understand what you want,' they said in Elvish. The human gave up, frustrated by the language barrier."
+```
+
+#### Example 5: Cooperation Unwillingness
+```
+Entity A (Borrower): Warlike warrior, relation +30 with peaceful monk
+Entity B (Lender): Peaceful monk, owns staff
+Warrior's Intent: Combat (attack neighboring village)
+Monk's Intent: Peace (prevent war)
+Communication: Native language (perfect)
+
+Process:
+  1. Warrior: "I need your staff to lead the attack."
+  2. Monk understands: "No, I cannot help you wage war."
+  3. Cooperation check:
+     - Base (Peaceful vs Warlike combat intent): -10
+     - Relation (+30): +15
+     - Intent Alignment (opposing): -20
+     - Total: -15
+  4. Cooperation threshold: 40
+  5. Result: Unwilling to lend (refused despite permission)
+
+Narrative: "The warrior asked for the staff. The monk shook his head. 'I cannot help you wage war. I'm sorry, but my staff will not be used for violence.' The warrior left, frustrated but understanding."
+```
+
+---
+
+### Integration with Other Systems
+
+**Intent/Goal System:**
+- Borrowing requires valid intent/goal
+- Item usage tied to intent fulfillment
+- Return triggered by intent completion
+
+**Communication System:**
+- Borrowing requires successful communication
+- Language barriers prevent borrowing
+- General signs allow basic borrowing requests (low clarity)
+
+**Cooperation System:**
+- Borrowing is a form of cooperation
+- Cooperation willingness affects borrowing success
+- Successful borrowing builds cooperation trust
+
+**Hierarchy System:**
+- Hierarchy can override relations for borrowing
+- Authority-based borrowing doesn't require charisma
+- Hierarchy borrowing may cause resentment
+
+**Inventory System:**
+- Items tracked during borrowing
+- Ownership temporarily transferred
+- Return mechanics track item condition
+
+---
+
 ## Systemic Interactions
 
 ### Dependencies
@@ -1639,6 +2154,7 @@ Narrative: "Kael worshiped the god as he worshiped gold. Useful, but not sacred.
 **Humanitarian Aid:** +40 relation triggers peacekeeper bands, +50 mobile hospitals
 **God Worship:** God relation affects prayer generation, obedience, temple attendance
 **Animal Companions:** +30 relation domesticates, +50 creates combat ally
+**Item Borrowing:** +50 relation enables automatic borrowing, low relations require charisma checks, hierarchy can override relations
 
 ### Synergies
 

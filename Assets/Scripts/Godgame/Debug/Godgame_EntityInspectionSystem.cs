@@ -4,6 +4,7 @@ using Godgame.Presentation;
 using Godgame.Villages;
 using Godgame.Villagers;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.AI;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -21,6 +22,7 @@ namespace Godgame.Debugging
     {
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<TimeState>();
             // Create inspection singleton if not exists
             var query = state.GetEntityQuery(typeof(EntityInspectionSingleton));
             if (query.IsEmpty)
@@ -35,6 +37,7 @@ namespace Godgame.Debugging
         public void OnUpdate(ref SystemState state)
         {
 #if UNITY_EDITOR
+            var timeState = SystemAPI.GetSingleton<TimeState>();
             // Get selected entity from input
             Entity selectedEntity = Entity.Null;
             if (SystemAPI.TryGetSingleton<SelectionInput>(out var selectionInput))
@@ -56,17 +59,17 @@ namespace Godgame.Debugging
                 }
 
                 inspection.InspectedEntity = selectedEntity;
-                inspection.Summary = BuildInspectionSummary(ref state, selectedEntity);
+                inspection.Summary = BuildInspectionSummary(ref state, selectedEntity, timeState);
                 inspection.IsValid = 1;
             }
 #endif
         }
 
 #if UNITY_EDITOR
-        private FixedString128Bytes BuildInspectionSummary(ref SystemState state, Entity entity)
+        private FixedString512Bytes BuildInspectionSummary(ref SystemState state, Entity entity, in TimeState timeState)
         {
             var em = state.EntityManager;
-            var summary = new FixedString128Bytes();
+            var summary = new FixedString512Bytes();
 
             // Check if villager
             if (em.HasComponent<VillagerBehavior>(entity))
@@ -94,6 +97,8 @@ namespace Godgame.Debugging
                     var job = em.GetComponentData<Godgame.Villagers.VillagerJob>(entity);
                     summary.Append($"\nJob: {job.Type}, Phase: {job.Phase}");
                 }
+
+                AppendCooldownSummary(ref summary, em, entity, timeState);
 
                 return summary;
             }
@@ -168,6 +173,112 @@ namespace Godgame.Debugging
             // Default
             summary.Append($"Entity {entity.Index}");
             return summary;
+        }
+
+        private static void AppendCooldownSummary(ref FixedString512Bytes summary, EntityManager em, Entity entity, in TimeState timeState)
+        {
+            if (!em.HasComponent<VillagerWorkCooldown>(entity))
+            {
+                return;
+            }
+
+            var cooldown = em.GetComponentData<VillagerWorkCooldown>(entity);
+            if (cooldown.EndTick == 0 || timeState.Tick >= cooldown.EndTick)
+            {
+                return;
+            }
+
+            var remainingTicks = cooldown.EndTick > timeState.Tick ? cooldown.EndTick - timeState.Tick : 0u;
+            var remainingSeconds = remainingTicks * timeState.FixedDeltaTime;
+            var roundedSeconds = math.max(0f, math.ceil(remainingSeconds));
+
+            var actionLabel = "Cooling down";
+            var leisureMode = cooldown.Mode;
+            var leisureAction = VillagerLeisureAction.None;
+            if (em.HasComponent<VillagerLeisureState>(entity))
+            {
+                leisureAction = em.GetComponentData<VillagerLeisureState>(entity).Action;
+            }
+
+            if (leisureAction == VillagerLeisureAction.Tidy)
+            {
+                actionLabel = "Taking a break: Tidy";
+            }
+            else if (leisureAction == VillagerLeisureAction.Observe)
+            {
+                actionLabel = "Taking a break: Observe";
+            }
+            if (leisureMode == VillagerWorkCooldownMode.None && em.HasComponent<VillagerGoalState>(entity))
+            {
+                var goal = em.GetComponentData<VillagerGoalState>(entity);
+                leisureMode = goal.CurrentGoal == VillagerGoal.Socialize
+                    ? VillagerWorkCooldownMode.Socialize
+                    : goal.CurrentGoal == VillagerGoal.Idle
+                        ? VillagerWorkCooldownMode.Wander
+                        : VillagerWorkCooldownMode.None;
+            }
+
+            if (leisureAction == VillagerLeisureAction.None && leisureMode == VillagerWorkCooldownMode.Socialize)
+            {
+                actionLabel = "Taking a break: Socialize";
+            }
+            else if (leisureAction == VillagerLeisureAction.None && leisureMode == VillagerWorkCooldownMode.Wander)
+            {
+                actionLabel = "Taking a break: Wander";
+            }
+
+            summary.Append($"\n{actionLabel} ({roundedSeconds:F0}s)");
+
+            if (leisureMode == VillagerWorkCooldownMode.Socialize && em.HasComponent<VillagerSocialFocus>(entity))
+            {
+                var focus = em.GetComponentData<VillagerSocialFocus>(entity);
+                if (focus.Target != Entity.Null && em.Exists(focus.Target))
+                {
+                    var targetLabel = ResolveEntityLabel(em, focus.Target);
+                    if (!string.IsNullOrEmpty(targetLabel))
+                    {
+                        summary.Append($" @ {targetLabel}");
+                    }
+                }
+            }
+            else if ((leisureAction == VillagerLeisureAction.Tidy || leisureAction == VillagerLeisureAction.Observe)
+                     && em.HasComponent<VillagerLeisureState>(entity))
+            {
+                var leisure = em.GetComponentData<VillagerLeisureState>(entity);
+                if (leisure.ActionTarget != Entity.Null && em.Exists(leisure.ActionTarget))
+                {
+                    var targetLabel = ResolveEntityLabel(em, leisure.ActionTarget);
+                    if (!string.IsNullOrEmpty(targetLabel))
+                    {
+                        summary.Append($" @ {targetLabel}");
+                    }
+                }
+            }
+        }
+
+        private static string ResolveEntityLabel(EntityManager em, Entity entity)
+        {
+            if (entity == Entity.Null)
+            {
+                return string.Empty;
+            }
+
+            if (em.HasComponent<Village>(entity))
+            {
+                var village = em.GetComponentData<Village>(entity);
+                if (village.VillageName.Length > 0)
+                {
+                    return village.VillageName.ToString();
+                }
+            }
+
+            var name = em.GetName(entity);
+            if (!string.IsNullOrEmpty(name))
+            {
+                return name;
+            }
+
+            return $"Entity {entity.Index}";
         }
 #endif
     }

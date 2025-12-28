@@ -16,12 +16,14 @@ namespace Godgame.Villagers
     public partial struct VillagerSocialFocusSystem : ISystem
     {
         private EntityQuery _villagerQuery;
+        private ComponentLookup<VillagerSocialFocus> _focusLookup;
 
         public void OnCreate(ref SystemState state)
         {
             _villagerQuery = SystemAPI.QueryBuilder()
                 .WithAll<LocalTransform, VillagerGoalState, VillagerBehavior, VillagerSocialFocus>()
                 .Build();
+            _focusLookup = state.GetComponentLookup<VillagerSocialFocus>(false);
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<VillagerScheduleConfig>();
         }
@@ -50,7 +52,7 @@ namespace Godgame.Villagers
             var goals = _villagerQuery.ToComponentDataArray<VillagerGoalState>(Allocator.Temp);
             var behaviors = _villagerQuery.ToComponentDataArray<VillagerBehavior>(Allocator.Temp);
 
-            var focusLookup = state.GetComponentLookup<VillagerSocialFocus>(false);
+            _focusLookup.Update(ref state);
             var radiusSq = radius * radius;
             var relationWeight = schedule.SocialPreferRelationWeight;
             var socialBonus = schedule.SocialPreferGoalBonus;
@@ -63,22 +65,22 @@ namespace Godgame.Villagers
                 var goal = goals[i];
                 if (goal.CurrentGoal != VillagerGoal.Socialize)
                 {
-                    if (focusLookup.HasComponent(entity))
+                    if (_focusLookup.HasComponent(entity))
                     {
-                        var focus = focusLookup[entity];
+                        var focus = _focusLookup[entity];
                         focus.Target = Entity.Null;
                         focus.NextPickTick = 0;
-                        focusLookup[entity] = focus;
+                        _focusLookup[entity] = focus;
                     }
                     continue;
                 }
 
-                if (!focusLookup.HasComponent(entity))
+                if (!_focusLookup.HasComponent(entity))
                 {
                     continue;
                 }
 
-                var focusState = focusLookup[entity];
+                var focusState = _focusLookup[entity];
                 if (focusState.Target != Entity.Null && state.EntityManager.Exists(focusState.Target))
                 {
                     if (timeState.Tick < focusState.NextPickTick)
@@ -124,7 +126,7 @@ namespace Godgame.Villagers
 
                 focusState.Target = bestTarget;
                 focusState.NextPickTick = timeState.Tick + ResolvePickTicks(pickMin, pickMax, behaviors[i], timeState.FixedDeltaTime, entity);
-                focusLookup[entity] = focusState;
+                _focusLookup[entity] = focusState;
             }
 
             entities.Dispose();

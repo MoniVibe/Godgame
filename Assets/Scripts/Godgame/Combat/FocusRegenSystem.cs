@@ -19,6 +19,8 @@ namespace Godgame.Combat
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct FocusRegenSystem : ISystem
     {
+        private ComponentLookup<VillagerRoutine> _routineLookup;
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
@@ -29,6 +31,8 @@ namespace Godgame.Combat
                 var configEntity = state.EntityManager.CreateEntity();
                 state.EntityManager.AddComponentData(configEntity, FocusConfig.Default);
             }
+
+            _routineLookup = state.GetComponentLookup<VillagerRoutine>(true);
         }
 
         [BurstCompile]
@@ -39,12 +43,14 @@ namespace Godgame.Combat
             var config = SystemAPI.GetSingleton<FocusConfig>();
             var currentTick = timeState.Tick;
 
+            _routineLookup.Update(ref state);
+
             new FocusRegenJob
             {
                 DeltaTime = deltaTime,
                 Config = config,
                 CurrentTick = currentTick,
-                RoutineLookup = SystemAPI.GetComponentLookup<VillagerRoutine>(true)
+                RoutineLookup = _routineLookup
             }.ScheduleParallel();
         }
 
@@ -108,4 +114,3 @@ namespace Godgame.Combat
         }
     }
 }
-
