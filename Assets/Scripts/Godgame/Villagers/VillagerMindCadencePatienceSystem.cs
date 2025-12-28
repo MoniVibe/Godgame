@@ -1,6 +1,5 @@
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
-using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -20,7 +19,6 @@ namespace Godgame.Villagers
             state.RequireForUpdate<VillagerScheduleConfig>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var cadenceSettings = SystemAPI.GetSingleton<MindCadenceSettings>();
