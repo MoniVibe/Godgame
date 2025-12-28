@@ -2777,6 +2777,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1996334887}
   - component: {fileID: 1996334886}
+  - component: {fileID: 1996334888}
   m_Layer: 0
   m_Name: GodgameRenderCatalog
   m_TagString: Untagged
@@ -2796,6 +2797,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3e7dadcaba03744c94f501f4e33141a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Godgame.Rendering::Godgame.Rendering.Catalog.RenderCatalogAuthoring
+  CatalogDefinition: {fileID: 11400000, guid: adbc3bf635dc62840a71d37074a449d3, type: 2}
+--- !u!114 &1996334888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1996334885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a49b4b670ae4c9bb696e3a46f04d975, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PureDOTS.Rendering::PureDOTS.Rendering.RenderPresentationCatalogRuntimeBootstrap
   CatalogDefinition: {fileID: 11400000, guid: adbc3bf635dc62840a71d37074a449d3, type: 2}
 --- !u!4 &1996334887
 Transform:

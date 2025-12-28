@@ -1,77 +1,49 @@
-# Godgame Render Catalog Setup
+# Godgame Render Catalog Truth Source
 
-This directory contains the render catalog system that maps Godgame entities to Unity Entities Graphics meshes and materials.
+This is the single source of truth for Godgame render catalog wiring.
 
-## Overview
+## Canonical Types (Truth)
 
-The render pipeline works as follows:
+All catalog authoring and runtime types live in PureDOTS:
 
-1. **RenderCatalogDefinition** (ScriptableObject) - Defines mesh/material mappings.
-2. **RenderCatalogAuthoring** (MonoBehaviour) - Bakes the catalog blob + `RenderMeshArray` singleton via the baker.
-3. **RenderSemanticKey / RenderKey / presenters** - Authored on entities (gameplay or authoring scripts) to describe the semantic they need.
-4. **PureDOTS Resolve/Apply stack** – `PureDOTS.Rendering.ResolveRenderVariantSystem` + `ApplyRenderVariantSystem` (plus Sprite/Debug presenters) bind `MaterialMeshInfo`, `RenderBounds`, and `WorldRenderBounds`. No local Godgame `ApplyRenderCatalogSystem` exists; the shared PureDOTS systems own the process.
+- `puredots/Packages/com.moni.puredots/Runtime/Rendering/RenderPresentationCatalogDefinition.cs`
+  - `RenderPresentationCatalogDefinition` (ScriptableObject with `Variants` + `Themes`)
+- `puredots/Packages/com.moni.puredots/Runtime/Rendering/RenderPresentationCatalogAuthoring.cs`
+  - `RenderPresentationCatalogAuthoring` (MonoBehaviour for baking)
+- `puredots/Packages/com.moni.puredots/Runtime/Authoring/Rendering/RenderPresentationCatalogBaker.cs`
+  - `RenderPresentationCatalogBaker` (creates `RenderPresentationCatalog` + `RenderMeshArray`)
+- `puredots/Packages/com.moni.puredots/Runtime/Rendering/RenderPresentationContract.cs`
+  - `RenderPresentationCatalog` + `RenderPresentationCatalogBlob`
 
-## Setup Instructions
+## Godgame Catalog Asset
 
-### 1. Create Render Catalog Asset
+- `godgame/Assets/Rendering/GodgameRenderCatalog.asset` (canonical)
+- `godgame/Assets/Scripts/Godgame/Rendering/Catalog/GodgameRenderCatalogDefinition.cs` (asset menu type)
 
-1. In Unity Editor, right-click in `Assets/Data/Rendering/` (or create the folder)
-2. Select **Create > Godgame > Rendering > RenderCatalog**
-3. Name it `GodgameRenderCatalog.asset`
+## Scene Wiring
 
-### 2. Configure Catalog Entries
+- `godgame/Assets/Scenes/TRI_Godgame_Smoke.unity`
+  - `Godgame.Rendering.Catalog.RenderCatalogAuthoring` (baked path)
+  - `PureDOTS.Rendering.RenderPresentationCatalogRuntimeBootstrap` (fallback when no baked catalog exists)
 
-1. Select the `GodgameRenderCatalog.asset` in the Inspector
-2. Set **Size** to the number of entity types you want to render (e.g., 5 for villager, village center, resource chunk, resource node, storehouse)
-3. For each entry, configure:
-   - **Key**: Use values from `GodgameSemanticKeys`:
-     - `100` = Villager
-     - `110` = VillageCenter
-     - `120` = ResourceChunk
-     - `130` = ResourceNode
-     - `150` = Storehouse
-   - **Mesh**: Assign a Unity Mesh (e.g., Cube, Sphere, or custom mesh)
-   - **Material**: Assign a Material compatible with Entities Graphics
-   - **Bounds Center**: Usually `(0, 0, 0)`
-   - **Bounds Extents**: Half-size of bounding box (e.g., `(0.5, 0.5, 0.5)` for a 1x1x1 cube)
+## How to Add a Render Entry (Godgame)
 
-### 3. Add Catalog to Scene
+1. Open `godgame/Assets/Rendering/GodgameRenderCatalog.asset`.
+2. Add a new item under `Variants` with Mesh/Material/Bounds/PresenterMask.
+3. Update Theme 0 (and any active themes) to map the `SemanticKey` to the new variant indices (`Lod0Variant`, `Lod1Variant`, `Lod2Variant`).
+4. Ensure gameplay writes `RenderSemanticKey` using `GodgameSemanticKeys` (`godgame/Assets/Scripts/Godgame/Rendering/GodgameSemanticKeys.cs`).
+5. The baker/runtime bootstrap bumps `RenderCatalogVersion` automatically; no manual versioning needed.
 
-1. In your Godgame demo scene, create an empty GameObject
-2. Name it `GodgameRenderCatalog`
-3. Add the **RenderCatalogAuthoring** component
-4. Assign the `GodgameRenderCatalog.asset` to the **Catalog Definition** field
-5. The baker will automatically create the ECS singleton when the scene is converted
+## Runtime Verification
 
-### 4. Verify Setup
-
-After entering Play Mode or converting the scene:
-
-- Check the Console for warnings from `PureDOTS.Rendering.ResolveRenderVariantSystem` / `ApplyRenderVariantSystem`. Missing mappings or invalid mesh/material indices are reported there.
-- If you see "No RenderKey entities found", ensure gameplay spawners/authoring scripts add the canonical `PureDOTS.Rendering.RenderKey`, `RenderSemanticKey`, and enable at least one presenter (`MeshPresenter`, `SpritePresenter`, or `DebugPresenter`).
-- If `RenderPresentationCatalog` is missing, ensure the catalog authoring GameObject lives in the scene or subscene so the baker can create the singleton.
-
-## Example Catalog Entry
-
-```
-Entry 0:
-  Key: 100 (Villager)
-  Mesh: Cube
-  Material: DefaultMaterial
-  Bounds Center: (0, 0, 0)
-  Bounds Extents: (0.5, 1, 0.5)  // 1x2x1 unit villager
-```
-
-## Render Keys Reference
-
-See `Godgame/Assets/Scripts/Godgame/Rendering/GodgameSemanticKeys.cs` for all available keys.
+- `RenderPresentationCatalog.Blob.IsCreated == true`
+- `RenderPresentationCatalog.RenderMeshArrayEntity` has `RenderMeshArray` shared component
+- Entities with `RenderSemanticKey` + enabled presenters resolve to `MaterialMeshInfo` + `RenderBounds`
 
 ## Troubleshooting
 
-- **No entities render**: Confirm entities have `PureDOTS.Rendering.RenderKey`, `RenderSemanticKey`, enabled presenters, and `RenderFlags.Visible = 1`. The PureDOTS apply system only touches entities that meet this contract.
-- **Catalog not found**: Ensure the `RenderCatalogAuthoring` GameObject is in the scene/subscene and references the catalog asset so the baker emits `RenderPresentationCatalog`.
-- **Wrong mesh appears**: Verify `RenderSemanticKey`/`RenderKey.ArchetypeId` matches a valid catalog entry and that the catalog blob version increments after edits (see `RenderPresentationCatalog.RenderCatalogVersion`).
-
+- **Catalog not found**: Ensure the catalog authoring object lives in the scene/subscene, or add the runtime bootstrap when you cannot bake.
+- **Wrong mesh appears**: Verify the theme mapping for `SemanticKey` points at the expected variant index.
 
 
 

@@ -29,7 +29,12 @@ namespace Godgame.Headless
 	        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
 	        static void LoadPresentationSceneIfRequested()
 	        {
-	            if (!Application.isBatchMode || !RuntimeMode.IsHeadless)
+	            if (!Application.isBatchMode)
+	            {
+	                return;
+	            }
+	            RuntimeMode.RefreshFromEnvironment();
+	            if (!RuntimeMode.IsHeadless)
 	            {
 	                return;
 	            }
@@ -56,6 +61,7 @@ namespace Godgame.Headless
                 return;
             if (!Application.isBatchMode)
                 return;
+            RuntimeMode.RefreshFromEnvironment();
             if (!RuntimeMode.IsHeadless)
                 return;
             if (!TryGetArgument(ScenarioArg, out var scenarioArg))
