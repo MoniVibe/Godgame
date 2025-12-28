@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System;
-using PureDOTS.Runtime.Core;
 using UnityEngine;
+using PureDOTS.Runtime.Core;
 using UnityEngine.SceneManagement;
 
 namespace Godgame.Diagnostics
