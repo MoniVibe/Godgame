@@ -34,6 +34,22 @@ All catalog authoring and runtime types live in PureDOTS:
 4. Ensure gameplay writes `RenderSemanticKey` using `GodgameSemanticKeys` (`godgame/Assets/Scripts/Godgame/Rendering/GodgameSemanticKeys.cs`).
 5. The baker/runtime bootstrap bumps `RenderCatalogVersion` automatically; no manual versioning needed.
 
+## Assetsvault Upgrade Lane (Hero Pass v1)
+
+Repeatable pipeline:
+
+1. Import from Assetsvault into `godgame/Assets/Art/Assetsvault/MedievalHero/` (Meshes, Materials, Textures, Shaders).
+2. Ensure materials are render-pipeline compatible (URP). If a pack ships built-in shaders, convert to URP Lit or author new URP materials.
+3. Append new variants to `godgame/Assets/Rendering/GodgameRenderCatalog.asset` (never reorder existing entries).
+4. Update Theme 0 mappings to the new variant indices.
+5. Verify the RenderMeshArray is populated and the smoke scene logs show MaterialMeshInfo assigned.
+
+Current hero mapping (v1):
+
+- `Storehouse_Gate_Hero_v1` uses `Gate_1A1` + `Gates_1A1`.
+- `ResourceNode_Rock_Hero_v1` uses `Cliff_Rocks_Set_A1` + `Cliff_Pieces_1`.
+- Theme 0 maps `GodgameSemanticKeys.Storehouse` to `Storehouse_Gate_Hero_v1` and `GodgameSemanticKeys.ResourceNode` to `ResourceNode_Rock_Hero_v1`.
+
 ## Runtime Verification
 
 - `RenderPresentationCatalog.Blob.IsCreated == true`
@@ -44,7 +60,6 @@ All catalog authoring and runtime types live in PureDOTS:
 
 - **Catalog not found**: Ensure the catalog authoring object lives in the scene/subscene, or add the runtime bootstrap when you cannot bake.
 - **Wrong mesh appears**: Verify the theme mapping for `SemanticKey` points at the expected variant index.
-
 
 
 

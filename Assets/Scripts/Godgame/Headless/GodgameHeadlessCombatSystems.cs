@@ -62,7 +62,7 @@ namespace Godgame.Headless
 
             _combatLookup = state.GetComponentLookup<VillagerCombatStats>(false);
             _threatLookup = state.GetComponentLookup<VillagerThreatState>(false);
-            _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+            _transformLookup = state.GetComponentLookup<LocalTransform>(false);
             _aiLookup = state.GetComponentLookup<VillagerAIState>(false);
 
             var engageDistance = ReadEnvFloat("GODGAME_HEADLESS_COMBAT_ENGAGE_DISTANCE", 6f);
@@ -104,6 +104,17 @@ namespace Godgame.Headless
             var attackerPos = _transformLookup[_attacker].Position;
             var defenderPos = _transformLookup[_defender].Position;
             var distanceSq = math.distancesq(attackerPos.xz, defenderPos.xz);
+            if (_hasEngaged == 0 && distanceSq > _engageDistanceSq)
+            {
+                var direction = math.normalizesafe(defenderPos - attackerPos, new float3(1f, 0f, 0f));
+                var desiredDistance = math.max(1f, math.sqrt(_engageDistanceSq) * 0.5f);
+                var adjustedPos = attackerPos + direction * desiredDistance;
+                var defenderTransform = _transformLookup[_defender];
+                defenderTransform.Position = new float3(adjustedPos.x, defenderTransform.Position.y, adjustedPos.z);
+                _transformLookup[_defender] = defenderTransform;
+                defenderPos = defenderTransform.Position;
+                distanceSq = math.distancesq(attackerPos.xz, defenderPos.xz);
+            }
 
             var engaged = _hasEngaged != 0 || distanceSq <= _engageDistanceSq;
             if (!engaged)

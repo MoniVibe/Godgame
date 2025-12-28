@@ -221,6 +221,32 @@ MonoBehaviour:
     TracerLength: 6
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
+  - Name: Storehouse_Gate_Hero_v1
+    Mesh: {fileID: 1767389050882782605, guid: 5bff385b6e6a8b447ad7e41e8fd8b8ab, type: 3}
+    Material: {fileID: 2100000, guid: b40c945f9a7c40bbb64fe8c7cf67f6f5, type: 2}
+    BoundsCenter: {x: 0, y: 0, z: 0}
+    BoundsExtents: {x: 0, y: 0, z: 0}
+    PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
+  - Name: ResourceNode_Rock_Hero_v1
+    Mesh: {fileID: -4514724834819138992, guid: b271ece00becfbf4caa78d8c401f4f70, type: 3}
+    Material: {fileID: 2100000, guid: 560f619a8e0d4bdbb1dfa52c1b4aae83, type: 2}
+    BoundsCenter: {x: 0, y: 0, z: 0}
+    BoundsExtents: {x: 0, y: 0, z: 0}
+    PresenterMask: 1
+    SubMesh: 0
+    RenderLayer: 0
+    VisualKind: 1
+    TracerWidth: 0.3
+    TracerLength: 6
+    TracerColor: {r: 1, g: 1, b: 1, a: 1}
+    TracerStyle: 0
   Themes:
   - Name: Default
     ThemeId: 0
@@ -270,11 +296,11 @@ MonoBehaviour:
       Lod1Variant: 0
       Lod2Variant: 0
     - SemanticKey: 140
-      Lod0Variant: 12
+      Lod0Variant: 17
       Lod1Variant: 0
       Lod2Variant: 0
     - SemanticKey: 150
-      Lod0Variant: 13
+      Lod0Variant: 16
       Lod1Variant: 0
       Lod2Variant: 0
     - SemanticKey: 151

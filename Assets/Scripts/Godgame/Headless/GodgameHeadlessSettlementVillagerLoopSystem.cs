@@ -1,6 +1,7 @@
 using System;
 using Godgame.Economy;
 using Godgame.Scenario;
+using Godgame.Villages;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
 using PureDOTS.Runtime.Resource;
@@ -120,6 +121,7 @@ namespace Godgame.Headless
 
             foreach (var (villagerState, transform, entity) in SystemAPI
                          .Query<RefRW<SettlementVillagerState>, RefRW<LocalTransform>>()
+                         .WithNone<VillageConstructionWorker>()
                          .WithEntityAccess())
             {
                 var stateData = villagerState.ValueRO;
