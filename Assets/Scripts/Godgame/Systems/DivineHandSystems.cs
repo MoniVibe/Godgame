@@ -51,6 +51,8 @@ namespace Godgame.Systems
         private ComponentLookup<LocalTransform> _transformLookup;
         private ComponentLookup<HandPickable> _pickableLookup;
         private ComponentLookup<HandHeldTag> _heldLookup;
+        private ComponentLookup<WorldManipulableTag> _worldManipulableLookup;
+        private ComponentLookup<NeverPickableTag> _neverPickableLookup;
         private ComponentLookup<RainCloudState> _rainCloudStateLookup;
         private ComponentLookup<ResourceTypeId> _resourceTypeIdLookup;
         private ComponentLookup<HandQueuedTag> _queuedTagLookup;
@@ -87,6 +89,8 @@ namespace Godgame.Systems
             _transformLookup = state.GetComponentLookup<LocalTransform>(false);
             _pickableLookup = state.GetComponentLookup<HandPickable>(true);
             _heldLookup = state.GetComponentLookup<HandHeldTag>(true);
+            _worldManipulableLookup = state.GetComponentLookup<WorldManipulableTag>(true);
+            _neverPickableLookup = state.GetComponentLookup<NeverPickableTag>(true);
             _rainCloudStateLookup = state.GetComponentLookup<RainCloudState>(false);
             _resourceTypeIdLookup = state.GetComponentLookup<ResourceTypeId>(true);
             _queuedTagLookup = state.GetComponentLookup<HandQueuedTag>(false);
@@ -119,6 +123,8 @@ namespace Godgame.Systems
             _transformLookup.Update(ref state);
             _pickableLookup.Update(ref state);
             _heldLookup.Update(ref state);
+            _worldManipulableLookup.Update(ref state);
+            _neverPickableLookup.Update(ref state);
             _rainCloudStateLookup.Update(ref state);
             _resourceTypeIdLookup.Update(ref state);
             _storehouseInventoryLookup.Update(ref state);
@@ -255,9 +261,21 @@ namespace Godgame.Systems
 
                 // Hold lock: only resolve pick candidate when nothing is currently held.
                 Entity pickCandidate = Entity.Null;
-                if (!hasHeldEntity && intent.StartSelect != 0 && stateData.CooldownTimer <= 0f)
+                var policy = new HandPickupPolicy
                 {
-                    pickCandidate = ResolveHandCandidate(ref state, in hover, stateData.CursorPosition, config);
+                    AutoPickDynamicPhysics = 0,
+                    EnableWorldGrab = 0,
+                    DebugWorldGrabAny = 0,
+                    WorldGrabRequiresTag = 1
+                };
+                if (SystemAPI.TryGetSingleton(out HandPickupPolicy policyValue))
+                {
+                    policy = policyValue;
+                }
+
+                if (!hasHeldEntity && inputFrame.RmbPressed && stateData.CooldownTimer <= 0f)
+                {
+                    pickCandidate = ResolveHandCandidate(ref state, in hover, stateData.CursorPosition, config, inputFrame, policy);
                 }
 
                 var aim = ResolveAimPoint(in hover, stateData.CursorPosition);
@@ -373,7 +391,7 @@ namespace Godgame.Systems
 
                     if (releaseRequested)
                     {
-                        bool appliedThrow = ReleaseHeldEntity(ref ecb, ref stateData, in history, in config, inputFrame, aim, normalizedChargeLevel, deltaTime, in intent, currentTick, commands);
+                        bool appliedThrow = ReleaseHeldEntity(ref ecb, ref stateData, in history, in config, inputFrame, aim, normalizedChargeLevel, deltaTime, in intent, slingshotMode, currentTick, commands);
                         hasHeldEntity = false;
                         stateData.HeldAmount = 0;
                         stateData.HeldResourceTypeIndex = DivineHandConstants.NoResourceType;
@@ -664,7 +682,7 @@ namespace Godgame.Systems
             }
         }
 
-        private Entity FindPickable(ref SystemState state, float3 cursorPosition, DivineHandConfig config)
+        private Entity FindPickable(ref SystemState state, float3 cursorPosition, DivineHandConfig config, HandInputFrame inputFrame, HandPickupPolicy policy)
         {
             Entity bestEntity = Entity.Null;
             float bestDistanceSq = config.PickupRadius * config.PickupRadius;
@@ -686,12 +704,16 @@ namespace Godgame.Systems
                     entries,
                     ref nearbyEntities);
 
-                // Filter by HandPickable and check held status
+                // Filter by candidate rules and check held status
                 foreach (var entity in nearbyEntities)
                 {
                     if (!state.EntityManager.Exists(entity) || 
-                        !_pickableLookup.HasComponent(entity) ||
                         _heldLookup.HasComponent(entity))
+                    {
+                        continue;
+                    }
+
+                    if (!CanPickCandidate(entity, inputFrame, policy))
                     {
                         continue;
                     }
@@ -730,10 +752,15 @@ namespace Godgame.Systems
             }
 
             // Fallback to full entity scan if spatial grid unavailable
-            foreach (var (pickable, transform, entity) in SystemAPI.Query<RefRO<HandPickable>, RefRO<LocalTransform>>()
+            foreach (var (transform, entity) in SystemAPI.Query<RefRO<LocalTransform>>()
                          .WithEntityAccess())
             {
                 if (_heldLookup.HasComponent(entity))
+                {
+                    continue;
+                }
+
+                if (!CanPickCandidate(entity, inputFrame, policy))
                 {
                     continue;
                 }
@@ -761,18 +788,36 @@ namespace Godgame.Systems
             return bestEntity;
         }
 
-        private Entity ResolveHandCandidate(ref SystemState state, in HandHover hover, float3 cursorPosition, DivineHandConfig config)
+        private Entity ResolveHandCandidate(ref SystemState state, in HandHover hover, float3 cursorPosition, DivineHandConfig config, HandInputFrame inputFrame, HandPickupPolicy policy)
         {
             var hoverTarget = hover.TargetEntity;
             if (hoverTarget != Entity.Null &&
                 state.EntityManager.Exists(hoverTarget) &&
-                _pickableLookup.HasComponent(hoverTarget) &&
-                !_heldLookup.HasComponent(hoverTarget))
+                !_heldLookup.HasComponent(hoverTarget) &&
+                CanPickCandidate(hoverTarget, inputFrame, policy))
             {
                 return hoverTarget;
             }
 
-            return FindPickable(ref state, cursorPosition, config);
+            return FindPickable(ref state, cursorPosition, config, inputFrame, policy);
+        }
+
+        private bool CanPickCandidate(Entity candidate, HandInputFrame inputFrame, HandPickupPolicy policy)
+        {
+            if (_neverPickableLookup.HasComponent(candidate))
+            {
+                return false;
+            }
+
+            bool hasPickable = _pickableLookup.HasComponent(candidate);
+            bool hasPhysicsVelocity = _physicsVelocityLookup.HasComponent(candidate);
+            bool autoPickDynamic = policy.AutoPickDynamicPhysics != 0 && hasPhysicsVelocity;
+            bool hasWorldTag = _worldManipulableLookup.HasComponent(candidate);
+            bool worldGrabActive = policy.EnableWorldGrab != 0 && inputFrame.CtrlHeld && inputFrame.ShiftHeld;
+            bool worldGrabAllowed = worldGrabActive &&
+                (policy.DebugWorldGrabAny != 0 || policy.WorldGrabRequiresTag == 0 || hasWorldTag);
+
+            return hasPickable || autoPickDynamic || worldGrabAllowed;
         }
 
         private struct AimPoint
@@ -814,6 +859,7 @@ namespace Godgame.Systems
             float normalizedChargeLevel,
             float deltaTime,
             in GodIntent intent,
+            bool slingshotMode,
             uint currentTick,
             DynamicBuffer<HandCommandElement> commands)
         {
@@ -834,7 +880,8 @@ namespace Godgame.Systems
             if (appliedThrow)
             {
                 ApplyThrowToEntity(ref ecb, releasedEntity, direction, impulse);
-                EmitSimpleCommand(ref commands, currentTick, HandCommandKind.Throw, releasedEntity, aim.TargetPosition, direction, impulse, normalizedChargeLevel, state.HeldResourceTypeIndex, state.HeldAmount);
+                var kind = slingshotMode ? HandCommandKind.SlingshotThrow : HandCommandKind.Throw;
+                EmitSimpleCommand(ref commands, currentTick, kind, releasedEntity, aim.TargetPosition, direction, impulse, normalizedChargeLevel, state.HeldResourceTypeIndex, state.HeldAmount);
             }
 
             state.HeldEntity = Entity.Null;

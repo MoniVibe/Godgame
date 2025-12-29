@@ -3,6 +3,8 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Godgame.Scenario;
+using Godgame.Villagers;
+using PureVillageTag = PureDOTS.Runtime.Village.VillageTag;
 // using PureDOTS.LegacyScenario.Village; // legacy scenario dependency
 
 namespace Godgame.Villages
@@ -31,7 +33,7 @@ namespace Godgame.Villages
             base.OnCreate();
             _villageQuery = GetEntityQuery(ComponentType.ReadOnly<Village>());
             _villagerQuery = GetEntityQuery(ComponentType.ReadOnly<SettlementVillagerState>());
-            _puredotsVillageQuery = GetEntityQuery(ComponentType.ReadOnly<VillageTag>());
+            _puredotsVillageQuery = GetEntityQuery(ComponentType.ReadOnly<PureVillageTag>());
             _puredotsVillagerQuery = GetEntityQuery(ComponentType.ReadOnly<VillagerTag>());
         }
 

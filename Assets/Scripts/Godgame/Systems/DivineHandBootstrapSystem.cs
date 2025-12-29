@@ -186,6 +186,17 @@ namespace Godgame.Systems
                 });
             }
 
+            if (!entityManager.HasComponent<HandPickupPolicy>(handEntity))
+            {
+                entityManager.AddComponentData(handEntity, new HandPickupPolicy
+                {
+                    AutoPickDynamicPhysics = 1,
+                    EnableWorldGrab = 1,
+                    DebugWorldGrabAny = 0,
+                    WorldGrabRequiresTag = 1
+                });
+            }
+
             if (!entityManager.HasComponent<DivineHandCommand>(handEntity))
             {
                 entityManager.AddComponentData(handEntity, new DivineHandCommand

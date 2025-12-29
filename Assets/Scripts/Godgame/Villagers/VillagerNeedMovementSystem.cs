@@ -1,11 +1,14 @@
 using Godgame.Scenario;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Physics;
 using PureDOTS.Runtime.Villagers;
+using Godgame.Physics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
 using Unity.Transforms;
 
 namespace Godgame.Villagers
@@ -26,6 +29,9 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerLeisureState> _leisureLookup;
         private BufferLookup<VillagerCooldownOutlookRule> _cooldownOutlookLookup;
         private BufferLookup<VillagerCooldownArchetypeModifier> _cooldownArchetypeLookup;
+        private ComponentLookup<PhysicsCollider> _physicsColliderLookup;
+        private ComponentLookup<GodgamePhysicsBody> _physicsBodyLookup;
+        private ComponentLookup<PhysicsColliderSpec> _colliderSpecLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -42,6 +48,9 @@ namespace Godgame.Villagers
             _leisureLookup = state.GetComponentLookup<VillagerLeisureState>(true);
             _cooldownOutlookLookup = state.GetBufferLookup<VillagerCooldownOutlookRule>(true);
             _cooldownArchetypeLookup = state.GetBufferLookup<VillagerCooldownArchetypeModifier>(true);
+            _physicsColliderLookup = state.GetComponentLookup<PhysicsCollider>(true);
+            _physicsBodyLookup = state.GetComponentLookup<GodgamePhysicsBody>(true);
+            _colliderSpecLookup = state.GetComponentLookup<PhysicsColliderSpec>(true);
         }
 
         [BurstCompile]
@@ -66,6 +75,9 @@ namespace Godgame.Villagers
             _leisureLookup.Update(ref state);
             _cooldownOutlookLookup.Update(ref state);
             _cooldownArchetypeLookup.Update(ref state);
+            _physicsColliderLookup.Update(ref state);
+            _physicsBodyLookup.Update(ref state);
+            _colliderSpecLookup.Update(ref state);
             var tick = timeState.Tick;
             var schedule = SystemAPI.GetSingleton<VillagerScheduleConfig>();
             var movementTuning = SystemAPI.TryGetSingleton<VillagerMovementTuning>(out var tuningValue)
@@ -111,6 +123,8 @@ namespace Godgame.Villagers
             var hasArchetypeRules = cooldownProfileEntity != Entity.Null && _cooldownArchetypeLookup.HasBuffer(cooldownProfileEntity);
             var outlookRules = hasOutlookRules ? _cooldownOutlookLookup[cooldownProfileEntity] : default;
             var archetypeRules = hasArchetypeRules ? _cooldownArchetypeLookup[cooldownProfileEntity] : default;
+            var hasPhysicsWorld = SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorld);
+            var sweepSkin = 0.02f;
 
             var villagerQuery = SystemAPI.QueryBuilder()
                 .WithAll<VillagerGoalState, LocalTransform>()
@@ -300,7 +314,39 @@ namespace Godgame.Villagers
                 }
                 currentVelocity += deltaV;
                 nav.ValueRW.Velocity = currentVelocity;
-                transform.ValueRW.Position += currentVelocity * deltaTime;
+                var desiredDelta = currentVelocity * deltaTime;
+                var resolvedDelta = desiredDelta;
+                if (hasPhysicsWorld && _physicsColliderLookup.HasComponent(entity))
+                {
+                    var collider = _physicsColliderLookup[entity];
+                    if (KinematicSweepUtility.TryResolveSweep(
+                        physicsWorld,
+                        collider,
+                        entity,
+                        transform.ValueRO.Position,
+                        transform.ValueRO.Rotation,
+                        desiredDelta,
+                        sweepSkin,
+                        true,
+                        true,
+                        out var sweepResult))
+                    {
+                        var hitEntity = sweepResult.HitEntity;
+                        if (sweepResult.HasHit != 0 && IsNonBlockingHit(hitEntity))
+                        {
+                            resolvedDelta = desiredDelta;
+                        }
+                        else
+                        {
+                            resolvedDelta = sweepResult.ResolvedDelta;
+                        }
+                    }
+                }
+                transform.ValueRW.Position += resolvedDelta;
+                if (deltaTime > 1e-4f)
+                {
+                    nav.ValueRW.Velocity = resolvedDelta / deltaTime;
+                }
                 movePlan.ValueRW = new MovePlan
                 {
                     Mode = MovePlanMode.Approach,
@@ -311,6 +357,36 @@ namespace Godgame.Villagers
             }
 
             separationMap.Dispose();
+        }
+
+        private bool IsNonBlockingHit(Entity hitEntity)
+        {
+            if (_colliderSpecLookup.HasComponent(hitEntity))
+            {
+                var spec = _colliderSpecLookup[hitEntity];
+                if (spec.IsTrigger != 0)
+                {
+                    return true;
+                }
+            }
+
+            if (_physicsBodyLookup.HasComponent(hitEntity))
+            {
+                var body = _physicsBodyLookup[hitEntity];
+                if ((body.Flags & GodgamePhysicsFlags.IsTrigger) != 0 ||
+                    (body.Flags & GodgamePhysicsFlags.SoftAvoidance) != 0)
+                {
+                    return true;
+                }
+
+                if (GodgamePhysicsLayers.IsTriggerLayer(body.Layer) ||
+                    GodgamePhysicsLayers.UsesSoftAvoidance(body.Layer))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static float3 BuildWanderOffset(Entity entity, uint tick, float radius)
