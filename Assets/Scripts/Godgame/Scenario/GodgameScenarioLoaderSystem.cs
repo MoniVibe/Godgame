@@ -12,6 +12,7 @@ namespace Godgame.Scenario
     public partial class GodgameScenarioLoaderSystem : SystemBase
     {
         private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
+        private const string CollisionScenarioFile = "godgame_collision_micro.json";
         private bool _loaded;
         private bool _didWarnMissingConfig;
         private bool _loggedSettlementConfigCount;
@@ -121,6 +122,7 @@ namespace Godgame.Scenario
 
             string json = File.ReadAllText(fullPath);
             var scenarioData = JsonUtility.FromJson<ScenarioData>(json);
+            var isCollisionScenario = fullPath.EndsWith(CollisionScenarioFile, StringComparison.OrdinalIgnoreCase);
 
             Debug.Log($"[GodgameScenarioLoaderSystem] Loading scenario: {scenarioData.name}");
 
@@ -138,6 +140,11 @@ namespace Godgame.Scenario
 
             // Parse entities from JSON
             int resourceNodeCount = 0;
+            DynamicBuffer<GodgameScenarioSpawnOverride> overrides = default;
+            if (isCollisionScenario)
+            {
+                overrides = EntityManager.AddBuffer<GodgameScenarioSpawnOverride>(configEntity);
+            }
             foreach (var entityData in scenarioData.entities)
             {
                 if (entityData.prefab == "Villager")
@@ -164,6 +171,20 @@ namespace Godgame.Scenario
                 {
                     resourceNodeCount += entityData.count;
                 }
+
+                if (isCollisionScenario)
+                {
+                    var kind = ResolveOverrideKind(entityData.prefab);
+                    if (kind != GodgameScenarioSpawnKind.None && entityData.count > 0)
+                    {
+                        overrides.Add(new GodgameScenarioSpawnOverride
+                        {
+                            Kind = kind,
+                            Position = entityData.position,
+                            Count = entityData.count
+                        });
+                    }
+                }
             }
 
             config.ResourceNodeCount = resourceNodeCount;
@@ -172,6 +193,19 @@ namespace Godgame.Scenario
             EntityManager.AddComponentData(configEntity, new GodgameScenarioRuntime());
             
             Debug.Log($"[GodgameScenarioLoaderSystem] Configured scenario with {config.VillagerCount} villagers, {config.StorehouseCount} storehouses, {config.VillageCenterCount} centers, {config.HousingCount} housing, {config.WorshipCount} worship.");
+        }
+
+        private static GodgameScenarioSpawnKind ResolveOverrideKind(string prefab)
+        {
+            return prefab switch
+            {
+                "Villager" => GodgameScenarioSpawnKind.Villager,
+                "VillageCenter" => GodgameScenarioSpawnKind.VillageCenter,
+                "Storehouse" => GodgameScenarioSpawnKind.Storehouse,
+                "Housing" => GodgameScenarioSpawnKind.Housing,
+                "Worship" => GodgameScenarioSpawnKind.Worship,
+                _ => GodgameScenarioSpawnKind.None
+            };
         }
 
         private static string ResolveScenarioPath(string relativePath)

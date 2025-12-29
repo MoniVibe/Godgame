@@ -59,6 +59,7 @@ namespace Godgame.Villagers
         private ComponentLookup<LocalTransform> _transformLookup;
         private ComponentLookup<VillagerCarryCapacity> _carryLookup;
         private ComponentLookup<VillagerPonderState> _ponderLookup;
+        private BufferLookup<VillagerJobDecisionEvent> _jobTraceLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -99,6 +100,7 @@ namespace Godgame.Villagers
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
             _carryLookup = state.GetComponentLookup<VillagerCarryCapacity>(true);
             _ponderLookup = state.GetComponentLookup<VillagerPonderState>(false);
+            _jobTraceLookup = state.GetBufferLookup<VillagerJobDecisionEvent>(false);
 
             _resourceNodeQuery = SystemAPI.QueryBuilder()
                 .WithAll<GodgameResourceNodeMirror, LocalTransform>()
@@ -160,6 +162,7 @@ namespace Godgame.Villagers
             _transformLookup.Update(ref state);
             _carryLookup.Update(ref state);
             _ponderLookup.Update(ref state);
+            _jobTraceLookup.Update(ref state);
 
             var catalog = SystemAPI.GetSingleton<ResourceTypeIndex>().Catalog;
             if (!catalog.IsCreated)
@@ -330,6 +333,7 @@ namespace Godgame.Villagers
                 TargetPositions = targetPositions,
                 CarryLookup = _carryLookup,
                 PonderLookup = _ponderLookup,
+                JobTraceLookup = _jobTraceLookup,
                 MovementTuning = movementTuning,
                 HasTreeTuning = hasTreeTuning ? (byte)1 : (byte)0,
                 TreeTuning = hasTreeTuning ? treeTuning : TreeFellingTuning.Default,
@@ -405,6 +409,14 @@ namespace Godgame.Villagers
             public const float DefaultMoveSpeed = 2.5f;
             public const float DefaultCooperationNodeSpacing = 2.2f;
             public const float DefaultCooperationStorehouseSpacing = 3.6f;
+            public const float DefaultFailureBackoffSeconds = 0.75f;
+            public const float DefaultFailureBackoffMaxSeconds = 6f;
+            private const byte PreconditionHasTicket = 1 << 0;
+            private const byte PreconditionTargetValid = 1 << 1;
+            private const byte PreconditionGroupReady = 1 << 2;
+            private const byte PreconditionRoleMatch = 1 << 3;
+            private const byte PreconditionResourceMatch = 1 << 4;
+            private const byte PreconditionStorehouse = 1 << 5;
 
             public float Delta;
             public EntityCommandBuffer.ParallelWriter Ecb;
@@ -459,6 +471,7 @@ namespace Godgame.Villagers
             [ReadOnly] public NativeParallelHashMap<Entity, float3> TargetPositions;
             [ReadOnly] public ComponentLookup<VillagerCarryCapacity> CarryLookup;
             public ComponentLookup<VillagerPonderState> PonderLookup;
+            [NativeDisableParallelForRestriction] public BufferLookup<VillagerJobDecisionEvent> JobTraceLookup;
             public VillagerMovementTuning MovementTuning;
             public TreeFellingTuning TreeTuning;
             public byte HasTreeTuning;
@@ -561,6 +574,8 @@ namespace Godgame.Villagers
 
                 if (!TicketLookup.HasComponent(assignment.Ticket))
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    RecordFailure(ref job, e, VillagerJobFailCode.TicketInvalid, assignment.Ticket, preconditionMask);
                     assignment.Ticket = Entity.Null;
                     assignment.CommitTick = 0;
                     ResetJob(ref job, e, patienceScore, tx.Position);
@@ -578,6 +593,8 @@ namespace Godgame.Villagers
                 ticket = TicketLookup[assignment.Ticket];
                 if (!IsTicketAssignedToEntity(assignment.Ticket, ticket, e))
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    RecordFailure(ref job, e, VillagerJobFailCode.TicketInvalid, assignment.Ticket, preconditionMask);
                     assignment.Ticket = Entity.Null;
                     assignment.CommitTick = 0;
                     ResetJob(ref job, e, patienceScore, tx.Position);
@@ -594,6 +611,15 @@ namespace Godgame.Villagers
 
                 if (ticket.State == JobTicketState.Cancelled || ticket.State == JobTicketState.Done)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    if (ticket.State == JobTicketState.Cancelled)
+                    {
+                        RecordFailure(ref job, e, VillagerJobFailCode.TicketCancelled, assignment.Ticket, preconditionMask);
+                    }
+                    else
+                    {
+                        RecordCompletion(ref job, e, assignment.Ticket, preconditionMask);
+                    }
                     ReleaseTicket(ref assignment, batch, e, ticket.State);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     nav.Velocity = float3.zero;
@@ -611,6 +637,8 @@ namespace Godgame.Villagers
                     && ticket.ClaimExpiresTick != 0
                     && ticket.ClaimExpiresTick <= CurrentTick)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    RecordFailure(ref job, e, VillagerJobFailCode.Timeout, assignment.Ticket, preconditionMask);
                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
@@ -618,6 +646,8 @@ namespace Godgame.Villagers
 
                 if (ticket.IsSingleItem == 0 && ticket.WorkAmount <= 0f)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    RecordCompletion(ref job, e, assignment.Ticket, preconditionMask);
                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Done);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
@@ -625,6 +655,8 @@ namespace Godgame.Villagers
 
                 if (job.Type == JobType.None)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    RecordFailure(ref job, e, VillagerJobFailCode.NoTicket, assignment.Ticket, preconditionMask);
                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
@@ -648,6 +680,9 @@ namespace Godgame.Villagers
                 var hasGenericTarget = ticket.IsSingleItem != 0 && ticketTarget != Entity.Null && TargetPositions.ContainsKey(ticketTarget);
                 if (!hasNodeTarget && !hasPileTarget && !hasGenericTarget)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    preconditionMask = SetMask(preconditionMask, PreconditionTargetValid, false);
+                    RecordFailure(ref job, e, VillagerJobFailCode.TargetInvalid, ticketTarget, preconditionMask);
                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Cancelled);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
@@ -658,6 +693,9 @@ namespace Godgame.Villagers
                     var node = ResourceNodeLookup[ticketTarget];
                     if (node.IsDepleted != 0 || node.RemainingAmount <= 0f)
                     {
+                        var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                        preconditionMask = SetMask(preconditionMask, PreconditionTargetValid, true);
+                        RecordFailure(ref job, e, VillagerJobFailCode.TargetDepleted, ticketTarget, preconditionMask);
                         ReleaseTicket(ref assignment, batch, e, JobTicketState.Done);
                         ResetJob(ref job, e, patienceScore, tx.Position);
                         return;
@@ -669,6 +707,9 @@ namespace Godgame.Villagers
                     var pile = PileLookup[ticketTarget];
                     if (pile.Amount <= 0f)
                     {
+                        var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                        preconditionMask = SetMask(preconditionMask, PreconditionTargetValid, true);
+                        RecordFailure(ref job, e, VillagerJobFailCode.TargetDepleted, ticketTarget, preconditionMask);
                         ReleaseTicket(ref assignment, batch, e, JobTicketState.Done);
                         ResetJob(ref job, e, patienceScore, tx.Position);
                         return;
@@ -677,6 +718,9 @@ namespace Godgame.Villagers
 
                 if (ticket.IsSingleItem == 0 && hasPileTarget && !isHauler)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    preconditionMask = SetMask(preconditionMask, PreconditionRoleMatch, false);
+                    RecordFailure(ref job, e, VillagerJobFailCode.RoleMismatch, ticketTarget, preconditionMask);
                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
@@ -684,6 +728,9 @@ namespace Godgame.Villagers
 
                 if (ticket.IsSingleItem == 0 && !hasPileTarget && isHauler)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    preconditionMask = SetMask(preconditionMask, PreconditionRoleMatch, false);
+                    RecordFailure(ref job, e, VillagerJobFailCode.RoleMismatch, ticketTarget, preconditionMask);
                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
@@ -691,6 +738,9 @@ namespace Godgame.Villagers
 
                 if (ticket.IsSingleItem == 0 && !isHauler && job.ResourceTypeIndex != ticket.ResourceTypeIndex)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    preconditionMask = SetMask(preconditionMask, PreconditionResourceMatch, false);
+                    RecordFailure(ref job, e, VillagerJobFailCode.ResourceMismatch, ticketTarget, preconditionMask);
                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
@@ -718,6 +768,9 @@ namespace Godgame.Villagers
 
                 if (ticket.IsSingleItem == 0 && job.ResourceTypeIndex == ushort.MaxValue && !isHauler)
                 {
+                    var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                    preconditionMask = SetMask(preconditionMask, PreconditionResourceMatch, false);
+                    RecordFailure(ref job, e, VillagerJobFailCode.ResourceMismatch, ticketTarget, preconditionMask);
                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                     ResetJob(ref job, e, patienceScore, tx.Position);
                     return;
@@ -799,6 +852,9 @@ namespace Godgame.Villagers
                         }
                         if (!TryResolveTicketTargetPosition(ticket.TargetEntity, out var ticketTargetPosition))
                         {
+                            var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                            preconditionMask = SetMask(preconditionMask, PreconditionTargetValid, false);
+                            RecordFailure(ref job, e, VillagerJobFailCode.TargetInvalid, ticket.TargetEntity, preconditionMask);
                             ReleaseTicket(ref assignment, batch, e, JobTicketState.Cancelled);
                             EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
                             break;
@@ -811,6 +867,13 @@ namespace Godgame.Villagers
                         nav.Destination = ticketTargetPosition + nodeOffset;
                         nav.Speed = moveSpeed;
                         job.Phase = JobPhase.NavigateToNode;
+
+                        var decisionMask = SetMask(0, PreconditionHasTicket, true);
+                        decisionMask = SetMask(decisionMask, PreconditionTargetValid, true);
+                        decisionMask = SetMask(decisionMask, PreconditionGroupReady, groupReady);
+                        decisionMask = SetMask(decisionMask, PreconditionRoleMatch, true);
+                        decisionMask = SetMask(decisionMask, PreconditionResourceMatch, true);
+                        RecordDecision(ref job, e, job.Phase, ticket.TargetEntity, default, decisionMask);
 
                         if (ticket.State == JobTicketState.Claimed && groupReady)
                         {
@@ -876,7 +939,7 @@ namespace Godgame.Villagers
                             }
 
                             if (TryFindStorehouse(tx.Position, useCooperation, in cooperation, hasAwareness, in awareness, storehouseRadiusSq,
-                                    out var nearestStorehouse, out var nearestStorehousePosition))
+                                    out var nearestStorehouse, out var nearestStorehousePosition, out var storehouseCandidates))
                             {
                                 job.Target = nearestStorehouse;
                                 var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
@@ -885,9 +948,14 @@ namespace Godgame.Villagers
                                 nav.Destination = nearestStorehousePosition + storehouseOffset;
                                 nav.Speed = moveSpeed;
                                 job.Phase = JobPhase.NavigateToStorehouse;
+
+                                var decisionMask = SetMask(0, PreconditionStorehouse, true);
+                                RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, decisionMask);
                             }
                             else
                             {
+                                var preconditionMask = SetMask(0, PreconditionStorehouse, false);
+                                RecordFailure(ref job, e, VillagerJobFailCode.NoStorehouse, Entity.Null, preconditionMask);
                                 job.CarryCount = 0f;
                                 ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                                 EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
@@ -926,7 +994,7 @@ namespace Godgame.Villagers
                                 || pile.Amount <= 0f)
                             {
                                 if (TryFindStorehouse(tx.Position, useCooperation, in cooperation, hasAwareness, in awareness, storehouseRadiusSq,
-                                        out var nearestStorehouse, out var nearestStorehousePosition))
+                                        out var nearestStorehouse, out var nearestStorehousePosition, out var storehouseCandidates))
                                 {
                                     job.Target = nearestStorehouse;
                                     var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
@@ -935,9 +1003,14 @@ namespace Godgame.Villagers
                                     nav.Destination = nearestStorehousePosition + storehouseOffset;
                                     nav.Speed = moveSpeed;
                                     job.Phase = JobPhase.NavigateToStorehouse;
+
+                                    var decisionMask = SetMask(0, PreconditionStorehouse, true);
+                                    RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, decisionMask);
                                 }
                                 else
                                 {
+                                    var preconditionMask = SetMask(0, PreconditionStorehouse, false);
+                                    RecordFailure(ref job, e, VillagerJobFailCode.NoStorehouse, Entity.Null, preconditionMask);
                                     job.CarryCount = 0f;
                                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                                     EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
@@ -1068,6 +1141,7 @@ namespace Godgame.Villagers
                                         });
                                         job.CarryCount = 0f;
                                         telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
+                                        RecordCompletion(ref job, e, ticket.TargetEntity, 0);
                                         ReleaseTicket(ref assignment, batch, e, ResolveCompletionState(ticket.TargetEntity, ticket));
                                         EnterIdle(ref job, e, patienceScore, DropoffCooldownSeconds, tx.Position);
                                         StartWorkCooldown(ref workCooldown, e, job.Type, patienceScore);
@@ -1076,7 +1150,7 @@ namespace Godgame.Villagers
                                     }
 
                                     if (TryFindStorehouse(tx.Position, useCooperation, in cooperation, hasAwareness, in awareness, storehouseRadiusSq,
-                                            out var nearestStorehouse, out var nearestStorehousePosition))
+                                            out var nearestStorehouse, out var nearestStorehousePosition, out var storehouseCandidates))
                                     {
                                         job.Target = nearestStorehouse;
                                         var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
@@ -1085,9 +1159,14 @@ namespace Godgame.Villagers
                                         nav.Destination = nearestStorehousePosition + storehouseOffset;
                                         nav.Speed = moveSpeed;
                                         job.Phase = JobPhase.NavigateToStorehouse;
+
+                                        var decisionMask = SetMask(0, PreconditionStorehouse, true);
+                                        RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, decisionMask);
                                     }
                                 else
                                 {
+                                    var preconditionMask = SetMask(0, PreconditionStorehouse, false);
+                                    RecordFailure(ref job, e, VillagerJobFailCode.NoStorehouse, Entity.Null, preconditionMask);
                                     job.CarryCount = 0f;
                                     ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
                                     EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
@@ -1171,14 +1250,26 @@ namespace Godgame.Villagers
                                     telemetry.DepositedAmountMilliInterval += BehaviorTelemetryMath.ToMilli(depositAmount);
                                     job.CarryCount = 0f;
                                 }
+                                else if (!deposited && depositAmount > 0f)
+                                {
+                                    var preconditionMask = SetMask(0, PreconditionStorehouse, true);
+                                    RecordFailure(ref job, e, VillagerJobFailCode.StorehouseFull, job.Target, preconditionMask);
+                                }
                             }
                         }
                         else
                         {
+                            var preconditionMask = SetMask(0, PreconditionStorehouse, false);
+                            RecordFailure(ref job, e, VillagerJobFailCode.TargetInvalid, job.Target, preconditionMask);
                             job.CarryCount = 0f;
                         }
 
                         telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
+
+                        if (job.CarryCount <= 0f)
+                        {
+                            RecordCompletion(ref job, e, job.Target, 0);
+                        }
 
                         ReleaseTicket(ref assignment, batch, e, ResolveCompletionState(ticket.TargetEntity, ticket));
                         EnterIdle(ref job, e, patienceScore, DropoffCooldownSeconds, tx.Position);
@@ -1615,12 +1706,23 @@ namespace Godgame.Villagers
                 return pileEntity != Entity.Null;
             }
 
+            private struct StorehouseCandidates
+            {
+                public Entity CandidateA;
+                public Entity CandidateB;
+                public Entity CandidateC;
+                public float ScoreA;
+                public float ScoreB;
+                public float ScoreC;
+            }
+
             private bool TryFindStorehouse(float3 origin, bool useCooperation, in VillagerCooperationIntent cooperation,
                 bool hasAwareness, in VillagerResourceAwareness awareness, float storehouseRadiusSq,
-                out Entity storehouse, out float3 storehousePosition)
+                out Entity storehouse, out float3 storehousePosition, out StorehouseCandidates candidates)
             {
                 storehouse = Entity.Null;
                 storehousePosition = float3.zero;
+                candidates = default;
                 float minDistSq = float.MaxValue;
 
                 if (useCooperation && cooperation.SharedStorehouse != Entity.Null)
@@ -1631,6 +1733,7 @@ namespace Godgame.Villagers
                     {
                         storehousePosition = StorehouseTransforms[storehouseIndex].Position;
                         minDistSq = math.distancesq(origin, storehousePosition);
+                        UpdateStorehouseCandidates(ref candidates, storehouse, minDistSq);
                     }
                     else
                     {
@@ -1645,6 +1748,7 @@ namespace Godgame.Villagers
                     {
                         storehousePosition = StorehouseTransforms[storehouseIndex].Position;
                         minDistSq = math.distancesq(origin, storehousePosition);
+                        UpdateStorehouseCandidates(ref candidates, storehouse, minDistSq);
                     }
                     else
                     {
@@ -1657,6 +1761,7 @@ namespace Godgame.Villagers
                     for (int i = 0; i < StorehouseEntities.Length; i++)
                     {
                         float distSq = math.distancesq(origin, StorehouseTransforms[i].Position);
+                        UpdateStorehouseCandidates(ref candidates, StorehouseEntities[i], distSq);
                         if (distSq <= storehouseRadiusSq && distSq < minDistSq)
                         {
                             minDistSq = distSq;
@@ -1667,6 +1772,179 @@ namespace Godgame.Villagers
                 }
 
                 return storehouse != Entity.Null;
+            }
+
+            private void UpdateStorehouseCandidates(ref StorehouseCandidates candidates, Entity candidate, float distSq)
+            {
+                var score = 1f / (1f + distSq);
+                if (score > candidates.ScoreA)
+                {
+                    candidates.CandidateC = candidates.CandidateB;
+                    candidates.ScoreC = candidates.ScoreB;
+                    candidates.CandidateB = candidates.CandidateA;
+                    candidates.ScoreB = candidates.ScoreA;
+                    candidates.CandidateA = candidate;
+                    candidates.ScoreA = score;
+                }
+                else if (score > candidates.ScoreB)
+                {
+                    candidates.CandidateC = candidates.CandidateB;
+                    candidates.ScoreC = candidates.ScoreB;
+                    candidates.CandidateB = candidate;
+                    candidates.ScoreB = score;
+                }
+                else if (score > candidates.ScoreC)
+                {
+                    candidates.CandidateC = candidate;
+                    candidates.ScoreC = score;
+                }
+            }
+
+            private byte SetMask(byte mask, byte flag, bool value)
+            {
+                return value ? (byte)(mask | flag) : mask;
+            }
+
+            private void RecordDecision(ref VillagerJobState job, Entity entity, JobPhase phase, Entity target, in StorehouseCandidates candidates, byte preconditionMask)
+            {
+                if (job.LastChosenJob != job.Type || job.LastTarget != target)
+                {
+                    job.RepeatCount = 0;
+                }
+
+                job.LastChosenJob = job.Type;
+                job.LastTarget = target;
+                job.LastFailCode = VillagerJobFailCode.None;
+                job.NextEligibleTick = 0;
+
+                var evt = new VillagerJobDecisionEvent
+                {
+                    Tick = CurrentTick,
+                    JobType = job.Type,
+                    Phase = phase,
+                    FailCode = VillagerJobFailCode.None,
+                    Target = target,
+                    CandidateA = candidates.CandidateA,
+                    CandidateB = candidates.CandidateB,
+                    CandidateC = candidates.CandidateC,
+                    ScoreA = candidates.ScoreA,
+                    ScoreB = candidates.ScoreB,
+                    ScoreC = candidates.ScoreC,
+                    PreconditionMask = preconditionMask
+                };
+
+                PushJobTrace(entity, evt);
+            }
+
+            private void RecordFailure(ref VillagerJobState job, Entity entity, VillagerJobFailCode failCode, Entity target, byte preconditionMask)
+            {
+                var isRepeat = job.LastChosenJob == job.Type && job.LastTarget == target && job.LastFailCode == failCode;
+                if (isRepeat && job.LastFailTick > 0u && CurrentTick > job.LastFailTick)
+                {
+                    job.RepeatCount = (byte)math.min(255, job.RepeatCount + 1);
+                }
+                else
+                {
+                    job.RepeatCount = 1;
+                }
+
+                job.LastChosenJob = job.Type;
+                job.LastTarget = target;
+                job.LastFailCode = failCode;
+                job.LastFailTick = CurrentTick;
+
+                if (ShouldBackoff(failCode))
+                {
+                    var backoffTicks = ResolveFailureBackoffTicks(job.RepeatCount);
+                    if (backoffTicks > 0u)
+                    {
+                        job.NextEligibleTick = CurrentTick + backoffTicks;
+                    }
+                }
+
+                var evt = new VillagerJobDecisionEvent
+                {
+                    Tick = CurrentTick,
+                    JobType = job.Type,
+                    Phase = job.Phase,
+                    FailCode = failCode,
+                    Target = target,
+                    CandidateA = Entity.Null,
+                    CandidateB = Entity.Null,
+                    CandidateC = Entity.Null,
+                    ScoreA = 0f,
+                    ScoreB = 0f,
+                    ScoreC = 0f,
+                    PreconditionMask = preconditionMask
+                };
+
+                PushJobTrace(entity, evt);
+            }
+
+            private void RecordCompletion(ref VillagerJobState job, Entity entity, Entity target, byte preconditionMask)
+            {
+                job.RepeatCount = 0;
+                job.LastFailCode = VillagerJobFailCode.None;
+                job.LastFailTick = CurrentTick;
+                job.NextEligibleTick = 0;
+
+                var evt = new VillagerJobDecisionEvent
+                {
+                    Tick = CurrentTick,
+                    JobType = job.Type,
+                    Phase = job.Phase,
+                    FailCode = VillagerJobFailCode.None,
+                    Target = target,
+                    CandidateA = Entity.Null,
+                    CandidateB = Entity.Null,
+                    CandidateC = Entity.Null,
+                    ScoreA = 0f,
+                    ScoreB = 0f,
+                    ScoreC = 0f,
+                    PreconditionMask = preconditionMask
+                };
+
+                PushJobTrace(entity, evt);
+            }
+
+            private void PushJobTrace(Entity entity, in VillagerJobDecisionEvent evt)
+            {
+                if (!JobTraceLookup.HasBuffer(entity))
+                {
+                    return;
+                }
+
+                var buffer = JobTraceLookup[entity];
+                buffer.Add(evt);
+                if (buffer.Length > 16)
+                {
+                    buffer.RemoveAt(0);
+                }
+            }
+
+            private bool ShouldBackoff(VillagerJobFailCode code)
+            {
+                switch (code)
+                {
+                    case VillagerJobFailCode.NoStorehouse:
+                    case VillagerJobFailCode.StorehouseFull:
+                    case VillagerJobFailCode.ReservationDenied:
+                    case VillagerJobFailCode.TargetInvalid:
+                    case VillagerJobFailCode.Timeout:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            private uint ResolveFailureBackoffTicks(byte repeatCount)
+            {
+                var secondsPerTick = math.max(FixedDeltaTime, 1e-4f);
+                var baseTicks = (uint)math.max(1f, math.ceil(DefaultFailureBackoffSeconds / secondsPerTick));
+                var maxTicks = (uint)math.max(baseTicks, math.ceil(DefaultFailureBackoffMaxSeconds / secondsPerTick));
+                var shift = math.clamp(repeatCount, (byte)0, (byte)5);
+                var scaled = baseTicks * (uint)(1 << shift);
+                return math.min(maxTicks, scaled);
             }
 
             private void ResetJob(ref VillagerJobState job, Entity entity, float patienceScore, float3 position)

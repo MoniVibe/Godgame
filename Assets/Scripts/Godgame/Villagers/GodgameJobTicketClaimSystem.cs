@@ -149,6 +149,12 @@ namespace Godgame.Villagers
                         continue;
                     }
 
+                    if (job.NextEligibleTick != 0 && job.NextEligibleTick > timeState.Tick
+                        && ShouldGateTicket(job, ticket, timeState.Tick))
+                    {
+                        continue;
+                    }
+
                     if (_cooldownLookup.HasComponent(villager) && _cooldownLookup[villager].EndTick > timeState.Tick)
                     {
                         continue;
@@ -299,6 +305,31 @@ namespace Godgame.Villagers
             var ttlSeconds = math.max(baseTtlSeconds, travelSeconds * 1.3f + 2f);
             var secondsPerTick = math.max(timeState.FixedDeltaTime, 1e-4f);
             return (uint)math.max(1f, math.ceil(ttlSeconds / secondsPerTick));
+        }
+
+        private static bool ShouldGateTicket(in VillagerJobState job, in JobTicket ticket, uint tick)
+        {
+            if (job.NextEligibleTick == 0 || job.NextEligibleTick <= tick)
+            {
+                return false;
+            }
+
+            if (job.LastChosenJob != job.Type || job.LastTarget != ticket.TargetEntity)
+            {
+                return false;
+            }
+
+            switch (job.LastFailCode)
+            {
+                case VillagerJobFailCode.TargetInvalid:
+                case VillagerJobFailCode.TargetDepleted:
+                case VillagerJobFailCode.ResourceMismatch:
+                case VillagerJobFailCode.RoleMismatch:
+                case VillagerJobFailCode.Timeout:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }

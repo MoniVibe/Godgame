@@ -400,7 +400,10 @@ namespace Godgame.Systems
 
                     if (hasHeldEntity && stateData.HeldEntity != Entity.Null)
                     {
-                        EmitHoldCommand(ref commands, currentTick, stateData.HeldEntity, holdTargetPosition, stateData.AimDirection, normalizedChargeLevel, stateData.HeldResourceTypeIndex);
+                        if (_physicsVelocityLookup.HasComponent(stateData.HeldEntity))
+                        {
+                            EmitHoldCommand(ref commands, currentTick, stateData.HeldEntity, holdTargetPosition, stateData.AimDirection, normalizedChargeLevel, stateData.HeldResourceTypeIndex);
+                        }
                     }
                 }
 

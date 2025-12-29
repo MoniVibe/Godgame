@@ -56,6 +56,11 @@ namespace Godgame.Scenario
                 var random = new Unity.Mathematics.Random(configValue.Seed != 0 ? configValue.Seed : (uint)entity.Index + 1u);
                 var prefabHasSettlementState = configValue.VillagerPrefab != Entity.Null &&
                                                entityManager.HasComponent<SettlementVillagerState>(configValue.VillagerPrefab);
+                var hasOverrides = entityManager.HasBuffer<GodgameScenarioSpawnOverride>(entity);
+                var overrides = hasOverrides ? entityManager.GetBuffer<GodgameScenarioSpawnOverride>(entity) : default;
+                hasOverrides = hasOverrides && overrides.Length > 0;
+                ResolveOverrideCounts(overrides, out var overrideVillagers, out var overrideCenters, out var overrideStorehouses, out var overrideHousing, out var overrideWorship);
+                var resolvedVillagerCount = hasOverrides ? overrideVillagers : configValue.VillagerCount;
 
                 var settlementRuntime = default(SettlementRuntime);
                 var settlementEntity = Entity.Null;
@@ -94,7 +99,7 @@ namespace Godgame.Scenario
                         Phase = VillagePhase.Growing,
                         CenterPosition = center,
                         InfluenceRadius = math.max(10f, configValue.SpawnRadius),
-                        MemberCount = math.max(0, configValue.VillagerCount),
+                        MemberCount = math.max(0, resolvedVillagerCount),
                         LastUpdateTick = 0u
                     });
                     ecb.AddComponent(villageEntity, new VillageAIDecision
@@ -114,12 +119,20 @@ namespace Godgame.Scenario
                 var primaryVillageCenter = Entity.Null;
                 var primaryHousing = Entity.Null;
                 var primaryWorship = Entity.Null;
+                var primaryStorehouse = Entity.Null;
+
+                if (hasOverrides)
+                {
+                    SpawnOverrides(ref ecb, entityManager, overrides, configValue, villagerPresentation, storePresentation, centerPresentation,
+                        housingPresentation, worshipPresentation, buildingScale, villagerScale, prefabHasSettlementState, settlementEntity, ref random,
+                        ref primaryVillageCenter, ref primaryHousing, ref primaryWorship, ref primaryStorehouse);
+                }
 
                 var centerRing = math.max(1f, configValue.SpawnRadius * 0.2f);
                 var housingRing = math.max(1f, configValue.SpawnRadius * 0.35f);
                 var worshipRing = math.max(1f, configValue.SpawnRadius * 0.35f);
 
-                if (configValue.VillageCenterPrefab != Entity.Null && configValue.VillageCenterCount > 0)
+                if (!hasOverrides && configValue.VillageCenterPrefab != Entity.Null && configValue.VillageCenterCount > 0)
                 {
                     for (int i = 0; i < configValue.VillageCenterCount; i++)
                     {
@@ -143,7 +156,7 @@ namespace Godgame.Scenario
                     }
                 }
 
-                if (configValue.HousingPrefab != Entity.Null && configValue.HousingCount > 0)
+                if (!hasOverrides && configValue.HousingPrefab != Entity.Null && configValue.HousingCount > 0)
                 {
                     var startAngle = math.PI * 0.5f;
                     for (int i = 0; i < configValue.HousingCount; i++)
@@ -168,7 +181,7 @@ namespace Godgame.Scenario
                     }
                 }
 
-                if (configValue.WorshipPrefab != Entity.Null && configValue.WorshipCount > 0)
+                if (!hasOverrides && configValue.WorshipPrefab != Entity.Null && configValue.WorshipCount > 0)
                 {
                     var startAngle = math.PI * 1.5f;
                     for (int i = 0; i < configValue.WorshipCount; i++)
@@ -194,7 +207,7 @@ namespace Godgame.Scenario
                 }
 
                 // Spawn villagers from scenario data
-                if (configValue.VillagerPrefab != Entity.Null && configValue.VillagerCount > 0)
+                if (!hasOverrides && configValue.VillagerPrefab != Entity.Null && configValue.VillagerCount > 0)
                 {
                     for (int i = 0; i < configValue.VillagerCount; i++)
                     {
@@ -286,8 +299,7 @@ namespace Godgame.Scenario
                 }
 
                 // Spawn storehouses from scenario data
-                Entity primaryStorehouse = Entity.Null;
-                if (configValue.StorehouseCount > 0)
+                if (!hasOverrides && configValue.StorehouseCount > 0)
                 {
                     for (int i = 0; i < configValue.StorehouseCount; i++)
                     {
@@ -546,6 +558,23 @@ namespace Godgame.Scenario
         public int ResourceNodeCount;
         public float SpawnRadius;
         public uint Seed;
+    }
+
+    public enum GodgameScenarioSpawnKind : byte
+    {
+        None = 0,
+        Villager = 1,
+        VillageCenter = 2,
+        Storehouse = 3,
+        Housing = 4,
+        Worship = 5
+    }
+
+    public struct GodgameScenarioSpawnOverride : IBufferElementData
+    {
+        public GodgameScenarioSpawnKind Kind;
+        public float3 Position;
+        public int Count;
     }
 
     /// <summary>
