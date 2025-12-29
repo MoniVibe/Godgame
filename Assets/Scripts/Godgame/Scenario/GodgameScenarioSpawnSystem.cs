@@ -48,6 +48,9 @@ namespace Godgame.Scenario
                 var runtimeValue = runtime.ValueRO;
                 var villagerPresentation = GetPrefabPresentationState(entityManager, configValue.VillagerPrefab);
                 var storePresentation = GetPrefabPresentationState(entityManager, configValue.StorehousePrefab);
+                var centerPresentation = GetPrefabPresentationState(entityManager, configValue.VillageCenterPrefab);
+                var housingPresentation = GetPrefabPresentationState(entityManager, configValue.HousingPrefab);
+                var worshipPresentation = GetPrefabPresentationState(entityManager, configValue.WorshipPrefab);
 
                 var center = float3.zero;
                 var random = new Unity.Mathematics.Random(configValue.Seed != 0 ? configValue.Seed : (uint)entity.Index + 1u);
@@ -106,6 +109,88 @@ namespace Godgame.Scenario
                     ecb.AddBuffer<VillageResource>(villageEntity);
                     ecb.AddBuffer<VillageMember>(villageEntity);
                     ecb.AddBuffer<VillageExpansionRequest>(villageEntity);
+                }
+
+                var primaryVillageCenter = Entity.Null;
+                var primaryHousing = Entity.Null;
+                var primaryWorship = Entity.Null;
+
+                var centerRing = math.max(1f, configValue.SpawnRadius * 0.2f);
+                var housingRing = math.max(1f, configValue.SpawnRadius * 0.35f);
+                var worshipRing = math.max(1f, configValue.SpawnRadius * 0.35f);
+
+                if (configValue.VillageCenterPrefab != Entity.Null && configValue.VillageCenterCount > 0)
+                {
+                    for (int i = 0; i < configValue.VillageCenterCount; i++)
+                    {
+                        var angle = (i * math.PI * 2f) / math.max(1, configValue.VillageCenterCount);
+                        var pos = center + new float3(
+                            math.cos(angle) * centerRing,
+                            0f,
+                            math.sin(angle) * centerRing);
+                        var instance = ecb.Instantiate(configValue.VillageCenterPrefab);
+                        ecb.SetComponent(instance, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, buildingScale));
+                        ApplyScenarioRenderContract(ref ecb, instance, GodgameSemanticKeys.VillageCenter, centerPresentation);
+                        AddOrSet(ref ecb, instance, new RenderTint
+                        {
+                            Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.VillageCenter)
+                        }, centerPresentation.HasRenderTint);
+
+                        if (primaryVillageCenter == Entity.Null)
+                        {
+                            primaryVillageCenter = instance;
+                        }
+                    }
+                }
+
+                if (configValue.HousingPrefab != Entity.Null && configValue.HousingCount > 0)
+                {
+                    var startAngle = math.PI * 0.5f;
+                    for (int i = 0; i < configValue.HousingCount; i++)
+                    {
+                        var angle = startAngle + (i * math.PI * 2f) / math.max(1, configValue.HousingCount);
+                        var pos = center + new float3(
+                            math.cos(angle) * housingRing,
+                            0f,
+                            math.sin(angle) * housingRing);
+                        var instance = ecb.Instantiate(configValue.HousingPrefab);
+                        ecb.SetComponent(instance, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, buildingScale));
+                        ApplyScenarioRenderContract(ref ecb, instance, GodgameSemanticKeys.Housing, housingPresentation);
+                        AddOrSet(ref ecb, instance, new RenderTint
+                        {
+                            Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Housing)
+                        }, housingPresentation.HasRenderTint);
+
+                        if (primaryHousing == Entity.Null)
+                        {
+                            primaryHousing = instance;
+                        }
+                    }
+                }
+
+                if (configValue.WorshipPrefab != Entity.Null && configValue.WorshipCount > 0)
+                {
+                    var startAngle = math.PI * 1.5f;
+                    for (int i = 0; i < configValue.WorshipCount; i++)
+                    {
+                        var angle = startAngle + (i * math.PI * 2f) / math.max(1, configValue.WorshipCount);
+                        var pos = center + new float3(
+                            math.cos(angle) * worshipRing,
+                            0f,
+                            math.sin(angle) * worshipRing);
+                        var instance = ecb.Instantiate(configValue.WorshipPrefab);
+                        ecb.SetComponent(instance, LocalTransform.FromPositionRotationScale(pos, quaternion.identity, buildingScale));
+                        ApplyScenarioRenderContract(ref ecb, instance, GodgameSemanticKeys.Worship, worshipPresentation);
+                        AddOrSet(ref ecb, instance, new RenderTint
+                        {
+                            Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Worship)
+                        }, worshipPresentation.HasRenderTint);
+
+                        if (primaryWorship == Entity.Null)
+                        {
+                            primaryWorship = instance;
+                        }
+                    }
                 }
 
                 // Spawn villagers from scenario data
@@ -239,6 +324,21 @@ namespace Godgame.Scenario
                             primaryStorehouse = storehouse;
                         }
                     }
+                }
+
+                if (primaryVillageCenter != Entity.Null && settlementRuntime.VillageCenterInstance == Entity.Null)
+                {
+                    settlementRuntime.VillageCenterInstance = primaryVillageCenter;
+                }
+
+                if (primaryHousing != Entity.Null && settlementRuntime.HousingInstance == Entity.Null)
+                {
+                    settlementRuntime.HousingInstance = primaryHousing;
+                }
+
+                if (primaryWorship != Entity.Null && settlementRuntime.WorshipInstance == Entity.Null)
+                {
+                    settlementRuntime.WorshipInstance = primaryWorship;
                 }
 
                 if (primaryStorehouse != Entity.Null)
@@ -434,9 +534,15 @@ namespace Godgame.Scenario
     public struct GodgameScenarioSpawnConfig : IComponentData
     {
         public Entity VillagerPrefab;
+        public Entity VillageCenterPrefab;
         public Entity StorehousePrefab;
+        public Entity HousingPrefab;
+        public Entity WorshipPrefab;
         public int VillagerCount;
+        public int VillageCenterCount;
         public int StorehouseCount;
+        public int HousingCount;
+        public int WorshipCount;
         public int ResourceNodeCount;
         public float SpawnRadius;
         public uint Seed;

@@ -162,7 +162,20 @@ namespace Godgame.Headless
             _resourceNodeLookup.Update(ref state);
 
             DynamicBuffer<TelemetryEvent> eventBuffer = default;
-            var emitEvents = TryGetEventBuffer(ref state, out eventBuffer);
+            var emitEvents = false;
+            if (SystemAPI.TryGetSingleton<TelemetryExportConfig>(out var config) &&
+                config.Enabled != 0 &&
+                (config.Flags & TelemetryExportFlags.IncludeTelemetryEvents) != 0)
+            {
+                var streamEntity = TelemetryStreamUtility.EnsureEventStream(state.EntityManager);
+                if (!state.EntityManager.HasBuffer<TelemetryEvent>(streamEntity))
+                {
+                    state.EntityManager.AddBuffer<TelemetryEvent>(streamEntity);
+                }
+
+                eventBuffer = state.EntityManager.GetBuffer<TelemetryEvent>(streamEntity);
+                emitEvents = true;
+            }
 
             foreach (var (job, entity) in SystemAPI.Query<RefRO<VillagerJobState>>().WithEntityAccess())
             {
@@ -189,7 +202,16 @@ namespace Godgame.Headless
             }
 
             var result = EvaluateRepetition();
-            LogBankResult(ref state, result.Pass, result.Reason, timeState.Tick);
+            var tickTime = timeState.Tick;
+            if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
+            {
+                tickTime = tickTimeState.Tick;
+            }
+
+            var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
+                ? scenario.Tick
+                : 0u;
+            LogBankResult(result.Pass, result.Reason, tickTime, scenarioTick);
             _bankReported = true;
             LogOffenderSummary(result);
             RequestExitIfEnabled(ref state, timeState.Tick, result.Pass ? 0 : 6);
@@ -666,26 +688,6 @@ namespace Godgame.Headless
             return 3;
         }
 
-        private bool TryGetEventBuffer(ref SystemState state, out DynamicBuffer<TelemetryEvent> buffer)
-        {
-            buffer = default;
-            if (!SystemAPI.TryGetSingleton<TelemetryExportConfig>(out var config) ||
-                config.Enabled == 0 ||
-                (config.Flags & TelemetryExportFlags.IncludeTelemetryEvents) == 0)
-            {
-                return false;
-            }
-
-            var streamEntity = TelemetryStreamUtility.EnsureEventStream(state.EntityManager);
-            if (!state.EntityManager.HasBuffer<TelemetryEvent>(streamEntity))
-            {
-                state.EntityManager.AddBuffer<TelemetryEvent>(streamEntity);
-            }
-
-            buffer = state.EntityManager.GetBuffer<TelemetryEvent>(streamEntity);
-            return true;
-        }
-
         private static uint ReadEnvUInt(string key, uint defaultValue)
         {
             var raw = SystemEnv.GetEnvironmentVariable(key);
@@ -710,18 +712,9 @@ namespace Godgame.Headless
             return math.clamp(configured, 8, capacity);
         }
 
-        private void LogBankResult(ref SystemState state, bool pass, string reason, uint tick)
+        private static void LogBankResult(bool pass, string reason, uint tickTime, uint scenarioTick)
         {
             const string testId = "G3.VILLAGER_REPETITION";
-            var tickTime = tick;
-            if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
-            {
-                tickTime = tickTimeState.Tick;
-            }
-
-            var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
-                ? scenario.Tick
-                : 0u;
             var delta = (int)tickTime - (int)scenarioTick;
 
             if (pass)

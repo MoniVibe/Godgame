@@ -27,6 +27,24 @@
       "radius": 5
     },
     {
+      "prefab": "VillageCenter",
+      "count": 1,
+      "position": { "x": 5, "y": 0, "z": -5 },
+      "radius": 4
+    },
+    {
+      "prefab": "Housing",
+      "count": 2,
+      "position": { "x": 18, "y": 0, "z": -5 },
+      "radius": 6
+    },
+    {
+      "prefab": "Worship",
+      "count": 1,
+      "position": { "x": -6, "y": 0, "z": 8 },
+      "radius": 4
+    },
+    {
       "prefab": "Tree",
       "count": 60,
       "position": { "x": 25, "y": 0, "z": 20 },

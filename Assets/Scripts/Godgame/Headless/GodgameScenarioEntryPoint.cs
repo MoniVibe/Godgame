@@ -110,15 +110,25 @@ namespace Godgame.Headless
                     LogTelemetryOutOnce(SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar) ?? "(unset)");
                     var result = ScenarioRunnerExecutor.RunFromFile(scenarioPath, reportPath);
                     Debug.Log($"[GodgameScenarioEntryPoint] ScenarioRunner '{scenarioPath}' completed. ticks={result.RunTicks} snapshots={result.SnapshotLogCount}");
-	                    if (result.PerformanceBudgetFailed)
-	                    {
-	                        Debug.LogError($"[GodgameScenarioEntryPoint] Performance budget failure ({result.PerformanceBudgetMetric}) at tick {result.PerformanceBudgetTick}: value={result.PerformanceBudgetValue:F2}, budget={result.PerformanceBudgetLimit:F2}");
-	                        Quit(2);
-	                    }
-	                    else
-	                    {
-	                        Quit(0);
-	                    }
+                    if (result.PerformanceBudgetFailed)
+                    {
+                        var exitPolicy = ScenarioExitUtility.ResolveExitPolicy();
+                        var message = $"[GodgameScenarioEntryPoint] Performance budget failure ({result.PerformanceBudgetMetric}) at tick {result.PerformanceBudgetTick}: value={result.PerformanceBudgetValue:F2}, budget={result.PerformanceBudgetLimit:F2}";
+                        if (exitPolicy == ExitPolicy.Strict)
+                        {
+                            Debug.LogError(message);
+                            Quit(2);
+                        }
+                        else
+                        {
+                            Debug.LogWarning(message);
+                            Quit(0);
+                        }
+                    }
+                    else
+                    {
+                        Quit(0);
+                    }
 	                    return;
 	                }
 

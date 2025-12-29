@@ -128,7 +128,10 @@ namespace Godgame.Scenario
             var config = new GodgameScenarioSpawnConfig
             {
                 VillagerPrefab = settlementConfig.VillagerPrefab,
+                VillageCenterPrefab = settlementConfig.VillageCenterPrefab,
                 StorehousePrefab = settlementConfig.StorehousePrefab,
+                HousingPrefab = settlementConfig.HousingPrefab,
+                WorshipPrefab = settlementConfig.WorshipPrefab,
                 SpawnRadius = 20f,
                 Seed = 12345
             };
@@ -141,9 +144,21 @@ namespace Godgame.Scenario
                 {
                     config.VillagerCount += entityData.count;
                 }
+                else if (entityData.prefab == "VillageCenter")
+                {
+                    config.VillageCenterCount += entityData.count;
+                }
                 else if (entityData.prefab == "Storehouse")
                 {
                     config.StorehouseCount += entityData.count;
+                }
+                else if (entityData.prefab == "Housing")
+                {
+                    config.HousingCount += entityData.count;
+                }
+                else if (entityData.prefab == "Worship" || entityData.prefab == "WorshipSite")
+                {
+                    config.WorshipCount += entityData.count;
                 }
                 else if (entityData.prefab == "Tree" || entityData.prefab == "ResourceNode")
                 {
@@ -156,7 +171,7 @@ namespace Godgame.Scenario
             EntityManager.AddComponentData(configEntity, config);
             EntityManager.AddComponentData(configEntity, new GodgameScenarioRuntime());
             
-            Debug.Log($"[GodgameScenarioLoaderSystem] Configured scenario with {config.VillagerCount} villagers, {config.StorehouseCount} storehouses.");
+            Debug.Log($"[GodgameScenarioLoaderSystem] Configured scenario with {config.VillagerCount} villagers, {config.StorehouseCount} storehouses, {config.VillageCenterCount} centers, {config.HousingCount} housing, {config.WorshipCount} worship.");
         }
 
         private static string ResolveScenarioPath(string relativePath)

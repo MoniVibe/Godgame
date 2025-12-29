@@ -328,7 +328,7 @@ namespace Godgame.Headless
             }
 
             var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
-            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
             {
                 state.Enabled = false;
                 return;

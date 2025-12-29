@@ -54,7 +54,16 @@ namespace Godgame.Headless
 
             if (SystemAPI.TryGetSingleton(out VillagerMovementDiagnosticsFailure failure))
             {
-                LogBankResult(ref state, false, ResolveReason(failure.Reason), timeState.Tick);
+                var tickTime = timeState.Tick;
+                if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
+                {
+                    tickTime = tickTimeState.Tick;
+                }
+
+                var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
+                    ? scenario.Tick
+                    : 0u;
+                LogBankResult(false, ResolveReason(failure.Reason), tickTime, scenarioTick);
                 _bankReported = true;
                 RequestExitIfEnabled(ref state, timeState.Tick, 2);
                 return;
@@ -62,7 +71,16 @@ namespace Godgame.Headless
 
             if (timeState.Tick >= _startTick + DefaultWindowTicks)
             {
-                LogBankResult(ref state, true, string.Empty, timeState.Tick);
+                var tickTime = timeState.Tick;
+                if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
+                {
+                    tickTime = tickTimeState.Tick;
+                }
+
+                var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
+                    ? scenario.Tick
+                    : 0u;
+                LogBankResult(true, string.Empty, tickTime, scenarioTick);
                 _bankReported = true;
                 RequestExitIfEnabled(ref state, timeState.Tick, 0);
             }
@@ -114,18 +132,9 @@ namespace Godgame.Headless
             GodgameHeadlessExitSystem.Request(ref state, tick, exitCode);
         }
 
-        private void LogBankResult(ref SystemState state, bool pass, string reason, uint tick)
+        private static void LogBankResult(bool pass, string reason, uint tickTime, uint scenarioTick)
         {
             const string testId = "G2.VILLAGER_MOVEMENT_DIAGNOSTICS";
-            var tickTime = tick;
-            if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
-            {
-                tickTime = tickTimeState.Tick;
-            }
-
-            var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
-                ? scenario.Tick
-                : 0u;
             var delta = (int)tickTime - (int)scenarioTick;
 
             if (pass)

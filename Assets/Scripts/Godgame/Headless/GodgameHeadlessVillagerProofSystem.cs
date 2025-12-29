@@ -118,8 +118,17 @@ namespace Godgame.Headless
                 _rewindPending = 1;
                 _rewindPass = 1;
                 _rewindObserved = stored - _initialStored;
+                var tickTime = timeState.Tick;
+                if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
+                {
+                    tickTime = tickTimeState.Tick;
+                }
+
+                var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
+                    ? scenario.Tick
+                    : 0u;
                 UnityDebug.Log($"[GodgameHeadlessVillagerProof] PASS tick={timeState.Tick} moved={moved:F2} stored={stored:F2} initialStored={_initialStored:F2} villagers={villagerCount} storehouses={storehouseCount} phase={phase}");
-                LogBankResult(ref state, ResolveBankTestId(), true, string.Empty, timeState.Tick);
+                LogBankResult(ResolveBankTestId(), true, string.Empty, tickTime, scenarioTick);
                 TelemetryLoopProofUtility.Emit(state.EntityManager, timeState.Tick, TelemetryLoopIds.Logistics, true, stored - _initialStored, ExpectedDelta, DefaultTimeoutTicks, step: StepGatherDeliver);
                 TryFlushRewindProof(ref state);
                 ExitIfRequested(ref state, timeState.Tick, 0);
@@ -132,8 +141,17 @@ namespace Godgame.Headless
                 _rewindPending = 1;
                 _rewindPass = 0;
                 _rewindObserved = stored - _initialStored;
+                var tickTime = timeState.Tick;
+                if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
+                {
+                    tickTime = tickTimeState.Tick;
+                }
+
+                var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
+                    ? scenario.Tick
+                    : 0u;
                 UnityDebug.LogError($"[GodgameHeadlessVillagerProof] FAIL tick={timeState.Tick} moved={moved:F2} stored={stored:F2} initialStored={_initialStored:F2} villagers={villagerCount} storehouses={storehouseCount} phase={phase}");
-                LogBankResult(ref state, ResolveBankTestId(), false, "timeout", timeState.Tick);
+                LogBankResult(ResolveBankTestId(), false, "timeout", tickTime, scenarioTick);
                 TelemetryLoopProofUtility.Emit(state.EntityManager, timeState.Tick, TelemetryLoopIds.Logistics, false, stored - _initialStored, ExpectedDelta, DefaultTimeoutTicks, step: StepGatherDeliver);
                 TryFlushRewindProof(ref state);
                 ExitIfRequested(ref state, timeState.Tick, 3);
@@ -273,22 +291,12 @@ namespace Godgame.Headless
             return _bankTestId;
         }
 
-        private void LogBankResult(ref SystemState state, FixedString64Bytes testId, bool pass, string reason, uint tick)
+        private static void LogBankResult(FixedString64Bytes testId, bool pass, string reason, uint tickTime, uint scenarioTick)
         {
             if (testId.IsEmpty)
             {
                 return;
             }
-
-            var tickTime = tick;
-            if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
-            {
-                tickTime = tickTimeState.Tick;
-            }
-
-            var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
-                ? scenario.Tick
-                : 0u;
             var delta = (int)tickTime - (int)scenarioTick;
 
             if (pass)
@@ -318,9 +326,10 @@ namespace Godgame.Headless
         private float GetStoredTotal(ref SystemState state)
         {
             var total = 0f;
-            foreach (var inventory in SystemAPI.Query<RefRO<StorehouseInventory>>())
+            using var inventories = _storehouseQuery.ToComponentDataArray<StorehouseInventory>(Allocator.Temp);
+            for (var i = 0; i < inventories.Length; i++)
             {
-                total += math.max(0f, inventory.ValueRO.TotalStored);
+                total += math.max(0f, inventories[i].TotalStored);
             }
 
             return total;
