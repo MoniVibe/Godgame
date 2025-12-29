@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Variants:
   - Name: VillagerMiner_Cylinder
-    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+    Mesh: {fileID: 4300044, guid: e6f8c6b4cd0c5d24fbefebd224edfdb5, type: 3}
+    Material: {fileID: 2100000, guid: d8fee6ba4ecb4fa194b1889c433e6788, type: 2}
+    BoundsCenter: {x: 0, y: 1.024455, z: 0.053210676}
+    BoundsExtents: {x: 1.0664115, y: 1.059441, z: 0.5680424}
     PresenterMask: 1
     SubMesh: 0
     RenderLayer: 0
@@ -27,10 +27,10 @@ MonoBehaviour:
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
   - Name: VillagerFarmer_Cylinder
-    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+    Mesh: {fileID: 4300044, guid: e6f8c6b4cd0c5d24fbefebd224edfdb5, type: 3}
+    Material: {fileID: 2100000, guid: d8fee6ba4ecb4fa194b1889c433e6788, type: 2}
+    BoundsCenter: {x: 0, y: 1.024455, z: 0.053210676}
+    BoundsExtents: {x: 1.0664115, y: 1.059441, z: 0.5680424}
     PresenterMask: 1
     SubMesh: 0
     RenderLayer: 0
@@ -40,10 +40,10 @@ MonoBehaviour:
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
   - Name: VillagerForester_Cylinder
-    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+    Mesh: {fileID: 4300044, guid: e6f8c6b4cd0c5d24fbefebd224edfdb5, type: 3}
+    Material: {fileID: 2100000, guid: d8fee6ba4ecb4fa194b1889c433e6788, type: 2}
+    BoundsCenter: {x: 0, y: 1.024455, z: 0.053210676}
+    BoundsExtents: {x: 1.0664115, y: 1.059441, z: 0.5680424}
     PresenterMask: 1
     SubMesh: 0
     RenderLayer: 0
@@ -53,10 +53,10 @@ MonoBehaviour:
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
   - Name: VillagerBreeder_Cylinder
-    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+    Mesh: {fileID: 4300044, guid: e6f8c6b4cd0c5d24fbefebd224edfdb5, type: 3}
+    Material: {fileID: 2100000, guid: d8fee6ba4ecb4fa194b1889c433e6788, type: 2}
+    BoundsCenter: {x: 0, y: 1.024455, z: 0.053210676}
+    BoundsExtents: {x: 1.0664115, y: 1.059441, z: 0.5680424}
     PresenterMask: 1
     SubMesh: 0
     RenderLayer: 0
@@ -66,10 +66,10 @@ MonoBehaviour:
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
   - Name: VillagerWorshipper_Cylinder
-    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+    Mesh: {fileID: 4300044, guid: e6f8c6b4cd0c5d24fbefebd224edfdb5, type: 3}
+    Material: {fileID: 2100000, guid: d8fee6ba4ecb4fa194b1889c433e6788, type: 2}
+    BoundsCenter: {x: 0, y: 1.024455, z: 0.053210676}
+    BoundsExtents: {x: 1.0664115, y: 1.059441, z: 0.5680424}
     PresenterMask: 1
     SubMesh: 0
     RenderLayer: 0
@@ -79,10 +79,10 @@ MonoBehaviour:
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
   - Name: VillagerRefiner_Cylinder
-    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+    Mesh: {fileID: 4300044, guid: e6f8c6b4cd0c5d24fbefebd224edfdb5, type: 3}
+    Material: {fileID: 2100000, guid: d8fee6ba4ecb4fa194b1889c433e6788, type: 2}
+    BoundsCenter: {x: 0, y: 1.024455, z: 0.053210676}
+    BoundsExtents: {x: 1.0664115, y: 1.059441, z: 0.5680424}
     PresenterMask: 1
     SubMesh: 0
     RenderLayer: 0
@@ -92,10 +92,10 @@ MonoBehaviour:
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
   - Name: VillagerPeacekeeper_Cylinder
-    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+    Mesh: {fileID: 4300044, guid: e6f8c6b4cd0c5d24fbefebd224edfdb5, type: 3}
+    Material: {fileID: 2100000, guid: d8fee6ba4ecb4fa194b1889c433e6788, type: 2}
+    BoundsCenter: {x: 0, y: 1.024455, z: 0.053210676}
+    BoundsExtents: {x: 1.0664115, y: 1.059441, z: 0.5680424}
     PresenterMask: 1
     SubMesh: 0
     RenderLayer: 0
@@ -105,10 +105,10 @@ MonoBehaviour:
     TracerColor: {r: 1, g: 1, b: 1, a: 1}
     TracerStyle: 0
   - Name: VillagerCombatant_Cylinder
-    Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
-    BoundsCenter: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
-    BoundsExtents: {x: 0.50000006, y: 1, z: 0.5000001}
+    Mesh: {fileID: 4300044, guid: e6f8c6b4cd0c5d24fbefebd224edfdb5, type: 3}
+    Material: {fileID: 2100000, guid: d8fee6ba4ecb4fa194b1889c433e6788, type: 2}
+    BoundsCenter: {x: 0, y: 1.024455, z: 0.053210676}
+    BoundsExtents: {x: 1.0664115, y: 1.059441, z: 0.5680424}
     PresenterMask: 1
     SubMesh: 0
     RenderLayer: 0
@@ -158,7 +158,7 @@ MonoBehaviour:
     TracerStyle: 0
   - Name: ResourceNode_Cube
     Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-    Material: {fileID: 2100000, guid: ca4fc8441050fa640824467d49d0d060, type: 2}
+    Material: {fileID: 2100000, guid: b2d3a6928db14cd4ab1495fc754ef0f5, type: 2}
     BoundsCenter: {x: 0, y: 0, z: 0}
     BoundsExtents: {x: 0.5, y: 0.5, z: 0.5}
     PresenterMask: 1

@@ -87,10 +87,22 @@ namespace Godgame.Presentation
                 ecb.AddComponent(entity, new PresentationLayer { Value = PresentationLayerId.Colony });
             }
 
-            if (!SystemAPI.HasComponent<RenderSemanticKey>(entity))
+            var presentationState = new GodgamePresentationUtility.PrefabPresentationState
             {
-                GodgamePresentationUtility.AssignRenderComponents(ref ecb, entity, semanticKey, default);
-            }
+                HasRenderKey = SystemAPI.HasComponent<RenderKey>(entity),
+                HasRenderVariantKey = SystemAPI.HasComponent<RenderVariantKey>(entity),
+                HasSemanticKey = SystemAPI.HasComponent<RenderSemanticKey>(entity),
+                HasRenderFlags = SystemAPI.HasComponent<RenderFlags>(entity),
+                HasMeshPresenter = SystemAPI.HasComponent<MeshPresenter>(entity),
+                HasSpritePresenter = SystemAPI.HasComponent<SpritePresenter>(entity),
+                HasDebugPresenter = SystemAPI.HasComponent<DebugPresenter>(entity),
+                HasRenderTint = SystemAPI.HasComponent<RenderTint>(entity),
+                HasRenderTexSlice = SystemAPI.HasComponent<RenderTexSlice>(entity),
+                HasRenderUv = SystemAPI.HasComponent<RenderUvTransform>(entity),
+                HasRenderThemeOverride = SystemAPI.HasComponent<RenderThemeOverride>(entity)
+            };
+
+            GodgamePresentationUtility.AssignRenderComponents(ref ecb, entity, semanticKey, presentationState);
 
             var buildingTint = GodgamePresentationColors.ForBuilding(semanticKey);
             if (SystemAPI.HasComponent<RenderTint>(entity))

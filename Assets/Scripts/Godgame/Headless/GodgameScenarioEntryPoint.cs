@@ -98,6 +98,7 @@ namespace Godgame.Headless
 	            {
 	                if (LooksLikeScenarioRunnerJson(scenarioPath))
 	                {
+	                    DisableGodgameHeadlessProofsForScenarioRunner();
 	                    var runnerTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
 	                    if (string.IsNullOrWhiteSpace(runnerTelemetryPath) && !string.IsNullOrEmpty(telemetryPath))
 	                    {
@@ -215,6 +216,14 @@ namespace Godgame.Headless
 	        {
 	            SetEnvIfUnset("PUREDOTS_HEADLESS_TIME_PROOF", "0");
 	            SetEnvIfUnset("PUREDOTS_HEADLESS_REWIND_PROOF", "0");
+	        }
+
+	        private static void DisableGodgameHeadlessProofsForScenarioRunner()
+	        {
+	            SetEnvIfUnset("GODGAME_HEADLESS_VILLAGER_PROOF", "0");
+	            SetEnvIfUnset("GODGAME_HEADLESS_NEEDS_PROOF", "0");
+	            SetEnvIfUnset("GODGAME_HEADLESS_COMBAT_PROOF", "0");
+	            SetEnvIfUnset("GODGAME_HEADLESS_VILLAGE_BUILD_PROOF", "0");
 	        }
 
 	        private static void SetEnvIfUnset(string key, string value)

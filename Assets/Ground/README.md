@@ -16,3 +16,7 @@ materials referenced by both the DOTS presentation registry and the new variant 
 When new descriptors are introduced, mirror the folder pattern here, author the URP
 material (re-using the shared Bakings texture stack when possible), then create a
 matching prefab + variant set so runtime swaps can resolve immediately.
+
+Biome materials are intentionally lightweight and point at textures under
+`Assets/Art/Assetsvault`. To swap a biome surface, edit the per-biome material's
+`_BaseMap` (and optional `_BumpMap`) without touching runtime logic.

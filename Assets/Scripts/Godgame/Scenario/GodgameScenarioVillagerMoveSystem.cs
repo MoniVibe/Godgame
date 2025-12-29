@@ -13,7 +13,6 @@ namespace Godgame.Scenario
     /// Moves villagers toward the current VillagerAIState.TargetEntity so the scenario has visible motion
     /// and headless runs generate meaningful time-driven state changes.
     /// </summary>
-    [DisableAutoCreation]
     [UpdateInGroup(typeof(VillagerSystemGroup))]
     [UpdateAfter(typeof(GodgameScenarioVillagerBehaviorSystem))]
     public partial struct GodgameScenarioVillagerMoveSystem : ISystem
@@ -24,13 +23,6 @@ namespace Godgame.Scenario
 
         public void OnCreate(ref SystemState state)
         {
-            // Hard-disabled: scenario loop should not simulate missing behaviors.
-            state.Enabled = false;
-            if (!state.Enabled)
-            {
-                return;
-            }
-
             state.RequireForUpdate<ScenarioSceneTag>();
             state.RequireForUpdate<SettlementConfig>();
             state.RequireForUpdate<GodgameScenarioConfigBlobReference>();
@@ -46,9 +38,8 @@ namespace Godgame.Scenario
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            if (!IsScenario01(ref state))
+            if (!IsScenarioActive(ref state))
             {
-                state.Enabled = false;
                 return;
             }
 
@@ -118,8 +109,13 @@ namespace Godgame.Scenario
             }
         }
 
-        private bool IsScenario01(ref SystemState state)
+        private bool IsScenarioActive(ref SystemState state)
         {
+            if (SystemAPI.TryGetSingleton<GodgameScenarioRuntime>(out var runtime))
+            {
+                return runtime.HasSpawned != 0;
+            }
+
             if (!SystemAPI.TryGetSingleton<GodgameScenarioConfigBlobReference>(out var configRef))
             {
                 return false;

@@ -28,7 +28,7 @@
 3. **Documentation**: update this file (and archive the previous snapshot) within 3–4 days of a new smoke feature landing.
 
 ## Quick Validation Checklist
-- Run headless command (see `headless_runbook.md`) → confirm logs mention `godgame_smoke.json` and villager/storehouse counts.
+- Run headless command (see `Docs/Headless/headless_runbook.md`) → confirm logs mention `godgame_smoke.json` and villager/storehouse counts.
 - Open `TRI_Godgame_Smoke.unity` → ensure Scenario Bootstrap UI reports `godgame_smoke.json`.
 - Check `Console` for:
   - `[Godgame Render SIM] ... godgame_smoke.json` message.
