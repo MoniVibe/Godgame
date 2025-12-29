@@ -46,9 +46,9 @@ Repeatable pipeline:
 
 Current hero mapping (v1):
 
-- `Storehouse_Gate_Hero_v1` uses `Gate_1A1` + `Gates_1A1`.
+- `Storehouse_Cube` uses `Storehouse_Wood_URP` (wood atlas on the cube placeholder).
 - `ResourceNode_Rock_Hero_v1` uses `Cliff_Rocks_Set_A1` + `Cliff_Pieces_1`.
-- Theme 0 maps `GodgameSemanticKeys.Storehouse` to `Storehouse_Gate_Hero_v1` and `GodgameSemanticKeys.ResourceNode` to `ResourceNode_Rock_Hero_v1`.
+- Theme 0 maps `GodgameSemanticKeys.Storehouse` to `Storehouse_Cube` and `GodgameSemanticKeys.ResourceNode` to `ResourceNode_Rock_Hero_v1`.
 
 ## Runtime Verification
 
@@ -60,7 +60,6 @@ Current hero mapping (v1):
 
 - **Catalog not found**: Ensure the catalog authoring object lives in the scene/subscene, or add the runtime bootstrap when you cannot bake.
 - **Wrong mesh appears**: Verify the theme mapping for `SemanticKey` points at the expected variant index.
-
 
 
 

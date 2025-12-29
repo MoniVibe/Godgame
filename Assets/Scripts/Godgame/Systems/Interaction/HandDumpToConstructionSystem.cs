@@ -19,6 +19,7 @@ namespace Godgame.Systems.Interaction
     public partial struct HandDumpToConstructionSystem : ISystem
     {
         private ComponentLookup<ConstructionIntake> _intakeLookup;
+        private ComponentLookup<ConstructionGhost> _ghostLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -28,6 +29,7 @@ namespace Godgame.Systems.Interaction
             state.RequireForUpdate<HandPayload>();
 
             _intakeLookup = state.GetComponentLookup<ConstructionIntake>(false);
+            _ghostLookup = state.GetComponentLookup<ConstructionGhost>(false);
         }
 
         [BurstCompile]
@@ -38,6 +40,7 @@ namespace Godgame.Systems.Interaction
             float deltaTime = timeState.FixedDeltaTime;
 
             _intakeLookup.Update(ref state);
+            _ghostLookup.Update(ref state);
 
             foreach (var (handStateRef, configRef, payloadBuffer, commandBuffer) in SystemAPI
                          .Query<RefRW<Godgame.Runtime.DivineHandState>, RefRO<DivineHandConfig>, DynamicBuffer<HandPayload>, DynamicBuffer<HandCommand>>())
@@ -75,26 +78,45 @@ namespace Godgame.Systems.Interaction
             float deltaTime)
         {
             var target = command.TargetEntity;
-            if (target == Entity.Null || !_intakeLookup.HasComponent(target))
+            if (target == Entity.Null || (!_intakeLookup.HasComponent(target) && !_ghostLookup.HasComponent(target)))
             {
                 return false;
             }
 
-            var intake = _intakeLookup[target];
-            if (intake.Paid >= intake.Cost)
+            ConstructionIntake intake = default;
+            ConstructionGhost ghost = default;
+            bool hasIntake = _intakeLookup.HasComponent(target);
+            bool hasGhost = _ghostLookup.HasComponent(target);
+
+            if (hasIntake)
             {
-                return true;
+                intake = _intakeLookup[target];
+                if (intake.Paid >= intake.Cost)
+                {
+                    return true;
+                }
             }
+
+            if (hasGhost)
+            {
+                ghost = _ghostLookup[target];
+                if (ghost.Paid >= ghost.Cost)
+                {
+                    return true;
+                }
+            }
+
+            ushort resourceType = hasIntake ? intake.ResourceTypeIndex : ghost.ResourceTypeIndex;
+            int remainingCost = hasIntake ? (intake.Cost - intake.Paid) : (ghost.Cost - ghost.Paid);
 
             float dumpRate = math.max(0f, config.DumpRate);
             int desiredUnits = math.max(1, (int)math.floor(dumpRate * deltaTime));
-            desiredUnits = math.min(desiredUnits, intake.Cost - intake.Paid);
+            desiredUnits = math.min(desiredUnits, remainingCost);
             if (desiredUnits <= 0)
             {
                 return false;
             }
 
-            ushort resourceType = intake.ResourceTypeIndex;
             float removed = HandPayloadUtility.RemoveAmount(ref payload, resourceType, desiredUnits);
             int removableUnits = (int)math.floor(removed);
             if (removableUnits <= 0)
@@ -102,12 +124,21 @@ namespace Godgame.Systems.Interaction
                 return false;
             }
 
-            intake.Paid += removableUnits;
-            intake.Paid = math.min(intake.Paid, intake.Cost);
-            _intakeLookup[target] = intake;
+            if (hasIntake)
+            {
+                intake.Paid += removableUnits;
+                intake.Paid = math.min(intake.Paid, intake.Cost);
+                _intakeLookup[target] = intake;
+            }
+
+            if (hasGhost)
+            {
+                ghost.Paid += removableUnits;
+                ghost.Paid = math.min(ghost.Paid, ghost.Cost);
+                _ghostLookup[target] = ghost;
+            }
 
             return true;
         }
     }
 }
-

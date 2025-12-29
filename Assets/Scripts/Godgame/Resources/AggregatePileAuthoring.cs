@@ -1,3 +1,4 @@
+using PureDOTS.Runtime.Components;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -91,8 +92,14 @@ namespace Godgame.Resources
 
                 AddComponent(entity, pile);
                 AddComponent(entity, new AggregatePileTag());
+                AddComponent(entity, new SiphonSource
+                {
+                    ResourceTypeIndex = authoring.resourceTypeIndex,
+                    Amount = pile.Amount,
+                    MinChunkSize = 1f,
+                    SiphonResistance = 0f
+                });
             }
         }
     }
 }
-

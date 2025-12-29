@@ -33,6 +33,7 @@ namespace Godgame.Systems
         public readonly RefRW<DivineHandState> HandState;
         public readonly RefRW<PureHandState> PureHandState;
         public readonly RefRO<DivineHandConfig> HandConfig;
+        public readonly RefRW<HandHistory> History;
         public readonly RefRW<DivineHandCommand> Command;
         public readonly RefRW<HandInteractionState> Interaction;
         public readonly DynamicBuffer<DivineHandEvent> Events;
@@ -55,7 +56,9 @@ namespace Godgame.Systems
         private ComponentLookup<HandQueuedTag> _queuedTagLookup;
         private ComponentLookup<MiracleToken> _miracleTokenLookup;
         private ComponentLookup<PhysicsVelocity> _physicsVelocityLookup;
+        private ComponentLookup<PhysicsMass> _physicsMassLookup;
         private ComponentLookup<PhysicsGravityFactor> _physicsGravityLookup;
+        private ComponentLookup<PureDOTS.Runtime.Interaction.MovementSuppressed> _movementSuppressedLookup;
         private ComponentLookup<MiracleCasterState> _miracleCasterLookup;
         private BufferLookup<MiracleSlotDefinition> _miracleSlotLookup;
         private ComponentLookup<StorehouseInventory> _storehouseInventoryLookup;
@@ -79,6 +82,7 @@ namespace Godgame.Systems
             state.RequireForUpdate<HandInputFrame>();
             state.RequireForUpdate<HandHover>();
             state.RequireForUpdate<HandAffordances>();
+            state.RequireForUpdate<HandHistory>();
 
             _transformLookup = state.GetComponentLookup<LocalTransform>(false);
             _pickableLookup = state.GetComponentLookup<HandPickable>(true);
@@ -87,12 +91,14 @@ namespace Godgame.Systems
             _resourceTypeIdLookup = state.GetComponentLookup<ResourceTypeId>(true);
             _queuedTagLookup = state.GetComponentLookup<HandQueuedTag>(false);
             _physicsVelocityLookup = state.GetComponentLookup<PhysicsVelocity>(false);
+            _physicsMassLookup = state.GetComponentLookup<PhysicsMass>(true);
             _physicsGravityLookup = state.GetComponentLookup<PhysicsGravityFactor>(false);
             _miracleTokenLookup = state.GetComponentLookup<MiracleToken>(true);
             _miracleCasterLookup = state.GetComponentLookup<MiracleCasterState>(true);
             _miracleSlotLookup = state.GetBufferLookup<MiracleSlotDefinition>(true);
             _storehouseInventoryLookup = state.GetComponentLookup<StorehouseInventory>(false);
             _storeItemsLookup = state.GetBufferLookup<StorehouseInventoryItem>(false);
+            _movementSuppressedLookup = state.GetComponentLookup<PureDOTS.Runtime.Interaction.MovementSuppressed>(false);
 
             state.RequireForUpdate<ResourceTypeIndex>();
         }
@@ -119,7 +125,9 @@ namespace Godgame.Systems
             _storeItemsLookup.Update(ref state);
             _queuedTagLookup.Update(ref state);
             _physicsVelocityLookup.Update(ref state);
+            _physicsMassLookup.Update(ref state);
             _physicsGravityLookup.Update(ref state);
+            _movementSuppressedLookup.Update(ref state);
             _miracleTokenLookup.Update(ref state);
             _miracleCasterLookup.Update(ref state);
             _miracleSlotLookup.Update(ref state);
@@ -142,6 +150,7 @@ namespace Godgame.Systems
                 RefRW<ResourceSiphonState> siphonRef = SystemAPI.GetComponentRW<ResourceSiphonState>(entity);
                 ref var stateData = ref hand.HandState.ValueRW;
                 ref var pureHandState = ref hand.PureHandState.ValueRW;
+                ref var history = ref hand.History.ValueRW;
                 var config = hand.HandConfig.ValueRO;
                 var intent = hand.Intent.ValueRO;
                 ref var command = ref hand.Command.ValueRW;
@@ -157,9 +166,15 @@ namespace Godgame.Systems
                 var previousLegacyState = MapGodgameStateToLegacy(previousState);
                 var previousResourceType = stateData.HeldResourceTypeIndex;
                 int previousAmount = stateData.HeldAmount;
+                bool resetHistory = false;
 
                 stateData.HeldCapacity = math.max(1, config.HeldCapacity);
                 
+                if (inputFrame.ToggleThrowMode)
+                {
+                    stateData.Flags ^= DivineHandStateFlags.ThrowModeSlingshot;
+                }
+
                 // Compute cursor world position from ray (intersect with ground plane at y=0)
                 float3 cursorWorldPos = inputFrame.RayOrigin;
                 float3 rayDir = inputFrame.RayDirection;
@@ -171,6 +186,40 @@ namespace Godgame.Systems
                         cursorWorldPos = inputFrame.RayOrigin + rayDir * t;
                     }
                 }
+
+                bool axisLockHeld = inputFrame.AltHeld;
+                if (axisLockHeld)
+                {
+                    if ((stateData.Flags & DivineHandStateFlags.AxisLockActive) == 0)
+                    {
+                        stateData.AxisLockXZ = new float2(cursorWorldPos.x, cursorWorldPos.z);
+                        stateData.Flags |= DivineHandStateFlags.AxisLockActive;
+                    }
+
+                    float2 lockXZ = stateData.AxisLockXZ;
+                    float t = 0f;
+                    if (math.abs(rayDir.x) > math.abs(rayDir.z))
+                    {
+                        if (math.abs(rayDir.x) > 0.0001f)
+                        {
+                            t = (lockXZ.x - inputFrame.RayOrigin.x) / rayDir.x;
+                        }
+                    }
+                    else if (math.abs(rayDir.z) > 0.0001f)
+                    {
+                        t = (lockXZ.y - inputFrame.RayOrigin.z) / rayDir.z;
+                    }
+
+                    var axisLockedPos = inputFrame.RayOrigin + rayDir * t;
+                    axisLockedPos.x = lockXZ.x;
+                    axisLockedPos.z = lockXZ.y;
+                    cursorWorldPos = axisLockedPos;
+                }
+                else if ((stateData.Flags & DivineHandStateFlags.AxisLockActive) != 0)
+                {
+                    stateData.Flags = (byte)(stateData.Flags & ~DivineHandStateFlags.AxisLockActive);
+                }
+
                 stateData.CursorPosition = cursorWorldPos;
                 stateData.AimDirection = math.normalizesafe(inputFrame.RayDirection, new float3(0f, -1f, 0f));
 
@@ -179,7 +228,7 @@ namespace Godgame.Systems
                     stateData.CooldownTimer = math.max(0f, stateData.CooldownTimer - deltaTime);
                 }
 
-                float maxChargeWindow = math.max(config.MinChargeSeconds, config.MaxChargeSeconds);
+                float maxChargeWindow = math.max(0f, config.MaxChargeSeconds);
 
                 // Update charge timer based on RMB held state
                 if (inputFrame.RmbHeld)
@@ -254,7 +303,16 @@ namespace Godgame.Systems
                         stateData.HeldLocalOffset = float3.zero;
                         stateData.HeldAmount = 1;
                         hasHeldEntity = true;
-                        ecb.AddComponent(pickCandidate, new HandHeldTag { Holder = entity });
+                        resetHistory = true;
+                        ResetHistory(ref history, stateData.CursorPosition);
+                        if (!_heldLookup.HasComponent(pickCandidate))
+                        {
+                            ecb.AddComponent(pickCandidate, new HandHeldTag { Holder = entity });
+                        }
+                        if (!entityManager.HasComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(pickCandidate))
+                        {
+                            ecb.AddComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(pickCandidate);
+                        }
                         
                         // Emit Pick command
                         commands.Add(new PureDOTS.Runtime.Hand.HandCommand
@@ -291,15 +349,18 @@ namespace Godgame.Systems
                 }
                 else
                 {
+                    var holdTargetPosition = stateData.CursorPosition;
+                    holdTargetPosition.y = math.max(config.HoldHeightOffset, holdTargetPosition.y);
+
                     MaintainHeldTransform(ref stateData, in config);
 
                     // Release is triggered by CancelAction or ConfirmPlace intent, or RMB release
                     bool releaseRequested = intent.CancelAction != 0 || intent.ConfirmPlace != 0 || inputFrame.RmbReleased;
                     bool queuedInstead = releaseRequested && inputFrame.ShiftHeld &&
-                                         TryQueueHeldEntity(ref ecb, entityManager, entity, ref stateData, in config, inputFrame, normalizedChargeLevel, currentTick, commands, queuedBuffer);
+                                         TryQueueHeldEntity(ref ecb, entityManager, entity, ref stateData, in history, in config, inputFrame, normalizedChargeLevel, currentTick, commands, queuedBuffer);
                     if (!queuedInstead && releaseRequested && _miracleTokenLookup.HasComponent(stateData.HeldEntity))
                     {
-                        HandleMiracleTokenRelease(ref ecb, ref stateData, in config, inputFrame, aim, normalizedChargeLevel, currentTick, commands, miracleEvents);
+                        HandleMiracleTokenRelease(ref ecb, ref stateData, in history, in config, inputFrame, aim, normalizedChargeLevel, deltaTime, currentTick, commands, miracleEvents);
                         hasHeldEntity = false;
                         releaseRequested = false;
                         miracleCastTriggered = true;
@@ -312,7 +373,7 @@ namespace Godgame.Systems
 
                     if (releaseRequested)
                     {
-                        bool appliedThrow = ReleaseHeldEntity(ref ecb, ref stateData, in config, inputFrame, aim, normalizedChargeLevel, in intent, currentTick, commands);
+                        bool appliedThrow = ReleaseHeldEntity(ref ecb, ref stateData, in history, in config, inputFrame, aim, normalizedChargeLevel, deltaTime, in intent, currentTick, commands);
                         hasHeldEntity = false;
                         stateData.HeldAmount = 0;
                         stateData.HeldResourceTypeIndex = DivineHandConstants.NoResourceType;
@@ -321,7 +382,7 @@ namespace Godgame.Systems
 
                     if (hasHeldEntity && stateData.HeldEntity != Entity.Null)
                     {
-                        EmitHoldCommand(ref commands, currentTick, stateData.HeldEntity, aim.TargetPosition, stateData.AimDirection, normalizedChargeLevel, stateData.HeldResourceTypeIndex);
+                        EmitHoldCommand(ref commands, currentTick, stateData.HeldEntity, holdTargetPosition, stateData.AimDirection, normalizedChargeLevel, stateData.HeldResourceTypeIndex);
                     }
                 }
 
@@ -334,22 +395,25 @@ namespace Godgame.Systems
                 bool wantsSiphon = !hasHeldEntity &&
                                    stateData.HeldAmount < stateData.HeldCapacity &&
                                    affordanceHasSiphon &&
-                                   inputFrame.LmbHeld;
+                                   inputFrame.RmbHeld;
 
                 bool wantsDump = !hasHeldEntity &&
                                  stateData.HeldAmount > 0 &&
-                                 affordanceHasDump &&
-                                 inputFrame.LmbHeld;
+                                 (affordanceHasDump || affordances.TargetEntity == Entity.Null) &&
+                                 inputFrame.RmbHeld;
 
                 bool hasCargo = hasHeldEntity || stateData.HeldAmount > 0;
                 
                 // Compute miracleVerbActive after all miracle cast attempts
                 bool miracleVerbActive = wantsMiracleCast && miracleCastTriggered;
 
-                stateData.Flags = hasCargo ? (byte)(stateData.Flags | 0x1) : (byte)(stateData.Flags & 0xFE);
+                stateData.Flags = hasCargo
+                    ? (byte)(stateData.Flags | DivineHandStateFlags.HasCargo)
+                    : (byte)(stateData.Flags & ~DivineHandStateFlags.HasCargo);
 
+                bool slingshotMode = (stateData.Flags & DivineHandStateFlags.ThrowModeSlingshot) != 0;
                 // Slingshot aim is active when holding cargo, charging, and not releasing
-                bool slingshotAimActive = hasCargo && config.MinChargeSeconds > 0f &&
+                bool slingshotAimActive = slingshotMode && hasCargo && config.MinChargeSeconds > 0f &&
                                            stateData.ChargeTimer >= config.MinChargeSeconds &&
                                            intent.ConfirmPlace == 0 && intent.CancelAction == 0;
 
@@ -483,10 +547,21 @@ namespace Godgame.Systems
                 }
 
                 pureHandState.HeldEntity = stateData.HeldEntity;
-                pureHandState.HoldPoint = aim.TargetPosition;
+                var holdPoint = stateData.CursorPosition;
+                holdPoint.y = math.max(config.HoldHeightOffset, holdPoint.y);
+                pureHandState.HoldPoint = holdPoint;
                 pureHandState.HoldDistance = stateData.HeldEntity == Entity.Null ? 0f : math.length(stateData.HeldLocalOffset);
                 pureHandState.ChargeTimer = stateData.ChargeTimer;
                 pureHandState.CooldownTimer = stateData.CooldownTimer;
+
+                if (resetHistory || stateData.HeldEntity == Entity.Null)
+                {
+                    ResetHistory(ref history, stateData.CursorPosition);
+                }
+                else
+                {
+                    AdvanceHistory(ref history, stateData.CursorPosition, deltaTime);
+                }
 
                 if (nextState != stateData.CurrentState)
                 {
@@ -557,6 +632,11 @@ namespace Godgame.Systems
         private void MaintainHeldTransform(ref DivineHandState state, in DivineHandConfig config)
         {
             if (state.HeldEntity == Entity.Null || !_transformLookup.HasComponent(state.HeldEntity))
+            {
+                return;
+            }
+
+            if (_physicsVelocityLookup.HasComponent(state.HeldEntity))
             {
                 return;
             }
@@ -727,10 +807,12 @@ namespace Godgame.Systems
 
         private bool ReleaseHeldEntity(ref EntityCommandBuffer ecb,
             ref DivineHandState state,
+            in HandHistory history,
             in DivineHandConfig config,
             HandInputFrame inputFrame,
             AimPoint aim,
             float normalizedChargeLevel,
+            float deltaTime,
             in GodIntent intent,
             uint currentTick,
             DynamicBuffer<HandCommandElement> commands)
@@ -746,19 +828,19 @@ namespace Godgame.Systems
             }
 
             var releasedEntity = state.HeldEntity;
-            ComputeThrowParameters(ref state, in config, inputFrame, out var direction, out var impulse);
+            ComputeThrowParameters(ref state, in config, in history, normalizedChargeLevel, inputFrame, out var direction, out var impulse);
 
             bool appliedThrow = intent.ConfirmPlace != 0 || inputFrame.RmbReleased;
             if (appliedThrow)
             {
                 ApplyThrowToEntity(ref ecb, releasedEntity, direction, impulse);
-            EmitSimpleCommand(ref commands, currentTick, HandCommandKind.Throw, releasedEntity, aim.TargetPosition, direction, impulse, normalizedChargeLevel, state.HeldResourceTypeIndex, state.HeldAmount);
+                EmitSimpleCommand(ref commands, currentTick, HandCommandKind.Throw, releasedEntity, aim.TargetPosition, direction, impulse, normalizedChargeLevel, state.HeldResourceTypeIndex, state.HeldAmount);
             }
 
             state.HeldEntity = Entity.Null;
             state.HeldLocalOffset = float3.zero;
             state.ChargeTimer = 0f;
-            state.Flags &= 0xFE;
+            state.Flags = (byte)(state.Flags & ~DivineHandStateFlags.HasCargo);
 
             return appliedThrow;
         }
@@ -767,6 +849,7 @@ namespace Godgame.Systems
             EntityManager entityManager,
             Entity handEntity,
             ref DivineHandState state,
+            in HandHistory history,
             in DivineHandConfig config,
             HandInputFrame inputFrame,
             float normalizedChargeLevel,
@@ -780,7 +863,7 @@ namespace Godgame.Systems
             }
 
             var queuedEntity = state.HeldEntity;
-            ComputeThrowParameters(ref state, in config, inputFrame, out var direction, out var impulse);
+            ComputeThrowParameters(ref state, in config, in history, normalizedChargeLevel, inputFrame, out var direction, out var impulse);
 
             queuedBuffer.Add(new HandQueuedThrowElement
             {
@@ -803,7 +886,7 @@ namespace Godgame.Systems
             state.HeldAmount = 0;
             state.HeldResourceTypeIndex = DivineHandConstants.NoResourceType;
             state.ChargeTimer = 0f;
-            state.Flags &= 0xFE;
+            state.Flags = (byte)(state.Flags & ~DivineHandStateFlags.HasCargo);
 
             EmitSimpleCommand(ref commands, currentTick, HandCommandKind.QueueThrow, queuedEntity, state.CursorPosition, direction, impulse, normalizedChargeLevel, queuedResourceType, 0f);
 
@@ -888,8 +971,14 @@ namespace Godgame.Systems
         {
             RestoreQueuedEntity(ref ecb, entry.Entity);
 
-            float charge = math.saturate(entry.ChargeLevel);
-            float speed = math.lerp(config.MinThrowSpeed, config.MaxThrowSpeed, charge);
+            float speed = entry.Impulse;
+            if (speed <= 0f)
+            {
+                float charge = math.saturate(entry.ChargeLevel);
+                float minSpeed = math.max(0f, config.MinThrowSpeed);
+                float maxSpeed = math.max(minSpeed, config.MaxThrowSpeed);
+                speed = math.lerp(minSpeed, maxSpeed, charge);
+            }
             float3 velocity = entry.Direction * speed;
 
             if (_physicsVelocityLookup.HasComponent(entry.Entity))
@@ -910,6 +999,11 @@ namespace Godgame.Systems
             if (_heldLookup.HasComponent(entry.Entity))
             {
                 ecb.RemoveComponent<HandHeldTag>(entry.Entity);
+            }
+
+            if (_movementSuppressedLookup.HasComponent(entry.Entity))
+            {
+                ecb.RemoveComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(entry.Entity);
             }
 
             if (_queuedTagLookup.HasComponent(entry.Entity))
@@ -945,35 +1039,109 @@ namespace Godgame.Systems
             ecb.RemoveComponent<HandQueuedTag>(entity);
         }
 
+        private static void ResetHistory(ref HandHistory history, float3 cursorPosition)
+        {
+            history.V0 = float3.zero;
+            history.V1 = float3.zero;
+            history.V2 = float3.zero;
+            history.V3 = float3.zero;
+            history.LastCursorPosition = cursorPosition;
+        }
+
+        private static void AdvanceHistory(ref HandHistory history, float3 cursorPosition, float deltaTime)
+        {
+            if (deltaTime <= 0f)
+            {
+                history.LastCursorPosition = cursorPosition;
+                return;
+            }
+
+            float3 velocity = (cursorPosition - history.LastCursorPosition) / deltaTime;
+            history.V3 = history.V2;
+            history.V2 = history.V1;
+            history.V1 = history.V0;
+            history.V0 = velocity;
+            history.LastCursorPosition = cursorPosition;
+        }
+
+        private static float3 ComputeWeightedVelocity(in HandHistory history)
+        {
+            return history.V0 * 0.4f +
+                   history.V1 * 0.3f +
+                   history.V2 * 0.2f +
+                   history.V3 * 0.1f;
+        }
+
+        private float ResolveHeldMass(Entity heldEntity)
+        {
+            if (heldEntity == Entity.Null)
+            {
+                return 1f;
+            }
+
+            if (_physicsMassLookup.HasComponent(heldEntity))
+            {
+                var physicsMass = _physicsMassLookup[heldEntity];
+                if (physicsMass.InverseMass > 0f)
+                {
+                    return math.max(1f / physicsMass.InverseMass, 0.01f);
+                }
+            }
+
+            if (_pickableLookup.HasComponent(heldEntity))
+            {
+                return math.max(_pickableLookup[heldEntity].Mass, 0.01f);
+            }
+
+            return 1f;
+        }
+
+        private float ResolveThrowMultiplier(Entity heldEntity)
+        {
+            if (heldEntity == Entity.Null || !_pickableLookup.HasComponent(heldEntity))
+            {
+                return 1f;
+            }
+
+            return math.max(0.01f, _pickableLookup[heldEntity].ThrowImpulseMultiplier);
+        }
+
         private void ComputeThrowParameters(ref DivineHandState state,
             in DivineHandConfig config,
+            in HandHistory history,
+            float normalizedChargeLevel,
             HandInputFrame inputFrame,
             out float3 direction,
             out float impulse)
         {
-            direction = math.normalizesafe(inputFrame.RayDirection, new float3(0f, -1f, 0f));
-            float baseImpulse = math.max(1f, config.ThrowImpulse);
-            float chargeDuration = math.max(0f, state.ChargeTimer);
-            float minCharge = math.max(0f, config.MinChargeSeconds);
-            float maxCharge = math.max(minCharge, config.MaxChargeSeconds);
+            float3 aimDirection = math.normalizesafe(inputFrame.RayDirection, new float3(0f, -1f, 0f));
+            float3 weightedVelocity = ComputeWeightedVelocity(in history);
+            float flickSpeed = math.length(weightedVelocity);
 
-            float normalizedCharge;
-            if (maxCharge > minCharge)
+            direction = flickSpeed > 0.001f
+                ? math.normalizesafe(weightedVelocity, aimDirection)
+                : aimDirection;
+
+            float baseSpeed = math.max(0f, config.ThrowImpulse);
+            float unclampedSpeed = baseSpeed + flickSpeed;
+
+            if (config.MinThrowSpeed > 0f)
             {
-                float clamped = math.clamp(chargeDuration, minCharge, maxCharge);
-                normalizedCharge = math.saturate((clamped - minCharge) / math.max(0.0001f, maxCharge - minCharge));
-            }
-            else if (maxCharge > 0f)
-            {
-                normalizedCharge = math.saturate(chargeDuration / math.max(0.0001f, maxCharge));
-            }
-            else
-            {
-                normalizedCharge = math.saturate(chargeDuration);
+                unclampedSpeed = math.max(unclampedSpeed, config.MinThrowSpeed);
             }
 
-            float chargeMultiplier = math.max(1f, 1f + normalizedCharge * config.ThrowChargeMultiplier);
-            impulse = baseImpulse * chargeMultiplier;
+            if (config.MaxThrowSpeed > 0f)
+            {
+                unclampedSpeed = math.min(unclampedSpeed, config.MaxThrowSpeed);
+            }
+
+            float mass = ResolveHeldMass(state.HeldEntity);
+            float massScale = math.rsqrt(mass + 0.25f);
+            float throwMultiplier = ResolveThrowMultiplier(state.HeldEntity);
+            float maxChargeMultiplier = math.max(1f, config.ThrowChargeMultiplier);
+            float chargeMultiplier = math.lerp(1f, maxChargeMultiplier, math.saturate(normalizedChargeLevel));
+
+            impulse = unclampedSpeed * massScale * throwMultiplier * chargeMultiplier;
         }
 
         private void ApplyThrowToEntity(ref EntityCommandBuffer ecb, Entity entity, float3 direction, float impulse)
@@ -1009,14 +1177,21 @@ namespace Godgame.Systems
             {
                 ecb.RemoveComponent<HandQueuedTag>(entity);
             }
+
+            if (_movementSuppressedLookup.HasComponent(entity))
+            {
+                ecb.RemoveComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(entity);
+            }
         }
 
         private void HandleMiracleTokenRelease(ref EntityCommandBuffer ecb,
             ref DivineHandState state,
+            in HandHistory history,
             in DivineHandConfig config,
             HandInputFrame inputFrame,
             AimPoint aim,
             float normalizedChargeLevel,
+            float deltaTime,
             uint currentTick,
             DynamicBuffer<HandCommandElement> commands,
             DynamicBuffer<MiracleReleaseEvent> miracleEvents)
@@ -1030,7 +1205,7 @@ namespace Godgame.Systems
             var token = _miracleTokenLookup[tokenEntity];
             ecb.DestroyEntity(tokenEntity);
 
-            ComputeThrowParameters(ref state, in config, inputFrame, out var direction, out var impulse);
+            ComputeThrowParameters(ref state, in config, in history, normalizedChargeLevel, inputFrame, out var direction, out var impulse);
 
             miracleEvents.Add(new MiracleReleaseEvent
             {
@@ -1048,7 +1223,7 @@ namespace Godgame.Systems
             state.HeldAmount = 0;
             state.HeldResourceTypeIndex = DivineHandConstants.NoResourceType;
             state.ChargeTimer = 0f;
-            state.Flags &= 0xFE;
+            state.Flags = (byte)(state.Flags & ~DivineHandStateFlags.HasCargo);
 
             EmitSimpleCommand(ref commands, currentTick, HandCommandKind.CastMiracle, tokenEntity, aim.TargetPosition, direction, impulse, normalizedChargeLevel, 0, 0f);
         }

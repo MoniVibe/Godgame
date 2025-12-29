@@ -10,7 +10,9 @@ namespace Godgame.Rendering.Systems
     /// Ensures a presenter exists for any entity with a render semantic key.
     /// </summary>
     [UpdateInGroup(typeof(PresentationSystemGroup))]
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     [UpdateBefore(typeof(RenderPresentationValidationSystem))]
+#endif
     public partial struct GodgameRenderContractRepairSystem : ISystem
     {
         private EntityQuery _missingPresenterQuery;

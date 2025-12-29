@@ -63,6 +63,8 @@ namespace Godgame.Authoring
                     LastUpdateTick = 0
                 });
 
+                AddComponent<DumpTargetStorehouse>(entity);
+
                 // Add capacity buffers for each resource type
                 var capacityBuffer = AddBuffer<StorehouseCapacityElement>(entity);
                 
@@ -153,4 +155,3 @@ namespace Godgame.Authoring
         }
     }
 }
-

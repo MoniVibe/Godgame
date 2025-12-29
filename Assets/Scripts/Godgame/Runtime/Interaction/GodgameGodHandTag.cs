@@ -12,6 +12,11 @@ namespace Godgame.Runtime.Interaction
     public struct GodgameGodHandTag : IComponentData { }
 
     /// <summary>
+    /// Explicit opt-in tag to enable the legacy Godgame hand pipeline.
+    /// </summary>
+    public struct GodgameLegacyHandTag : IComponentData { }
+
+    /// <summary>
     /// Ensures a singleton god hand entity exists with GodgameGodHandTag.
     /// Falls back to querying for camera transform if no tagged entity exists.
     /// </summary>
@@ -22,6 +27,7 @@ namespace Godgame.Runtime.Interaction
 
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<GodgameLegacyHandTag>();
             _godHandEntity = Entity.Null;
         }
 
@@ -75,7 +81,6 @@ namespace Godgame.Runtime.Interaction
         }
     }
 }
-
 
 
 

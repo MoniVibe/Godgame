@@ -70,6 +70,10 @@ namespace Godgame.Scenario
             }
 
             state.EntityManager.CompleteDependencyBeforeRW<VillagerAIState>();
+            state.EntityManager.CompleteDependencyBeforeRW<VillagerJob>();
+            state.EntityManager.CompleteDependencyBeforeRW<VillagerJobTicket>();
+            state.EntityManager.CompleteDependencyBeforeRW<VillagerFlags>();
+            state.EntityManager.CompleteDependencyBeforeRW<VillagerAvailability>();
             _settlementLookup.Update(ref state);
             _transformLookup.Update(ref state);
             _resourceLookup.Update(ref state);

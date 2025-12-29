@@ -40,6 +40,7 @@ namespace Godgame.Systems.Interaction
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
             state.RequireForUpdate<PhysicsConfig>();
+            state.RequireForUpdate<GodgameLegacyHandTag>();
 
             _pickableLookup = state.GetComponentLookup<Pickable>(true);
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);

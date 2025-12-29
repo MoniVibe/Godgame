@@ -37,6 +37,7 @@ namespace Godgame.Systems.Interaction
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
             state.RequireForUpdate<HandInputFrame>();
+            state.RequireForUpdate<GodgameLegacyHandTag>();
 
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
             _physicsVelocityLookup = state.GetComponentLookup<Unity.Physics.PhysicsVelocity>(false);
@@ -367,5 +368,4 @@ namespace Godgame.Systems.Interaction
         }
     }
 }
-
 

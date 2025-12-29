@@ -65,6 +65,7 @@ namespace Godgame.Systems
                     CursorPosition = cursor,
                     AimDirection = new float3(0f, -1f, 0f),
                     HeldLocalOffset = float3.zero,
+                    AxisLockXZ = new float2(cursor.x, cursor.z),
                     CurrentState = GodgameHandState.Empty,
                     PreviousState = GodgameHandState.Empty,
                     ChargeTimer = 0f,
@@ -72,7 +73,20 @@ namespace Godgame.Systems
                     HeldResourceTypeIndex = DivineHandConstants.NoResourceType,
                     HeldAmount = 0,
                     HeldCapacity = 1000,
-                    Flags = 0
+                    Flags = DivineHandStateFlags.ThrowModeSlingshot
+                });
+            }
+
+            if (!entityManager.HasComponent<HandHistory>(handEntity))
+            {
+                var cursor = new float3(0f, 3f, 0f);
+                entityManager.AddComponentData(handEntity, new HandHistory
+                {
+                    V0 = float3.zero,
+                    V1 = float3.zero,
+                    V2 = float3.zero,
+                    V3 = float3.zero,
+                    LastCursorPosition = cursor
                 });
             }
 

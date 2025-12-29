@@ -1,3 +1,4 @@
+using Godgame.Resources;
 using Godgame.Runtime;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Hand;
@@ -20,6 +21,7 @@ namespace Godgame.Systems.Interaction
     public partial struct HandSiphonSystem : ISystem
     {
         private ComponentLookup<SiphonSource> _siphonLookup;
+        private ComponentLookup<AggregatePile> _pileLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -29,6 +31,7 @@ namespace Godgame.Systems.Interaction
             state.RequireForUpdate<HandPayload>();
 
             _siphonLookup = state.GetComponentLookup<SiphonSource>(false);
+            _pileLookup = state.GetComponentLookup<AggregatePile>(false);
         }
 
         [BurstCompile]
@@ -39,6 +42,7 @@ namespace Godgame.Systems.Interaction
             float deltaTime = timeState.FixedDeltaTime;
 
             _siphonLookup.Update(ref state);
+            _pileLookup.Update(ref state);
 
             foreach (var (handStateRef, configRef, payloadBuffer, commandBuffer) in SystemAPI
                          .Query<RefRW<DivineHandState>, RefRO<DivineHandConfig>, DynamicBuffer<HandPayload>, DynamicBuffer<HandCommand>>())
@@ -56,7 +60,7 @@ namespace Godgame.Systems.Interaction
                         continue;
                     }
 
-                    if (TrySiphon(ref handState, payload, in config, in command, deltaTime))
+                    if (TrySiphon(ref handState, payload, in config, in command, currentTick, deltaTime))
                     {
                         commands.RemoveAt(i);
                     }
@@ -70,6 +74,7 @@ namespace Godgame.Systems.Interaction
             DynamicBuffer<HandPayload> payload,
             in DivineHandConfig config,
             in HandCommand command,
+            uint currentTick,
             float deltaTime)
         {
             if (handState.HeldAmount >= handState.HeldCapacity)
@@ -78,19 +83,37 @@ namespace Godgame.Systems.Interaction
             }
 
             var target = command.TargetEntity;
-            if (target == Entity.Null || !_siphonLookup.HasComponent(target))
+            if (target == Entity.Null || (!_siphonLookup.HasComponent(target) && !_pileLookup.HasComponent(target)))
             {
                 return true; // remove command when target disappears
             }
 
-            var source = _siphonLookup[target];
-            if (source.Amount <= 0f)
+            ushort resourceType = DivineHandConstants.NoResourceType;
+            float availableAmount = 0f;
+            bool hasAggregatePile = _pileLookup.HasComponent(target);
+            AggregatePile pile = default;
+            SiphonSource source = default;
+
+            if (hasAggregatePile)
+            {
+                pile = _pileLookup[target];
+                resourceType = pile.ResourceTypeIndex;
+                availableAmount = pile.Amount;
+            }
+            else
+            {
+                source = _siphonLookup[target];
+                resourceType = source.ResourceTypeIndex;
+                availableAmount = source.Amount;
+            }
+
+            if (availableAmount <= 0f)
             {
                 return true;
             }
 
             float rate = math.max(0f, config.SiphonRate);
-            float potentialUnits = math.min(rate * deltaTime, source.Amount);
+            float potentialUnits = math.min(rate * deltaTime, availableAmount);
             int capacityRemaining = math.max(0, handState.HeldCapacity - handState.HeldAmount);
             if (capacityRemaining <= 0)
             {
@@ -103,12 +126,28 @@ namespace Godgame.Systems.Interaction
                 return false;
             }
 
-            source.Amount -= units;
-            _siphonLookup[target] = source;
+            if (hasAggregatePile)
+            {
+                var removed = pile.Remove(units, currentTick);
+                units = math.min(units, removed);
+                _pileLookup[target] = pile;
+                if (_siphonLookup.HasComponent(target))
+                {
+                    source = _siphonLookup[target];
+                    source.Amount = pile.Amount;
+                    source.ResourceTypeIndex = pile.ResourceTypeIndex;
+                    _siphonLookup[target] = source;
+                }
+            }
+            else
+            {
+                source.Amount -= units;
+                _siphonLookup[target] = source;
+            }
 
-            ushort resourceType = command.ResourceTypeIndex != DivineHandConstants.NoResourceType
+            resourceType = command.ResourceTypeIndex != DivineHandConstants.NoResourceType
                 ? command.ResourceTypeIndex
-                : source.ResourceTypeIndex;
+                : resourceType;
             HandPayloadUtility.AddAmount(ref payload, resourceType, units);
 
             handState.HeldAmount = (int)math.round(HandPayloadUtility.GetTotalAmount(payload));
@@ -118,4 +157,3 @@ namespace Godgame.Systems.Interaction
         }
     }
 }
-

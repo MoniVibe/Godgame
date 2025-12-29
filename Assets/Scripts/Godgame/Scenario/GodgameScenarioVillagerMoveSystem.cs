@@ -1,4 +1,3 @@
-#if !UNITY_DISABLE_AUTOMATIC_SYSTEM_BOOTSTRAP
 using PureDOTS.Runtime.Components;
 using PureDOTS.Systems;
 using Unity.Burst;
@@ -152,4 +151,3 @@ namespace Godgame.Scenario
         }
     }
 }
-#endif

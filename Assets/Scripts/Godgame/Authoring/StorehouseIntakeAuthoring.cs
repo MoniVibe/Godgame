@@ -51,6 +51,8 @@ namespace Godgame.Authoring
                     OutputRate = math.max(0f, authoring.outputRate)
                 });
 
+                AddComponent<DumpTargetStorehouse>(entity);
+
                 var inventory = new StorehouseInventory
                 {
                     TotalCapacity = 0f,

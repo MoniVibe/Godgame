@@ -21,10 +21,11 @@ namespace Godgame.Headless
 	        private const string ReportArg = "--report";
 	        private const string PureDotsTelemetryPathEnvVar = "PUREDOTS_TELEMETRY_PATH";
 	        private const string PureDotsTelemetryEnableEnvVar = "PUREDOTS_TELEMETRY_ENABLE";
-	        private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
-	        private const string HeadlessPresentationEnv = "PUREDOTS_HEADLESS_PRESENTATION";
-	        private const string PresentationSceneName = "TRI_Godgame_Smoke";
-	        private static bool s_executed;
+        private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
+        private const string HeadlessPresentationEnv = "PUREDOTS_HEADLESS_PRESENTATION";
+        private const string PresentationSceneName = "TRI_Godgame_Smoke";
+        private static bool s_executed;
+        private static bool s_loggedTelemetry;
 
 	        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
 	        static void LoadPresentationSceneIfRequested()
@@ -100,14 +101,15 @@ namespace Godgame.Headless
 	                {
 	                    DisableGodgameHeadlessProofsForScenarioRunner();
 	                    var runnerTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
-	                    if (string.IsNullOrWhiteSpace(runnerTelemetryPath) && !string.IsNullOrEmpty(telemetryPath))
-	                    {
-	                        SystemEnv.SetEnvironmentVariable(PureDotsTelemetryPathEnvVar, telemetryPath);
-	                        SystemEnv.SetEnvironmentVariable(PureDotsTelemetryEnableEnvVar, "1");
-	                    }
+                    if (string.IsNullOrWhiteSpace(runnerTelemetryPath) && !string.IsNullOrEmpty(telemetryPath))
+                    {
+                        SystemEnv.SetEnvironmentVariable(PureDotsTelemetryPathEnvVar, telemetryPath);
+                        SystemEnv.SetEnvironmentVariable(PureDotsTelemetryEnableEnvVar, "1");
+                    }
 
-	                    var result = ScenarioRunnerExecutor.RunFromFile(scenarioPath, reportPath);
-	                    Debug.Log($"[GodgameScenarioEntryPoint] ScenarioRunner '{scenarioPath}' completed. ticks={result.RunTicks} snapshots={result.SnapshotLogCount}");
+                    LogTelemetryOutOnce(SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar) ?? "(unset)");
+                    var result = ScenarioRunnerExecutor.RunFromFile(scenarioPath, reportPath);
+                    Debug.Log($"[GodgameScenarioEntryPoint] ScenarioRunner '{scenarioPath}' completed. ticks={result.RunTicks} snapshots={result.SnapshotLogCount}");
 	                    if (result.PerformanceBudgetFailed)
 	                    {
 	                        Debug.LogError($"[GodgameScenarioEntryPoint] Performance budget failure ({result.PerformanceBudgetMetric}) at tick {result.PerformanceBudgetTick}: value={result.PerformanceBudgetValue:F2}, budget={result.PerformanceBudgetLimit:F2}");
@@ -123,21 +125,24 @@ namespace Godgame.Headless
 	                DisableHeadlessProofsForScenario();
 	                SystemEnv.SetEnvironmentVariable(ScenarioEnvVar, scenarioPath);
 
-	                var existingTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
-	                if (!string.IsNullOrWhiteSpace(existingTelemetryPath))
-	                {
-	                    Debug.Log($"[GodgameScenarioEntryPoint] Scenario='{scenarioPath}', telemetry='{existingTelemetryPath}' (note: Godgame does not emit a ScenarioRunner report; --report is optional and can be used to derive a default telemetry output path).");
-	                }
-	                else if (!string.IsNullOrEmpty(telemetryPath))
-	                {
-	                    SystemEnv.SetEnvironmentVariable(PureDotsTelemetryPathEnvVar, telemetryPath);
-	                    SystemEnv.SetEnvironmentVariable(PureDotsTelemetryEnableEnvVar, "1");
-	                    Debug.Log($"[GodgameScenarioEntryPoint] Scenario='{scenarioPath}', telemetry='{telemetryPath}' (note: Godgame does not emit a ScenarioRunner report; --report is used to derive telemetry output).");
-	                }
-	                else
-	                {
-	                    Debug.Log($"[GodgameScenarioEntryPoint] Scenario='{scenarioPath}' (telemetry path not overridden).");
-	                }
+                var existingTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
+                if (!string.IsNullOrWhiteSpace(existingTelemetryPath))
+                {
+                    LogTelemetryOutOnce(existingTelemetryPath);
+                    Debug.Log($"[GodgameScenarioEntryPoint] Scenario='{scenarioPath}', telemetry='{existingTelemetryPath}' (note: Godgame does not emit a ScenarioRunner report; --report is optional and can be used to derive a default telemetry output path).");
+                }
+                else if (!string.IsNullOrEmpty(telemetryPath))
+                {
+                    SystemEnv.SetEnvironmentVariable(PureDotsTelemetryPathEnvVar, telemetryPath);
+                    SystemEnv.SetEnvironmentVariable(PureDotsTelemetryEnableEnvVar, "1");
+                    LogTelemetryOutOnce(telemetryPath);
+                    Debug.Log($"[GodgameScenarioEntryPoint] Scenario='{scenarioPath}', telemetry='{telemetryPath}' (note: Godgame does not emit a ScenarioRunner report; --report is used to derive telemetry output).");
+                }
+                else
+                {
+                    LogTelemetryOutOnce("(unset)");
+                    Debug.Log($"[GodgameScenarioEntryPoint] Scenario='{scenarioPath}' (telemetry path not overridden).");
+                }
 	            }
 	            catch (Exception ex)
 	            {
@@ -234,11 +239,22 @@ namespace Godgame.Headless
 	            }
 	        }
 
-	        private static bool IsTruthy(string value)
-	        {
-	            return string.Equals(value, "1", StringComparison.OrdinalIgnoreCase)
-	                || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
-	        }
+        private static bool IsTruthy(string value)
+        {
+            return string.Equals(value, "1", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void LogTelemetryOutOnce(string telemetryPath)
+        {
+            if (s_loggedTelemetry)
+            {
+                return;
+            }
+
+            s_loggedTelemetry = true;
+            Debug.Log($"TELEMETRY_OUT:{telemetryPath}");
+        }
 
         private static void Quit(int exitCode)
         {

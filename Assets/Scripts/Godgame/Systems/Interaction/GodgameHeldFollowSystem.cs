@@ -29,6 +29,7 @@ namespace Godgame.Systems.Interaction
         {
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
+            state.RequireForUpdate<GodgameLegacyHandTag>();
 
             _transformLookup = state.GetComponentLookup<LocalTransform>(false);
             _pickupStateLookup = state.GetComponentLookup<PickupState>(true);
@@ -161,4 +162,3 @@ namespace Godgame.Systems.Interaction
         }
     }
 }
-

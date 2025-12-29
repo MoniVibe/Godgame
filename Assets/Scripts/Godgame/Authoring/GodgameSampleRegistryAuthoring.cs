@@ -232,6 +232,8 @@ namespace Godgame.Authoring
                         LastUpdateTick = definition.LastMutationTick
                     });
 
+                    AddComponent<DumpTargetStorehouse>(entity);
+
                     // Add capacity buffers for each resource type in summaries
                     var capacityBuffer = AddBuffer<StorehouseCapacityElement>(entity);
                     var inventoryBuffer = AddBuffer<StorehouseInventoryItem>(entity);

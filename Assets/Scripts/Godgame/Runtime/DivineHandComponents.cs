@@ -49,6 +49,7 @@ namespace Godgame.Runtime
         public float3 CursorPosition;
         public float3 AimDirection;
         public float3 HeldLocalOffset;
+        public float2 AxisLockXZ;
         public HandState CurrentState;
         public HandState PreviousState;
         public float ChargeTimer;
@@ -57,6 +58,18 @@ namespace Godgame.Runtime
         public int HeldAmount;
         public int HeldCapacity;
         public byte Flags;
+    }
+
+    /// <summary>
+    /// Recent hand velocity samples for flick throw tuning (V0 is most recent).
+    /// </summary>
+    public struct HandHistory : IComponentData
+    {
+        public float3 V0;
+        public float3 V1;
+        public float3 V2;
+        public float3 V3;
+        public float3 LastCursorPosition;
     }
 
     /// <summary>
@@ -69,6 +82,13 @@ namespace Godgame.Runtime
         Pile = 2,
         Draggable = 3,
         Ground = 4
+    }
+
+    public static class DivineHandStateFlags
+    {
+        public const byte HasCargo = 1 << 0;
+        public const byte ThrowModeSlingshot = 1 << 1;
+        public const byte AxisLockActive = 1 << 2;
     }
 
     /// <summary>
@@ -95,4 +115,3 @@ namespace Godgame.Runtime
         public float ChargeLevel; // 0..1 normalized charge level
     }
 }
-

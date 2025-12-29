@@ -2,6 +2,7 @@ using System;
 using Godgame.Scenario;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
+using PureDOTS.Runtime.Scenarios;
 using PureDOTS.Runtime.Telemetry;
 using PureDOTS.Runtime.Time;
 using Unity.Collections;
@@ -23,6 +24,9 @@ namespace Godgame.Headless
     {
         private const string EnabledEnv = "GODGAME_HEADLESS_VILLAGER_PROOF";
         private const string ExitOnResultEnv = "GODGAME_HEADLESS_VILLAGER_PROOF_EXIT";
+        private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
+        private const string SmokeScenarioFile = "godgame_smoke.json";
+        private const string LoopScenarioFile = "villager_loop_small.json";
         private const uint DefaultTimeoutTicks = 900; // ~15 seconds at 60hz
 
         private byte _enabled;
@@ -36,6 +40,8 @@ namespace Godgame.Headless
         private byte _rewindPending;
         private byte _rewindPass;
         private float _rewindObserved;
+        private FixedString64Bytes _bankTestId;
+        private byte _bankResolved;
         private static readonly FixedString32Bytes ExpectedDelta = new FixedString32Bytes(">0");
         private static readonly FixedString32Bytes StepGatherDeliver = new FixedString32Bytes("gather_deliver");
         private static readonly FixedString64Bytes RewindProofId = new FixedString64Bytes("godgame.villager");
@@ -113,6 +119,7 @@ namespace Godgame.Headless
                 _rewindPass = 1;
                 _rewindObserved = stored - _initialStored;
                 UnityDebug.Log($"[GodgameHeadlessVillagerProof] PASS tick={timeState.Tick} moved={moved:F2} stored={stored:F2} initialStored={_initialStored:F2} villagers={villagerCount} storehouses={storehouseCount} phase={phase}");
+                LogBankResult(ref state, ResolveBankTestId(), true, string.Empty, timeState.Tick);
                 TelemetryLoopProofUtility.Emit(state.EntityManager, timeState.Tick, TelemetryLoopIds.Logistics, true, stored - _initialStored, ExpectedDelta, DefaultTimeoutTicks, step: StepGatherDeliver);
                 TryFlushRewindProof(ref state);
                 ExitIfRequested(ref state, timeState.Tick, 0);
@@ -126,6 +133,7 @@ namespace Godgame.Headless
                 _rewindPass = 0;
                 _rewindObserved = stored - _initialStored;
                 UnityDebug.LogError($"[GodgameHeadlessVillagerProof] FAIL tick={timeState.Tick} moved={moved:F2} stored={stored:F2} initialStored={_initialStored:F2} villagers={villagerCount} storehouses={storehouseCount} phase={phase}");
+                LogBankResult(ref state, ResolveBankTestId(), false, "timeout", timeState.Tick);
                 TelemetryLoopProofUtility.Emit(state.EntityManager, timeState.Tick, TelemetryLoopIds.Logistics, false, stored - _initialStored, ExpectedDelta, DefaultTimeoutTicks, step: StepGatherDeliver);
                 TryFlushRewindProof(ref state);
                 ExitIfRequested(ref state, timeState.Tick, 3);
@@ -237,6 +245,59 @@ namespace Godgame.Headless
 
             _trackedVillager = best;
             _trackedStart = bestPos;
+        }
+
+        private FixedString64Bytes ResolveBankTestId()
+        {
+            if (_bankResolved != 0)
+            {
+                return _bankTestId;
+            }
+
+            _bankResolved = 1;
+            var scenarioPath = SystemEnv.GetEnvironmentVariable(ScenarioPathEnv);
+            if (string.IsNullOrWhiteSpace(scenarioPath))
+            {
+                return _bankTestId;
+            }
+
+            if (scenarioPath.EndsWith(SmokeScenarioFile, StringComparison.OrdinalIgnoreCase))
+            {
+                _bankTestId = new FixedString64Bytes("G0.GODGAME_SMOKE");
+            }
+            else if (scenarioPath.EndsWith(LoopScenarioFile, StringComparison.OrdinalIgnoreCase))
+            {
+                _bankTestId = new FixedString64Bytes("G1.VILLAGER_LOOP_SMALL");
+            }
+
+            return _bankTestId;
+        }
+
+        private void LogBankResult(ref SystemState state, FixedString64Bytes testId, bool pass, string reason, uint tick)
+        {
+            if (testId.IsEmpty)
+            {
+                return;
+            }
+
+            var tickTime = tick;
+            if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
+            {
+                tickTime = tickTimeState.Tick;
+            }
+
+            var scenarioTick = SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenario)
+                ? scenario.Tick
+                : 0u;
+            var delta = (int)tickTime - (int)scenarioTick;
+
+            if (pass)
+            {
+                UnityDebug.Log($"BANK:{testId}:PASS tickTime={tickTime} scenarioTick={scenarioTick} delta={delta}");
+                return;
+            }
+
+            UnityDebug.Log($"BANK:{testId}:FAIL reason={reason} tickTime={tickTime} scenarioTick={scenarioTick} delta={delta}");
         }
 
         private SettlementVillagerPhase GetTrackedPhase(ref SystemState state)
