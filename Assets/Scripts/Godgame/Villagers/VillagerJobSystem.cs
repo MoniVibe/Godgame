@@ -203,6 +203,9 @@ namespace Godgame.Villagers
             var minCommitSeconds = math.max(0f, jobTicketTuning.MinCommitSeconds);
             var secondsPerTick = math.max(timeState.FixedDeltaTime, 1e-4f);
             var minCommitTicks = (uint)math.max(0f, math.ceil(minCommitSeconds / secondsPerTick));
+            var failureBackoffBaseTicks = (uint)math.max(1f, math.ceil(StepJob.DefaultFailureBackoffSeconds / secondsPerTick));
+            var failureBackoffMaxTicks = (uint)math.max(failureBackoffBaseTicks,
+                math.ceil(StepJob.DefaultFailureBackoffMaxSeconds / secondsPerTick));
             var cooldownProfile = SystemAPI.GetSingleton<VillagerCooldownProfile>();
             var cooldownProfileEntity = SystemAPI.GetSingletonEntity<VillagerCooldownProfile>();
 
@@ -357,6 +360,8 @@ namespace Godgame.Villagers
                 GroupCohesionOrderWeight = jobTicketTuning.GroupCohesionOrderWeight,
                 GroupCohesionMin = jobTicketTuning.GroupCohesionMin,
                 GroupCohesionMax = jobTicketTuning.GroupCohesionMax,
+                FailureBackoffBaseTicks = failureBackoffBaseTicks,
+                FailureBackoffMaxTicks = failureBackoffMaxTicks,
                 MinCommitTicks = minCommitTicks,
                 CurrentTick = timeState.Tick,
                 FixedDeltaTime = timeState.FixedDeltaTime,
@@ -495,6 +500,8 @@ namespace Godgame.Villagers
             public float GroupCohesionOrderWeight;
             public float GroupCohesionMin;
             public float GroupCohesionMax;
+            public uint FailureBackoffBaseTicks;
+            public uint FailureBackoffMaxTicks;
             public uint MinCommitTicks;
             public uint CurrentTick;
             public float FixedDeltaTime;
@@ -1939,9 +1946,12 @@ namespace Godgame.Villagers
 
             private uint ResolveFailureBackoffTicks(byte repeatCount)
             {
-                var secondsPerTick = math.max(FixedDeltaTime, 1e-4f);
-                var baseTicks = (uint)math.max(1f, math.ceil(DefaultFailureBackoffSeconds / secondsPerTick));
-                var maxTicks = (uint)math.max(baseTicks, math.ceil(DefaultFailureBackoffMaxSeconds / secondsPerTick));
+                var baseTicks = FailureBackoffBaseTicks;
+                if (baseTicks == 0u)
+                {
+                    return 0u;
+                }
+                var maxTicks = math.max(baseTicks, FailureBackoffMaxTicks);
                 var shift = math.clamp(repeatCount, (byte)0, (byte)5);
                 var scaled = baseTicks * (uint)(1 << shift);
                 return math.min(maxTicks, scaled);

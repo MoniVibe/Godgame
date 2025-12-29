@@ -421,6 +421,278 @@ namespace Godgame.Scenario
             ecb.Dispose();
         }
 
+        private static void ResolveOverrideCounts(DynamicBuffer<GodgameScenarioSpawnOverride> overrides, out int villagers, out int centers, out int storehouses, out int housing, out int worship)
+        {
+            villagers = 0;
+            centers = 0;
+            storehouses = 0;
+            housing = 0;
+            worship = 0;
+
+            if (!overrides.IsCreated)
+            {
+                return;
+            }
+
+            for (int i = 0; i < overrides.Length; i++)
+            {
+                var entry = overrides[i];
+                var count = math.max(0, entry.Count);
+                switch (entry.Kind)
+                {
+                    case GodgameScenarioSpawnKind.Villager:
+                        villagers += count;
+                        break;
+                    case GodgameScenarioSpawnKind.VillageCenter:
+                        centers += count;
+                        break;
+                    case GodgameScenarioSpawnKind.Storehouse:
+                        storehouses += count;
+                        break;
+                    case GodgameScenarioSpawnKind.Housing:
+                        housing += count;
+                        break;
+                    case GodgameScenarioSpawnKind.Worship:
+                        worship += count;
+                        break;
+                }
+            }
+        }
+
+        private static void SpawnOverrides(
+            ref EntityCommandBuffer ecb,
+            EntityManager entityManager,
+            DynamicBuffer<GodgameScenarioSpawnOverride> overrides,
+            GodgameScenarioSpawnConfig configValue,
+            PrefabPresentationState villagerPresentation,
+            PrefabPresentationState storePresentation,
+            PrefabPresentationState centerPresentation,
+            PrefabPresentationState housingPresentation,
+            PrefabPresentationState worshipPresentation,
+            float buildingScale,
+            float villagerScale,
+            bool prefabHasSettlementState,
+            Entity settlementEntity,
+            ref Unity.Mathematics.Random random,
+            ref Entity primaryVillageCenter,
+            ref Entity primaryHousing,
+            ref Entity primaryWorship,
+            ref Entity primaryStorehouse)
+        {
+            if (!overrides.IsCreated || overrides.Length == 0)
+            {
+                return;
+            }
+
+            var villagerIndex = 0;
+            for (int i = 0; i < overrides.Length; i++)
+            {
+                var entry = overrides[i];
+                var count = math.max(0, entry.Count);
+                if (count == 0)
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < count; j++)
+                {
+                    var pos = ResolveOverridePosition(entry.Position, j, count);
+                    switch (entry.Kind)
+                    {
+                        case GodgameScenarioSpawnKind.Villager:
+                            SpawnVillager(ref ecb, entityManager, configValue.VillagerPrefab, pos, villagerScale, ref random, prefabHasSettlementState, settlementEntity, villagerIndex, villagerPresentation);
+                            villagerIndex++;
+                            break;
+                        case GodgameScenarioSpawnKind.VillageCenter:
+                            SpawnBuilding(ref ecb, configValue.VillageCenterPrefab, pos, buildingScale, GodgameSemanticKeys.VillageCenter, centerPresentation, GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.VillageCenter), ref primaryVillageCenter);
+                            break;
+                        case GodgameScenarioSpawnKind.Storehouse:
+                            SpawnStorehouse(ref ecb, entityManager, configValue.StorehousePrefab, pos, buildingScale, storePresentation, ref primaryStorehouse);
+                            break;
+                        case GodgameScenarioSpawnKind.Housing:
+                            SpawnBuilding(ref ecb, configValue.HousingPrefab, pos, buildingScale, GodgameSemanticKeys.Housing, housingPresentation, GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Housing), ref primaryHousing);
+                            break;
+                        case GodgameScenarioSpawnKind.Worship:
+                            SpawnBuilding(ref ecb, configValue.WorshipPrefab, pos, buildingScale, GodgameSemanticKeys.Worship, worshipPresentation, GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Worship), ref primaryWorship);
+                            break;
+                    }
+                }
+            }
+        }
+
+        private static float3 ResolveOverridePosition(in float3 basePos, int index, int count)
+        {
+            if (count <= 1)
+            {
+                return basePos;
+            }
+
+            var angle = (index * math.PI * 2f) / math.max(1, count);
+            var offset = new float3(math.cos(angle), 0f, math.sin(angle)) * 0.5f;
+            return basePos + offset;
+        }
+
+        private static void SpawnVillager(
+            ref EntityCommandBuffer ecb,
+            EntityManager entityManager,
+            Entity prefab,
+            float3 position,
+            float scale,
+            ref Unity.Mathematics.Random random,
+            bool prefabHasSettlementState,
+            Entity settlementEntity,
+            int index,
+            PrefabPresentationState presentation)
+        {
+            if (prefab == Entity.Null)
+            {
+                return;
+            }
+
+            var villager = ecb.Instantiate(prefab);
+            ecb.SetComponent(villager, LocalTransform.FromPositionRotationScale(position, quaternion.identity, scale));
+            ecb.AddComponent<LocalToWorld>(villager);
+
+            ecb.AddComponent(villager, new Godgame.Villagers.VillagerNeeds
+            {
+                Health = 100f,
+                MaxHealth = 100f,
+                Energy = 800f,
+                Morale = 700f
+            });
+
+            var role = VillagerRenderKeyUtility.GetDefaultRoleForIndex(index);
+            ecb.AddComponent(villager, new VillagerRenderRole { Value = role });
+            var roleAssignment = GodgameAIRoleDefinitions.ResolveForVillager(role);
+            ecb.AddComponent(villager, new AIRole { RoleId = roleAssignment.RoleId });
+            ecb.AddComponent(villager, new AIDoctrine { DoctrineId = roleAssignment.DoctrineId });
+            ecb.AddComponent(villager, new AIBehaviorProfile
+            {
+                ProfileId = roleAssignment.ProfileId,
+                ProfileHash = roleAssignment.ProfileHash,
+                ProfileEntity = Entity.Null,
+                SourceId = GodgameAIRoleDefinitions.SourceScenario
+            });
+            var renderKeyId = VillagerRenderKeyUtility.GetRenderKeyForRole(role);
+            var dotsJobType = VillagerRenderKeyUtility.GetDefaultPureDotsJobForRole(role);
+
+            ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerJob
+            {
+                Type = dotsJobType,
+                Phase = PureDOTS.Runtime.Components.VillagerJob.JobPhase.Idle,
+                Productivity = 1f,
+                LastStateChangeTick = 0
+            });
+
+            ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerAIState
+            {
+                CurrentState = PureDOTS.Runtime.Components.VillagerAIState.State.Idle,
+                CurrentGoal = PureDOTS.Runtime.Components.VillagerAIState.Goal.None,
+                StateTimer = 0f,
+                StateStartTick = 0
+            });
+
+            ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerFlags
+            {
+                IsIdle = true,
+                IsWorking = false
+            });
+
+            ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerAvailability
+            {
+                IsAvailable = 1,
+                LastChangeTick = 0
+            });
+            ecb.AddComponent(villager, Godgame.Villagers.VillagerBehavior.Neutral);
+
+            if (settlementEntity != Entity.Null)
+            {
+                var villagerState = new SettlementVillagerState
+                {
+                    Settlement = settlementEntity,
+                    Phase = SettlementVillagerPhase.Idle,
+                    RandomState = random.NextUInt(1, uint.MaxValue)
+                };
+
+                if (prefabHasSettlementState)
+                {
+                    ecb.SetComponent(villager, villagerState);
+                }
+                else
+                {
+                    ecb.AddComponent(villager, villagerState);
+                }
+            }
+
+            ApplyScenarioRenderContract(ref ecb, villager, renderKeyId, presentation);
+        }
+
+        private static void SpawnBuilding(
+            ref EntityCommandBuffer ecb,
+            Entity prefab,
+            float3 position,
+            float scale,
+            ushort semanticKey,
+            PrefabPresentationState presentation,
+            float4 tint,
+            ref Entity primary)
+        {
+            if (prefab == Entity.Null)
+            {
+                return;
+            }
+
+            var instance = ecb.Instantiate(prefab);
+            ecb.SetComponent(instance, LocalTransform.FromPositionRotationScale(position, quaternion.identity, scale));
+            ApplyScenarioRenderContract(ref ecb, instance, semanticKey, presentation);
+            AddOrSet(ref ecb, instance, new RenderTint
+            {
+                Value = tint
+            }, presentation.HasRenderTint);
+
+            if (primary == Entity.Null)
+            {
+                primary = instance;
+            }
+        }
+
+        private static void SpawnStorehouse(
+            ref EntityCommandBuffer ecb,
+            EntityManager entityManager,
+            Entity prefab,
+            float3 position,
+            float scale,
+            PrefabPresentationState presentation,
+            ref Entity primary)
+        {
+            Entity instance;
+            var isFallback = prefab == Entity.Null;
+            if (!isFallback)
+            {
+                instance = ecb.Instantiate(prefab);
+                ecb.SetComponent(instance, LocalTransform.FromPositionRotationScale(position, quaternion.identity, scale));
+                ApplyScenarioRenderContract(ref ecb, instance, GodgameSemanticKeys.Storehouse, presentation);
+                AddOrSet(ref ecb, instance, new RenderTint
+                {
+                    Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Storehouse)
+                }, presentation.HasRenderTint);
+            }
+            else
+            {
+                instance = CreateFallbackStorehouse(ref ecb, position, scale);
+            }
+
+            if (!isFallback)
+            {
+                EnsureStorehouseComponents(entityManager, ref ecb, prefab, instance);
+            }
+
+            if (primary == Entity.Null)
+            {
+                primary = instance;
+            }
+        }
+
         private static bool TryGetExistingSettlement(EntityManager entityManager, out Entity settlement, out SettlementRuntime runtime)
         {
             settlement = Entity.Null;

@@ -319,6 +319,11 @@ namespace Godgame.Villagers
                 return false;
             }
 
+            if (ticket.TargetEntity == Entity.Null && job.ResourceTypeIndex != ticket.ResourceTypeIndex)
+            {
+                return false;
+            }
+
             switch (job.LastFailCode)
             {
                 case VillagerJobFailCode.TargetInvalid:
