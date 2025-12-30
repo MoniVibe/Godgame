@@ -15,7 +15,7 @@ namespace Godgame.Villagers
         public void OnCreate(ref SystemState state)
         {
             _missingQuery = SystemAPI.QueryBuilder()
-                .WithAll<VillagerGoalState>()
+                .WithAll<VillagerJobState>()
                 .WithNone<VillagerJobDecisionEvent>()
                 .Build();
             state.RequireForUpdate(_missingQuery);

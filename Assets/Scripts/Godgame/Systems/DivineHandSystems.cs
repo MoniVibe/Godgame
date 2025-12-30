@@ -391,7 +391,8 @@ namespace Godgame.Systems
 
                     if (releaseRequested)
                     {
-                        bool appliedThrow = ReleaseHeldEntity(ref ecb, ref stateData, in history, in config, inputFrame, aim, normalizedChargeLevel, deltaTime, in intent, slingshotMode, currentTick, commands);
+                        bool appliedThrow = ReleaseHeldEntity(ref ecb, ref stateData, in history, in config, inputFrame, aim, normalizedChargeLevel, deltaTime, in intent,
+                            (stateData.Flags & DivineHandStateFlags.ThrowModeSlingshot) != 0, currentTick, commands);
                         hasHeldEntity = false;
                         stateData.HeldAmount = 0;
                         stateData.HeldResourceTypeIndex = DivineHandConstants.NoResourceType;
@@ -432,9 +433,10 @@ namespace Godgame.Systems
                     ? (byte)(stateData.Flags | DivineHandStateFlags.HasCargo)
                     : (byte)(stateData.Flags & ~DivineHandStateFlags.HasCargo);
 
-                bool slingshotMode = (stateData.Flags & DivineHandStateFlags.ThrowModeSlingshot) != 0;
                 // Slingshot aim is active when holding cargo, charging, and not releasing
-                bool slingshotAimActive = slingshotMode && hasCargo && config.MinChargeSeconds > 0f &&
+                bool slingshotAimActive = ((stateData.Flags & DivineHandStateFlags.ThrowModeSlingshot) != 0) &&
+                                          hasCargo &&
+                                          config.MinChargeSeconds > 0f &&
                                            stateData.ChargeTimer >= config.MinChargeSeconds &&
                                            intent.ConfirmPlace == 0 && intent.CancelAction == 0;
 

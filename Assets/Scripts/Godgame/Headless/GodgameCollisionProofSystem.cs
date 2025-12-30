@@ -174,7 +174,8 @@ namespace Godgame.Headless
                 return;
             }
 
-            var entries = profileComponent.Profile.Value.Entries;
+            ref var profile = ref profileComponent.Profile.Value;
+            ref var entries = ref profile.Entries;
             if (!PhysicsColliderProfileHelpers.TryGetSpec(ref entries, GodgameSemanticKeys.Villager, out var villagerSpec))
             {
                 return;

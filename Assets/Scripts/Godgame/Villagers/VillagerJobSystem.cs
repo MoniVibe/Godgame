@@ -875,12 +875,12 @@ namespace Godgame.Villagers
                         nav.Speed = moveSpeed;
                         job.Phase = JobPhase.NavigateToNode;
 
-                        var decisionMask = SetMask(0, PreconditionHasTicket, true);
-                        decisionMask = SetMask(decisionMask, PreconditionTargetValid, true);
-                        decisionMask = SetMask(decisionMask, PreconditionGroupReady, groupReady);
-                        decisionMask = SetMask(decisionMask, PreconditionRoleMatch, true);
-                        decisionMask = SetMask(decisionMask, PreconditionResourceMatch, true);
-                        RecordDecision(ref job, e, job.Phase, ticket.TargetEntity, default, decisionMask);
+                        var ticketDecisionMask = SetMask(0, PreconditionHasTicket, true);
+                        ticketDecisionMask = SetMask(ticketDecisionMask, PreconditionTargetValid, true);
+                        ticketDecisionMask = SetMask(ticketDecisionMask, PreconditionGroupReady, groupReady);
+                        ticketDecisionMask = SetMask(ticketDecisionMask, PreconditionRoleMatch, true);
+                        ticketDecisionMask = SetMask(ticketDecisionMask, PreconditionResourceMatch, true);
+                        RecordDecision(ref job, e, job.Phase, ticket.TargetEntity, default, ticketDecisionMask);
 
                         if (ticket.State == JobTicketState.Claimed && groupReady)
                         {
@@ -956,8 +956,8 @@ namespace Godgame.Villagers
                                 nav.Speed = moveSpeed;
                                 job.Phase = JobPhase.NavigateToStorehouse;
 
-                                var decisionMask = SetMask(0, PreconditionStorehouse, true);
-                                RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, decisionMask);
+                                var storehouseDecisionMask = SetMask(0, PreconditionStorehouse, true);
+                                RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, storehouseDecisionMask);
                             }
                             else
                             {
@@ -1011,8 +1011,8 @@ namespace Godgame.Villagers
                                     nav.Speed = moveSpeed;
                                     job.Phase = JobPhase.NavigateToStorehouse;
 
-                                    var decisionMask = SetMask(0, PreconditionStorehouse, true);
-                                    RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, decisionMask);
+                                    var storehouseDecisionMask = SetMask(0, PreconditionStorehouse, true);
+                                    RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, storehouseDecisionMask);
                                 }
                                 else
                                 {
@@ -1167,8 +1167,8 @@ namespace Godgame.Villagers
                                         nav.Speed = moveSpeed;
                                         job.Phase = JobPhase.NavigateToStorehouse;
 
-                                        var decisionMask = SetMask(0, PreconditionStorehouse, true);
-                                        RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, decisionMask);
+                                        var storehouseDecisionMask = SetMask(0, PreconditionStorehouse, true);
+                                        RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, storehouseDecisionMask);
                                     }
                                 else
                                 {
@@ -1952,7 +1952,7 @@ namespace Godgame.Villagers
                     return 0u;
                 }
                 var maxTicks = math.max(baseTicks, FailureBackoffMaxTicks);
-                var shift = math.clamp(repeatCount, (byte)0, (byte)5);
+                int shift = repeatCount > 5 ? 5 : repeatCount;
                 var scaled = baseTicks * (uint)(1 << shift);
                 return math.min(maxTicks, scaled);
             }
