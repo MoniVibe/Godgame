@@ -24,6 +24,7 @@ namespace Godgame.Headless
     {
         private const string EnabledEnv = "GODGAME_HEADLESS_VILLAGER_PROOF";
         private const string ExitOnResultEnv = "GODGAME_HEADLESS_VILLAGER_PROOF_EXIT";
+        private const string ExitMinTickEnv = "GODGAME_HEADLESS_VILLAGER_PROOF_EXIT_MIN_TICK";
         private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
         private const string SmokeScenarioFile = "godgame_smoke.json";
         private const string LoopScenarioFile = "villager_loop_small.json";
@@ -190,6 +191,12 @@ namespace Godgame.Headless
         private static void ExitIfRequested(ref SystemState state, uint tick, int exitCode)
         {
             if (!string.Equals(SystemEnv.GetEnvironmentVariable(ExitOnResultEnv), "1", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var minTickRaw = SystemEnv.GetEnvironmentVariable(ExitMinTickEnv);
+            if (!string.IsNullOrWhiteSpace(minTickRaw) && uint.TryParse(minTickRaw, out var minTick) && tick < minTick)
             {
                 return;
             }

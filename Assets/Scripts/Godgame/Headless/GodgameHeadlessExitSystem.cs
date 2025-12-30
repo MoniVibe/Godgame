@@ -1,8 +1,10 @@
+using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
 using PureDOTS.Systems.Telemetry;
 using Unity.Entities;
 using UnityEngine;
 using UnityDebug = UnityEngine.Debug;
+using SystemEnv = System.Environment;
 
 namespace Godgame.Headless
 {
@@ -20,7 +22,9 @@ namespace Godgame.Headless
     [UpdateAfter(typeof(TelemetryExportSystem))]
     public partial struct GodgameHeadlessExitSystem : ISystem
     {
+        private const string ExitMinTickEnv = "GODGAME_HEADLESS_EXIT_MIN_TICK";
         private byte _quitIssued;
+        private byte _loggedExitMinTick;
 
         public void OnCreate(ref SystemState state)
         {
@@ -38,6 +42,35 @@ namespace Godgame.Headless
             if (_quitIssued != 0)
             {
                 return;
+            }
+
+            var minTickRaw = SystemEnv.GetEnvironmentVariable(ExitMinTickEnv);
+            if (!string.IsNullOrWhiteSpace(minTickRaw) &&
+                uint.TryParse(minTickRaw, out var minTick))
+            {
+                var currentTick = 0u;
+                var tickSource = "none";
+                if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
+                {
+                    currentTick = tickTimeState.Tick;
+                    tickSource = "tickTime";
+                }
+                else if (SystemAPI.TryGetSingleton<TimeState>(out var timeState))
+                {
+                    currentTick = timeState.Tick;
+                    tickSource = "time";
+                }
+
+                if (_loggedExitMinTick == 0)
+                {
+                    _loggedExitMinTick = 1;
+                    UnityDebug.Log($"[GodgameHeadlessExitSystem] ExitMinTick={minTick} currentTick={currentTick} source={tickSource}");
+                }
+
+                if (tickSource == "none" || currentTick < minTick)
+                {
+                    return;
+                }
             }
 
             foreach (var request in SystemAPI.Query<RefRO<GodgameHeadlessExitRequest>>())

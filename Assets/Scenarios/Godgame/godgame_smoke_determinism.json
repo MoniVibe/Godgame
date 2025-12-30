@@ -1,0 +1,27 @@
+{
+  "scenarioId": "scenario.godgame.smoke_determinism",
+  "seed": 42,
+  "runTicks": 1800,
+  "entityCounts": [
+    {
+      "registryId": "godgame.villager",
+      "count": 48
+    },
+    {
+      "registryId": "godgame.storehouse",
+      "count": 4
+    },
+    {
+      "registryId": "godgame.resource_node",
+      "count": 20
+    },
+    {
+      "registryId": "godgame.resource_chunk",
+      "count": 20
+    }
+  ],
+  "inputCommands": [],
+  "telemetry": {
+    "loops": ["logistics"]
+  }
+}
