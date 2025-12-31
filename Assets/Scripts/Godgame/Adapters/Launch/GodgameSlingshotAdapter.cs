@@ -1,6 +1,8 @@
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Combat;
 using PureDOTS.Runtime.Launch;
 using PureDOTS.Runtime.Physics;
+using PureDOTS.Systems.Physics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -90,20 +92,27 @@ namespace Godgame.Adapters.Launch
     /// Processes collision events for launched projectiles in Godgame.
     /// Translates generic collision events to Godgame-specific effects.
     /// </summary>
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(PureDOTS.Systems.Launch.LaunchExecutionSystem))]
+    [UpdateInGroup(typeof(PhysicsPostEventSystemGroup))]
+    [UpdateAfter(typeof(PureDOTS.Systems.Physics.PhysicsEventSystem))]
     public partial struct GodgameSlingshotCollisionAdapter : ISystem
     {
+        private const float DamagePerImpulse = 0.1f;
+        private const float TriggerDamage = 1f;
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
+            state.RequireForUpdate<PhysicsConfig>();
+            state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            var timeState = SystemAPI.GetSingleton<TimeState>();
             var rewindState = SystemAPI.GetSingleton<RewindState>();
+            var config = SystemAPI.GetSingleton<PhysicsConfig>();
 
             // Only process in Record mode
             if (rewindState.Mode != RewindMode.Record)
@@ -111,14 +120,64 @@ namespace Godgame.Adapters.Launch
                 return;
             }
 
+            if (config.ProviderId == PhysicsProviderIds.None || !config.IsGodgamePhysicsEnabled)
+            {
+                return;
+            }
+
+            if (PhysicsConfigHelpers.IsPostRewindSettleFrame(in config, timeState.Tick))
+            {
+                return;
+            }
+
+            var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
+                .CreateCommandBuffer(state.WorldUnmanaged);
+
             // Process collision events for launched projectiles
             foreach (var (projectileTag, collisionBuffer, entity) in
                 SystemAPI.Query<RefRO<LaunchedProjectileTag>, DynamicBuffer<PhysicsCollisionEventElement>>()
                     .WithEntityAccess())
             {
+                if (collisionBuffer.Length == 0)
+                {
+                    continue;
+                }
+
                 for (int i = 0; i < collisionBuffer.Length; i++)
                 {
                     var collision = collisionBuffer[i];
+                    if (collision.EventType == PhysicsCollisionEventType.TriggerExit)
+                    {
+                        continue;
+                    }
+
+                    if (collision.OtherEntity == Entity.Null)
+                    {
+                        continue;
+                    }
+
+                    var damage = collision.EventType == PhysicsCollisionEventType.TriggerEnter
+                        ? TriggerDamage
+                        : math.max(0f, collision.Impulse) * DamagePerImpulse;
+
+                    var damageEvent = new DamageEvent
+                    {
+                        SourceEntity = projectileTag.ValueRO.SourceLauncher,
+                        TargetEntity = collision.OtherEntity,
+                        RawDamage = damage,
+                        Type = DamageType.Physical,
+                        Tick = collision.Tick,
+                        Flags = DamageFlags.None
+                    };
+
+                    if (!SystemAPI.HasBuffer<DamageEvent>(collision.OtherEntity))
+                    {
+                        ecb.AddBuffer<DamageEvent>(collision.OtherEntity);
+                    }
+
+                    ecb.AppendToBuffer(collision.OtherEntity, damageEvent);
+                    ecb.RemoveComponent<LaunchedProjectileTag>(entity);
+                    break;
 
                     // Process Godgame-specific collision effects
                     // Examples:
@@ -134,4 +193,3 @@ namespace Godgame.Adapters.Launch
         }
     }
 }
-
