@@ -3,11 +3,13 @@ using Godgame.Presentation;
 using Godgame.Registry;
 using Godgame.Resources;
 using PureDOTS.Rendering;
+using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Spatial;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using Godgame.Runtime.Interaction;
 
 namespace Godgame.Authoring
 {
@@ -58,9 +60,18 @@ namespace Godgame.Authoring
                 {
                     Value = GodgamePresentationColors.ForResourceType(authoring.resourceType)
                 });
+
+                var pickableDefaults = HandPickableDefaults.Default;
+                AddComponent(entity, new HandPickable
+                {
+                    Mass = math.max(0.1f, pickableDefaults.Mass),
+                    MaxHoldDistance = math.max(0.1f, pickableDefaults.MaxHoldDistance),
+                    ThrowImpulseMultiplier = math.max(0.1f, pickableDefaults.ThrowImpulseMultiplier),
+                    FollowLerp = math.clamp(pickableDefaults.FollowLerp, 0.01f, 1f)
+                });
+                AddComponent<Pickable>(entity);
             }
         }
     }
 }
-
 
