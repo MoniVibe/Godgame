@@ -8,24 +8,23 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
-using UnityEngine;
 
 namespace Godgame.Systems.Interaction
 {
     /// <summary>
     /// Handles throw/drop mechanics for Godgame: RMB release, 3s settle timer, movement detection, velocity accumulation.
     /// </summary>
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(GodgameHeldFollowSystem))]
+    [UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
     public partial struct GodgameThrowSystem : ISystem
     {
         private ComponentLookup<LocalTransform> _transformLookup;
         private ComponentLookup<Unity.Physics.PhysicsVelocity> _physicsVelocityLookup;
         private ComponentLookup<PickupState> _pickupStateLookup;
         private EntityQuery _godHandQuery;
+        private uint _lastInputSampleId;
+        private NativeParallelHashSet<Entity> _loggedFallbackEntities;
 
         // Settle timer threshold (3 seconds)
         private const float SettleHoldTime = 3f;
@@ -38,6 +37,7 @@ namespace Godgame.Systems.Interaction
             state.RequireForUpdate<RewindState>();
             state.RequireForUpdate<HandInputFrame>();
             state.RequireForUpdate<GodgameLegacyHandTag>();
+            state.RequireForUpdate<HandHover>();
 
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
             _physicsVelocityLookup = state.GetComponentLookup<Unity.Physics.PhysicsVelocity>(false);
@@ -46,6 +46,15 @@ namespace Godgame.Systems.Interaction
             _godHandQuery = SystemAPI.QueryBuilder()
                 .WithAll<GodgameGodHandTag, PickupState>()
                 .Build();
+            _loggedFallbackEntities = new NativeParallelHashSet<Entity>(128, Allocator.Persistent);
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            if (_loggedFallbackEntities.IsCreated)
+            {
+                _loggedFallbackEntities.Dispose();
+            }
         }
 
         public void OnUpdate(ref SystemState state)
@@ -73,16 +82,17 @@ namespace Godgame.Systems.Interaction
 
             // Read input from HandInputFrame
             var inputFrame = SystemAPI.GetSingleton<HandInputFrame>();
-            bool rmbDown = inputFrame.RmbHeld;
-            bool rmbWasReleased = inputFrame.RmbReleased;
-            bool shiftHeld = inputFrame.ShiftHeld;
-
-            // Get camera for direction calculation (still needed for some operations)
-            var camera = UnityEngine.Camera.main;
-            if (camera == null)
+            var hover = SystemAPI.GetSingleton<HandHover>();
+            var interactionPolicy = InteractionPolicy.CreateDefault();
+            if (SystemAPI.TryGetSingleton(out InteractionPolicy policyValue))
             {
-                return;
+                interactionPolicy = policyValue;
             }
+            bool isNewSample = inputFrame.SampleId != _lastInputSampleId;
+            bool rmbDown = inputFrame.RmbHeld;
+            bool rmbWasReleased = isNewSample && inputFrame.RmbReleased;
+            bool shiftHeld = inputFrame.ShiftHeld;
+            var aimDirection = math.normalizesafe(inputFrame.RayDirection, new float3(0f, 0f, 1f));
 
             ref var pickupState = ref pickupStateRef.ValueRW;
             var deltaTime = timeState.FixedDeltaTime;
@@ -95,7 +105,7 @@ namespace Godgame.Systems.Interaction
                 // Check for 3s settle
                 if (pickupState.HoldTime >= SettleHoldTime && rmbDown)
                 {
-                    HandleSettleToTerrain(ref state, pickupState.TargetEntity, camera);
+                    HandleSettleToTerrain(ref state, pickupState.TargetEntity, hover);
                     return;
                 }
 
@@ -120,16 +130,21 @@ namespace Godgame.Systems.Interaction
                     if (shiftHeld)
                     {
                         // Queue throw
-                        HandleQueueThrow(ref state, godHandEntity, pickupState.TargetEntity, camera, pickupState);
+                        HandleQueueThrow(ref state, godHandEntity, pickupState.TargetEntity, aimDirection, pickupState);
                         ResetPickupState(ref pickupState);
                     }
                     else
                     {
                         // Immediate throw
-                        HandleThrow(ref state, pickupState.TargetEntity, camera, pickupState);
+                        HandleThrow(ref state, pickupState.TargetEntity, aimDirection, pickupState, interactionPolicy);
                         ResetPickupState(ref pickupState);
                     }
                 }
+            }
+
+            if (isNewSample)
+            {
+                _lastInputSampleId = inputFrame.SampleId;
             }
         }
 
@@ -143,16 +158,16 @@ namespace Godgame.Systems.Interaction
 
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
 
-            // Remove HeldByPlayer
+            // Disable HeldByPlayer
             if (state.EntityManager.HasComponent<HeldByPlayer>(targetEntity))
             {
-                ecb.RemoveComponent<HeldByPlayer>(targetEntity);
+                ecb.SetComponentEnabled<HeldByPlayer>(targetEntity, false);
             }
 
-            // Remove MovementSuppressed
+            // Disable MovementSuppressed
             if (state.EntityManager.HasComponent<MovementSuppressed>(targetEntity))
             {
-                ecb.RemoveComponent<MovementSuppressed>(targetEntity);
+                ecb.SetComponentEnabled<MovementSuppressed>(targetEntity, false);
             }
 
             // Set velocity to zero (gentle drop)
@@ -172,8 +187,9 @@ namespace Godgame.Systems.Interaction
         private void HandleThrow(
             ref SystemState state,
             Entity targetEntity,
-            UnityEngine.Camera camera,
-            PickupState pickupState)
+            float3 aimDirection,
+            PickupState pickupState,
+            InteractionPolicy interactionPolicy)
         {
             if (targetEntity == Entity.Null || !state.EntityManager.Exists(targetEntity))
             {
@@ -191,24 +207,24 @@ namespace Godgame.Systems.Interaction
             }
             else
             {
-                // Fallback to camera forward
-                throwDirection = camera.transform.forward;
+                // Fallback to input ray direction
+                throwDirection = aimDirection;
             }
 
             // Calculate throw force
             float throwForce = BaseThrowForce + math.length(pickupState.AccumulatedVelocity) * 0.5f;
             float3 throwVelocity = throwDirection * throwForce;
 
-            // Remove HeldByPlayer
+            // Disable HeldByPlayer
             if (state.EntityManager.HasComponent<HeldByPlayer>(targetEntity))
             {
-                ecb.RemoveComponent<HeldByPlayer>(targetEntity);
+                ecb.SetComponentEnabled<HeldByPlayer>(targetEntity, false);
             }
 
-            // Remove MovementSuppressed
+            // Disable MovementSuppressed
             if (state.EntityManager.HasComponent<MovementSuppressed>(targetEntity))
             {
-                ecb.RemoveComponent<MovementSuppressed>(targetEntity);
+                ecb.SetComponentEnabled<MovementSuppressed>(targetEntity, false);
             }
 
             // Set physics velocity
@@ -220,15 +236,63 @@ namespace Godgame.Systems.Interaction
                 ecb.SetComponent(targetEntity, velocity);
             }
 
-            // Add BeingThrown component
-            ecb.AddComponent(targetEntity, new BeingThrown
+            var prevPosition = float3.zero;
+            var prevRotation = quaternion.identity;
+            if (_transformLookup.HasComponent(targetEntity))
+            {
+                var transform = _transformLookup[targetEntity];
+                prevPosition = transform.Position;
+                prevRotation = transform.Rotation;
+            }
+
+            bool hasBeingThrown = state.EntityManager.HasComponent<BeingThrown>(targetEntity);
+            if (!hasBeingThrown && interactionPolicy.AllowStructuralFallback == 0)
+            {
+                if (interactionPolicy.LogStructuralFallback != 0)
+                {
+                    LogFallbackOnce(targetEntity, "BeingThrown", skipped: true);
+                }
+                ecb.Playback(state.EntityManager);
+                ecb.Dispose();
+                return;
+            }
+
+            // Enable BeingThrown component
+            var thrown = new BeingThrown
             {
                 InitialVelocity = throwVelocity,
-                TimeSinceThrow = 0f
-            });
+                TimeSinceThrow = 0f,
+                PrevPosition = prevPosition,
+                PrevRotation = prevRotation
+            };
+            if (hasBeingThrown)
+            {
+                ecb.SetComponent(targetEntity, thrown);
+                ecb.SetComponentEnabled<BeingThrown>(targetEntity, true);
+            }
+            else
+            {
+                ecb.AddComponent(targetEntity, thrown);
+                if (interactionPolicy.LogStructuralFallback != 0)
+                {
+                    LogFallbackOnce(targetEntity, "BeingThrown", skipped: false);
+                }
+            }
 
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
+        }
+
+        [BurstDiscard]
+        private void LogFallbackOnce(Entity target, string missingComponents, bool skipped)
+        {
+            if (!_loggedFallbackEntities.IsCreated || !_loggedFallbackEntities.Add(target))
+            {
+                return;
+            }
+
+            var action = skipped ? "skipping throw tag (strict policy)" : "using structural fallback";
+            UnityEngine.Debug.LogWarning($"[GodgameThrowSystem] Missing {missingComponents} on entity {target.Index}:{target.Version}; {action}.");
         }
 
         [BurstDiscard]
@@ -236,7 +300,7 @@ namespace Godgame.Systems.Interaction
             ref SystemState state,
             Entity godHandEntity,
             Entity targetEntity,
-            UnityEngine.Camera camera,
+            float3 aimDirection,
             PickupState pickupState)
         {
             if (targetEntity == Entity.Null || !state.EntityManager.Exists(targetEntity))
@@ -252,7 +316,7 @@ namespace Godgame.Systems.Interaction
             }
             else
             {
-                throwDirection = camera.transform.forward;
+                throwDirection = aimDirection;
             }
 
             // Calculate throw force
@@ -273,54 +337,29 @@ namespace Godgame.Systems.Interaction
                 });
             }
 
-            // Remove HeldByPlayer and MovementSuppressed
+            // Disable HeldByPlayer and MovementSuppressed
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
             if (state.EntityManager.HasComponent<HeldByPlayer>(targetEntity))
             {
-                ecb.RemoveComponent<HeldByPlayer>(targetEntity);
+                ecb.SetComponentEnabled<HeldByPlayer>(targetEntity, false);
             }
             if (state.EntityManager.HasComponent<MovementSuppressed>(targetEntity))
             {
-                ecb.RemoveComponent<MovementSuppressed>(targetEntity);
+                ecb.SetComponentEnabled<MovementSuppressed>(targetEntity, false);
             }
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
         }
 
         [BurstDiscard]
-        private void HandleSettleToTerrain(ref SystemState state, Entity targetEntity, UnityEngine.Camera camera)
+        private void HandleSettleToTerrain(ref SystemState state, Entity targetEntity, HandHover hover)
         {
             if (targetEntity == Entity.Null || !state.EntityManager.Exists(targetEntity))
             {
                 return;
             }
 
-            // Raycast to terrain from camera
-            var inputFrame = SystemAPI.GetSingleton<HandInputFrame>();
-            var ray = new UnityEngine.Ray(
-                new Vector3(inputFrame.RayOrigin.x, inputFrame.RayOrigin.y, inputFrame.RayOrigin.z),
-                new Vector3(inputFrame.RayDirection.x, inputFrame.RayDirection.y, inputFrame.RayDirection.z));
-
-            // Use physics raycast for terrain
-            if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorldSingleton))
-            {
-                return;
-            }
-
-            var collisionWorld = physicsWorldSingleton.CollisionWorld;
-            var raycastInput = new RaycastInput
-            {
-                Start = ray.origin,
-                End = ray.origin + ray.direction * 1000f,
-                Filter = new CollisionFilter
-                {
-                    BelongsTo = ~0u,
-                    CollidesWith = ~0u,
-                    GroupIndex = 0
-                }
-            };
-
-            if (collisionWorld.CastRay(raycastInput, out var hit))
+            if (hover.TargetEntity != Entity.Null)
             {
                 var ecb = new EntityCommandBuffer(Allocator.TempJob);
 
@@ -328,18 +367,18 @@ namespace Godgame.Systems.Interaction
                 if (_transformLookup.HasComponent(targetEntity))
                 {
                     var transform = _transformLookup[targetEntity];
-                    transform.Position = hit.Position;
+                    transform.Position = hover.HitPosition;
                     ecb.SetComponent(targetEntity, transform);
                 }
 
-                // Remove HeldByPlayer and MovementSuppressed
+                // Disable HeldByPlayer and MovementSuppressed
                 if (state.EntityManager.HasComponent<HeldByPlayer>(targetEntity))
                 {
-                    ecb.RemoveComponent<HeldByPlayer>(targetEntity);
+                    ecb.SetComponentEnabled<HeldByPlayer>(targetEntity, false);
                 }
                 if (state.EntityManager.HasComponent<MovementSuppressed>(targetEntity))
                 {
-                    ecb.RemoveComponent<MovementSuppressed>(targetEntity);
+                    ecb.SetComponentEnabled<MovementSuppressed>(targetEntity, false);
                 }
 
                 // Zero velocity
@@ -363,6 +402,7 @@ namespace Godgame.Systems.Interaction
             pickupState.LastRaycastPosition = float3.zero;
             pickupState.CursorMovementAccumulator = 0f;
             pickupState.HoldTime = 0f;
+            pickupState.HoldDistance = 0f;
             pickupState.AccumulatedVelocity = float3.zero;
             pickupState.IsMoving = false;
         }

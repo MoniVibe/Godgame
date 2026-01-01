@@ -4,6 +4,7 @@ using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Interaction;
 using PureDOTS.Runtime.Resources;
 using PureDOTS.Runtime.Scenarios;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -50,6 +51,7 @@ namespace Godgame.Scenario
         private int _baselineDeliveries;
         private float _baselineStorehouseInventory;
         private uint _rewindStartTick;
+        private NativeParallelHashSet<Entity> _loggedFallbackEntities;
 
         public void OnCreate(ref SystemState state)
         {
@@ -61,6 +63,15 @@ namespace Godgame.Scenario
             _villagerQuery = state.GetEntityQuery(ComponentType.ReadOnly<Godgame.Villagers.VillagerId>());
             _resourceQuery = state.GetEntityQuery(ComponentType.ReadOnly<ResourceNodeTag>());
             _storehouseQuery = state.GetEntityQuery(ComponentType.ReadOnly<StorehouseConfig>());
+            _loggedFallbackEntities = new NativeParallelHashSet<Entity>(128, Allocator.Persistent);
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            if (_loggedFallbackEntities.IsCreated)
+            {
+                _loggedFallbackEntities.Dispose();
+            }
         }
 
         public void OnUpdate(ref SystemState state)
@@ -166,20 +177,60 @@ namespace Godgame.Scenario
                 }
             }
 
-            if (!state.EntityManager.HasComponent<HeldByPlayer>(_handTarget))
+            var interactionPolicy = InteractionPolicy.CreateDefault();
+            if (SystemAPI.TryGetSingleton(out InteractionPolicy policyValue))
             {
-                state.EntityManager.AddComponentData(_handTarget, new HeldByPlayer
-                {
-                    Holder = _handEntity,
-                    LocalOffset = float3.zero,
-                    HoldStartPosition = _handTargetPosition,
-                    HoldStartTime = 0f
-                });
+                interactionPolicy = policyValue;
             }
 
-            if (!state.EntityManager.HasComponent<MovementSuppressed>(_handTarget))
+            bool hasHeldByPlayer = state.EntityManager.HasComponent<HeldByPlayer>(_handTarget);
+            bool hasMovementSuppressed = state.EntityManager.HasComponent<MovementSuppressed>(_handTarget);
+            if ((!hasHeldByPlayer || !hasMovementSuppressed) && interactionPolicy.AllowStructuralFallback == 0)
+            {
+                if (interactionPolicy.LogStructuralFallback != 0)
+                {
+                    var missing = hasHeldByPlayer
+                        ? "MovementSuppressed"
+                        : hasMovementSuppressed
+                            ? "HeldByPlayer"
+                            : "HeldByPlayer, MovementSuppressed";
+                    LogFallbackOnce(_handTarget, missing, skipped: true);
+                }
+                return false;
+            }
+
+            var heldByPlayer = new HeldByPlayer
+            {
+                Holder = _handEntity,
+                LocalOffset = float3.zero,
+                HoldStartPosition = _handTargetPosition,
+                HoldStartTime = 0f
+            };
+            if (hasHeldByPlayer)
+            {
+                state.EntityManager.SetComponentData(_handTarget, heldByPlayer);
+                state.EntityManager.SetComponentEnabled<HeldByPlayer>(_handTarget, true);
+            }
+            else
+            {
+                state.EntityManager.AddComponentData(_handTarget, heldByPlayer);
+                if (interactionPolicy.LogStructuralFallback != 0)
+                {
+                    LogFallbackOnce(_handTarget, "HeldByPlayer", skipped: false);
+                }
+            }
+
+            if (hasMovementSuppressed)
+            {
+                state.EntityManager.SetComponentEnabled<MovementSuppressed>(_handTarget, true);
+            }
+            else
             {
                 state.EntityManager.AddComponent<MovementSuppressed>(_handTarget);
+                if (interactionPolicy.LogStructuralFallback != 0)
+                {
+                    LogFallbackOnce(_handTarget, "MovementSuppressed", skipped: false);
+                }
             }
 
             if (state.EntityManager.HasComponent<PickupState>(_handEntity))
@@ -206,12 +257,12 @@ namespace Godgame.Scenario
 
             if (state.EntityManager.HasComponent<HeldByPlayer>(_handTarget))
             {
-                state.EntityManager.RemoveComponent<HeldByPlayer>(_handTarget);
+                state.EntityManager.SetComponentEnabled<HeldByPlayer>(_handTarget, false);
             }
 
             if (state.EntityManager.HasComponent<MovementSuppressed>(_handTarget))
             {
-                state.EntityManager.RemoveComponent<MovementSuppressed>(_handTarget);
+                state.EntityManager.SetComponentEnabled<MovementSuppressed>(_handTarget, false);
             }
 
             var throwVelocity = new float3(4f, 6f, 2f);
@@ -223,20 +274,44 @@ namespace Godgame.Scenario
                 state.EntityManager.SetComponentData(_handTarget, velocity);
             }
 
-            if (!state.EntityManager.HasComponent<BeingThrown>(_handTarget))
+            var interactionPolicy = InteractionPolicy.CreateDefault();
+            if (SystemAPI.TryGetSingleton(out InteractionPolicy policyValue))
             {
-                state.EntityManager.AddComponentData(_handTarget, new BeingThrown
-                {
-                    InitialVelocity = throwVelocity,
-                    TimeSinceThrow = 0f
-                });
+                interactionPolicy = policyValue;
             }
-            else
+
+            var prevPosition = float3.zero;
+            var prevRotation = quaternion.identity;
+            if (state.EntityManager.HasComponent<LocalTransform>(_handTarget))
             {
-                var thrown = state.EntityManager.GetComponentData<BeingThrown>(_handTarget);
-                thrown.InitialVelocity = throwVelocity;
-                thrown.TimeSinceThrow = 0f;
+                var transform = state.EntityManager.GetComponentData<LocalTransform>(_handTarget);
+                prevPosition = transform.Position;
+                prevRotation = transform.Rotation;
+            }
+            var thrown = new BeingThrown
+            {
+                InitialVelocity = throwVelocity,
+                TimeSinceThrow = 0f,
+                PrevPosition = prevPosition,
+                PrevRotation = prevRotation
+            };
+            bool hasBeingThrown = state.EntityManager.HasComponent<BeingThrown>(_handTarget);
+            if (hasBeingThrown)
+            {
                 state.EntityManager.SetComponentData(_handTarget, thrown);
+                state.EntityManager.SetComponentEnabled<BeingThrown>(_handTarget, true);
+            }
+            else if (interactionPolicy.AllowStructuralFallback != 0)
+            {
+                state.EntityManager.AddComponentData(_handTarget, thrown);
+                if (interactionPolicy.LogStructuralFallback != 0)
+                {
+                    LogFallbackOnce(_handTarget, "BeingThrown", skipped: false);
+                }
+            }
+            else if (interactionPolicy.LogStructuralFallback != 0)
+            {
+                LogFallbackOnce(_handTarget, "BeingThrown", skipped: true);
             }
 
             if (state.EntityManager.HasComponent<PickupState>(_handEntity))
@@ -422,7 +497,8 @@ namespace Godgame.Scenario
         {
             foreach (var (node, transform, entity) in SystemAPI.Query<RefRO<ResourceNodeTag>, RefRO<LocalTransform>>().WithEntityAccess())
             {
-                if (state.EntityManager.HasComponent<HeldByPlayer>(entity))
+                if (state.EntityManager.HasComponent<HeldByPlayer>(entity) &&
+                    state.EntityManager.IsComponentEnabled<HeldByPlayer>(entity))
                 {
                     continue;
                 }
@@ -435,6 +511,18 @@ namespace Godgame.Scenario
             target = Entity.Null;
             position = float3.zero;
             return false;
+        }
+
+        [BurstDiscard]
+        private void LogFallbackOnce(Entity target, string missingComponents, bool skipped)
+        {
+            if (!_loggedFallbackEntities.IsCreated || !_loggedFallbackEntities.Add(target))
+            {
+                return;
+            }
+
+            var action = skipped ? "skipping structural fallback (strict policy)" : "using structural fallback";
+            UnityEngine.Debug.LogWarning($"[GodgameRewindGateHarnessSystem] Missing {missingComponents} on entity {target.Index}:{target.Version}; {action}.");
         }
     }
 }

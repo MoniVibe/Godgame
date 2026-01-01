@@ -1,5 +1,6 @@
 using Godgame.Visitors;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Interaction;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -73,6 +74,21 @@ namespace Godgame.Visitors
                     if (isPickable && !state.EntityManager.HasComponent<PickableTag>(entity))
                     {
                         state.EntityManager.AddComponent<PickableTag>(entity);
+                        if (!state.EntityManager.HasComponent<HeldByPlayer>(entity))
+                        {
+                            state.EntityManager.AddComponent<HeldByPlayer>(entity);
+                        }
+                        state.EntityManager.SetComponentEnabled<HeldByPlayer>(entity, false);
+                        if (!state.EntityManager.HasComponent<MovementSuppressed>(entity))
+                        {
+                            state.EntityManager.AddComponent<MovementSuppressed>(entity);
+                        }
+                        state.EntityManager.SetComponentEnabled<MovementSuppressed>(entity, false);
+                        if (!state.EntityManager.HasComponent<BeingThrown>(entity))
+                        {
+                            state.EntityManager.AddComponent<BeingThrown>(entity);
+                        }
+                        state.EntityManager.SetComponentEnabled<BeingThrown>(entity, false);
                     }
                     else if (!isPickable && state.EntityManager.HasComponent<PickableTag>(entity))
                     {
@@ -83,4 +99,3 @@ namespace Godgame.Visitors
         }
     }
 }
-

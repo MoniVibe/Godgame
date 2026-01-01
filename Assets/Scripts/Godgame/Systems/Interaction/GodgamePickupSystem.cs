@@ -1,4 +1,5 @@
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Hand;
 using PureDOTS.Runtime.Interaction;
 using PureDOTS.Runtime.Physics;
 using PureDOTS.Runtime.Time;
@@ -9,11 +10,8 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Physics;
 using Unity.Physics.Systems;
 using Unity.Transforms;
-using UnityEngine;
-using UnityEngine.InputSystem;
 using Pickable = PureDOTS.Runtime.Interaction.Pickable;
 
 namespace Godgame.Systems.Interaction
@@ -22,7 +20,7 @@ namespace Godgame.Systems.Interaction
     /// Handles pickup interaction using RMB input and Unity.Physics raycasts for Godgame.
     /// Implements state machine: Empty → AboutToPick → Holding
     /// </summary>
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
     // Removed invalid UpdateAfter: PhysicsPostEventSystemGroup lives in FixedStep; cross-group ordering handled by adapter systems.
     public partial struct GodgamePickupSystem : ISystem
     {
@@ -31,6 +29,8 @@ namespace Godgame.Systems.Interaction
         private ComponentLookup<HeldByPlayer> _heldLookup;
         private ComponentLookup<CameraTransform> _cameraTransformLookup;
         private EntityQuery _godHandQuery;
+        private uint _lastInputSampleId;
+        private NativeParallelHashSet<Entity> _loggedFallbackEntities;
 
         // Cursor movement threshold in world space units (3 pixels converted)
         private const float CursorMovementThreshold = 0.1f;
@@ -41,6 +41,8 @@ namespace Godgame.Systems.Interaction
             state.RequireForUpdate<RewindState>();
             state.RequireForUpdate<PhysicsConfig>();
             state.RequireForUpdate<GodgameLegacyHandTag>();
+            state.RequireForUpdate<HandInputFrame>();
+            state.RequireForUpdate<HandHover>();
 
             _pickableLookup = state.GetComponentLookup<Pickable>(true);
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
@@ -50,6 +52,15 @@ namespace Godgame.Systems.Interaction
             _godHandQuery = SystemAPI.QueryBuilder()
                 .WithAll<GodgameGodHandTag, PickupState>()
                 .Build();
+            _loggedFallbackEntities = new NativeParallelHashSet<Entity>(128, Allocator.Persistent);
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            if (_loggedFallbackEntities.IsCreated)
+            {
+                _loggedFallbackEntities.Dispose();
+            }
         }
 
         public void OnUpdate(ref SystemState state)
@@ -70,6 +81,13 @@ namespace Godgame.Systems.Interaction
 
             var godHandEntity = _godHandQuery.GetSingletonEntity();
             var pickupStateRef = SystemAPI.GetComponentRW<PickupState>(godHandEntity);
+            var inputFrame = SystemAPI.GetSingleton<HandInputFrame>();
+            var hover = SystemAPI.GetSingleton<HandHover>();
+            var interactionPolicy = InteractionPolicy.CreateDefault();
+            if (SystemAPI.TryGetSingleton(out InteractionPolicy policyValue))
+            {
+                interactionPolicy = policyValue;
+            }
 
             // Update lookups
             _pickableLookup.Update(ref state);
@@ -77,53 +95,15 @@ namespace Godgame.Systems.Interaction
             _heldLookup.Update(ref state);
             _cameraTransformLookup.Update(ref state);
 
-            // Read input (non-Burst)
-            var mouse = Mouse.current;
-            if (mouse == null)
-            {
-                return;
-            }
+            bool isNewSample = inputFrame.SampleId != _lastInputSampleId;
+            bool rmbDown = inputFrame.RmbHeld;
+            bool rmbWasPressed = isNewSample && inputFrame.RmbPressed;
+            bool rmbWasReleased = isNewSample && inputFrame.RmbReleased;
 
-            bool rmbDown = mouse.rightButton.isPressed;
-            bool rmbWasPressed = mouse.rightButton.wasPressedThisFrame;
-            bool rmbWasReleased = mouse.rightButton.wasReleasedThisFrame;
-
-            // Get camera for raycast
-            var camera = UnityEngine.Camera.main;
-            if (camera == null)
-            {
-                return;
-            }
-
-            // Get physics world for raycast
-            if (!SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorldSingleton))
-            {
-                return;
-            }
-
-            var collisionWorld = physicsWorldSingleton.CollisionWorld;
-
-            // Perform raycast from camera
-            var mousePosition = mouse.position.ReadValue();
-            var ray = camera.ScreenPointToRay(mousePosition);
-            var rayStart = ray.origin;
-            var rayEnd = rayStart + ray.direction * 1000f; // Max distance
-
-            var raycastInput = new RaycastInput
-            {
-                Start = rayStart,
-                End = rayEnd,
-                Filter = new CollisionFilter
-                {
-                    BelongsTo = ~0u,
-                    CollidesWith = ~0u,
-                    GroupIndex = 0
-                }
-            };
-
-            bool hasHit = collisionWorld.CastRay(raycastInput, out var hit);
-            Entity hitEntity = hasHit ? hit.Entity : Entity.Null;
-            float3 hitPosition = hasHit ? hit.Position : float3.zero;
+            var rayOrigin = inputFrame.RayOrigin;
+            var rayDirection = math.normalizesafe(inputFrame.RayDirection, new float3(0f, 0f, 1f));
+            Entity hitEntity = hover.TargetEntity;
+            float3 hitPosition = hover.HitPosition;
 
             // Update state machine
             ref var pickupState = ref pickupStateRef.ValueRW;
@@ -132,11 +112,11 @@ namespace Godgame.Systems.Interaction
             switch (pickupState.State)
             {
                 case PickupStateType.Empty:
-                    HandleEmptyState(ref state, ref pickupState, rmbWasPressed, hitEntity, hitPosition, godHandEntity);
+                    HandleEmptyState(ref state, ref pickupState, rmbWasPressed, rayOrigin, rayDirection, hitEntity, hitPosition, hover.Distance, godHandEntity);
                     break;
 
                 case PickupStateType.AboutToPick:
-                    HandleAboutToPickState(ref state, ref pickupState, rmbDown, rmbWasReleased, hitEntity, hitPosition, deltaTime, godHandEntity);
+                    HandleAboutToPickState(ref state, ref pickupState, rmbDown, rmbWasReleased, rayOrigin, rayDirection, deltaTime, godHandEntity, interactionPolicy);
                     break;
 
                 case PickupStateType.Holding:
@@ -151,6 +131,11 @@ namespace Godgame.Systems.Interaction
                     // Handled by ThrowQueueSystem
                     break;
             }
+
+            if (isNewSample)
+            {
+                _lastInputSampleId = inputFrame.SampleId;
+            }
         }
 
         [BurstDiscard]
@@ -158,8 +143,11 @@ namespace Godgame.Systems.Interaction
             ref SystemState state,
             ref PickupState pickupState,
             bool rmbWasPressed,
+            float3 rayOrigin,
+            float3 rayDirection,
             Entity hitEntity,
             float3 hitPosition,
+            float hoverDistance,
             Entity godHandEntity)
         {
             if (!rmbWasPressed || hitEntity == Entity.Null)
@@ -174,7 +162,7 @@ namespace Godgame.Systems.Interaction
             }
 
             // Check if entity is already held
-            if (_heldLookup.HasComponent(hitEntity))
+            if (_heldLookup.HasComponent(hitEntity) && _heldLookup.IsComponentEnabled(hitEntity))
             {
                 return;
             }
@@ -182,7 +170,8 @@ namespace Godgame.Systems.Interaction
             // Transition to AboutToPick
             pickupState.State = PickupStateType.AboutToPick;
             pickupState.TargetEntity = hitEntity;
-            pickupState.LastRaycastPosition = hitPosition;
+            pickupState.HoldDistance = hoverDistance;
+            pickupState.LastRaycastPosition = rayOrigin + rayDirection * pickupState.HoldDistance;
             pickupState.CursorMovementAccumulator = 0f;
             pickupState.HoldTime = 0f;
             pickupState.AccumulatedVelocity = float3.zero;
@@ -195,10 +184,11 @@ namespace Godgame.Systems.Interaction
             ref PickupState pickupState,
             bool rmbDown,
             bool rmbWasReleased,
-            Entity hitEntity,
-            float3 hitPosition,
+            float3 rayOrigin,
+            float3 rayDirection,
             float deltaTime,
-            Entity godHandEntity)
+            Entity godHandEntity,
+            InteractionPolicy interactionPolicy)
         {
             if (rmbWasReleased)
             {
@@ -220,9 +210,10 @@ namespace Godgame.Systems.Interaction
             pickupState.HoldTime += deltaTime;
 
             // Track cursor movement
-            float movementDistance = math.distance(hitPosition, pickupState.LastRaycastPosition);
+            var rayPoint = rayOrigin + rayDirection * math.max(0f, pickupState.HoldDistance);
+            float movementDistance = math.distance(rayPoint, pickupState.LastRaycastPosition);
             pickupState.CursorMovementAccumulator += movementDistance;
-            pickupState.LastRaycastPosition = hitPosition;
+            pickupState.LastRaycastPosition = rayPoint;
 
             // Check if cursor moved enough to transition to Holding
             if (pickupState.CursorMovementAccumulator > CursorMovementThreshold)
@@ -231,6 +222,24 @@ namespace Godgame.Systems.Interaction
                 var targetEntity = pickupState.TargetEntity;
                 if (targetEntity != Entity.Null && state.EntityManager.Exists(targetEntity))
                 {
+                    bool hasHeldByPlayer = _heldLookup.HasComponent(targetEntity);
+                    bool hasMovementSuppressed = state.EntityManager.HasComponent<MovementSuppressed>(targetEntity);
+                    if ((!hasHeldByPlayer || !hasMovementSuppressed) && interactionPolicy.AllowStructuralFallback == 0)
+                    {
+                        if (interactionPolicy.LogStructuralFallback != 0)
+                        {
+                            var missing = hasHeldByPlayer
+                                ? "MovementSuppressed"
+                                : hasMovementSuppressed
+                                    ? "HeldByPlayer"
+                                    : "HeldByPlayer, MovementSuppressed";
+                            LogFallbackOnce(targetEntity, missing, skipped: true);
+                        }
+                        pickupState.State = PickupStateType.Empty;
+                        pickupState.TargetEntity = Entity.Null;
+                        return;
+                    }
+
                     // Get holder transform (god hand entity or camera)
                     var holderTransform = _transformLookup.HasComponent(godHandEntity)
                         ? _transformLookup[godHandEntity]
@@ -248,22 +257,46 @@ namespace Godgame.Systems.Interaction
                         holderTransform.Rotation = cameraTransform.Rotation;
                     }
 
-                    // Calculate local offset
-                    var worldPos = hitPosition;
-                    var localOffset = math.mul(math.inverse(holderTransform.Rotation), worldPos - holderTransform.Position);
+                    var targetTransform = _transformLookup[targetEntity];
+                    var worldPos = rayPoint;
+                    var localOffset = math.mul(math.inverse(targetTransform.Rotation), worldPos - targetTransform.Position);
 
-                    // Add HeldByPlayer component
+                    // Set HeldByPlayer component
                     var ecb = new EntityCommandBuffer(Allocator.TempJob);
-                    ecb.AddComponent(targetEntity, new HeldByPlayer
+                    var heldByPlayer = new HeldByPlayer
                     {
                         Holder = godHandEntity,
                         LocalOffset = localOffset,
                         HoldStartPosition = worldPos,
                         HoldStartTime = pickupState.HoldTime
-                    });
+                    };
+                    if (hasHeldByPlayer)
+                    {
+                        ecb.SetComponent(targetEntity, heldByPlayer);
+                        ecb.SetComponentEnabled<HeldByPlayer>(targetEntity, true);
+                    }
+                    else
+                    {
+                        ecb.AddComponent(targetEntity, heldByPlayer);
+                        if (interactionPolicy.LogStructuralFallback != 0)
+                        {
+                            LogFallbackOnce(targetEntity, "HeldByPlayer", skipped: false);
+                        }
+                    }
 
-                    // Add MovementSuppressed
-                    ecb.AddComponent<MovementSuppressed>(targetEntity);
+                    // Enable MovementSuppressed
+                    if (hasMovementSuppressed)
+                    {
+                        ecb.SetComponentEnabled<MovementSuppressed>(targetEntity, true);
+                    }
+                    else
+                    {
+                        ecb.AddComponent<MovementSuppressed>(targetEntity);
+                        if (interactionPolicy.LogStructuralFallback != 0)
+                        {
+                            LogFallbackOnce(targetEntity, "MovementSuppressed", skipped: false);
+                        }
+                    }
 
                     // Zero out physics velocity if entity has physics
                     if (state.EntityManager.HasComponent<Unity.Physics.PhysicsVelocity>(targetEntity))
@@ -282,6 +315,18 @@ namespace Godgame.Systems.Interaction
                     pickupState.LastHolderPosition = holderTransform.Position;
                 }
             }
+        }
+
+        [BurstDiscard]
+        private void LogFallbackOnce(Entity target, string missingComponents, bool skipped)
+        {
+            if (!_loggedFallbackEntities.IsCreated || !_loggedFallbackEntities.Add(target))
+            {
+                return;
+            }
+
+            var action = skipped ? "skipping pick (strict policy)" : "using structural fallback";
+            UnityEngine.Debug.LogWarning($"[GodgamePickupSystem] Missing {missingComponents} on entity {target.Index}:{target.Version}; {action}.");
         }
     }
 }

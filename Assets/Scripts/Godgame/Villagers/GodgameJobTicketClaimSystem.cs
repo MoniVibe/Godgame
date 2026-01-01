@@ -144,7 +144,7 @@ namespace Godgame.Villagers
                     }
 
                     var job = _jobLookup[villager];
-                    if (job.Type != JobType.Gather || job.Phase != JobPhase.Idle || job.DecisionCooldown > 0f)
+                    if (job.Type != JobType.Gather || job.Phase != JobPhase.Idle)
                     {
                         continue;
                     }

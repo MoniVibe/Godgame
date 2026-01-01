@@ -1,5 +1,6 @@
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Interaction;
+using PureDOTS.Runtime.Hand;
 using PureDOTS.Runtime.Physics;
 using PureDOTS.Runtime.Time;
 using Godgame.Presentation;
@@ -8,6 +9,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Physics.Systems;
 using Unity.Transforms;
 
 namespace Godgame.Systems.Interaction
@@ -16,8 +18,7 @@ namespace Godgame.Systems.Interaction
     /// Updates held entity positions to follow the god hand/camera for Godgame.
     /// Handles different states: Holding, AboutToPick, PrimedToThrow
     /// </summary>
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(GodgamePickupSystem))]
+    [UpdateInGroup(typeof(BeforePhysicsSystemGroup))]
     public partial struct GodgameHeldFollowSystem : ISystem
     {
         private ComponentLookup<LocalTransform> _transformLookup;
@@ -30,6 +31,7 @@ namespace Godgame.Systems.Interaction
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<RewindState>();
             state.RequireForUpdate<GodgameLegacyHandTag>();
+            state.RequireForUpdate<HandInputFrame>();
 
             _transformLookup = state.GetComponentLookup<LocalTransform>(false);
             _pickupStateLookup = state.GetComponentLookup<PickupState>(true);
@@ -55,6 +57,9 @@ namespace Godgame.Systems.Interaction
             _physicsVelocityLookup.Update(ref state);
 
             var deltaTime = timeState.FixedDeltaTime;
+            var inputFrame = SystemAPI.GetSingleton<HandInputFrame>();
+            var rayDirection = math.normalizesafe(inputFrame.RayDirection, new float3(0f, 0f, 1f));
+            var rayOrigin = inputFrame.RayOrigin;
 
             // Get camera transform if available
             var cameraQuery = SystemAPI.QueryBuilder()
@@ -117,10 +122,18 @@ namespace Godgame.Systems.Interaction
                 }
                 else
                 {
-                    // Normal holding: follow holder with local offset
-                    var rotatedOffset = math.mul(holderTransform.Rotation, held.LocalOffset);
-                    targetPosition = holderTransform.Position + rotatedOffset;
                     targetRotation = holderTransform.Rotation; // Match holder rotation, or keep stable
+                    if (pickupState.HoldDistance > 0f && math.lengthsq(rayDirection) > 0.0001f)
+                    {
+                        var holdPoint = rayOrigin + rayDirection * pickupState.HoldDistance;
+                        var rotatedOffset = math.mul(targetRotation, held.LocalOffset);
+                        targetPosition = holdPoint - rotatedOffset;
+                    }
+                    else
+                    {
+                        var rotatedOffset = math.mul(targetRotation, held.LocalOffset);
+                        targetPosition = holderTransform.Position + rotatedOffset;
+                    }
                 }
 
                 // Update transform
@@ -150,11 +163,9 @@ namespace Godgame.Systems.Interaction
                             var stateRef = SystemAPI.GetComponentRW<PickupState>(holderEntity);
                             ref var pickupStateRW = ref stateRef.ValueRW;
                             pickupStateRW.IsMoving = true;
-                            pickupStateRW.LastHolderPosition = holderTransform.Position;
-
-                            // Accumulate velocity for throw
                             var velocityDelta = (holderTransform.Position - pickupStateRW.LastHolderPosition) / deltaTime;
                             pickupStateRW.AccumulatedVelocity += velocityDelta * deltaTime;
+                            pickupStateRW.LastHolderPosition = holderTransform.Position;
                         }
                     }
                 }

@@ -1,6 +1,8 @@
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Interaction;
 using Unity.Entities;
 using UnityEngine;
+using Pickable = PureDOTS.Runtime.Interaction.Pickable;
 
 namespace Godgame.Authoring
 {
@@ -26,6 +28,12 @@ namespace Godgame.Authoring
                     FollowLerp = Mathf.Clamp(authoring.followLerp, 0.01f, 1f)
                 });
                 AddComponent<Pickable>(entity);
+                AddComponent<HeldByPlayer>(entity);
+                SetComponentEnabled<HeldByPlayer>(entity, false);
+                AddComponent<MovementSuppressed>(entity);
+                SetComponentEnabled<MovementSuppressed>(entity, false);
+                AddComponent<BeingThrown>(entity);
+                SetComponentEnabled<BeingThrown>(entity, false);
             }
         }
     }

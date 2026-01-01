@@ -6,6 +6,7 @@ using Godgame.Runtime.Interaction;
 using Godgame.Villages;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Interaction;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -13,6 +14,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using PureDOTS.Rendering;
 using static Godgame.Rendering.GodgamePresentationUtility;
+using Pickable = PureDOTS.Runtime.Interaction.Pickable;
 
 namespace Godgame.Scenario
 {
@@ -777,6 +779,12 @@ namespace Godgame.Scenario
             if (addPickable)
             {
                 ecb.AddComponent<Pickable>(instance);
+                ecb.AddComponent<HeldByPlayer>(instance);
+                ecb.SetComponentEnabled<HeldByPlayer>(instance, false);
+                ecb.AddComponent<MovementSuppressed>(instance);
+                ecb.SetComponentEnabled<MovementSuppressed>(instance, false);
+                ecb.AddComponent<BeingThrown>(instance);
+                ecb.SetComponentEnabled<BeingThrown>(instance, false);
             }
         }
 

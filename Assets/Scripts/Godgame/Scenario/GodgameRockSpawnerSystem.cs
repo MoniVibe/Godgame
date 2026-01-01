@@ -2,6 +2,7 @@ using Godgame.Scenario;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using PureDOTS.Runtime;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Interaction;
 using PureDOTS.Runtime.Physics;
 using Unity.Entities;
 using Unity.Collections;
@@ -10,6 +11,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Godgame.Rendering;
 using Godgame.Runtime.Interaction;
+using Pickable = PureDOTS.Runtime.Interaction.Pickable;
 
 namespace Godgame.Scenario
 {
@@ -151,6 +153,12 @@ namespace Godgame.Scenario
             em.AddBuffer<PhysicsCollisionEventElement>(rockEntity);
 
             em.AddComponent<Pickable>(rockEntity);
+            em.AddComponent<HeldByPlayer>(rockEntity);
+            em.SetComponentEnabled<HeldByPlayer>(rockEntity, false);
+            em.AddComponent<MovementSuppressed>(rockEntity);
+            em.SetComponentEnabled<MovementSuppressed>(rockEntity, false);
+            em.AddComponent<BeingThrown>(rockEntity);
+            em.SetComponentEnabled<BeingThrown>(rockEntity, false);
             em.AddComponentData(rockEntity, new HandPickable
             {
                 Mass = math.max(0.1f, pickableDefaults.Mass),

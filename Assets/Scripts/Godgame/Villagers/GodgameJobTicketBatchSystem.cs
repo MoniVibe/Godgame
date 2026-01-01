@@ -124,7 +124,11 @@ namespace Godgame.Villagers
                     continue;
                 }
 
-                if (job.ValueRO.Phase != JobPhase.Idle && job.ValueRO.Phase != JobPhase.NavigateToNode)
+                if (job.ValueRO.Phase != JobPhase.Idle
+                    && job.ValueRO.Phase != JobPhase.NavigateToNode
+                    && job.ValueRO.Phase != JobPhase.Gather
+                    && job.ValueRO.Phase != JobPhase.NavigateToStorehouse
+                    && job.ValueRO.Phase != JobPhase.Deliver)
                 {
                     continue;
                 }
