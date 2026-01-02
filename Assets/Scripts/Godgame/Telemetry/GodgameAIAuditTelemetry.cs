@@ -186,8 +186,10 @@ namespace Godgame.Telemetry
             EnsureBuffer<GodgameGatherYieldRecord>(entityManager, telemetryEntity);
             EnsureBuffer<GodgameGatherFailureRecord>(entityManager, telemetryEntity);
             EnsureBuffer<GodgameHaulTripRecord>(entityManager, telemetryEntity);
+            EnsureBuffer<GodgameOracleLoopSample>(entityManager, telemetryEntity);
             EnsureComponent(entityManager, telemetryEntity, new GodgameTelemetrySummary());
             EnsureComponent(entityManager, telemetryEntity, new GodgameTelemetryAccumulator());
+            EnsureComponent(entityManager, telemetryEntity, new GodgameOracleAccumulator());
             EnsureComponent(entityManager, telemetryEntity, new GodgameTelemetryBudgets
             {
                 MinResourcesPerMinute = 25f,
