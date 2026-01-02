@@ -1,4 +1,5 @@
 using Godgame.Villagers;
+using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Telemetry;
 using Unity.Collections;
