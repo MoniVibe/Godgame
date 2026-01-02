@@ -39,6 +39,7 @@ namespace Godgame.Scenario
             state.RequireForUpdate<SettlementConfig>();
             state.RequireForUpdate<GodgameScenarioConfigBlobReference>();
             state.RequireForUpdate<TimeState>();
+            state.RequireForUpdate<RewindState>();
 
             _tickInitialized = 0;
             _lastTick = 0;
@@ -63,8 +64,13 @@ namespace Godgame.Scenario
             }
 
             var timeState = SystemAPI.GetSingleton<TimeState>();
+            var rewindState = SystemAPI.GetSingleton<RewindState>();
             var deltaTime = ResolveDeltaTime(timeState);
             if (deltaTime <= 0f)
+            {
+                return;
+            }
+            if (rewindState.Mode != RewindMode.Record)
             {
                 return;
             }

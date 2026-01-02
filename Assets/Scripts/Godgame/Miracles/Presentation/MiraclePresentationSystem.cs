@@ -1,5 +1,6 @@
 using Godgame.Environment;
 using PureDOTS.Environment;
+using PureDOTS.Runtime.Time;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -26,8 +27,8 @@ namespace Godgame.Miracles.Presentation
         {
             _localToWorldLookup.Update(this);
 
-            var hasClimate = SystemAPI.TryGetSingleton(out Godgame.Environment.ClimateState climateState);
             var hasBiome = SystemAPI.TryGetSingleton(out Godgame.Environment.BiomeGrid biomeGrid);
+            var hasTimeOfDay = SystemAPI.TryGetSingleton(out TimeOfDayState timeOfDayState);
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             foreach (var (bindingRW, swapRW, entity) in SystemAPI
@@ -44,7 +45,7 @@ namespace Godgame.Miracles.Presentation
                 var variantSuffix = string.Empty;
                 var variantIntensity = 1f;
 
-                var timeOfDay = hasClimate ? 12f : 12f; // Placeholder
+                var timeOfDay = hasTimeOfDay ? math.frac(timeOfDayState.TimeOfDayNorm) * 24f : 12f;
                 var biome = BiomeType.Unknown;
 
                 if (hasBiome && _localToWorldLookup.HasComponent(entity))

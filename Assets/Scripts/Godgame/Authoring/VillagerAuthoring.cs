@@ -1,6 +1,7 @@
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Communication;
+using PureDOTS.Runtime.Interaction;
 using PureDOTS.Runtime.Interrupts;
 using PureDOTS.Runtime.Modularity;
 using PureDOTS.Runtime.Perception;
@@ -14,6 +15,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using Pickable = PureDOTS.Runtime.Interaction.Pickable;
 
 namespace Godgame.Authoring
 {
@@ -495,6 +497,12 @@ namespace Godgame.Authoring
                 if (authoring.allowDivineHandPickup)
                 {
                     AddComponent<Pickable>(entity);
+                    AddComponent<HeldByPlayer>(entity);
+                    SetComponentEnabled<HeldByPlayer>(entity, false);
+                    AddComponent<MovementSuppressed>(entity);
+                    SetComponentEnabled<MovementSuppressed>(entity, false);
+                    AddComponent<BeingThrown>(entity);
+                    SetComponentEnabled<BeingThrown>(entity, false);
                     AddComponent(entity, new HandPickable
                     {
                         Mass = math.max(0.1f, authoring.handPickableMass),

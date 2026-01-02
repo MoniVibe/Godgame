@@ -1,6 +1,7 @@
 using Godgame.Runtime;
 using MiracleToken = Godgame.Runtime.MiracleToken;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Interaction;
 using PureDOTS.Runtime.Resource;
 using PureDOTS.Runtime.Spatial;
 using PureDOTS.Runtime.Hand;
@@ -65,6 +66,8 @@ namespace Godgame.Systems
         private BufferLookup<MiracleSlotDefinition> _miracleSlotLookup;
         private ComponentLookup<StorehouseInventory> _storehouseInventoryLookup;
         private BufferLookup<StorehouseInventoryItem> _storeItemsLookup;
+        private uint _lastInputSampleId;
+        private NativeParallelHashSet<Entity> _loggedFallbackEntities;
 
         public void OnCreate(ref SystemState state)
         {
@@ -103,8 +106,17 @@ namespace Godgame.Systems
             _storehouseInventoryLookup = state.GetComponentLookup<StorehouseInventory>(false);
             _storeItemsLookup = state.GetBufferLookup<StorehouseInventoryItem>(false);
             _movementSuppressedLookup = state.GetComponentLookup<PureDOTS.Runtime.Interaction.MovementSuppressed>(false);
+            _loggedFallbackEntities = new NativeParallelHashSet<Entity>(128, Allocator.Persistent);
 
             state.RequireForUpdate<ResourceTypeIndex>();
+        }
+
+        public void OnDestroy(ref SystemState state)
+        {
+            if (_loggedFallbackEntities.IsCreated)
+            {
+                _loggedFallbackEntities.Dispose();
+            }
         }
 
         [BurstCompile]
@@ -147,6 +159,17 @@ namespace Godgame.Systems
 
                 // Read HandInputFrame singleton and affordances
                 var inputFrame = SystemAPI.GetSingleton<HandInputFrame>();
+                var interactionPolicy = InteractionPolicy.CreateDefault();
+                if (SystemAPI.TryGetSingleton(out InteractionPolicy policyValue))
+                {
+                    interactionPolicy = policyValue;
+                }
+                bool isNewSample = inputFrame.SampleId != _lastInputSampleId;
+                bool rmbPressed = isNewSample && inputFrame.RmbPressed;
+                bool rmbReleased = isNewSample && inputFrame.RmbReleased;
+                bool releaseOnePressed = isNewSample && inputFrame.ReleaseOnePressed;
+                bool releaseAllPressed = isNewSample && inputFrame.ReleaseAllPressed;
+                bool toggleThrowMode = isNewSample && inputFrame.ToggleThrowMode;
                 var hover = SystemAPI.GetSingleton<HandHover>();
                 var affordances = SystemAPI.GetSingleton<HandAffordances>();
 
@@ -176,7 +199,7 @@ namespace Godgame.Systems
 
                 stateData.HeldCapacity = math.max(1, config.HeldCapacity);
                 
-                if (inputFrame.ToggleThrowMode)
+                if (toggleThrowMode)
                 {
                     stateData.Flags ^= DivineHandStateFlags.ThrowModeSlingshot;
                 }
@@ -268,12 +291,12 @@ namespace Godgame.Systems
                     DebugWorldGrabAny = 0,
                     WorldGrabRequiresTag = 1
                 };
-                if (SystemAPI.TryGetSingleton(out HandPickupPolicy policyValue))
+                if (SystemAPI.TryGetSingleton(out HandPickupPolicy pickupPolicyValue))
                 {
-                    policy = policyValue;
+                    policy = pickupPolicyValue;
                 }
 
-                if (!hasHeldEntity && inputFrame.RmbPressed && stateData.CooldownTimer <= 0f)
+                if (!hasHeldEntity && rmbPressed && stateData.CooldownTimer <= 0f)
                 {
                     pickCandidate = ResolveHandCandidate(ref state, in hover, stateData.CursorPosition, config, inputFrame, policy);
                 }
@@ -288,7 +311,7 @@ namespace Godgame.Systems
                 bool affordanceHasDumpGround = (affordances.Flags & HandAffordanceFlags.CanDumpGround) != 0;
                 bool affordanceHasDump = affordanceHasDumpStorehouse || affordanceHasDumpConstruction || affordanceHasDumpGround;
                 bool affordanceHasMiracle = (affordances.Flags & HandAffordanceFlags.CanCastMiracle) != 0;
-                bool wantsMiracleCast = affordanceHasMiracle && inputFrame.RmbReleased;
+                bool wantsMiracleCast = affordanceHasMiracle && rmbReleased;
 
                 // Declare miracleCastTriggered early, initialized to false
                 bool miracleCastTriggered = false;
@@ -317,6 +340,19 @@ namespace Godgame.Systems
 
                     if (accept)
                     {
+                        bool hasMovementSuppressed = entityManager.HasComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(pickCandidate);
+                        if (!hasMovementSuppressed && interactionPolicy.AllowStructuralFallback == 0)
+                        {
+                            if (interactionPolicy.LogStructuralFallback != 0)
+                            {
+                                LogFallbackOnce(pickCandidate, "MovementSuppressed", skipped: true);
+                            }
+                            accept = false;
+                        }
+                    }
+
+                    if (accept)
+                    {
                         stateData.HeldEntity = pickCandidate;
                         stateData.HeldLocalOffset = float3.zero;
                         stateData.HeldAmount = 1;
@@ -327,9 +363,17 @@ namespace Godgame.Systems
                         {
                             ecb.AddComponent(pickCandidate, new HandHeldTag { Holder = entity });
                         }
-                        if (!entityManager.HasComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(pickCandidate))
+                        if (entityManager.HasComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(pickCandidate))
+                        {
+                            ecb.SetComponentEnabled<PureDOTS.Runtime.Interaction.MovementSuppressed>(pickCandidate, true);
+                        }
+                        else
                         {
                             ecb.AddComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(pickCandidate);
+                            if (interactionPolicy.LogStructuralFallback != 0)
+                            {
+                                LogFallbackOnce(pickCandidate, "MovementSuppressed", skipped: false);
+                            }
                         }
                         
                         // Emit Pick command
@@ -373,7 +417,7 @@ namespace Godgame.Systems
                     MaintainHeldTransform(ref stateData, in config);
 
                     // Release is triggered by CancelAction or ConfirmPlace intent, or RMB release
-                    bool releaseRequested = intent.CancelAction != 0 || intent.ConfirmPlace != 0 || inputFrame.RmbReleased;
+                    bool releaseRequested = intent.CancelAction != 0 || intent.ConfirmPlace != 0 || rmbReleased;
                     bool queuedInstead = releaseRequested && inputFrame.ShiftHeld &&
                                          TryQueueHeldEntity(ref ecb, entityManager, entity, ref stateData, in history, in config, inputFrame, normalizedChargeLevel, currentTick, commands, queuedBuffer);
                     if (!queuedInstead && releaseRequested && _miracleTokenLookup.HasComponent(stateData.HeldEntity))
@@ -391,7 +435,7 @@ namespace Godgame.Systems
 
                     if (releaseRequested)
                     {
-                        bool appliedThrow = ReleaseHeldEntity(ref ecb, ref stateData, in history, in config, inputFrame, aim, normalizedChargeLevel, deltaTime, in intent,
+                        bool appliedThrow = ReleaseHeldEntity(ref ecb, ref stateData, in history, in config, inputFrame, rmbReleased, aim, normalizedChargeLevel, deltaTime, in intent,
                             (stateData.Flags & DivineHandStateFlags.ThrowModeSlingshot) != 0, currentTick, commands);
                         hasHeldEntity = false;
                         stateData.HeldAmount = 0;
@@ -632,11 +676,11 @@ namespace Godgame.Systems
 
                 if (queuedBuffer.Length > 0)
                 {
-                    if (inputFrame.ReleaseAllPressed)
+                    if (releaseAllPressed)
                     {
                         ReleaseQueuedEntries(ref ecb, entityManager, queuedBuffer, queuedBuffer.Length, in config, ref stateData);
                     }
-                    else if (inputFrame.ReleaseOnePressed)
+                    else if (releaseOnePressed)
                     {
                         ReleaseQueuedEntries(ref ecb, entityManager, queuedBuffer, 1, in config, ref stateData);
                     }
@@ -644,12 +688,30 @@ namespace Godgame.Systems
 
                 hand.Command.ValueRW = command;
             }
+
+            if (isNewSample)
+            {
+                _lastInputSampleId = inputFrame.SampleId;
             }
+        }
+
             finally
             {
                 ecb.Playback(entityManager);
                 ecb.Dispose();
             }
+        }
+
+        [BurstDiscard]
+        private void LogFallbackOnce(Entity target, string missingComponents, bool skipped)
+        {
+            if (!_loggedFallbackEntities.IsCreated || !_loggedFallbackEntities.Add(target))
+            {
+                return;
+            }
+
+            var action = skipped ? "skipping pick (strict policy)" : "using structural fallback";
+            UnityEngine.Debug.LogWarning($"[DivineHandSystem] Missing {missingComponents} on entity {target.Index}:{target.Version}; {action}.");
         }
 
         private void MaintainHeldTransform(ref DivineHandState state, in DivineHandConfig config)
@@ -860,6 +922,7 @@ namespace Godgame.Systems
             in HandHistory history,
             in DivineHandConfig config,
             HandInputFrame inputFrame,
+            bool rmbReleased,
             AimPoint aim,
             float normalizedChargeLevel,
             float deltaTime,
@@ -881,7 +944,7 @@ namespace Godgame.Systems
             var releasedEntity = state.HeldEntity;
             ComputeThrowParameters(ref state, in config, in history, normalizedChargeLevel, inputFrame, out var direction, out var impulse);
 
-            bool appliedThrow = intent.ConfirmPlace != 0 || inputFrame.RmbReleased;
+            bool appliedThrow = intent.ConfirmPlace != 0 || rmbReleased;
             if (appliedThrow)
             {
                 ApplyThrowToEntity(ref ecb, releasedEntity, direction, impulse);
@@ -1055,7 +1118,7 @@ namespace Godgame.Systems
 
             if (_movementSuppressedLookup.HasComponent(entry.Entity))
             {
-                ecb.RemoveComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(entry.Entity);
+                ecb.SetComponentEnabled<PureDOTS.Runtime.Interaction.MovementSuppressed>(entry.Entity, false);
             }
 
             if (_queuedTagLookup.HasComponent(entry.Entity))
@@ -1232,7 +1295,7 @@ namespace Godgame.Systems
 
             if (_movementSuppressedLookup.HasComponent(entity))
             {
-                ecb.RemoveComponent<PureDOTS.Runtime.Interaction.MovementSuppressed>(entity);
+                ecb.SetComponentEnabled<PureDOTS.Runtime.Interaction.MovementSuppressed>(entity, false);
             }
         }
 

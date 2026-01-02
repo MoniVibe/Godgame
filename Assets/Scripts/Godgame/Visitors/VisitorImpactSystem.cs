@@ -1,4 +1,5 @@
 using Godgame.Visitors;
+using PureDOTS.Environment;
 using PureDOTS.Runtime.Components;
 using Unity.Burst;
 using Unity.Collections;
@@ -34,12 +35,22 @@ namespace Godgame.Visitors
 
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<TimeState>();
+            state.RequireForUpdate<RewindState>();
+            state.RequireForUpdate<TerrainModificationQueue>();
             state.RequireForUpdate<VisitorTag>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            var timeState = SystemAPI.GetSingleton<TimeState>();
+            var rewindState = SystemAPI.GetSingleton<RewindState>();
+            if (timeState.IsPaused || rewindState.Mode != RewindMode.Record)
+            {
+                return;
+            }
+
             // Find or create impact event buffer singleton
             Entity impactEventEntity;
             if (!SystemAPI.TryGetSingletonEntity<VisitorImpactEvent>(out impactEventEntity))
@@ -49,6 +60,12 @@ namespace Godgame.Visitors
             }
 
             var impactEvents = state.EntityManager.GetBuffer<VisitorImpactEvent>(impactEventEntity);
+            var hasQueue = SystemAPI.TryGetSingletonEntity<TerrainModificationQueue>(out var queueEntity);
+            DynamicBuffer<TerrainModificationRequest> modificationBuffer = default;
+            if (hasQueue)
+            {
+                modificationBuffer = SystemAPI.GetBuffer<TerrainModificationRequest>(queueEntity);
+            }
 
             foreach (var (visitorState, transform, entity) in SystemAPI.Query<RefRW<VisitorState>, RefRO<LocalTransform>>()
                 .WithAll<VisitorTag>()
@@ -102,6 +119,31 @@ namespace Godgame.Visitors
                         Energy = energy
                     });
 
+                    if (hasQueue)
+                    {
+                        modificationBuffer.Add(new TerrainModificationRequest
+                        {
+                            Kind = TerrainModificationKind.Dig,
+                            Shape = TerrainModificationShape.Brush,
+                            ToolKind = TerrainModificationToolKind.Drill,
+                            Start = pos,
+                            End = pos,
+                            Radius = radius,
+                            Depth = radius,
+                            MaterialId = 0,
+                            DamageDelta = 0,
+                            DamageThreshold = 0,
+                            YieldMultiplier = 1f,
+                            HeatDelta = 0f,
+                            InstabilityDelta = 0f,
+                            Flags = TerrainModificationFlags.AffectsSurface | TerrainModificationFlags.AffectsVolume,
+                            RequestedTick = timeState.Tick,
+                            Actor = entity,
+                            VolumeEntity = Entity.Null,
+                            Space = TerrainModificationSpace.World
+                        });
+                    }
+
                     // Mark visitor as no longer inbound (impacted)
                     stateRef.IsInbound = false;
                     visitorState.ValueRW = stateRef;
@@ -147,4 +189,3 @@ namespace Godgame.Visitors
         }
     }
 }
-

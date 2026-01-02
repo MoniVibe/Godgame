@@ -565,6 +565,20 @@ namespace Godgame.Villagers
                     {
                         job.DecisionCooldown = math.max(0f, job.DecisionCooldown - Delta);
                     }
+                    if (GoalLookup.HasComponent(e) && PonderLookup.HasComponent(e))
+                    {
+                        var goal = GoalLookup[e];
+                        if (goal.CurrentGoal == VillagerGoal.Work)
+                        {
+                            var ponder = PonderLookup[e];
+                            if (ponder.RemainingSeconds <= 0f)
+                            {
+                                ponder.RemainingSeconds = ResolveDeliberationSeconds(e, patienceScore);
+                                ponder.AnchorPosition = float3.zero;
+                                PonderLookup[e] = ponder;
+                            }
+                        }
+                    }
                     job.Phase = JobPhase.Idle;
                     job.Target = Entity.Null;
                     assignment.CommitTick = 0;
@@ -1138,7 +1152,26 @@ namespace Godgame.Villagers
                                     }
 
                                     var dropMin = math.max(PileDropMinUnits, PileMinSpawnAmount);
-                                    if (!shouldHaul && HasPileConfig != 0 && outputResourceIndex != ushort.MaxValue && job.CarryCount >= dropMin)
+                                    var canDropToPile = HasPileConfig != 0
+                                                        && outputResourceIndex != ushort.MaxValue
+                                                        && job.CarryCount >= dropMin;
+                                    if (shouldHaul && !isHauler && canDropToPile)
+                                    {
+                                        if (TryFindStorehouse(tx.Position, useCooperation, in cooperation, hasAwareness, in awareness, storehouseRadiusSq,
+                                                out _, out var nearestStorehousePositionForDrop, out _))
+                                        {
+                                            if (math.distancesq(tx.Position, nearestStorehousePositionForDrop) > PileSearchRadiusSq)
+                                            {
+                                                shouldHaul = false;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            shouldHaul = false;
+                                        }
+                                    }
+
+                                    if (!shouldHaul && canDropToPile)
                                     {
                                         Ecb.AppendToBuffer(ciq, PileConfigEntity, new AggregatePileSpawnCommand
                                         {

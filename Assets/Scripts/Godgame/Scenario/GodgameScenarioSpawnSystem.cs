@@ -2,9 +2,11 @@ using Godgame.AI;
 using Godgame.Economy;
 using Godgame.Presentation;
 using Godgame.Rendering;
+using Godgame.Runtime.Interaction;
 using Godgame.Villages;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Interaction;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -12,6 +14,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using PureDOTS.Rendering;
 using static Godgame.Rendering.GodgamePresentationUtility;
+using Pickable = PureDOTS.Runtime.Interaction.Pickable;
 
 namespace Godgame.Scenario
 {
@@ -33,6 +36,9 @@ namespace Godgame.Scenario
             var entityManager = state.EntityManager;
             const float villagerScale = 0.9f;
             const float buildingScale = 3f;
+            var pickableDefaults = SystemAPI.TryGetSingleton(out HandPickableDefaults defaults)
+                ? defaults
+                : HandPickableDefaults.Default;
 
             foreach (var (config, runtime, entity) in SystemAPI.Query<
                 RefRO<GodgameScenarioSpawnConfig>,
@@ -51,6 +57,22 @@ namespace Godgame.Scenario
                 var centerPresentation = GetPrefabPresentationState(entityManager, configValue.VillageCenterPrefab);
                 var housingPresentation = GetPrefabPresentationState(entityManager, configValue.HousingPrefab);
                 var worshipPresentation = GetPrefabPresentationState(entityManager, configValue.WorshipPrefab);
+                bool centerHasHandPickable = configValue.VillageCenterPrefab != Entity.Null &&
+                                             entityManager.HasComponent<HandPickable>(configValue.VillageCenterPrefab);
+                bool centerHasPickable = configValue.VillageCenterPrefab != Entity.Null &&
+                                         entityManager.HasComponent<Pickable>(configValue.VillageCenterPrefab);
+                bool housingHasHandPickable = configValue.HousingPrefab != Entity.Null &&
+                                              entityManager.HasComponent<HandPickable>(configValue.HousingPrefab);
+                bool housingHasPickable = configValue.HousingPrefab != Entity.Null &&
+                                          entityManager.HasComponent<Pickable>(configValue.HousingPrefab);
+                bool worshipHasHandPickable = configValue.WorshipPrefab != Entity.Null &&
+                                              entityManager.HasComponent<HandPickable>(configValue.WorshipPrefab);
+                bool worshipHasPickable = configValue.WorshipPrefab != Entity.Null &&
+                                          entityManager.HasComponent<Pickable>(configValue.WorshipPrefab);
+                bool storehouseHasHandPickable = configValue.StorehousePrefab != Entity.Null &&
+                                                 entityManager.HasComponent<HandPickable>(configValue.StorehousePrefab);
+                bool storehouseHasPickable = configValue.StorehousePrefab != Entity.Null &&
+                                             entityManager.HasComponent<Pickable>(configValue.StorehousePrefab);
 
                 var center = float3.zero;
                 var random = new Unity.Mathematics.Random(configValue.Seed != 0 ? configValue.Seed : (uint)entity.Index + 1u);
@@ -124,7 +146,9 @@ namespace Godgame.Scenario
                 if (hasOverrides)
                 {
                     SpawnOverrides(ref ecb, entityManager, overrides, configValue, villagerPresentation, storePresentation, centerPresentation,
-                        housingPresentation, worshipPresentation, buildingScale, villagerScale, prefabHasSettlementState, settlementEntity, ref random,
+                        housingPresentation, worshipPresentation, buildingScale, villagerScale, prefabHasSettlementState, settlementEntity,
+                        pickableDefaults, centerHasPickable, centerHasHandPickable, housingHasPickable, housingHasHandPickable,
+                        worshipHasPickable, worshipHasHandPickable, storehouseHasPickable, storehouseHasHandPickable, ref random,
                         ref primaryVillageCenter, ref primaryHousing, ref primaryWorship, ref primaryStorehouse);
                 }
 
@@ -148,6 +172,8 @@ namespace Godgame.Scenario
                         {
                             Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.VillageCenter)
                         }, centerPresentation.HasRenderTint);
+                        AddScenarioPickable(ref ecb, instance, pickableDefaults, buildingScale,
+                            !centerHasPickable, !centerHasHandPickable);
 
                         if (primaryVillageCenter == Entity.Null)
                         {
@@ -173,6 +199,8 @@ namespace Godgame.Scenario
                         {
                             Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Housing)
                         }, housingPresentation.HasRenderTint);
+                        AddScenarioPickable(ref ecb, instance, pickableDefaults, buildingScale,
+                            !housingHasPickable, !housingHasHandPickable);
 
                         if (primaryHousing == Entity.Null)
                         {
@@ -198,6 +226,8 @@ namespace Godgame.Scenario
                         {
                             Value = GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Worship)
                         }, worshipPresentation.HasRenderTint);
+                        AddScenarioPickable(ref ecb, instance, pickableDefaults, buildingScale,
+                            !worshipHasPickable, !worshipHasHandPickable);
 
                         if (primaryWorship == Entity.Null)
                         {
@@ -330,6 +360,8 @@ namespace Godgame.Scenario
                         {
                             EnsureStorehouseComponents(entityManager, ref ecb, configValue.StorehousePrefab, storehouse);
                         }
+                        AddScenarioPickable(ref ecb, storehouse, pickableDefaults, buildingScale,
+                            !storehouseHasPickable, !storehouseHasHandPickable);
 
                         if (primaryStorehouse == Entity.Null)
                         {
@@ -405,6 +437,7 @@ namespace Godgame.Scenario
                         {
                             Value = GodgamePresentationColors.ForResourceType(ResourceType.IronOre)
                         });
+                        AddScenarioPickable(ref ecb, nodeEntity, pickableDefaults, 1f, true, true);
 
                         if (settlementEntity != Entity.Null)
                         {
@@ -473,6 +506,15 @@ namespace Godgame.Scenario
             float villagerScale,
             bool prefabHasSettlementState,
             Entity settlementEntity,
+            HandPickableDefaults pickableDefaults,
+            bool centerHasPickable,
+            bool centerHasHandPickable,
+            bool housingHasPickable,
+            bool housingHasHandPickable,
+            bool worshipHasPickable,
+            bool worshipHasHandPickable,
+            bool storehouseHasPickable,
+            bool storehouseHasHandPickable,
             ref Unity.Mathematics.Random random,
             ref Entity primaryVillageCenter,
             ref Entity primaryHousing,
@@ -504,16 +546,23 @@ namespace Godgame.Scenario
                             villagerIndex++;
                             break;
                         case GodgameScenarioSpawnKind.VillageCenter:
-                            SpawnBuilding(ref ecb, configValue.VillageCenterPrefab, pos, buildingScale, GodgameSemanticKeys.VillageCenter, centerPresentation, GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.VillageCenter), ref primaryVillageCenter);
+                            SpawnBuilding(ref ecb, configValue.VillageCenterPrefab, pos, buildingScale, GodgameSemanticKeys.VillageCenter, centerPresentation,
+                                GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.VillageCenter), pickableDefaults,
+                                !centerHasPickable, !centerHasHandPickable, ref primaryVillageCenter);
                             break;
                         case GodgameScenarioSpawnKind.Storehouse:
-                            SpawnStorehouse(ref ecb, entityManager, configValue.StorehousePrefab, pos, buildingScale, storePresentation, ref primaryStorehouse);
+                            SpawnStorehouse(ref ecb, entityManager, configValue.StorehousePrefab, pos, buildingScale, storePresentation,
+                                pickableDefaults, !storehouseHasPickable, !storehouseHasHandPickable, ref primaryStorehouse);
                             break;
                         case GodgameScenarioSpawnKind.Housing:
-                            SpawnBuilding(ref ecb, configValue.HousingPrefab, pos, buildingScale, GodgameSemanticKeys.Housing, housingPresentation, GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Housing), ref primaryHousing);
+                            SpawnBuilding(ref ecb, configValue.HousingPrefab, pos, buildingScale, GodgameSemanticKeys.Housing, housingPresentation,
+                                GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Housing), pickableDefaults,
+                                !housingHasPickable, !housingHasHandPickable, ref primaryHousing);
                             break;
                         case GodgameScenarioSpawnKind.Worship:
-                            SpawnBuilding(ref ecb, configValue.WorshipPrefab, pos, buildingScale, GodgameSemanticKeys.Worship, worshipPresentation, GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Worship), ref primaryWorship);
+                            SpawnBuilding(ref ecb, configValue.WorshipPrefab, pos, buildingScale, GodgameSemanticKeys.Worship, worshipPresentation,
+                                GodgamePresentationColors.ForBuilding(GodgameSemanticKeys.Worship), pickableDefaults,
+                                !worshipHasPickable, !worshipHasHandPickable, ref primaryWorship);
                             break;
                     }
                 }
@@ -635,6 +684,9 @@ namespace Godgame.Scenario
             ushort semanticKey,
             PrefabPresentationState presentation,
             float4 tint,
+            HandPickableDefaults pickableDefaults,
+            bool addPickable,
+            bool addHandPickable,
             ref Entity primary)
         {
             if (prefab == Entity.Null)
@@ -649,6 +701,7 @@ namespace Godgame.Scenario
             {
                 Value = tint
             }, presentation.HasRenderTint);
+            AddScenarioPickable(ref ecb, instance, pickableDefaults, scale, addPickable, addHandPickable);
 
             if (primary == Entity.Null)
             {
@@ -663,6 +716,9 @@ namespace Godgame.Scenario
             float3 position,
             float scale,
             PrefabPresentationState presentation,
+            HandPickableDefaults pickableDefaults,
+            bool addPickable,
+            bool addHandPickable,
             ref Entity primary)
         {
             Entity instance;
@@ -686,10 +742,49 @@ namespace Godgame.Scenario
             {
                 EnsureStorehouseComponents(entityManager, ref ecb, prefab, instance);
             }
+            AddScenarioPickable(ref ecb, instance, pickableDefaults, scale, addPickable, addHandPickable);
 
             if (primary == Entity.Null)
             {
                 primary = instance;
+            }
+        }
+
+        private static void AddScenarioPickable(
+            ref EntityCommandBuffer ecb,
+            Entity instance,
+            in HandPickableDefaults defaults,
+            float scale,
+            bool addPickable,
+            bool addHandPickable)
+        {
+            if (instance == Entity.Null || (!addPickable && !addHandPickable))
+            {
+                return;
+            }
+
+            var mass = math.max(0.1f, defaults.Mass * math.max(0.1f, scale));
+
+            if (addHandPickable)
+            {
+                ecb.AddComponent(instance, new HandPickable
+                {
+                    Mass = mass,
+                    MaxHoldDistance = math.max(0.1f, defaults.MaxHoldDistance),
+                    ThrowImpulseMultiplier = math.max(0.1f, defaults.ThrowImpulseMultiplier),
+                    FollowLerp = math.clamp(defaults.FollowLerp, 0.01f, 1f)
+                });
+            }
+
+            if (addPickable)
+            {
+                ecb.AddComponent<Pickable>(instance);
+                ecb.AddComponent<HeldByPlayer>(instance);
+                ecb.SetComponentEnabled<HeldByPlayer>(instance, false);
+                ecb.AddComponent<MovementSuppressed>(instance);
+                ecb.SetComponentEnabled<MovementSuppressed>(instance, false);
+                ecb.AddComponent<BeingThrown>(instance);
+                ecb.SetComponentEnabled<BeingThrown>(instance, false);
             }
         }
 

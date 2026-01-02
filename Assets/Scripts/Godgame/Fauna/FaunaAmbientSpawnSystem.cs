@@ -3,6 +3,7 @@ using Godgame.Environment;
 using Godgame.Miracles.Presentation;
 using Godgame.Presentation;
 using PureDOTS.Environment;
+using PureDOTS.Runtime.Time;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -31,8 +32,8 @@ namespace Godgame.Fauna
             _localToWorldLookup.Update(this);
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
-            var hasClimate = SystemAPI.TryGetSingleton(out Godgame.Environment.ClimateState climateState);
             var hasBiome = SystemAPI.TryGetSingleton(out Godgame.Environment.BiomeGrid biomeGrid);
+            var hasTimeOfDay = SystemAPI.TryGetSingleton(out TimeOfDayState timeOfDayState);
             var elapsedTime = (float)SystemAPI.Time.ElapsedTime;
 
             foreach (var (volumeRO, runtimeRW, agentBuffer, entity) in SystemAPI
@@ -65,8 +66,8 @@ namespace Godgame.Fauna
                 }
 
                 // Placeholder for biome sampling until BiomeGrid has SampleNearest
-                var biome = BiomeType.Unknown; 
-                var timeOfDay = hasClimate ? 12f : 12f; // Placeholder until TimeOfDayHours is available
+                var biome = BiomeType.Unknown;
+                var timeOfDay = hasTimeOfDay ? math.frac(timeOfDayState.TimeOfDayNorm) * 24f : 12f;
 
                 if (!TryPickRule(profile.Rules, biome, timeOfDay, ref random, out var rule, out var ruleIndex))
                 {

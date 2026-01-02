@@ -21,6 +21,7 @@ namespace Godgame.Villagers
             state.RequireForUpdate<VillagerPonderState>();
             state.RequireForUpdate<JobAssignment>();
             state.RequireForUpdate<VillagerGoalState>();
+            state.RequireForUpdate<VillagerScheduleConfig>();
         }
 
         [BurstCompile]
@@ -37,9 +38,11 @@ namespace Godgame.Villagers
             }
 
             var deltaTime = SystemAPI.Time.DeltaTime;
+            var schedule = SystemAPI.GetSingleton<VillagerScheduleConfig>();
 
-            foreach (var (goal, assignment, ponder, nav, transform) in SystemAPI
-                         .Query<RefRO<VillagerGoalState>, RefRO<JobAssignment>, RefRW<VillagerPonderState>, RefRW<Navigation>, RefRO<LocalTransform>>())
+            foreach (var (goal, assignment, ponder, nav, transform, entity) in SystemAPI
+                         .Query<RefRO<VillagerGoalState>, RefRO<JobAssignment>, RefRW<VillagerPonderState>, RefRW<Navigation>, RefRO<LocalTransform>>()
+                         .WithEntityAccess())
             {
                 if (goal.ValueRO.CurrentGoal != VillagerGoal.Work)
                 {
@@ -63,13 +66,29 @@ namespace Godgame.Villagers
                 var anchor = ponder.ValueRO.AnchorPosition;
                 if (math.lengthsq(anchor) <= 1e-4f)
                 {
-                    anchor = transform.ValueRO.Position;
+                    anchor = transform.ValueRO.Position + ResolvePonderOffset(entity, schedule.NeedWanderRadius);
                     ponder.ValueRW.AnchorPosition = anchor;
                 }
 
                 nav.ValueRW.Destination = anchor;
-                nav.ValueRW.Speed = 0f;
+                var arrivalDistance = math.max(0.1f, schedule.NeedWanderRadius * 0.05f);
+                if (math.lengthsq(anchor - transform.ValueRO.Position) <= arrivalDistance * arrivalDistance)
+                {
+                    nav.ValueRW.Speed = 0f;
+                    continue;
+                }
+
+                var shuffleSpeed = math.max(0.01f, schedule.NeedMoveSpeed * 0.35f);
+                nav.ValueRW.Speed = shuffleSpeed;
             }
+        }
+
+        private static float3 ResolvePonderOffset(Entity entity, float baseRadius)
+        {
+            var radius = math.max(0.1f, baseRadius * 0.25f);
+            var seed = math.hash(new uint2((uint)entity.Index, (uint)entity.Version));
+            var angle = (seed / (float)uint.MaxValue) * math.PI * 2f;
+            return new float3(math.cos(angle), 0f, math.sin(angle)) * radius;
         }
     }
 }
