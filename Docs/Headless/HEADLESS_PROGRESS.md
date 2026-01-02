@@ -1,5 +1,9 @@
 # Headless & Presentation Progress (updated 2025-12-23)
 
+## Ops Bus Protocol
+- Nightly coordination now uses the ops bus protocol (`../../../puredots/Docs/Headless/OPS_BUS_PROTOCOL.md`).
+- WSL runners honor `ops/locks/build.lock`; PS builders publish and update `builds/current_godgame.json`.
+
 ## Canonical Smoke Scenario
 - **Scenario artifact**: `Assets/Scenarios/Godgame/godgame_smoke.json`
   - 2 settlements (Villager + Storehouse groupings) + resource belts for the gather/haul/build loop.

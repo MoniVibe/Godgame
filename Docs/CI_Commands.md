@@ -62,6 +62,13 @@ Run scenario with rewind test:
 Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.GodgameScenarioEntryPoints.RunScenarioWithRewind --scenario "Assets/Scenarios/godgame_demo.json" --rewindTicks 100 --report "Logs/scenario_rewind_report.json"
 ```
 
+## Nightly headless cycle
+
+- Batch tests (EditMode/PlayMode) must use `-runTests -testPlatform editmode|playmode -testResults <xml>` and run in batchmode.
+- Scenario runs emit reports/logs; nightly outputs are written under `TRI_STATE_DIR/runs/YYYY-MM-DD/`.
+- Some tests are compiled only when `UNITY_INCLUDE_TESTS` is enabled; ensure the define is set for headless test runs.
+- Burst compilation checks are Editor-only and should run in the Windows/PowerShell lane.
+
 ## Test Coverage
 
 ### EditMode Test Coverage

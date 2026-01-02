@@ -2,6 +2,8 @@
 
 - **Master orientation**: `../TRI_PROJECT_BRIEFING.md` (TRI baseline, canonical).
 - **Agent entry point**: `AGENTS.md` (workflow + commands), `prompts.md` (current agent split).
+- **Headless workflows**: `Docs/Headless/HEADLESS_PROGRESS.md`, `Docs/CI_Commands.md`
+- **Ops bus protocol**: `../../puredots/Docs/Headless/OPS_BUS_PROTOCOL.md`
 - **Active TODOs**: `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` (main), `Docs/TODO/Phase2_Demo_TODO.md` (legacy checklist).
 - **Truth Sources**: `Docs/TruthSources_Inventory.md`, `Docs/TruthSources_Architecture.md`, `Docs/TruthSources_QuickReference.md`.
 - **Progress**: `Docs/Progress.md` (milestones, active lanes, session log).
