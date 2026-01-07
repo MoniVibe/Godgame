@@ -177,7 +177,7 @@ namespace Godgame.Headless
             GodgameHeadlessExitSystem.Request(ref state, tick, 0);
         }
 
-        private static bool TryResolveTick(ref SystemState state, out uint tick, out float fixedDt)
+        private bool TryResolveTick(ref SystemState state, out uint tick, out float fixedDt)
         {
             tick = 0;
             fixedDt = 0f;
@@ -212,7 +212,7 @@ namespace Godgame.Headless
             return tick != 0 || fixedDt > 0f || SystemAPI.HasSingleton<ScenarioRunnerTick>();
         }
 
-        private static bool TryResolveRunTicks(ref SystemState state, float fixedDt, out uint runTicks, out byte hasSpawned)
+        private bool TryResolveRunTicks(ref SystemState state, float fixedDt, out uint runTicks, out byte hasSpawned)
         {
             runTicks = 0;
             hasSpawned = 1;
