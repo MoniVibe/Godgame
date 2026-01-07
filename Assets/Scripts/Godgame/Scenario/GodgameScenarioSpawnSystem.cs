@@ -950,5 +950,7 @@ namespace Godgame.Scenario
     public struct GodgameScenarioRuntime : IComponentData
     {
         public byte HasSpawned;
+        public uint RunTicks;
+        public float DurationSeconds;
     }
 }

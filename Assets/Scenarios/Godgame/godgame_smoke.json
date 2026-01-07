@@ -1,6 +1,7 @@
 {
   "name": "Godgame Smoke",
   "description": "Shared smoke scenario used by headless + TRI_Godgame_Smoke to showcase villages, aggregates, and work loops.",
+  "duration_s": 30,
   "entities": [
     {
       "prefab": "Villager",

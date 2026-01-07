@@ -14,7 +14,9 @@ namespace Godgame.Headless
     public partial struct GodgameHeadlessDiagnosticsSystem : ISystem
     {
         private const uint SampleIntervalTicks = 30;
+        private const uint HeartbeatIntervalTicks = 60;
         private uint _lastSampleTick;
+        private uint _lastHeartbeatTick;
         private byte _runtimeSeen;
         private byte _runStarted;
         private byte _exitHandled;
@@ -53,6 +55,7 @@ namespace Godgame.Headless
 
             GodgameHeadlessDiagnostics.RecordMetrics(tick, fixedDt, state.EntityManager, ref _lastSampleTick, SampleIntervalTicks);
             UpdateProgress(ref state, tick);
+            UpdateHeartbeat(tick);
 
             if (_exitHandled == 0 && SystemAPI.TryGetSingleton(out GodgameHeadlessExitRequest request))
             {
@@ -127,6 +130,22 @@ namespace Godgame.Headless
                     GodgameHeadlessDiagnostics.UpdateProgress("run", "spawned", tick);
                 }
             }
+        }
+
+        private void UpdateHeartbeat(uint tick)
+        {
+            if (tick == 0)
+            {
+                return;
+            }
+
+            if (_lastHeartbeatTick != 0 && tick >= _lastHeartbeatTick && tick - _lastHeartbeatTick < HeartbeatIntervalTicks)
+            {
+                return;
+            }
+
+            _lastHeartbeatTick = tick;
+            GodgameHeadlessDiagnostics.UpdateProgress("run", "heartbeat", tick);
         }
     }
 }

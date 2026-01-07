@@ -1,5 +1,7 @@
+using Godgame.Scenario;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Core;
+using PureDOTS.Runtime.Scenarios;
 using PureDOTS.Systems.Telemetry;
 using Unity.Entities;
 using UnityEngine;
@@ -119,6 +121,121 @@ namespace Godgame.Headless
             request.ExitCode = request.ExitCode != 0 ? request.ExitCode : exitCode;
             request.RequestedTick = tick;
             entityManager.SetComponentData(existing, request);
+        }
+    }
+
+    [UpdateInGroup(typeof(LateSimulationSystemGroup))]
+    [UpdateBefore(typeof(GodgameHeadlessDiagnosticsSystem))]
+    public partial struct GodgameHeadlessScenarioQuitSystem : ISystem
+    {
+        private byte _startTickSet;
+        private uint _startTick;
+
+        public void OnCreate(ref SystemState state)
+        {
+            RuntimeMode.RefreshFromEnvironment();
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode)
+            {
+                state.Enabled = false;
+            }
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            if (!TryResolveTick(ref state, out var tick, out var fixedDt))
+            {
+                return;
+            }
+
+            if (!TryResolveRunTicks(ref state, fixedDt, out var runTicks, out var hasSpawned))
+            {
+                return;
+            }
+
+            if (runTicks == 0 || hasSpawned == 0)
+            {
+                return;
+            }
+
+            if (_startTickSet == 0)
+            {
+                _startTickSet = 1;
+                _startTick = tick;
+            }
+
+            var endTick = _startTick + runTicks;
+            if (tick < endTick)
+            {
+                return;
+            }
+
+            if (SystemAPI.HasSingleton<GodgameHeadlessExitRequest>())
+            {
+                return;
+            }
+
+            GodgameHeadlessExitSystem.Request(ref state, tick, 0);
+        }
+
+        private static bool TryResolveTick(ref SystemState state, out uint tick, out float fixedDt)
+        {
+            tick = 0;
+            fixedDt = 0f;
+
+            if (SystemAPI.TryGetSingleton<ScenarioRunnerTick>(out var scenarioTick))
+            {
+                tick = scenarioTick.Tick;
+            }
+
+            if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
+            {
+                if (tickTimeState.Tick > tick)
+                {
+                    tick = tickTimeState.Tick;
+                }
+                fixedDt = tickTimeState.FixedDeltaTime;
+            }
+
+            if (SystemAPI.TryGetSingleton<TimeState>(out var timeState))
+            {
+                if (timeState.Tick > tick)
+                {
+                    tick = timeState.Tick;
+                }
+
+                if (fixedDt <= 0f)
+                {
+                    fixedDt = timeState.FixedDeltaTime;
+                }
+            }
+
+            return tick != 0 || fixedDt > 0f || SystemAPI.HasSingleton<ScenarioRunnerTick>();
+        }
+
+        private static bool TryResolveRunTicks(ref SystemState state, float fixedDt, out uint runTicks, out byte hasSpawned)
+        {
+            runTicks = 0;
+            hasSpawned = 1;
+
+            if (SystemAPI.TryGetSingleton<ScenarioInfo>(out var scenarioInfo) && scenarioInfo.RunTicks > 0)
+            {
+                runTicks = (uint)scenarioInfo.RunTicks;
+            }
+
+            if (SystemAPI.TryGetSingleton<GodgameScenarioRuntime>(out var runtime))
+            {
+                hasSpawned = runtime.HasSpawned;
+                if (runtime.RunTicks > 0)
+                {
+                    runTicks = runtime.RunTicks;
+                }
+                else if (runtime.DurationSeconds > 0f && fixedDt > 0f)
+                {
+                    runTicks = (uint)Mathf.CeilToInt(runtime.DurationSeconds / fixedDt);
+                }
+            }
+
+            return runTicks > 0;
         }
     }
 }

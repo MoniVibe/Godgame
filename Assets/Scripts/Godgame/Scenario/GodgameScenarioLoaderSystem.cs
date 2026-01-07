@@ -190,7 +190,18 @@ namespace Godgame.Scenario
             config.ResourceNodeCount = resourceNodeCount;
 
             EntityManager.AddComponentData(configEntity, config);
-            EntityManager.AddComponentData(configEntity, new GodgameScenarioRuntime());
+            var runtime = new GodgameScenarioRuntime
+            {
+                HasSpawned = 0,
+                RunTicks = scenarioData.runTicks > 0 ? (uint)scenarioData.runTicks : 0u,
+                DurationSeconds = scenarioData.duration_s > 0f ? scenarioData.duration_s : 0f
+            };
+            EntityManager.AddComponentData(configEntity, runtime);
+
+            if (runtime.RunTicks > 0 && SystemAPI.TryGetSingletonRW<PureDOTS.Runtime.Scenarios.ScenarioInfo>(out var scenarioInfo))
+            {
+                scenarioInfo.ValueRW.RunTicks = (int)runtime.RunTicks;
+            }
             
             Debug.Log($"[GodgameScenarioLoaderSystem] Configured scenario with {config.VillagerCount} villagers, {config.StorehouseCount} storehouses, {config.VillageCenterCount} centers, {config.HousingCount} housing, {config.WorshipCount} worship.");
         }
@@ -257,6 +268,8 @@ namespace Godgame.Scenario
         {
             public string name;
             public string description;
+            public float duration_s;
+            public int runTicks;
             public EntityData[] entities;
         }
 
