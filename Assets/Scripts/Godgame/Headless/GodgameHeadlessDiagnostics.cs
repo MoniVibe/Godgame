@@ -586,7 +586,6 @@ namespace Godgame.Headless
             sb.Append("sim_ticks=").Append(simTicks).Append('\n');
             sb.Append("alloc_bytes_peak=").Append(allocBytesPeak).Append('\n');
             sb.Append("avg_dt_ms=").Append(FormatFloat(avgDtMs)).Append('\n');
-            sb.Append("entity_count_peak=").Append(entityCountPeak).Append('\n');
             for (int i = 0; i < invariants.Count; i++)
             {
                 var inv = invariants[i];
