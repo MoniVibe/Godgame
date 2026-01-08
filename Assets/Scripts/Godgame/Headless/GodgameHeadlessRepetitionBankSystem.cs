@@ -42,7 +42,7 @@ namespace Godgame.Headless
         private const string LivelockMinStoredEnv = "GODGAME_HEADLESS_REPETITION_LIVELOCK_MIN_STORED";
         private const string LivelockMinTransitionsEnv = "GODGAME_HEADLESS_REPETITION_LIVELOCK_MIN_TRANSITIONS";
 
-        private const uint DefaultWindowTicks = 300; // ~5 seconds at 60hz.
+        private const uint DefaultWindowTicks = 120; // Short window for nightly loop snapshots.
         private const int DefaultWindowSize = 24;
         private const int DefaultMinSamples = 12;
         private const int DefaultOscillationRepeats = 3;
