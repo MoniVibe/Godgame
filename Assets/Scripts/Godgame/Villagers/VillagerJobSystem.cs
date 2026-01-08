@@ -1402,9 +1402,9 @@ namespace Godgame.Villagers
                 var minMultiplier = math.clamp(MovementTuning.ArriveMinSpeedMultiplier, 0.1f, 1f);
                 if (!useSmoothing)
                 {
-                    var t = math.saturate(distance / slowRadius);
-                    var scale = math.lerp(minMultiplier, 1f, t);
-                    return speed * scale;
+                    var slowdownT = math.saturate(distance / slowRadius);
+                    var slowdownScale = math.lerp(minMultiplier, 1f, slowdownT);
+                    return speed * slowdownScale;
                 }
 
                 var stopRadius = math.max(0f, MovementTuning.ArriveStopRadius);
