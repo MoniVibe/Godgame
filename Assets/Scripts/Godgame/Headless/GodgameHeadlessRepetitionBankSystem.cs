@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using Godgame.Registry;
 using Godgame.Telemetry;
@@ -56,6 +57,7 @@ namespace Godgame.Headless
         private bool _bankActive;
         private bool _bankReported;
         private bool _snapshotWritten;
+        private string _snapshotOutDir;
         private uint _startTick;
         private uint _windowTicks;
         private int _windowSize;
@@ -490,7 +492,7 @@ namespace Godgame.Headless
 
         private void WriteRepetitionSnapshot(in RepetitionResult result, uint tickTime, uint scenarioTick)
         {
-            if (_snapshotWritten || !GodgameHeadlessDiagnostics.Enabled)
+            if (_snapshotWritten)
             {
                 return;
             }
@@ -506,7 +508,19 @@ namespace Godgame.Headless
             snapshots.Sort(CompareOffenders);
 
             var json = BuildSnapshotJson(result, snapshots, tickTime, scenarioTick);
-            GodgameHeadlessDiagnostics.WriteArtifact(SnapshotFileName, json);
+            if (GodgameHeadlessDiagnostics.Enabled)
+            {
+                GodgameHeadlessDiagnostics.WriteArtifact(SnapshotFileName, json);
+                return;
+            }
+
+            var outDir = ResolveSnapshotOutDir();
+            if (string.IsNullOrWhiteSpace(outDir))
+            {
+                return;
+            }
+
+            TryWriteSnapshotFile(outDir, json);
         }
 
         private OffenderSnapshot BuildOffenderSnapshot(in Offender offender)
@@ -614,6 +628,84 @@ namespace Godgame.Headless
 
             sb.Append("]}");
             return sb.ToString();
+        }
+
+        private string ResolveSnapshotOutDir()
+        {
+            if (!string.IsNullOrWhiteSpace(_snapshotOutDir))
+            {
+                return _snapshotOutDir;
+            }
+
+            var args = SystemEnv.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                var arg = args[i];
+                if (string.Equals(arg, "--outDir", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 < args.Length)
+                    {
+                        _snapshotOutDir = TrimArgPath(args[i + 1]);
+                        break;
+                    }
+                }
+                else if (arg.StartsWith("--outDir=", StringComparison.OrdinalIgnoreCase))
+                {
+                    _snapshotOutDir = TrimArgPath(arg.Substring("--outDir=".Length));
+                    break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(_snapshotOutDir))
+            {
+                _snapshotOutDir = GodgameHeadlessDiagnostics.OutDir;
+            }
+
+            return _snapshotOutDir;
+        }
+
+        private static void TryWriteSnapshotFile(string outDir, string payload)
+        {
+            if (string.IsNullOrWhiteSpace(outDir) || string.IsNullOrWhiteSpace(payload))
+            {
+                return;
+            }
+
+            try
+            {
+                var path = Path.Combine(outDir, SnapshotFileName);
+                var dir = Path.GetDirectoryName(path);
+                if (!string.IsNullOrWhiteSpace(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                var tempPath = path + ".tmp";
+                File.WriteAllText(tempPath, payload);
+                if (File.Exists(path))
+                {
+                    try
+                    {
+                        File.Replace(tempPath, path, null);
+                        return;
+                    }
+                    catch
+                    {
+                    }
+
+                    File.Delete(path);
+                }
+
+                File.Move(tempPath, path);
+            }
+            catch
+            {
+            }
+        }
+
+        private static string TrimArgPath(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().Trim('"');
         }
 
         private static void AppendOffenderJson(StringBuilder sb, OffenderSnapshot offender)
