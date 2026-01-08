@@ -19,6 +19,8 @@ namespace Godgame.Villagers
         public float SocialBias;
         public float RestBias;
         public float FaithBias;
+        public float NeedInterruptUrgency;
+        public float NeedInterruptWorkWeight;
 
         public float AdherenceMin;
         public float AdherenceMax;
@@ -62,6 +64,8 @@ namespace Godgame.Villagers
             SocialBias = 1.2f,
             RestBias = 1.2f,
             FaithBias = 1.05f,
+            NeedInterruptUrgency = 0.7f,
+            NeedInterruptWorkWeight = 0.35f,
             AdherenceMin = 0.45f,
             AdherenceMax = 1.0f,
             ScheduleOffsetMax01 = 0.06f,

@@ -64,8 +64,8 @@ namespace Godgame.Villagers
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            foreach (var (behavior, entity) in SystemAPI
-                         .Query<RefRO<VillagerBehavior>>()
+            foreach (var (behavior, needs, entity) in SystemAPI
+                         .Query<RefRO<VillagerBehavior>, RefRO<VillagerNeedState>>()
                          .WithEntityAccess())
             {
                 var schedule = ResolveScheduleConfig(entity, baseSchedule, villageScheduleMap, _villagerScheduleLookup);
@@ -84,6 +84,17 @@ namespace Godgame.Villagers
                 workBias = math.lerp(1f, workBias, adherence);
                 socialBias = math.lerp(1f, socialBias, adherence);
                 restBias = math.lerp(1f, restBias, adherence);
+
+                var interruptThreshold = math.clamp(schedule.NeedInterruptUrgency, 0f, 1f);
+                if (interruptThreshold > 0f)
+                {
+                    var needMax = math.max(math.max(needs.ValueRO.HungerUrgency, needs.ValueRO.RestUrgency),
+                        math.max(math.max(needs.ValueRO.SafetyUrgency, needs.ValueRO.SocialUrgency), needs.ValueRO.FaithUrgency));
+                    if (needMax >= interruptThreshold)
+                    {
+                        workBias *= math.clamp(schedule.NeedInterruptWorkWeight, 0f, 1f);
+                    }
+                }
 
                 var bias = new VillagerNeedBias
                 {
@@ -237,6 +248,8 @@ namespace Godgame.Villagers
                 SocialBias = math.lerp(a.SocialBias, b.SocialBias, w),
                 RestBias = math.lerp(a.RestBias, b.RestBias, w),
                 FaithBias = math.lerp(a.FaithBias, b.FaithBias, w),
+                NeedInterruptUrgency = math.lerp(a.NeedInterruptUrgency, b.NeedInterruptUrgency, w),
+                NeedInterruptWorkWeight = math.lerp(a.NeedInterruptWorkWeight, b.NeedInterruptWorkWeight, w),
                 AdherenceMin = math.lerp(a.AdherenceMin, b.AdherenceMin, w),
                 AdherenceMax = math.lerp(a.AdherenceMax, b.AdherenceMax, w),
                 ScheduleOffsetMax01 = math.lerp(a.ScheduleOffsetMax01, b.ScheduleOffsetMax01, w),

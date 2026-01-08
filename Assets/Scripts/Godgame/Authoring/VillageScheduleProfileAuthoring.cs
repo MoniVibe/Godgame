@@ -30,6 +30,8 @@ namespace Godgame.Authoring
         [Range(0f, 3f)] public float socialBias = 1.2f;
         [Range(0f, 3f)] public float restBias = 1.2f;
         [Range(0f, 3f)] public float faithBias = 1.05f;
+        [Range(0f, 1f)] public float needInterruptUrgency = 0.7f;
+        [Range(0f, 1f)] public float needInterruptWorkWeight = 0.35f;
 
         [Header("Adherence")]
         [Range(0f, 1f)] public float adherenceMin = 0.45f;
@@ -65,6 +67,8 @@ namespace Godgame.Authoring
                         SocialBias = Mathf.Max(0f, authoring.socialBias),
                         RestBias = Mathf.Max(0f, authoring.restBias),
                         FaithBias = Mathf.Max(0f, authoring.faithBias),
+                        NeedInterruptUrgency = Mathf.Clamp01(authoring.needInterruptUrgency),
+                        NeedInterruptWorkWeight = Mathf.Clamp01(authoring.needInterruptWorkWeight),
                         AdherenceMin = Mathf.Clamp01(authoring.adherenceMin),
                         AdherenceMax = Mathf.Clamp01(authoring.adherenceMax),
                         ScheduleOffsetMax01 = Mathf.Max(0f, authoring.scheduleOffsetMax01),

@@ -217,6 +217,8 @@ namespace Godgame.Villagers
                 SocialBias = math.lerp(a.SocialBias, b.SocialBias, w),
                 RestBias = math.lerp(a.RestBias, b.RestBias, w),
                 FaithBias = math.lerp(a.FaithBias, b.FaithBias, w),
+                NeedInterruptUrgency = math.lerp(a.NeedInterruptUrgency, b.NeedInterruptUrgency, w),
+                NeedInterruptWorkWeight = math.lerp(a.NeedInterruptWorkWeight, b.NeedInterruptWorkWeight, w),
                 AdherenceMin = math.lerp(a.AdherenceMin, b.AdherenceMin, w),
                 AdherenceMax = math.lerp(a.AdherenceMax, b.AdherenceMax, w),
                 ScheduleOffsetMax01 = math.lerp(a.ScheduleOffsetMax01, b.ScheduleOffsetMax01, w),
