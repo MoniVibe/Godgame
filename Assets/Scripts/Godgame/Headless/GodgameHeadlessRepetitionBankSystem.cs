@@ -508,6 +508,7 @@ namespace Godgame.Headless
             snapshots.Sort(CompareOffenders);
 
             var json = BuildSnapshotJson(result, snapshots, tickTime, scenarioTick);
+            GodgameHeadlessDiagnostics.InitializeFromArgs();
             if (GodgameHeadlessDiagnostics.Enabled)
             {
                 GodgameHeadlessDiagnostics.WriteArtifact(SnapshotFileName, json);
@@ -637,6 +638,7 @@ namespace Godgame.Headless
                 return _snapshotOutDir;
             }
 
+            GodgameHeadlessDiagnostics.InitializeFromArgs();
             var args = SystemEnv.GetCommandLineArgs();
             for (int i = 0; i < args.Length; i++)
             {
