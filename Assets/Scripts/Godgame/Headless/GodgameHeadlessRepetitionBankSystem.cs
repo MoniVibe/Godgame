@@ -490,7 +490,7 @@ namespace Godgame.Headless
 
         private void WriteRepetitionSnapshot(in RepetitionResult result, uint tickTime, uint scenarioTick)
         {
-            if (_snapshotWritten || result.Offenders.Length == 0 || !GodgameHeadlessDiagnostics.Enabled)
+            if (_snapshotWritten || !GodgameHeadlessDiagnostics.Enabled)
             {
                 return;
             }
@@ -578,6 +578,14 @@ namespace Godgame.Headless
             AppendString(sb, "snapshot_id", "GODGAME_REPETITION_SNAPSHOT");
             sb.Append(',');
             AppendString(sb, "reason", result.Reason ?? string.Empty);
+            sb.Append(',');
+            AppendInt(sb, "pass", result.Pass ? 1 : 0);
+            sb.Append(',');
+            AppendInt(sb, "repetition_high", result.RepetitionHigh ? 1 : 0);
+            sb.Append(',');
+            AppendInt(sb, "livelock", result.LivelockTriggered ? 1 : 0);
+            sb.Append(',');
+            AppendInt(sb, "offender_count", result.Offenders.Length);
             sb.Append(',');
             AppendUInt(sb, "tick_time", tickTime);
             sb.Append(',');
