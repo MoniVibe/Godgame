@@ -199,7 +199,7 @@ namespace Godgame.Headless
             }
 
             var path = ResolvePathWithinOutDir(OutDir, fileName, fileName);
-            EnqueueWrite(path, payload);
+            TryWriteAtomic(path, payload);
         }
 
         public static void ReportInvariant(string id, string message, string observed = "", string expected = "", string contextJson = "")
