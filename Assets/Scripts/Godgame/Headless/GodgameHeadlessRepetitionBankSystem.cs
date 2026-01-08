@@ -95,7 +95,6 @@ namespace Godgame.Headless
             }
 
             state.RequireForUpdate<TimeState>();
-            state.RequireForUpdate<VillagerJobState>();
 
             _windowTicks = ReadEnvUInt(WindowTicksEnv, DefaultWindowTicks);
             _windowSize = ResolveWindowSize(ReadEnvInt(WindowSizeEnv, DefaultWindowSize));
