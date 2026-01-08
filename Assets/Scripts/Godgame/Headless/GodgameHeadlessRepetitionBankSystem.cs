@@ -146,10 +146,6 @@ namespace Godgame.Headless
             }
 
             var timeState = SystemAPI.GetSingleton<TimeState>();
-            if (timeState.IsPaused)
-            {
-                return;
-            }
 
             if (_startTick == 0)
             {
