@@ -107,6 +107,11 @@ namespace Godgame.Villagers
                     continue;
                 }
 
+                if (tuning.EnableReplanBackoff != 0 && job.ValueRO.NextReplanTick > timeState.Tick)
+                {
+                    continue;
+                }
+
                 if (_cooldownLookup.HasComponent(entity) && _cooldownLookup[entity].EndTick > timeState.Tick)
                 {
                     continue;

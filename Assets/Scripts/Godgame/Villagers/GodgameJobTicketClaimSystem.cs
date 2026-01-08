@@ -149,6 +149,11 @@ namespace Godgame.Villagers
                         continue;
                     }
 
+                    if (tuning.EnableReplanBackoff != 0 && job.NextReplanTick > timeState.Tick)
+                    {
+                        continue;
+                    }
+
                     if (job.NextEligibleTick != 0 && job.NextEligibleTick > timeState.Tick
                         && ShouldGateTicket(job, ticket, timeState.Tick))
                     {
