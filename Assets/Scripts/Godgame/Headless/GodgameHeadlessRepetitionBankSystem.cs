@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 using Godgame.Registry;
 using Godgame.Telemetry;
 using Godgame.Villagers;
@@ -26,6 +29,7 @@ namespace Godgame.Headless
         private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
         private const string LoopScenarioFile = "villager_loop_small.json";
         private const string ExitOnResultEnv = "GODGAME_HEADLESS_REPETITION_EXIT";
+        private const string SnapshotFileName = "repetition_snapshot.json";
 
         private const string WindowSizeEnv = "GODGAME_HEADLESS_REPETITION_WINDOW";
         private const string MinSamplesEnv = "GODGAME_HEADLESS_REPETITION_MIN_SAMPLES";
@@ -46,10 +50,12 @@ namespace Godgame.Headless
         private const float DefaultEntropyMin = 1.1f;
         private const float DefaultLivelockMinStored = 0.1f;
         private const float DefaultLivelockMinTransitions = 8f;
+        private const int SnapshotMaxOffenders = 5;
 
         private byte _bankResolved;
         private bool _bankActive;
         private bool _bankReported;
+        private bool _snapshotWritten;
         private uint _startTick;
         private uint _windowTicks;
         private int _windowSize;
@@ -67,6 +73,8 @@ namespace Godgame.Headless
         private NativeList<AgentTrace> _agents;
         private NativeParallelHashMap<Entity, int> _agentLookup;
         private ComponentLookup<VillagerGoalState> _goalLookup;
+        private ComponentLookup<VillagerJobState> _jobLookup;
+        private ComponentLookup<Navigation> _navigationLookup;
         private ComponentLookup<MoveIntent> _moveIntentLookup;
         private ComponentLookup<MovePlan> _movePlanLookup;
         private ComponentLookup<DecisionTrace> _decisionTraceLookup;
@@ -101,6 +109,8 @@ namespace Godgame.Headless
             _agentLookup = new NativeParallelHashMap<Entity, int>(512, Allocator.Persistent);
 
             _goalLookup = state.GetComponentLookup<VillagerGoalState>(true);
+            _jobLookup = state.GetComponentLookup<VillagerJobState>(true);
+            _navigationLookup = state.GetComponentLookup<Navigation>(true);
             _moveIntentLookup = state.GetComponentLookup<MoveIntent>(true);
             _movePlanLookup = state.GetComponentLookup<MovePlan>(true);
             _decisionTraceLookup = state.GetComponentLookup<DecisionTrace>(true);
@@ -155,6 +165,8 @@ namespace Godgame.Headless
             }
 
             _goalLookup.Update(ref state);
+            _jobLookup.Update(ref state);
+            _navigationLookup.Update(ref state);
             _moveIntentLookup.Update(ref state);
             _movePlanLookup.Update(ref state);
             _decisionTraceLookup.Update(ref state);
@@ -212,6 +224,7 @@ namespace Godgame.Headless
                 ? scenario.Tick
                 : 0u;
             LogBankResult(result.Pass, result.Reason, tickTime, scenarioTick);
+            WriteRepetitionSnapshot(result, tickTime, scenarioTick);
             _bankReported = true;
             LogOffenderSummary(result);
             RequestExitIfEnabled(ref state, timeState.Tick, result.Pass ? 0 : 6);
@@ -473,6 +486,222 @@ namespace Godgame.Headless
             }
 
             result.Offenders.Dispose();
+        }
+
+        private void WriteRepetitionSnapshot(in RepetitionResult result, uint tickTime, uint scenarioTick)
+        {
+            if (_snapshotWritten || !result.RepetitionHigh || !GodgameHeadlessDiagnostics.Enabled)
+            {
+                return;
+            }
+
+            _snapshotWritten = true;
+
+            var snapshots = new List<OffenderSnapshot>(math.min(result.Offenders.Length, SnapshotMaxOffenders));
+            for (int i = 0; i < result.Offenders.Length; i++)
+            {
+                snapshots.Add(BuildOffenderSnapshot(result.Offenders[i]));
+            }
+
+            snapshots.Sort(CompareOffenders);
+
+            var json = BuildSnapshotJson(result, snapshots, tickTime, scenarioTick);
+            GodgameHeadlessDiagnostics.WriteArtifact(SnapshotFileName, json);
+        }
+
+        private OffenderSnapshot BuildOffenderSnapshot(in Offender offender)
+        {
+            var entity = offender.Entity;
+            var job = _jobLookup.HasComponent(entity) ? _jobLookup[entity] : default;
+            var goal = _goalLookup.HasComponent(entity) ? _goalLookup[entity].CurrentGoal : default;
+
+            var hasMoveIntent = _moveIntentLookup.HasComponent(entity);
+            var moveIntent = hasMoveIntent ? _moveIntentLookup[entity] : default;
+            var movePlan = _movePlanLookup.HasComponent(entity) ? _movePlanLookup[entity].Mode : default;
+
+            var target = job.Target != Entity.Null ? job.Target : moveIntent.TargetEntity;
+            var targetClass = ResolveTargetClass(target);
+
+            var destination = float3.zero;
+            var hasDestination = false;
+            if (hasMoveIntent)
+            {
+                destination = moveIntent.TargetPosition;
+                hasDestination = math.lengthsq(destination) > 0.001f;
+            }
+            else if (_navigationLookup.HasComponent(entity))
+            {
+                destination = _navigationLookup[entity].Destination;
+                hasDestination = math.lengthsq(destination) > 0.001f;
+            }
+
+            return new OffenderSnapshot
+            {
+                Entity = entity,
+                CycleLength = offender.CycleLength,
+                Repeats = offender.Repeats,
+                Entropy = offender.Entropy,
+                ReasonSummary = offender.ReasonSummary,
+                Goal = (byte)goal,
+                JobType = (byte)job.Type,
+                JobPhase = (byte)job.Phase,
+                MoveIntent = (byte)moveIntent.IntentType,
+                MovePlan = (byte)movePlan,
+                Target = target,
+                TargetClass = targetClass,
+                Destination = destination,
+                HasDestination = hasDestination
+            };
+        }
+
+        private static int CompareOffenders(OffenderSnapshot a, OffenderSnapshot b)
+        {
+            var entropyCompare = a.Entropy.CompareTo(b.Entropy);
+            if (entropyCompare != 0)
+            {
+                return entropyCompare;
+            }
+
+            var cycleCompare = b.CycleLength.CompareTo(a.CycleLength);
+            if (cycleCompare != 0)
+            {
+                return cycleCompare;
+            }
+
+            return a.Entity.Index.CompareTo(b.Entity.Index);
+        }
+
+        private static string BuildSnapshotJson(in RepetitionResult result, List<OffenderSnapshot> offenders, uint tickTime, uint scenarioTick)
+        {
+            var sb = new StringBuilder(512);
+            sb.Append('{');
+            AppendString(sb, "snapshot_id", "GODGAME_REPETITION_SNAPSHOT");
+            sb.Append(',');
+            AppendString(sb, "reason", result.Reason ?? string.Empty);
+            sb.Append(',');
+            AppendUInt(sb, "tick_time", tickTime);
+            sb.Append(',');
+            AppendUInt(sb, "scenario_tick", scenarioTick);
+            sb.Append(',');
+            AppendInt(sb, "total_agents", result.TotalAgents);
+            sb.Append(',');
+            AppendInt(sb, "oscillation_count", result.OscillationCount);
+            sb.Append(',');
+            AppendInt(sb, "short_cycle_count", result.ShortCycleCount);
+            sb.Append(',');
+            AppendFloat(sb, "median_entropy", result.MedianEntropy);
+            sb.Append(',');
+            sb.Append("\"offenders\":[");
+
+            var count = math.min(SnapshotMaxOffenders, offenders.Count);
+            for (int i = 0; i < count; i++)
+            {
+                if (i > 0)
+                {
+                    sb.Append(',');
+                }
+
+                AppendOffenderJson(sb, offenders[i]);
+            }
+
+            sb.Append("]}");
+            return sb.ToString();
+        }
+
+        private static void AppendOffenderJson(StringBuilder sb, OffenderSnapshot offender)
+        {
+            sb.Append('{');
+            AppendInt(sb, "entity_index", offender.Entity.Index);
+            AppendInt(sb, "entity_version", offender.Entity.Version, true);
+            AppendInt(sb, "cycle_len", offender.CycleLength, true);
+            AppendInt(sb, "repeats", offender.Repeats, true);
+            AppendFloat(sb, "entropy", offender.Entropy, true);
+            AppendString(sb, "reason_summary", offender.ReasonSummary.ToString(), true);
+            AppendInt(sb, "goal", offender.Goal, true);
+            AppendInt(sb, "job_type", offender.JobType, true);
+            AppendInt(sb, "job_phase", offender.JobPhase, true);
+            AppendInt(sb, "move_intent", offender.MoveIntent, true);
+            AppendInt(sb, "move_plan", offender.MovePlan, true);
+            AppendInt(sb, "target_index", offender.Target.Index, true);
+            AppendInt(sb, "target_version", offender.Target.Version, true);
+            AppendString(sb, "target_class", ResolveTargetClassLabel(offender.TargetClass), true);
+            AppendInt(sb, "has_dest", offender.HasDestination ? 1 : 0, true);
+            if (offender.HasDestination)
+            {
+                sb.Append(",\"dest\":[");
+                AppendFloatValue(sb, offender.Destination.x);
+                sb.Append(',');
+                AppendFloatValue(sb, offender.Destination.y);
+                sb.Append(',');
+                AppendFloatValue(sb, offender.Destination.z);
+                sb.Append(']');
+            }
+
+            sb.Append('}');
+        }
+
+        private static string ResolveTargetClassLabel(byte targetClass)
+        {
+            return targetClass switch
+            {
+                1 => "storehouse",
+                2 => "resource",
+                3 => "other",
+                _ => "none"
+            };
+        }
+
+        private static void AppendString(StringBuilder sb, string key, string value, bool prependComma = false)
+        {
+            if (prependComma)
+            {
+                sb.Append(',');
+            }
+
+            sb.Append('"').Append(key).Append("\":\"");
+            sb.Append(Escape(value));
+            sb.Append('"');
+        }
+
+        private static void AppendUInt(StringBuilder sb, string key, uint value)
+        {
+            sb.Append('"').Append(key).Append("\":").Append(value);
+        }
+
+        private static void AppendInt(StringBuilder sb, string key, int value, bool prependComma = false)
+        {
+            if (prependComma)
+            {
+                sb.Append(',');
+            }
+
+            sb.Append('"').Append(key).Append("\":").Append(value);
+        }
+
+        private static void AppendFloat(StringBuilder sb, string key, float value, bool prependComma = false)
+        {
+            if (prependComma)
+            {
+                sb.Append(',');
+            }
+
+            sb.Append('"').Append(key).Append("\":");
+            AppendFloatValue(sb, value);
+        }
+
+        private static void AppendFloatValue(StringBuilder sb, float value)
+        {
+            sb.Append(value.ToString("F3", CultureInfo.InvariantCulture));
+        }
+
+        private static string Escape(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
 
         private static bool HasRepeatingCycle(in FixedList128Bytes<uint> signatures, int cycleLength, int repeats)
@@ -788,6 +1017,24 @@ namespace Godgame.Headless
                 Entropy = entropy;
                 ReasonSummary = reasonSummary;
             }
+        }
+
+        private struct OffenderSnapshot
+        {
+            public Entity Entity;
+            public int CycleLength;
+            public int Repeats;
+            public float Entropy;
+            public FixedString128Bytes ReasonSummary;
+            public byte Goal;
+            public byte JobType;
+            public byte JobPhase;
+            public byte MoveIntent;
+            public byte MovePlan;
+            public Entity Target;
+            public byte TargetClass;
+            public float3 Destination;
+            public bool HasDestination;
         }
 
         private struct RepetitionResult
