@@ -462,9 +462,9 @@ namespace Godgame.Villagers
 
             if (!useSmoothing)
             {
-                var t = math.saturate(distance / slowRadius);
-                var scale = math.lerp(minMultiplier, 1f, t);
-                return speed * scale;
+                var slowdownT = math.saturate(distance / slowRadius);
+                var slowdownScale = math.lerp(minMultiplier, 1f, slowdownT);
+                return speed * slowdownScale;
             }
 
             var clampedStop = math.max(0f, stopRadius);
