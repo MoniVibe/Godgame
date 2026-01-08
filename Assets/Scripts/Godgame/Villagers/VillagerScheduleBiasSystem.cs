@@ -1,5 +1,6 @@
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
+using PureDOTS.Runtime.Identity;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -18,6 +19,7 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerScheduleProfile> _villagerScheduleLookup;
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
         private ComponentLookup<VillagerDirectiveBias> _directiveBiasLookup;
+        private ComponentLookup<VillagerOutlook> _outlookLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -27,6 +29,7 @@ namespace Godgame.Villagers
             _villagerScheduleLookup = state.GetComponentLookup<VillagerScheduleProfile>(true);
             _alignmentLookup = state.GetComponentLookup<VillagerAlignment>(true);
             _directiveBiasLookup = state.GetComponentLookup<VillagerDirectiveBias>(true);
+            _outlookLookup = state.GetComponentLookup<VillagerOutlook>(true);
         }
 
         [BurstCompile]
@@ -59,6 +62,7 @@ namespace Godgame.Villagers
             _villagerScheduleLookup.Update(ref state);
             _alignmentLookup.Update(ref state);
             _directiveBiasLookup.Update(ref state);
+            _outlookLookup.Update(ref state);
 
             var villageScheduleMap = BuildVillageScheduleMap(ref state);
 
@@ -84,6 +88,8 @@ namespace Godgame.Villagers
                 workBias = math.lerp(1f, workBias, adherence);
                 socialBias = math.lerp(1f, socialBias, adherence);
                 restBias = math.lerp(1f, restBias, adherence);
+
+                workBias = math.max(0.1f, workBias * ResolveOutlookWorkScale(entity));
 
                 var bias = new VillagerNeedBias
                 {
@@ -211,6 +217,37 @@ namespace Godgame.Villagers
 
             var orderAxis = _alignmentLookup[entity].OrderAxis;
             return math.saturate((orderAxis + 100f) / 200f);
+        }
+
+        private float ResolveOutlookWorkScale(Entity entity)
+        {
+            if (!_outlookLookup.HasComponent(entity))
+            {
+                return 1f;
+            }
+
+            var outlook = _outlookLookup[entity];
+            var slotCount = math.min(outlook.OutlookTypes.Length, outlook.OutlookValues.Length);
+            var warlike01 = 0f;
+            var peaceful01 = 0f;
+
+            for (var i = 0; i < slotCount; i++)
+            {
+                var typeId = outlook.OutlookTypes[i];
+                var value01 = math.abs(outlook.OutlookValues[i]) / 100f;
+                if (typeId == (byte)OutlookType.Warlike)
+                {
+                    warlike01 = math.max(warlike01, value01);
+                }
+                else if (typeId == (byte)OutlookType.Peaceful)
+                {
+                    peaceful01 = math.max(peaceful01, value01);
+                }
+            }
+
+            var warlikeScale = math.lerp(1f, 1.12f, warlike01);
+            var peacefulScale = math.lerp(1f, 0.88f, peaceful01);
+            return math.max(0.6f, warlikeScale * peacefulScale);
         }
 
         private static VillagerScheduleConfig BlendSchedules(in VillagerScheduleConfig a, in VillagerScheduleConfig b, float weight)
