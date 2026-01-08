@@ -140,7 +140,7 @@ namespace Godgame.Headless
                 return;
             }
 
-            if (SystemAPI.TryGetSingleton<RewindState>(out var rewind) && rewind.Mode != RewindMode.Record)
+            if (SystemAPI.TryGetSingleton<RewindState>(out var rewind) && rewind.Mode == RewindMode.Rewind)
             {
                 return;
             }
