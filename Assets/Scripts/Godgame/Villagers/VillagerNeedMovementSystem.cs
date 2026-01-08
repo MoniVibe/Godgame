@@ -469,6 +469,9 @@ namespace Godgame.Villagers
             }
 
             var orbitRadius = math.min(radius * 0.3f, 2.5f);
+            var radiusSeed = math.hash(new uint2((uint)(entity.Index + 19), 0x19c3u));
+            var radius01 = (radiusSeed & 0xffffu) / 65535f;
+            orbitRadius *= math.lerp(0.65f, 1.15f, radius01);
             var seed = math.hash(new uint2((uint)(entity.Index + 13), 0x41b3u));
             var phase01 = (seed & 0xffffu) / 65535f;
             var angle = (worldSeconds * 0.35f + phase01) * math.PI * 2f;
