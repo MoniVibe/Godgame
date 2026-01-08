@@ -663,6 +663,16 @@ namespace Godgame.Headless
                 _snapshotOutDir = GodgameHeadlessDiagnostics.OutDir;
             }
 
+            if (string.IsNullOrWhiteSpace(_snapshotOutDir) && !string.IsNullOrWhiteSpace(GodgameHeadlessDiagnostics.ProgressPath))
+            {
+                _snapshotOutDir = Path.GetDirectoryName(GodgameHeadlessDiagnostics.ProgressPath);
+            }
+
+            if (string.IsNullOrWhiteSpace(_snapshotOutDir) && !string.IsNullOrWhiteSpace(GodgameHeadlessDiagnostics.InvariantsPath))
+            {
+                _snapshotOutDir = Path.GetDirectoryName(GodgameHeadlessDiagnostics.InvariantsPath);
+            }
+
             return _snapshotOutDir;
         }
 
