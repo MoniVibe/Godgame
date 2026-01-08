@@ -241,8 +241,8 @@ namespace Godgame.Headless
             var scenarioPath = SystemEnv.GetEnvironmentVariable(ScenarioPathEnv);
             if (string.IsNullOrWhiteSpace(scenarioPath))
             {
-                state.Enabled = false;
-                return false;
+                _bankActive = true;
+                return true;
             }
 
             _bankActive = scenarioPath.EndsWith(LoopScenarioFile, StringComparison.OrdinalIgnoreCase);
