@@ -214,6 +214,23 @@ namespace Godgame.Headless
             });
         }
 
+        public static void TryWriteArtifact(string fileName, string payload)
+        {
+            InitializeFromArgs();
+            if (!Enabled)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(payload))
+            {
+                return;
+            }
+
+            var path = ResolvePathWithinOutDir(OutDir, fileName, fileName);
+            TryWriteAtomic(path, payload);
+        }
+
         public static void WriteInvariantsForExit(EntityManager entityManager, int exitCode, uint fallbackTick)
         {
             if (!Enabled)

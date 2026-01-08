@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Text;
 using Godgame.Registry;
 using Godgame.Telemetry;
 using Godgame.Villagers;
@@ -28,6 +29,8 @@ namespace Godgame.Headless
         private const string LoopScenarioFile = "villager_loop_small.json";
         private const string ExitOnResultEnv = "GODGAME_HEADLESS_REPETITION_EXIT";
         private const string LoopInvariantId = "Invariant/VillagerLoopRepetition";
+        private const string RepetitionSnapshotFile = "villager_repetition_snapshot.json";
+        private const int MaxSnapshotAgents = 5;
 
         private const string WindowSizeEnv = "GODGAME_HEADLESS_REPETITION_WINDOW";
         private const string MinSamplesEnv = "GODGAME_HEADLESS_REPETITION_MIN_SAMPLES";
@@ -219,6 +222,7 @@ namespace Godgame.Headless
             {
                 ReportLoopInvariant(result, tickTime, scenarioTick);
             }
+            EmitRepetitionSnapshotIfNeeded(ref state, result, tickTime, scenarioTick);
             LogOffenderSummary(result);
             RequestExit(ref state, timeState.Tick, result.Pass, 6);
         }
@@ -479,6 +483,195 @@ namespace Godgame.Headless
             }
 
             result.Offenders.Dispose();
+        }
+
+        private void EmitRepetitionSnapshotIfNeeded(ref SystemState state, in RepetitionResult result, uint tickTime, uint scenarioTick)
+        {
+            if (!result.RepetitionHigh)
+            {
+                return;
+            }
+
+            var topEntries = new RepetitionSnapshotEntry[MaxSnapshotAgents];
+            var count = BuildTopRepeatingSnapshotEntries(result, topEntries);
+            var json = BuildRepetitionSnapshotJson(ref state, topEntries, count, tickTime, scenarioTick, result.Reason);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return;
+            }
+
+            GodgameHeadlessDiagnostics.TryWriteArtifact(RepetitionSnapshotFile, json);
+        }
+
+        private int BuildTopRepeatingSnapshotEntries(in RepetitionResult result, RepetitionSnapshotEntry[] topEntries)
+        {
+            var count = 0;
+            if (result.Offenders.IsCreated && result.Offenders.Length > 0)
+            {
+                for (int i = 0; i < result.Offenders.Length; i++)
+                {
+                    var offender = result.Offenders[i];
+                    count = InsertSnapshotEntry(topEntries, count,
+                        new RepetitionSnapshotEntry(offender.Entity, ResolveThrashTransitions(offender.Entity)));
+                }
+            }
+
+            if (count > 0)
+            {
+                return count;
+            }
+
+            for (int i = 0; i < _agents.Length; i++)
+            {
+                var trace = _agents[i];
+                if (trace.Signatures.Length < _minSamples)
+                {
+                    continue;
+                }
+
+                count = InsertSnapshotEntry(topEntries, count,
+                    new RepetitionSnapshotEntry(trace.Entity, trace.ThrashTransitions));
+            }
+
+            return count;
+        }
+
+        private int ResolveThrashTransitions(Entity entity)
+        {
+            return _agentLookup.TryGetValue(entity, out var index) ? _agents[index].ThrashTransitions : 0;
+        }
+
+        private static int InsertSnapshotEntry(RepetitionSnapshotEntry[] topEntries, int count, RepetitionSnapshotEntry entry)
+        {
+            if (entry.Entity == Entity.Null || ContainsSnapshotEntry(topEntries, count, entry.Entity))
+            {
+                return count;
+            }
+
+            var insertAt = count;
+            for (int i = 0; i < count; i++)
+            {
+                if (entry.Score > topEntries[i].Score)
+                {
+                    insertAt = i;
+                    break;
+                }
+            }
+
+            if (insertAt >= MaxSnapshotAgents)
+            {
+                return count;
+            }
+
+            if (count < MaxSnapshotAgents)
+            {
+                count++;
+            }
+
+            for (int i = count - 1; i > insertAt; i--)
+            {
+                topEntries[i] = topEntries[i - 1];
+            }
+
+            topEntries[insertAt] = entry;
+            return count;
+        }
+
+        private static bool ContainsSnapshotEntry(RepetitionSnapshotEntry[] topEntries, int count, Entity entity)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (topEntries[i].Entity == entity)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static string BuildRepetitionSnapshotJson(ref SystemState state, RepetitionSnapshotEntry[] entries, int count, uint tickTime, uint scenarioTick, string reason)
+        {
+            var sb = new StringBuilder(256);
+            sb.Append('{');
+            sb.Append("\"tick\":").Append(tickTime);
+            sb.Append(",\"scenarioTick\":").Append(scenarioTick);
+            sb.Append(",\"reason\":\"").Append(reason ?? string.Empty).Append('"');
+            sb.Append(",\"agents\":[");
+
+            var appended = 0;
+            for (int i = 0; i < count; i++)
+            {
+                var entity = entries[i].Entity;
+                if (entity == Entity.Null || !state.EntityManager.Exists(entity))
+                {
+                    continue;
+                }
+
+                if (appended > 0)
+                {
+                    sb.Append(',');
+                }
+
+                AppendRepetitionSnapshotAgent(sb, ref state, entity);
+                appended++;
+            }
+
+            sb.Append("]}");
+            return sb.ToString();
+        }
+
+        private static void AppendRepetitionSnapshotAgent(StringBuilder sb, ref SystemState state, Entity entity)
+        {
+            var entityManager = state.EntityManager;
+            var hasJob = entityManager.HasComponent<VillagerJobState>(entity);
+            var job = hasJob ? entityManager.GetComponentData<VillagerJobState>(entity) : default;
+            var hasIntent = entityManager.HasComponent<MoveIntent>(entity);
+            var intent = hasIntent ? entityManager.GetComponentData<MoveIntent>(entity) : default;
+            var hasNavigation = entityManager.HasComponent<Navigation>(entity);
+            var navigation = hasNavigation ? entityManager.GetComponentData<Navigation>(entity) : default;
+
+            var target = job.Target != Entity.Null ? job.Target : intent.TargetEntity;
+            var hasDestination = hasNavigation || hasIntent;
+            var destination = hasNavigation ? navigation.Destination : intent.TargetPosition;
+
+            sb.Append('{');
+            sb.Append("\"entityId\":").Append(entity.Index).Append(',');
+            sb.Append("\"jobPhase\":\"").Append(hasJob ? job.Phase.ToString() : "Unknown").Append("\",");
+            sb.Append("\"targetId\":");
+            if (target == Entity.Null)
+            {
+                sb.Append("null");
+            }
+            else
+            {
+                sb.Append(target.Index);
+            }
+            sb.Append(',');
+            sb.Append("\"destination\":");
+            if (hasDestination)
+            {
+                AppendVector3Json(sb, destination);
+            }
+            else
+            {
+                sb.Append("null");
+            }
+            sb.Append('}');
+        }
+
+        private static void AppendVector3Json(StringBuilder sb, float3 value)
+        {
+            sb.Append('{');
+            sb.Append("\"x\":").Append(FormatFloat(value.x));
+            sb.Append(",\"y\":").Append(FormatFloat(value.y));
+            sb.Append(",\"z\":").Append(FormatFloat(value.z));
+            sb.Append('}');
+        }
+
+        private static string FormatFloat(float value)
+        {
+            return value.ToString("0.###", CultureInfo.InvariantCulture);
         }
 
         private static bool HasRepeatingCycle(in FixedList128Bytes<uint> signatures, int cycleLength, int repeats)
@@ -782,6 +975,18 @@ namespace Godgame.Headless
         {
             public byte Code;
             public int Count;
+        }
+
+        private struct RepetitionSnapshotEntry
+        {
+            public Entity Entity;
+            public int Score;
+
+            public RepetitionSnapshotEntry(Entity entity, int score)
+            {
+                Entity = entity;
+                Score = score;
+            }
         }
 
         private struct Offender
