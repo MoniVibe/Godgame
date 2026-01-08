@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Godgame.Registry;
 using Godgame.Telemetry;
 using Godgame.Villagers;
@@ -26,6 +27,7 @@ namespace Godgame.Headless
         private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
         private const string LoopScenarioFile = "villager_loop_small.json";
         private const string ExitOnResultEnv = "GODGAME_HEADLESS_REPETITION_EXIT";
+        private const string LoopInvariantId = "Invariant/VillagerLoopRepetition";
 
         private const string WindowSizeEnv = "GODGAME_HEADLESS_REPETITION_WINDOW";
         private const string MinSamplesEnv = "GODGAME_HEADLESS_REPETITION_MIN_SAMPLES";
@@ -213,8 +215,12 @@ namespace Godgame.Headless
                 : 0u;
             LogBankResult(result.Pass, result.Reason, tickTime, scenarioTick);
             _bankReported = true;
+            if (!result.Pass)
+            {
+                ReportLoopInvariant(result, tickTime, scenarioTick);
+            }
             LogOffenderSummary(result);
-            RequestExitIfEnabled(ref state, timeState.Tick, result.Pass ? 0 : 6);
+            RequestExit(ref state, timeState.Tick, result.Pass, 6);
         }
 
         private bool ResolveBankActive(ref SystemState state)
@@ -726,14 +732,20 @@ namespace Godgame.Headless
             UnityDebug.Log($"BANK:{testId}:FAIL reason={reason} tickTime={tickTime} scenarioTick={scenarioTick} delta={delta}");
         }
 
-        private static void RequestExitIfEnabled(ref SystemState state, uint tick, int exitCode)
+        private static void RequestExit(ref SystemState state, uint tick, bool pass, int failExitCode)
         {
+            if (!pass)
+            {
+                GodgameHeadlessExitSystem.Request(ref state, tick, failExitCode);
+                return;
+            }
+
             if (!string.Equals(SystemEnv.GetEnvironmentVariable(ExitOnResultEnv), "1", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
 
-            GodgameHeadlessExitSystem.Request(ref state, tick, exitCode);
+            GodgameHeadlessExitSystem.Request(ref state, tick, 0);
         }
 
         private struct AgentTrace
@@ -814,6 +826,46 @@ namespace Godgame.Headless
             Completed = 1,
             Cancelled = 2,
             Failed = 3
+        }
+
+        private void ReportLoopInvariant(in RepetitionResult result, uint tick, uint scenarioTick)
+        {
+            var totalAgents = math.max(1, result.TotalAgents);
+            var oscillationRatio = result.OscillationCount / (float)totalAgents;
+            var shortCycleRatio = result.ShortCycleCount / (float)totalAgents;
+            var observed = string.Format(CultureInfo.InvariantCulture,
+                "oscillation_ratio={0:0.###} short_cycle_ratio={1:0.###} stored_delta={2:0.###} avg_transitions={3:0.###} median_entropy={4:0.###}",
+                oscillationRatio, shortCycleRatio, result.StoredDelta, result.AverageTransitions, result.MedianEntropy);
+            var expected = string.Format(CultureInfo.InvariantCulture,
+                "oscillation_ratio<={0:0.###} short_cycle_ratio<={0:0.###} median_entropy>={1:0.###} stored_delta>={2:0.###} avg_transitions<{3:0.###}",
+                _failPercent, _entropyMin, _livelockMinStored, _livelockMinTransitions);
+            var context = string.Format(CultureInfo.InvariantCulture,
+                "{{\"reason\":\"{0}\",\"tick\":{1},\"scenarioTick\":{2},\"totalAgents\":{3},\"oscillation\":{4},\"shortCycle\":{5},\"oscRepeats\":{6},\"shortRepeats\":{7},\"windowSize\":{8},\"minSamples\":{9},\"failPercent\":{10:0.###},\"entropyMin\":{11:0.###},\"medianEntropy\":{12:0.###},\"storedDelta\":{13:0.###},\"livelockMinStored\":{14:0.###},\"avgTransitions\":{15:0.###},\"livelockMinTransitions\":{16:0.###}}}",
+                result.Reason ?? string.Empty,
+                tick,
+                scenarioTick,
+                result.TotalAgents,
+                result.OscillationCount,
+                result.ShortCycleCount,
+                _oscRepeats,
+                _shortRepeats,
+                _windowSize,
+                _minSamples,
+                _failPercent,
+                _entropyMin,
+                result.MedianEntropy,
+                result.StoredDelta,
+                _livelockMinStored,
+                result.AverageTransitions,
+                _livelockMinTransitions);
+
+            ScenarioExitUtility.ReportInvariant(LoopInvariantId,
+                $"Villager repetition loop detected (reason={result.Reason}, agents={result.TotalAgents}).");
+            GodgameHeadlessDiagnostics.ReportInvariant(LoopInvariantId,
+                "Villager repetition loop detected.",
+                observed,
+                expected,
+                context);
         }
     }
 }
