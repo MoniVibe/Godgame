@@ -490,7 +490,7 @@ namespace Godgame.Headless
 
         private void WriteRepetitionSnapshot(in RepetitionResult result, uint tickTime, uint scenarioTick)
         {
-            if (_snapshotWritten || !result.RepetitionHigh || !GodgameHeadlessDiagnostics.Enabled)
+            if (_snapshotWritten || result.Offenders.Length == 0 || !GodgameHeadlessDiagnostics.Enabled)
             {
                 return;
             }
