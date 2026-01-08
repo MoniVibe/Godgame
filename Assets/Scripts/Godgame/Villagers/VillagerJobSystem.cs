@@ -60,6 +60,7 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerCarryCapacity> _carryLookup;
         private ComponentLookup<VillagerPonderState> _ponderLookup;
         private BufferLookup<VillagerJobDecisionEvent> _jobTraceLookup;
+        private ComponentLookup<VillagerId> _villagerIdLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -101,6 +102,7 @@ namespace Godgame.Villagers
             _carryLookup = state.GetComponentLookup<VillagerCarryCapacity>(true);
             _ponderLookup = state.GetComponentLookup<VillagerPonderState>(false);
             _jobTraceLookup = state.GetBufferLookup<VillagerJobDecisionEvent>(false);
+            _villagerIdLookup = state.GetComponentLookup<VillagerId>(true);
 
             _resourceNodeQuery = SystemAPI.QueryBuilder()
                 .WithAll<GodgameResourceNodeMirror, LocalTransform>()
@@ -163,6 +165,7 @@ namespace Godgame.Villagers
             _carryLookup.Update(ref state);
             _ponderLookup.Update(ref state);
             _jobTraceLookup.Update(ref state);
+            _villagerIdLookup.Update(ref state);
 
             var catalog = SystemAPI.GetSingleton<ResourceTypeIndex>().Catalog;
             if (!catalog.IsCreated)
@@ -337,6 +340,7 @@ namespace Godgame.Villagers
                 CarryLookup = _carryLookup,
                 PonderLookup = _ponderLookup,
                 JobTraceLookup = _jobTraceLookup,
+                VillagerIdLookup = _villagerIdLookup,
                 MovementTuning = movementTuning,
                 HasTreeTuning = hasTreeTuning ? (byte)1 : (byte)0,
                 TreeTuning = hasTreeTuning ? treeTuning : TreeFellingTuning.Default,
@@ -477,6 +481,7 @@ namespace Godgame.Villagers
             [ReadOnly] public ComponentLookup<VillagerCarryCapacity> CarryLookup;
             public ComponentLookup<VillagerPonderState> PonderLookup;
             [NativeDisableParallelForRestriction] public BufferLookup<VillagerJobDecisionEvent> JobTraceLookup;
+            [ReadOnly] public ComponentLookup<VillagerId> VillagerIdLookup;
             public VillagerMovementTuning MovementTuning;
             public TreeFellingTuning TreeTuning;
             public byte HasTreeTuning;
@@ -830,11 +835,15 @@ namespace Godgame.Villagers
                 var baseMoveSpeed = MoveSpeed > 0f ? MoveSpeed : DefaultMoveSpeed;
                 var statAverage = ResolveStatAverage(e);
                 var hasStamina = TryGetStamina(e, out var combatStats, out var currentStamina, out var maxStamina, out var staminaRatio);
-                var moveSpeed = ResolveMoveSpeed(e, baseMoveSpeed, hazardUrgency, statAverage, staminaRatio, out var runIntensity);
-                nav.Speed = moveSpeed;
-                var accelMultiplier = math.max(0.1f, MovementTuning.AccelerationMultiplier);
-                var decelMultiplier = math.max(0.1f, MovementTuning.DecelerationMultiplier);
-                var turnBlendSpeed = math.max(0.1f, MovementTuning.TurnBlendSpeed);
+            var moveSpeed = ResolveMoveSpeed(e, baseMoveSpeed, hazardUrgency, statAverage, staminaRatio, out var runIntensity);
+            nav.Speed = moveSpeed;
+            var navFlags = nav.FeatureFlags;
+            var useSmoothing = (navFlags & NavigationFeatureFlags.LocomotionSmoothing) != 0;
+            var useArrivalOffset = (navFlags & NavigationFeatureFlags.ArrivalOffset) != 0;
+            var arrivalOffset = useArrivalOffset ? ResolveArrivalOffset(e, arrivalDistance) : float3.zero;
+            var accelMultiplier = math.max(0.1f, MovementTuning.AccelerationMultiplier);
+            var decelMultiplier = math.max(0.1f, MovementTuning.DecelerationMultiplier);
+            var turnBlendSpeed = math.max(0.1f, MovementTuning.TurnBlendSpeed);
                 var movedThisTick = false;
 
                 if (job.DropoffCooldown > 0f)
@@ -885,7 +894,7 @@ namespace Godgame.Villagers
                         var nodeOffset = useCooperation
                             ? BuildCooperationOffset(ticket.TargetEntity, e, DefaultCooperationNodeSpacing)
                             : float3.zero;
-                        nav.Destination = ticketTargetPosition + nodeOffset;
+                        nav.Destination = ticketTargetPosition + nodeOffset + arrivalOffset;
                         nav.Speed = moveSpeed;
                         job.Phase = JobPhase.NavigateToNode;
 
@@ -912,7 +921,7 @@ namespace Godgame.Villagers
                             var moveDir = VillagerSteeringMath.BlendDirection(direction, hazardVector, hazardUrgency);
                             var separation = ResolveSeparation(e, tx.Position);
                             moveDir = math.normalizesafe(moveDir + separation);
-                            var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance);
+                            var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance, arrivalDistance, useSmoothing);
                             var currentVelocity = nav.Velocity;
                             currentVelocity.y = 0f;
                             if (math.lengthsq(currentVelocity) > 1e-4f)
@@ -966,7 +975,7 @@ namespace Godgame.Villagers
                                 var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
                                     ? BuildCooperationOffset(nearestStorehouse, e, DefaultCooperationStorehouseSpacing)
                                     : float3.zero;
-                                nav.Destination = nearestStorehousePosition + storehouseOffset;
+                                nav.Destination = nearestStorehousePosition + storehouseOffset + arrivalOffset;
                                 nav.Speed = moveSpeed;
                                 job.Phase = JobPhase.NavigateToStorehouse;
 
@@ -1021,7 +1030,7 @@ namespace Godgame.Villagers
                                     var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
                                         ? BuildCooperationOffset(nearestStorehouse, e, DefaultCooperationStorehouseSpacing)
                                         : float3.zero;
-                                    nav.Destination = nearestStorehousePosition + storehouseOffset;
+                                    nav.Destination = nearestStorehousePosition + storehouseOffset + arrivalOffset;
                                     nav.Speed = moveSpeed;
                                     job.Phase = JobPhase.NavigateToStorehouse;
 
@@ -1196,7 +1205,7 @@ namespace Godgame.Villagers
                                         var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
                                             ? BuildCooperationOffset(nearestStorehouse, e, DefaultCooperationStorehouseSpacing)
                                             : float3.zero;
-                                        nav.Destination = nearestStorehousePosition + storehouseOffset;
+                                        nav.Destination = nearestStorehousePosition + storehouseOffset + arrivalOffset;
                                         nav.Speed = moveSpeed;
                                         job.Phase = JobPhase.NavigateToStorehouse;
 
@@ -1224,7 +1233,7 @@ namespace Godgame.Villagers
                             var moveDir = VillagerSteeringMath.BlendDirection(direction, hazardVector, hazardUrgency);
                             var separation = ResolveSeparation(e, tx.Position);
                             moveDir = math.normalizesafe(moveDir + separation);
-                            var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance);
+                            var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance, deliverDistance, useSmoothing);
                             var currentVelocity = nav.Velocity;
                             currentVelocity.y = 0f;
                             if (math.lengthsq(currentVelocity) > 1e-4f)
@@ -1359,7 +1368,9 @@ namespace Godgame.Villagers
                 toTarget.y = 0f;
                 var distance = math.length(toTarget);
                 var speed = math.max(0f, nav.Speed);
-                var travelSpeed = ApplyArriveSlowdown(speed, distance);
+                var arrivalDistance = ArrivalDistance > 0f ? ArrivalDistance : DefaultArrivalDistance;
+                var useSmoothing = (nav.FeatureFlags & NavigationFeatureFlags.LocomotionSmoothing) != 0;
+                var travelSpeed = ApplyArriveSlowdown(speed, distance, arrivalDistance, useSmoothing);
                 var desiredVel = distance > 0.01f && travelSpeed > 0f
                     ? math.normalizesafe(toTarget) * travelSpeed
                     : float3.zero;
@@ -1380,16 +1391,39 @@ namespace Godgame.Villagers
                 };
             }
 
-            private float ApplyArriveSlowdown(float speed, float distance)
+            private float ApplyArriveSlowdown(float speed, float distance, float arrivalDistance, bool useSmoothing)
             {
-                var radius = math.max(0f, MovementTuning.ArriveSlowdownRadius);
-                if (radius <= 0f || speed <= 0f)
+                var slowRadius = math.max(0f, MovementTuning.ArriveSlowdownRadius);
+                if (slowRadius <= 0f || speed <= 0f)
                 {
                     return speed;
                 }
 
                 var minMultiplier = math.clamp(MovementTuning.ArriveMinSpeedMultiplier, 0.1f, 1f);
-                var t = math.saturate(distance / radius);
+                if (!useSmoothing)
+                {
+                    var t = math.saturate(distance / slowRadius);
+                    var scale = math.lerp(minMultiplier, 1f, t);
+                    return speed * scale;
+                }
+
+                var stopRadius = math.max(0f, MovementTuning.ArriveStopRadius);
+                if (stopRadius <= 0f)
+                {
+                    stopRadius = math.max(0f, arrivalDistance);
+                }
+                if (arrivalDistance > 0f)
+                {
+                    stopRadius = math.min(stopRadius, arrivalDistance);
+                }
+
+                slowRadius = math.max(slowRadius, stopRadius);
+                if (distance <= stopRadius)
+                {
+                    return 0f;
+                }
+
+                var t = math.saturate((distance - stopRadius) / math.max(1e-4f, slowRadius - stopRadius));
                 var scale = math.lerp(minMultiplier, 1f, t);
                 return speed * scale;
             }
@@ -2446,6 +2480,45 @@ namespace Godgame.Villagers
                 var angle = random.NextFloat(0f, math.PI * 2f);
                 var radius = random.NextFloat(0.4f, 1f) * spacing;
                 return new float3(math.cos(angle) * radius, 0f, math.sin(angle) * radius);
+            }
+
+            private float3 ResolveArrivalOffset(Entity entity, float arrivalDistance)
+            {
+                var maxRadius = math.max(0f, MovementTuning.ArrivalOffsetRadius);
+                if (maxRadius <= 0f)
+                {
+                    return float3.zero;
+                }
+
+                var minRadius = math.clamp(MovementTuning.ArrivalOffsetMinRadius, 0f, maxRadius);
+                if (arrivalDistance > 0f)
+                {
+                    var clampRadius = math.max(0.05f, arrivalDistance * 0.8f);
+                    if (maxRadius > clampRadius)
+                    {
+                        maxRadius = clampRadius;
+                        minRadius = math.min(minRadius, maxRadius);
+                    }
+                }
+
+                var seed = ResolveArrivalSeed(entity);
+                var angle = (seed & 0xffffu) * (math.PI * 2f / 65535f);
+                var radius01 = ((seed >> 16) & 0xffffu) / 65535f;
+                var radius = math.lerp(minRadius, maxRadius, radius01);
+                return new float3(math.cos(angle) * radius, 0f, math.sin(angle) * radius);
+            }
+
+            private uint ResolveArrivalSeed(Entity entity)
+            {
+                if (VillagerIdLookup.HasComponent(entity))
+                {
+                    var id = VillagerIdLookup[entity];
+                    var seed = math.hash(new uint2((uint)id.Value, (uint)id.FactionId));
+                    return seed != 0u ? seed : 1u;
+                }
+
+                var fallback = math.hash(new uint2((uint)(entity.Index + 1), (uint)(entity.Version + 1)));
+                return fallback != 0u ? fallback : 1u;
             }
 
             private float ApplySpeedVariance(Entity entity, float baseSpeed)

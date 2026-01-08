@@ -36,6 +36,11 @@ namespace Godgame.Authoring
         [Header("Arrive Slowdown")]
         [Range(0f, 8f)] public float arriveSlowdownRadius = 2.4f;
         [Range(0.1f, 1f)] public float arriveMinSpeedMultiplier = 0.35f;
+        [Range(0f, 8f)] public float arriveStopRadius = 2f;
+
+        [Header("Arrival Offset")]
+        [Range(0f, 1.5f)] public float arrivalOffsetRadius = 0.6f;
+        [Range(0f, 1.5f)] public float arrivalOffsetMinRadius = 0.15f;
 
         [Header("Kinematics")]
         [Range(0.5f, 12f)] public float accelerationMultiplier = 4f;
@@ -68,6 +73,9 @@ namespace Godgame.Authoring
                     SpeedVariancePeriodSeconds = Mathf.Max(0f, authoring.speedVariancePeriodSeconds),
                     ArriveSlowdownRadius = Mathf.Max(0f, authoring.arriveSlowdownRadius),
                     ArriveMinSpeedMultiplier = Mathf.Clamp(authoring.arriveMinSpeedMultiplier, 0.1f, 1f),
+                    ArriveStopRadius = Mathf.Max(0f, authoring.arriveStopRadius),
+                    ArrivalOffsetRadius = Mathf.Max(0f, authoring.arrivalOffsetRadius),
+                    ArrivalOffsetMinRadius = Mathf.Clamp(authoring.arrivalOffsetMinRadius, 0f, Mathf.Max(0f, authoring.arrivalOffsetRadius)),
                     AccelerationMultiplier = Mathf.Max(0.1f, authoring.accelerationMultiplier),
                     DecelerationMultiplier = Mathf.Max(0.1f, authoring.decelerationMultiplier),
                     TurnBlendSpeed = Mathf.Max(0.1f, authoring.turnBlendSpeed),

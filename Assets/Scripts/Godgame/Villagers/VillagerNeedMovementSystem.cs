@@ -109,6 +109,7 @@ namespace Godgame.Villagers
             var separationMaxPush = math.max(0f, movementTuning.SeparationMaxPush);
             var separationCellSize = math.max(0.1f, movementTuning.SeparationCellSize);
             var arriveSlowdownRadius = math.max(0f, movementTuning.ArriveSlowdownRadius);
+            var arriveStopRadius = math.max(0f, movementTuning.ArriveStopRadius);
             var arriveMinMultiplier = math.clamp(movementTuning.ArriveMinSpeedMultiplier, 0.1f, 1f);
             var accelMultiplier = math.max(0.1f, movementTuning.AccelerationMultiplier);
             var decelMultiplier = math.max(0.1f, movementTuning.DecelerationMultiplier);
@@ -231,6 +232,7 @@ namespace Godgame.Villagers
 
                 var patience01 = math.saturate((behavior.PatienceScore + 100f) * 0.005f);
                 var arrivalDistance = 0.6f;
+                var useSmoothing = (nav.ValueRO.FeatureFlags & NavigationFeatureFlags.LocomotionSmoothing) != 0;
                 var radius = currentGoal == VillagerGoal.Socialize ? activeSocialRadius : activeWanderRadius;
                 if (currentGoal != VillagerGoal.Flee
                     && (timeState.Tick >= movementState.ValueRO.NextRepathTick
@@ -299,7 +301,8 @@ namespace Godgame.Villagers
                     var turnLerp = math.saturate(deltaTime * turnBlendSpeed);
                     dir = math.normalizesafe(math.lerp(currentDir, dir, turnLerp), dir);
                 }
-                var arriveSpeed = ApplyArriveSlowdown(moveSpeed, distance, arriveSlowdownRadius, arriveMinMultiplier);
+                var arriveSpeed = ApplyArriveSlowdown(moveSpeed, distance, arrivalDistance, arriveSlowdownRadius,
+                    arriveStopRadius, arriveMinMultiplier, useSmoothing);
                 var desiredVelocity = dir * arriveSpeed;
                 var currentSpeed = math.length(currentVelocity);
                 var acceleration = math.max(0.1f, moveSpeed * accelMultiplier);
@@ -449,14 +452,38 @@ namespace Godgame.Villagers
             return baseSpeed * math.max(0.1f, variance);
         }
 
-        private static float ApplyArriveSlowdown(float speed, float distance, float radius, float minMultiplier)
+        private static float ApplyArriveSlowdown(float speed, float distance, float arrivalDistance, float slowRadius,
+            float stopRadius, float minMultiplier, bool useSmoothing)
         {
-            if (radius <= 0f || speed <= 0f)
+            if (slowRadius <= 0f || speed <= 0f)
             {
                 return speed;
             }
 
-            var t = math.saturate(distance / radius);
+            if (!useSmoothing)
+            {
+                var t = math.saturate(distance / slowRadius);
+                var scale = math.lerp(minMultiplier, 1f, t);
+                return speed * scale;
+            }
+
+            var clampedStop = math.max(0f, stopRadius);
+            if (clampedStop <= 0f)
+            {
+                clampedStop = math.max(0f, arrivalDistance);
+            }
+            if (arrivalDistance > 0f)
+            {
+                clampedStop = math.min(clampedStop, arrivalDistance);
+            }
+            slowRadius = math.max(slowRadius, clampedStop);
+
+            if (distance <= clampedStop)
+            {
+                return 0f;
+            }
+
+            var t = math.saturate((distance - clampedStop) / math.max(1e-4f, slowRadius - clampedStop));
             var scale = math.lerp(minMultiplier, 1f, t);
             return speed * scale;
         }
