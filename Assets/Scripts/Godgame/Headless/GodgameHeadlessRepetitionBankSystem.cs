@@ -512,15 +512,18 @@ namespace Godgame.Headless
             if (GodgameHeadlessDiagnostics.Enabled)
             {
                 GodgameHeadlessDiagnostics.WriteArtifact(SnapshotFileName, json);
+                UnityDebug.Log($"[GodgameHeadlessRepetition] snapshot_written via diagnostics ({SnapshotFileName}).");
                 return;
             }
 
             var outDir = ResolveSnapshotOutDir();
             if (string.IsNullOrWhiteSpace(outDir))
             {
+                UnityDebug.LogWarning("[GodgameHeadlessRepetition] snapshot_out_dir missing; snapshot skipped.");
                 return;
             }
 
+            UnityDebug.Log($"[GodgameHeadlessRepetition] snapshot_out_dir={outDir}");
             TryWriteSnapshotFile(outDir, json);
         }
 
