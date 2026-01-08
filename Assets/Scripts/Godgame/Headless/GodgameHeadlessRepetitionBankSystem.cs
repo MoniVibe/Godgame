@@ -57,7 +57,7 @@ namespace Godgame.Headless
         private bool _bankActive;
         private bool _bankReported;
         private bool _snapshotWritten;
-        private string _snapshotOutDir;
+        private FixedString512Bytes _snapshotOutDir;
         private uint _startTick;
         private uint _windowTicks;
         private int _windowSize;
@@ -636,9 +636,9 @@ namespace Godgame.Headless
 
         private string ResolveSnapshotOutDir()
         {
-            if (!string.IsNullOrWhiteSpace(_snapshotOutDir))
+            if (_snapshotOutDir.Length > 0)
             {
-                return _snapshotOutDir;
+                return _snapshotOutDir.ToString();
             }
 
             GodgameHeadlessDiagnostics.InitializeFromArgs();
@@ -650,33 +650,33 @@ namespace Godgame.Headless
                 {
                     if (i + 1 < args.Length)
                     {
-                        _snapshotOutDir = TrimArgPath(args[i + 1]);
+                        _snapshotOutDir = new FixedString512Bytes(TrimArgPath(args[i + 1]));
                         break;
                     }
                 }
                 else if (arg.StartsWith("--outDir=", StringComparison.OrdinalIgnoreCase))
                 {
-                    _snapshotOutDir = TrimArgPath(arg.Substring("--outDir=".Length));
+                    _snapshotOutDir = new FixedString512Bytes(TrimArgPath(arg.Substring("--outDir=".Length)));
                     break;
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(_snapshotOutDir))
+            if (_snapshotOutDir.Length == 0 && !string.IsNullOrWhiteSpace(GodgameHeadlessDiagnostics.OutDir))
             {
-                _snapshotOutDir = GodgameHeadlessDiagnostics.OutDir;
+                _snapshotOutDir = new FixedString512Bytes(GodgameHeadlessDiagnostics.OutDir);
             }
 
-            if (string.IsNullOrWhiteSpace(_snapshotOutDir) && !string.IsNullOrWhiteSpace(GodgameHeadlessDiagnostics.ProgressPath))
+            if (_snapshotOutDir.Length == 0 && !string.IsNullOrWhiteSpace(GodgameHeadlessDiagnostics.ProgressPath))
             {
-                _snapshotOutDir = Path.GetDirectoryName(GodgameHeadlessDiagnostics.ProgressPath);
+                _snapshotOutDir = new FixedString512Bytes(Path.GetDirectoryName(GodgameHeadlessDiagnostics.ProgressPath));
             }
 
-            if (string.IsNullOrWhiteSpace(_snapshotOutDir) && !string.IsNullOrWhiteSpace(GodgameHeadlessDiagnostics.InvariantsPath))
+            if (_snapshotOutDir.Length == 0 && !string.IsNullOrWhiteSpace(GodgameHeadlessDiagnostics.InvariantsPath))
             {
-                _snapshotOutDir = Path.GetDirectoryName(GodgameHeadlessDiagnostics.InvariantsPath);
+                _snapshotOutDir = new FixedString512Bytes(Path.GetDirectoryName(GodgameHeadlessDiagnostics.InvariantsPath));
             }
 
-            return _snapshotOutDir;
+            return _snapshotOutDir.ToString();
         }
 
         private static void TryWriteSnapshotFile(string outDir, string payload)
