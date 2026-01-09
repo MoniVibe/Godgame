@@ -1,3 +1,4 @@
+#if GODGAME_HAS_DIGGER
 using PureDOTS.Environment;
 using PureDOTS.Runtime.Components;
 using Unity.Entities;
@@ -123,3 +124,15 @@ namespace Godgame.Presentation.Digger
         }
     }
 }
+#else
+using Unity.Entities;
+
+namespace Godgame.Presentation.Digger
+{
+    public partial struct Godgame_DiggerDigOpBridgeSystem : ISystem
+    {
+        public void OnCreate(ref SystemState state) { }
+        public void OnUpdate(ref SystemState state) { }
+    }
+}
+#endif

@@ -1,3 +1,4 @@
+#if GODGAME_HAS_DIGGER
 using System;
 using System.Reflection;
 using PureDOTS.Environment;
@@ -314,3 +315,22 @@ namespace Godgame.Presentation.Digger
         }
     }
 }
+#else
+using UnityEngine;
+
+namespace Godgame.Presentation.Digger
+{
+    public sealed class DiggerDigOpApplier : MonoBehaviour
+    {
+        public int AppliedOps => 0;
+        public int SkippedOps => 0;
+        public uint LastTick => 0;
+        public Vector3 LastPosition => default;
+
+        private void Awake()
+        {
+            enabled = false;
+        }
+    }
+}
+#endif

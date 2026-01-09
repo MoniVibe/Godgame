@@ -1,3 +1,4 @@
+#if GODGAME_HAS_DIGGER
 using System;
 using PureDOTS.Environment;
 using PureDOTS.Runtime.Core;
@@ -68,3 +69,32 @@ namespace Godgame.Presentation.Digger
         }
     }
 }
+#else
+using PureDOTS.Runtime.Core;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Mathematics;
+
+namespace Godgame.Presentation.Digger
+{
+    [InternalBufferCapacity(32)]
+    public struct DiggerDigOp : IBufferElementData
+    {
+        public TerrainModificationKind Kind;
+        public TerrainModificationShape Shape;
+        public float3 Start;
+        public float3 End;
+        public float Radius;
+        public float Depth;
+        public byte MaterialId;
+        public uint Tick;
+    }
+
+    public struct DiggerDigOpQueue : IComponentData { }
+
+    internal static class DiggerViewGate
+    {
+        public static bool IsEnabled => false;
+    }
+}
+#endif
