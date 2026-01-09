@@ -23,12 +23,14 @@ namespace Tri.BuildTools
         private const string ManifestFileName = "build_manifest.json";
         private const string BuildReportJsonName = "build_report.json";
         private const string BuildReportTextName = "build_report.txt";
+        private const string HybridRendererDisabledDefine = "HYBRID_RENDERER_DISABLED";
 
         public static void Build()
         {
             var args = BuildArgs.Parse();
             var startUtc = DateTime.UtcNow;
             var outcome = BuildOutcome.Create(args, "Failed", "Build did not start", string.Empty, startUtc);
+            DefineScope? hybridRendererScope = null;
 
             EnsureDirectory(args.ArtifactRoot);
             var logsDir = Path.Combine(args.ArtifactRoot, LogsFolderName);
@@ -44,6 +46,7 @@ namespace Tri.BuildTools
                 ValidateArgs(args);
                 ConfigurePlayerSettings();
                 EnsureLinuxServerSupport();
+                hybridRendererScope = DefineScope.Ensure(BuildTargetGroup.Standalone, HybridRendererDisabledDefine);
 
                 BuildReport report = null;
                 GodgameHeadlessBuilder.BuildLinuxHeadless(args.BuildOut);
@@ -108,6 +111,7 @@ namespace Tri.BuildTools
             }
             finally
             {
+                hybridRendererScope?.Dispose();
                 TryWriteOutcome(outcome, outcomePath);
                 if (InternalEditorUtility.inBatchMode)
                 {
@@ -133,6 +137,64 @@ namespace Tri.BuildTools
             var group = BuildTargetGroup.Standalone;
             PlayerSettings.SetScriptingBackend(group, ScriptingImplementation.IL2CPP);
             EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Server;
+        }
+
+        private sealed class DefineScope : IDisposable
+        {
+            private readonly BuildTargetGroup _group;
+            private readonly string _originalSymbols;
+            private readonly bool _changed;
+
+            private DefineScope(BuildTargetGroup group, string originalSymbols, bool changed)
+            {
+                _group = group;
+                _originalSymbols = originalSymbols;
+                _changed = changed;
+            }
+
+            public static DefineScope Ensure(BuildTargetGroup group, string define)
+            {
+                var original = PlayerSettings.GetScriptingDefineSymbolsForGroup(group) ?? string.Empty;
+                var symbols = original.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                var list = new List<string>(symbols.Length + 1);
+                var hasDefine = false;
+
+                foreach (var symbol in symbols)
+                {
+                    var trimmed = symbol.Trim();
+                    if (string.IsNullOrEmpty(trimmed))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(trimmed, define, StringComparison.Ordinal))
+                    {
+                        hasDefine = true;
+                    }
+
+                    list.Add(trimmed);
+                }
+
+                if (!hasDefine)
+                {
+                    list.Add(define);
+                    var updated = string.Join(";", list);
+                    PlayerSettings.SetScriptingDefineSymbolsForGroup(group, updated);
+                    return new DefineScope(group, original, true);
+                }
+
+                return new DefineScope(group, original, false);
+            }
+
+            public void Dispose()
+            {
+                if (!_changed)
+                {
+                    return;
+                }
+
+                PlayerSettings.SetScriptingDefineSymbolsForGroup(_group, _originalSymbols);
+            }
         }
 
         private static void EnsureLinuxServerSupport()
