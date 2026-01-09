@@ -191,6 +191,17 @@ namespace Godgame.Headless
             EnqueueWrite(ProgressPath, BuildProgressJson(phase, checkpoint, tick));
         }
 
+        public static void WriteArtifact(string fileName, string payload)
+        {
+            if (!Enabled || string.IsNullOrWhiteSpace(fileName) || string.IsNullOrWhiteSpace(payload))
+            {
+                return;
+            }
+
+            var path = ResolvePathWithinOutDir(OutDir, fileName, fileName);
+            TryWriteAtomic(path, payload);
+        }
+
         public static void ReportInvariant(string id, string message, string observed = "", string expected = "", string contextJson = "")
         {
             if (!Enabled)
