@@ -18,6 +18,8 @@ namespace Godgame.Villagers
         private ComponentLookup<VillagerScheduleProfile> _villagerScheduleLookup;
         private ComponentLookup<VillagerAlignment> _alignmentLookup;
         private ComponentLookup<VillagerDirectiveBias> _directiveBiasLookup;
+        private ComponentLookup<VillagerOutlook> _outlookLookup;
+        private BufferLookup<VillagerCooldownOutlookRule> _cooldownOutlookLookup;
 
         public void OnCreate(ref SystemState state)
         {
@@ -27,6 +29,8 @@ namespace Godgame.Villagers
             _villagerScheduleLookup = state.GetComponentLookup<VillagerScheduleProfile>(true);
             _alignmentLookup = state.GetComponentLookup<VillagerAlignment>(true);
             _directiveBiasLookup = state.GetComponentLookup<VillagerDirectiveBias>(true);
+            _outlookLookup = state.GetComponentLookup<VillagerOutlook>(true);
+            _cooldownOutlookLookup = state.GetBufferLookup<VillagerCooldownOutlookRule>(true);
         }
 
         [BurstCompile]
@@ -59,8 +63,15 @@ namespace Godgame.Villagers
             _villagerScheduleLookup.Update(ref state);
             _alignmentLookup.Update(ref state);
             _directiveBiasLookup.Update(ref state);
+            _outlookLookup.Update(ref state);
+            _cooldownOutlookLookup.Update(ref state);
 
             var villageScheduleMap = BuildVillageScheduleMap(ref state);
+            var cooldownProfileEntity = SystemAPI.HasSingleton<VillagerCooldownProfile>()
+                ? SystemAPI.GetSingletonEntity<VillagerCooldownProfile>()
+                : Entity.Null;
+            var hasOutlookRules = cooldownProfileEntity != Entity.Null && _cooldownOutlookLookup.HasBuffer(cooldownProfileEntity);
+            var outlookRules = hasOutlookRules ? _cooldownOutlookLookup[cooldownProfileEntity] : default;
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
@@ -83,6 +94,7 @@ namespace Godgame.Villagers
 
                 workBias = math.lerp(1f, workBias, adherence);
                 socialBias = math.lerp(1f, socialBias, adherence);
+                socialBias *= ResolveOutlookSocialScale(entity, hasOutlookRules, outlookRules, _outlookLookup);
                 restBias = math.lerp(1f, restBias, adherence);
 
                 var bias = new VillagerNeedBias
@@ -211,6 +223,63 @@ namespace Godgame.Villagers
 
             var orderAxis = _alignmentLookup[entity].OrderAxis;
             return math.saturate((orderAxis + 100f) / 200f);
+        }
+
+        private static float ResolveOutlookSocialScale(Entity entity, bool hasRules,
+            DynamicBuffer<VillagerCooldownOutlookRule> rules, ComponentLookup<VillagerOutlook> outlookLookup)
+        {
+            if (!hasRules || !outlookLookup.HasComponent(entity))
+            {
+                return 1f;
+            }
+
+            var outlook = outlookLookup[entity];
+            var slotCount = math.min(outlook.OutlookTypes.Length, outlook.OutlookValues.Length);
+            if (slotCount == 0 || rules.Length == 0)
+            {
+                return 1f;
+            }
+
+            var delta = 0f;
+            for (var i = 0; i < slotCount; i++)
+            {
+                var typeId = outlook.OutlookTypes[i];
+                if (typeId == 0)
+                {
+                    continue;
+                }
+
+                if (!TryGetOutlookRule(typeId, rules, out var rule))
+                {
+                    continue;
+                }
+
+                var value01 = outlook.OutlookValues[i] / 100f;
+                if (math.abs(value01) <= 1e-4f)
+                {
+                    continue;
+                }
+
+                delta += rule.SocializeWeight * value01;
+            }
+
+            return math.max(0.1f, 1f + delta);
+        }
+
+        private static bool TryGetOutlookRule(byte outlookType, in DynamicBuffer<VillagerCooldownOutlookRule> rules,
+            out VillagerCooldownOutlookRule rule)
+        {
+            for (var i = 0; i < rules.Length; i++)
+            {
+                if (rules[i].OutlookType == outlookType)
+                {
+                    rule = rules[i];
+                    return true;
+                }
+            }
+
+            rule = default;
+            return false;
         }
 
         private static VillagerScheduleConfig BlendSchedules(in VillagerScheduleConfig a, in VillagerScheduleConfig b, float weight)
