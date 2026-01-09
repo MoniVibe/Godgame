@@ -338,7 +338,8 @@ namespace Godgame.Scenario
                 ecb.AddComponent(entity, new Navigation
                 {
                     Destination = positions[i],
-                    Speed = 5f
+                    Speed = 5f,
+                    FeatureFlags = NavigationFeatureFlags.LocomotionSmoothing | NavigationFeatureFlags.ArrivalOffset
                 });
                 ecb.AddComponent(entity, new VillagerCombatStats
                 {

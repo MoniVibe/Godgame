@@ -20,6 +20,9 @@ namespace Godgame.Villagers
         public float SpeedVariancePeriodSeconds;
         public float ArriveSlowdownRadius;
         public float ArriveMinSpeedMultiplier;
+        public float ArriveStopRadius;
+        public float ArrivalOffsetRadius;
+        public float ArrivalOffsetMinRadius;
         public float AccelerationMultiplier;
         public float DecelerationMultiplier;
         public float TurnBlendSpeed;
@@ -43,6 +46,9 @@ namespace Godgame.Villagers
             SpeedVariancePeriodSeconds = 7f,
             ArriveSlowdownRadius = 2.4f,
             ArriveMinSpeedMultiplier = 0.35f,
+            ArriveStopRadius = 2f,
+            ArrivalOffsetRadius = 0.6f,
+            ArrivalOffsetMinRadius = 0.15f,
             AccelerationMultiplier = 4f,
             DecelerationMultiplier = 6f,
             TurnBlendSpeed = 8f,

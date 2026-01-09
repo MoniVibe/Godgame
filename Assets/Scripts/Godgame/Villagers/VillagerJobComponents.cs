@@ -1,3 +1,4 @@
+using System;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -110,5 +111,14 @@ namespace Godgame.Villagers
         public float3 Destination;
         public float Speed;
         public float3 Velocity;
+        public NavigationFeatureFlags FeatureFlags;
+    }
+
+    [Flags]
+    public enum NavigationFeatureFlags : byte
+    {
+        None = 0,
+        LocomotionSmoothing = 1 << 0,
+        ArrivalOffset = 1 << 1
     }
 }

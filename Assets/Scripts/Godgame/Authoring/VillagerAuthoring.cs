@@ -273,7 +273,8 @@ namespace Godgame.Authoring
                 AddComponent(entity, new Godgame.Villagers.Navigation
                 {
                     Destination = float3.zero,
-                    Speed = 0f
+                    Speed = 0f,
+                    FeatureFlags = NavigationFeatureFlags.LocomotionSmoothing | NavigationFeatureFlags.ArrivalOffset
                 });
 
                 AddComponent<CommunicationModuleTag>(entity);
