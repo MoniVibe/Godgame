@@ -149,6 +149,12 @@ namespace Godgame.Villagers
                         continue;
                     }
 
+                    if ((job.CommitUntilTick != 0 && job.CommitUntilTick > timeState.Tick)
+                        || (job.NextAllowedDecisionTick != 0 && job.NextAllowedDecisionTick > timeState.Tick))
+                    {
+                        continue;
+                    }
+
                     if (job.NextEligibleTick != 0 && job.NextEligibleTick > timeState.Tick
                         && ShouldGateTicket(job, ticket, timeState.Tick))
                     {

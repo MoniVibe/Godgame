@@ -525,8 +525,9 @@ namespace Godgame.Villagers
                 ref LocalTransform tx, ref Navigation nav, ref GatherDeliverTelemetry telemetry, ref MoveIntent moveIntent, ref MovePlan movePlan)
             {
                 var patienceScore = BehaviorLookup.HasComponent(e) ? BehaviorLookup[e].PatienceScore : 0f;
+                var holdDecision = job.NextAllowedDecisionTick > CurrentTick || job.CommitUntilTick > CurrentTick;
 
-                if (assignment.Ticket == Entity.Null && batch.Length > 0)
+                if (!holdDecision && assignment.Ticket == Entity.Null && batch.Length > 0)
                 {
                     var nextTicket = batch[0].Ticket;
                     batch.RemoveAt(0);
@@ -1881,9 +1882,14 @@ namespace Godgame.Villagers
 
             private void RecordDecision(ref VillagerJobState job, Entity entity, JobPhase phase, Entity target, in StorehouseCandidates candidates, byte preconditionMask)
             {
-                if (job.LastChosenJob != job.Type || job.LastTarget != target)
+                var changed = job.LastChosenJob != job.Type || job.LastTarget != target;
+                if (changed)
                 {
                     job.RepeatCount = 0;
+                    job.FailureCount = 0;
+                    job.FailureBackoffTicks = 0;
+                    job.NextAllowedDecisionTick = 0;
+                    job.CommitUntilTick = MinCommitTicks > 0u ? CurrentTick + MinCommitTicks : 0u;
                 }
 
                 job.LastChosenJob = job.Type;
@@ -1915,24 +1921,33 @@ namespace Godgame.Villagers
                 var isRepeat = job.LastChosenJob == job.Type && job.LastTarget == target && job.LastFailCode == failCode;
                 if (isRepeat && job.LastFailTick > 0u && CurrentTick > job.LastFailTick)
                 {
-                    job.RepeatCount = (byte)math.min(255, job.RepeatCount + 1);
+                    var nextCount = (byte)math.min(255, job.FailureCount + 1);
+                    job.RepeatCount = nextCount;
+                    job.FailureCount = nextCount;
                 }
                 else
                 {
                     job.RepeatCount = 1;
+                    job.FailureCount = 1;
                 }
 
                 job.LastChosenJob = job.Type;
                 job.LastTarget = target;
                 job.LastFailCode = failCode;
                 job.LastFailTick = CurrentTick;
+                job.CommitUntilTick = 0;
+                job.FailureBackoffTicks = 0;
+                job.NextAllowedDecisionTick = 0;
 
                 if (ShouldBackoff(failCode))
                 {
-                    var backoffTicks = ResolveFailureBackoffTicks(job.RepeatCount);
+                    var backoffTicks = ResolveFailureBackoffTicks(job.FailureCount);
                     if (backoffTicks > 0u)
                     {
-                        job.NextEligibleTick = CurrentTick + backoffTicks;
+                        var nextTick = CurrentTick + backoffTicks;
+                        job.FailureBackoffTicks = backoffTicks;
+                        job.NextEligibleTick = nextTick;
+                        job.NextAllowedDecisionTick = nextTick;
                     }
                 }
 
@@ -1958,9 +1973,13 @@ namespace Godgame.Villagers
             private void RecordCompletion(ref VillagerJobState job, Entity entity, Entity target, byte preconditionMask)
             {
                 job.RepeatCount = 0;
+                job.FailureCount = 0;
                 job.LastFailCode = VillagerJobFailCode.None;
                 job.LastFailTick = CurrentTick;
                 job.NextEligibleTick = 0;
+                job.CommitUntilTick = 0;
+                job.NextAllowedDecisionTick = 0;
+                job.FailureBackoffTicks = 0;
 
                 var evt = new VillagerJobDecisionEvent
                 {
