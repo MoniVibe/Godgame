@@ -396,10 +396,13 @@ namespace Godgame.Villagers
                 return float3.zero;
             }
 
+            var radiusSeed = math.hash(new uint2((uint)(entity.Index + 23), 0x7a21u));
+            var radiusScale = math.lerp(0.8f, 1.2f, (radiusSeed & 0xffffu) / 65535f);
+            var scaledRadius = radius * radiusScale;
             var seed = math.hash(new uint3((uint)(entity.Index + 1), tick + 31u, 9049u));
             var random = Unity.Mathematics.Random.CreateFromIndex(seed == 0u ? 1u : seed);
             var angle = random.NextFloat(0f, math.PI * 2f);
-            var distance = random.NextFloat(0f, radius);
+            var distance = random.NextFloat(0f, scaledRadius);
             return new float3(math.cos(angle) * distance, 0f, math.sin(angle) * distance);
         }
 
