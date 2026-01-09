@@ -1,0 +1,12 @@
+{
+  "name": "Godgame NavPreference Gate Micro",
+  "description": "Headless micro scenario for safe vs direct nav preference gating.",
+  "entities": [
+    {
+      "prefab": "VillageCenter",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 0
+    }
+  ]
+}
