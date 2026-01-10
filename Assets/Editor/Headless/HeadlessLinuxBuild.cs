@@ -165,7 +165,7 @@ namespace Tri.BuildTools
             throw new BuildFailedException("Linux Build Support (Server) is not installed.");
         }
 
-        private static BuildReport BuildLinuxHeadless(string outputDirectory)
+        internal static BuildReport BuildLinuxHeadless(string outputDirectory)
         {
             var absoluteOutput = ResolveOutputDirectory(outputDirectory);
             Debug.Log($"[HeadlessLinuxBuild] START BUILD {DateTime.UtcNow:O}");
@@ -842,6 +842,17 @@ namespace Tri.BuildTools
                 return arg.StartsWith("-", StringComparison.Ordinal);
             }
         }
+    }
+}
+namespace Godgame.Headless.Editor
+{
+    public static class GodgameHeadlessBuilder
+    {
+        public static BuildReport BuildLinuxHeadless()
+            => Tri.BuildTools.HeadlessLinuxBuild.BuildLinuxHeadless("Builds/Godgame_headless/Linux");
+
+        public static BuildReport BuildLinuxHeadless(string outputDirectory)
+            => Tri.BuildTools.HeadlessLinuxBuild.BuildLinuxHeadless(outputDirectory);
     }
 }
 #nullable disable
