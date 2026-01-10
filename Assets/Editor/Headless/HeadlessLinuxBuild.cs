@@ -45,8 +45,7 @@ namespace Tri.BuildTools
                 ConfigurePlayerSettings();
                 EnsureLinuxServerSupport();
 
-                BuildReport report = null;
-                GodgameHeadlessBuilder.BuildLinuxHeadless(args.BuildOut);
+                var report = GodgameHeadlessBuilder.BuildLinuxHeadless(args.BuildOut);
                 var entrypointPath = ResolveEntrypointPath(report, args.BuildOut);
                 var dataPath = GetPlayerDataFolderPath(entrypointPath);
 
