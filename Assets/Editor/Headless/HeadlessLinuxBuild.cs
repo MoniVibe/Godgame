@@ -6,7 +6,6 @@ using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using Godgame.Headless.Editor;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -18,11 +17,18 @@ namespace Tri.BuildTools
     public static class HeadlessLinuxBuild
     {
         private const string BuildTargetLabel = "StandaloneLinux64-Server";
+        private const string DefaultOutputFolder = "Builds/Godgame_headless/Linux";
+        private const string HeadlessExecutableName = "Godgame_Headless.x86_64";
         private const string LogsFolderName = "logs";
         private const string OutcomeFileName = "build_outcome.json";
         private const string ManifestFileName = "build_manifest.json";
         private const string BuildReportJsonName = "build_report.json";
         private const string BuildReportTextName = "build_report.txt";
+        private static readonly string[] HeadlessScenes =
+        {
+            "Assets/Scenes/HeadlessBootstrap.unity",
+            "Assets/Scenes/TRI_Godgame_Smoke.unity"
+        };
 
         public static void Build()
         {
@@ -45,8 +51,7 @@ namespace Tri.BuildTools
                 ConfigurePlayerSettings();
                 EnsureLinuxServerSupport();
 
-                BuildReport report = null;
-                GodgameHeadlessBuilder.BuildLinuxHeadless(args.BuildOut);
+                var report = BuildLinuxHeadless(args.BuildOut);
                 var entrypointPath = ResolveEntrypointPath(report, args.BuildOut);
                 var dataPath = GetPlayerDataFolderPath(entrypointPath);
 
@@ -158,6 +163,51 @@ namespace Tri.BuildTools
             }
 
             throw new BuildFailedException("Linux Build Support (Server) is not installed.");
+        }
+
+        internal static BuildReport BuildLinuxHeadless(string outputDirectory)
+        {
+            var absoluteOutput = ResolveOutputDirectory(outputDirectory);
+            Debug.Log($"[HeadlessLinuxBuild] START BUILD {DateTime.UtcNow:O}");
+            Debug.Log($"[HeadlessLinuxBuild] Output path: {absoluteOutput}");
+            Debug.Log($"[HeadlessLinuxBuild] Working directory: {Directory.GetCurrentDirectory()}");
+
+            Directory.CreateDirectory(absoluteOutput);
+
+            var buildPlayerOptions = new BuildPlayerOptions
+            {
+                scenes = HeadlessScenes,
+                locationPathName = Path.Combine(absoluteOutput, HeadlessExecutableName),
+                target = BuildTarget.StandaloneLinux64,
+                targetGroup = BuildTargetGroup.Standalone,
+                subtarget = (int)StandaloneBuildSubtarget.Server,
+                options = BuildOptions.StrictMode | BuildOptions.EnableHeadlessMode | BuildOptions.DetailedBuildReport
+            };
+
+            var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            if (report.summary.result != BuildResult.Succeeded)
+            {
+                throw new BuildFailedException($"Godgame headless build failed: {report.summary.result}.");
+            }
+
+            Debug.Log($"[HeadlessLinuxBuild] END BUILD {DateTime.UtcNow:O}");
+            return report;
+        }
+
+        private static string ResolveOutputDirectory(string outputDirectory)
+        {
+            if (string.IsNullOrWhiteSpace(outputDirectory))
+            {
+                outputDirectory = DefaultOutputFolder;
+            }
+
+            if (Path.IsPathRooted(outputDirectory))
+            {
+                return Path.GetFullPath(outputDirectory);
+            }
+
+            var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+            return Path.GetFullPath(Path.Combine(projectRoot, outputDirectory));
         }
 
         private static void WriteBuildReport(BuildReport report, string jsonPath, string textPath)
@@ -792,6 +842,17 @@ namespace Tri.BuildTools
                 return arg.StartsWith("-", StringComparison.Ordinal);
             }
         }
+    }
+}
+namespace Godgame.Headless.Editor
+{
+    public static class GodgameHeadlessBuilder
+    {
+        public static BuildReport BuildLinuxHeadless()
+            => Tri.BuildTools.HeadlessLinuxBuild.BuildLinuxHeadless("Builds/Godgame_headless/Linux");
+
+        public static BuildReport BuildLinuxHeadless(string outputDirectory)
+            => Tri.BuildTools.HeadlessLinuxBuild.BuildLinuxHeadless(outputDirectory);
     }
 }
 #nullable disable
