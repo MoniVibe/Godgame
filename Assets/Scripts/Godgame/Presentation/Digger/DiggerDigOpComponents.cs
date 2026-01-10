@@ -70,6 +70,7 @@ namespace Godgame.Presentation.Digger
     }
 }
 #else
+using PureDOTS.Environment;
 using PureDOTS.Runtime.Core;
 using Unity.Collections;
 using Unity.Entities;
