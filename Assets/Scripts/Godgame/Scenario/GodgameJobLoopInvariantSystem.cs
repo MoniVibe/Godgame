@@ -4,6 +4,7 @@ using System.IO;
 using Godgame.Headless;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Scenarios;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
