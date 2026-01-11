@@ -4,6 +4,7 @@ using System.IO;
 using Godgame.Headless;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Scenarios;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -220,7 +221,7 @@ namespace Godgame.Scenario
             return value.ToString("0.###", CultureInfo.InvariantCulture);
         }
 
-        private static float SumStored(ref SystemState state)
+        private float SumStored(ref SystemState state)
         {
             var total = 0f;
             foreach (var inventory in SystemAPI.Query<RefRO<StorehouseInventory>>())
@@ -231,7 +232,7 @@ namespace Godgame.Scenario
             return total;
         }
 
-        private static bool TryFindNegativeInventory(ref SystemState state, out int negativeCount, out float minValue)
+        private bool TryFindNegativeInventory(ref SystemState state, out int negativeCount, out float minValue)
         {
             negativeCount = 0;
             minValue = 0f;
@@ -262,7 +263,7 @@ namespace Godgame.Scenario
             return negativeCount > 0;
         }
 
-        private static bool TryResolveTick(ref SystemState state, out uint tick, out float fixedDt)
+        private bool TryResolveTick(ref SystemState state, out uint tick, out float fixedDt)
         {
             tick = 0u;
             fixedDt = 0f;
@@ -313,12 +314,15 @@ namespace Godgame.Scenario
 
             if (string.IsNullOrWhiteSpace(candidate))
             {
-                if (!SystemAPI.TryGetSingleton<ScenarioOptions>(out var options))
+                var em = state.EntityManager;
+                using var query = em.CreateEntityQuery(ComponentType.ReadOnly<ScenarioOptions>());
+                if (query.IsEmptyIgnoreFilter)
                 {
                     resolvedPath = string.Empty;
                     return false;
                 }
 
+                var options = query.GetSingleton<ScenarioOptions>();
                 candidate = options.ScenarioPath.ToString();
             }
 
@@ -382,17 +386,20 @@ namespace Godgame.Scenario
         internal static void EnsureScenarioInfo(ref SystemState state, uint seed)
         {
             var scenarioId = new FixedString64Bytes(ScenarioIdText);
-            if (SystemAPI.TryGetSingletonRW<ScenarioInfo>(out var infoRw))
+            var em = state.EntityManager;
+            using var query = em.CreateEntityQuery(ComponentType.ReadWrite<ScenarioInfo>());
+            if (!query.IsEmptyIgnoreFilter)
             {
-                var updated = infoRw.ValueRW;
-                updated.ScenarioId = scenarioId;
-                updated.Seed = seed;
-                infoRw.ValueRW = updated;
+                var entity = query.GetSingletonEntity();
+                var info = em.GetComponentData<ScenarioInfo>(entity);
+                info.ScenarioId = scenarioId;
+                info.Seed = seed;
+                em.SetComponentData(entity, info);
                 return;
             }
 
-            var scenarioEntity = state.EntityManager.CreateEntity(typeof(ScenarioInfo));
-            state.EntityManager.SetComponentData(scenarioEntity, new ScenarioInfo
+            var scenarioEntity = em.CreateEntity(typeof(ScenarioInfo));
+            em.SetComponentData(scenarioEntity, new ScenarioInfo
             {
                 ScenarioId = scenarioId,
                 Seed = seed,
