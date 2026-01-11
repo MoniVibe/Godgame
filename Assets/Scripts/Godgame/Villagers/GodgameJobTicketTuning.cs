@@ -19,6 +19,7 @@ namespace Godgame.Villagers
         public float AttachRadius;
         public float ClaimTTLSeconds;
         public float MinCommitSeconds;
+        public byte EnableReplanBackoff;
         public float HeavyCarryThresholdUnits;
         public int HeavyCarryRequiredWorkers;
         public int HeavyCarryMinWorkers;
@@ -42,6 +43,7 @@ namespace Godgame.Villagers
             AttachRadius = 18f,
             ClaimTTLSeconds = 6f,
             MinCommitSeconds = 2f,
+            EnableReplanBackoff = 1,
             HeavyCarryThresholdUnits = 200f,
             HeavyCarryRequiredWorkers = 3,
             HeavyCarryMinWorkers = 2,

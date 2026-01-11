@@ -204,8 +204,10 @@ namespace Godgame.Villagers
                 : VillagerScheduleConfig.Default;
             var jobTicketTuning = SystemAPI.GetSingleton<GodgameJobTicketTuning>();
             var minCommitSeconds = math.max(0f, jobTicketTuning.MinCommitSeconds);
+            var enableReplanBackoff = jobTicketTuning.EnableReplanBackoff != 0;
             var secondsPerTick = math.max(timeState.FixedDeltaTime, 1e-4f);
             var minCommitTicks = (uint)math.max(0f, math.ceil(minCommitSeconds / secondsPerTick));
+            var replanBackoffTicks = enableReplanBackoff ? minCommitTicks : 0u;
             var failureBackoffBaseTicks = (uint)math.max(1f, math.ceil(StepJob.DefaultFailureBackoffSeconds / secondsPerTick));
             var failureBackoffMaxTicks = (uint)math.max(failureBackoffBaseTicks,
                 math.ceil(StepJob.DefaultFailureBackoffMaxSeconds / secondsPerTick));
@@ -364,6 +366,8 @@ namespace Godgame.Villagers
                 GroupCohesionOrderWeight = jobTicketTuning.GroupCohesionOrderWeight,
                 GroupCohesionMin = jobTicketTuning.GroupCohesionMin,
                 GroupCohesionMax = jobTicketTuning.GroupCohesionMax,
+                EnableReplanBackoff = enableReplanBackoff ? (byte)1 : (byte)0,
+                ReplanBackoffTicks = replanBackoffTicks,
                 FailureBackoffBaseTicks = failureBackoffBaseTicks,
                 FailureBackoffMaxTicks = failureBackoffMaxTicks,
                 MinCommitTicks = minCommitTicks,
@@ -505,6 +509,8 @@ namespace Godgame.Villagers
             public float GroupCohesionOrderWeight;
             public float GroupCohesionMin;
             public float GroupCohesionMax;
+            public byte EnableReplanBackoff;
+            public uint ReplanBackoffTicks;
             public uint FailureBackoffBaseTicks;
             public uint FailureBackoffMaxTicks;
             public uint MinCommitTicks;
@@ -1881,7 +1887,8 @@ namespace Godgame.Villagers
 
             private void RecordDecision(ref VillagerJobState job, Entity entity, JobPhase phase, Entity target, in StorehouseCandidates candidates, byte preconditionMask)
             {
-                if (job.LastChosenJob != job.Type || job.LastTarget != target)
+                var changed = job.LastChosenJob != job.Type || job.LastTarget != target;
+                if (changed)
                 {
                     job.RepeatCount = 0;
                 }
@@ -1890,6 +1897,21 @@ namespace Godgame.Villagers
                 job.LastTarget = target;
                 job.LastFailCode = VillagerJobFailCode.None;
                 job.NextEligibleTick = 0;
+                if (changed)
+                {
+                    if (EnableReplanBackoff != 0 && ReplanBackoffTicks > 0u)
+                    {
+                        var nextReplanTick = CurrentTick + ReplanBackoffTicks;
+                        if (nextReplanTick > job.NextReplanTick)
+                        {
+                            job.NextReplanTick = nextReplanTick;
+                        }
+                    }
+                    else
+                    {
+                        job.NextReplanTick = 0;
+                    }
+                }
 
                 var evt = new VillagerJobDecisionEvent
                 {
@@ -1932,7 +1954,12 @@ namespace Godgame.Villagers
                     var backoffTicks = ResolveFailureBackoffTicks(job.RepeatCount);
                     if (backoffTicks > 0u)
                     {
-                        job.NextEligibleTick = CurrentTick + backoffTicks;
+                        var backoffUntil = CurrentTick + backoffTicks;
+                        job.NextEligibleTick = backoffUntil;
+                        if (EnableReplanBackoff != 0 && backoffUntil > job.NextReplanTick)
+                        {
+                            job.NextReplanTick = backoffUntil;
+                        }
                     }
                 }
 

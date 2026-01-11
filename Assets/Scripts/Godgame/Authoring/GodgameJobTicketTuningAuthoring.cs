@@ -21,6 +21,7 @@ namespace Godgame.Authoring
         [Min(0f)] public float attachRadius = 18f;
         [Min(0f)] public float claimTTLSeconds = 6f;
         [Min(0f)] public float minCommitSeconds = 2f;
+        public bool enableReplanBackoff = true;
         [Min(0f)] public float heavyCarryThresholdUnits = 200f;
         [Min(1)] public int heavyCarryRequiredWorkers = 3;
         [Min(1)] public int heavyCarryMinWorkers = 2;
@@ -49,6 +50,7 @@ namespace Godgame.Authoring
                     AttachRadius = Mathf.Max(0f, authoring.attachRadius),
                     ClaimTTLSeconds = Mathf.Max(0f, authoring.claimTTLSeconds),
                     MinCommitSeconds = Mathf.Max(0f, authoring.minCommitSeconds),
+                    EnableReplanBackoff = authoring.enableReplanBackoff ? (byte)1 : (byte)0,
                     HeavyCarryThresholdUnits = Mathf.Max(0f, authoring.heavyCarryThresholdUnits),
                     HeavyCarryRequiredWorkers = Mathf.Max(1, authoring.heavyCarryRequiredWorkers),
                     HeavyCarryMinWorkers = Mathf.Max(1, authoring.heavyCarryMinWorkers),
