@@ -1,0 +1,44 @@
+{
+  "name": "Job Loop 01",
+  "description": "Headless job loop scenario for gather/deliver invariants.",
+  "duration_s": 20,
+  "seed": 20260108,
+  "min_invariant_s": 10,
+  "entities": [
+    {
+      "prefab": "Villager",
+      "count": 12,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 12
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": 0 }
+    },
+    {
+      "prefab": "VillageCenter",
+      "count": 1,
+      "position": { "x": 8, "y": 0, "z": 0 },
+      "radius": 3
+    },
+    {
+      "prefab": "Housing",
+      "count": 1,
+      "position": { "x": -8, "y": 0, "z": 0 },
+      "radius": 3
+    },
+    {
+      "prefab": "Worship",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": 8 },
+      "radius": 3
+    },
+    {
+      "prefab": "Tree",
+      "count": 24,
+      "position": { "x": 14, "y": 0, "z": 0 },
+      "radius": 10
+    }
+  ]
+}
