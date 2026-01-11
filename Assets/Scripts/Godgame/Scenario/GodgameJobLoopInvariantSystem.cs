@@ -383,17 +383,20 @@ namespace Godgame.Scenario
         internal static void EnsureScenarioInfo(ref SystemState state, uint seed)
         {
             var scenarioId = new FixedString64Bytes(ScenarioIdText);
-            if (SystemAPI.TryGetSingletonRW<ScenarioInfo>(out var infoRw))
+            var em = state.EntityManager;
+            using var query = em.CreateEntityQuery(ComponentType.ReadWrite<ScenarioInfo>());
+            if (!query.IsEmptyIgnoreFilter)
             {
-                var updated = infoRw.ValueRW;
-                updated.ScenarioId = scenarioId;
-                updated.Seed = seed;
-                infoRw.ValueRW = updated;
+                var entity = query.GetSingletonEntity();
+                var info = em.GetComponentData<ScenarioInfo>(entity);
+                info.ScenarioId = scenarioId;
+                info.Seed = seed;
+                em.SetComponentData(entity, info);
                 return;
             }
 
-            var scenarioEntity = state.EntityManager.CreateEntity(typeof(ScenarioInfo));
-            state.EntityManager.SetComponentData(scenarioEntity, new ScenarioInfo
+            var scenarioEntity = em.CreateEntity(typeof(ScenarioInfo));
+            em.SetComponentData(scenarioEntity, new ScenarioInfo
             {
                 ScenarioId = scenarioId,
                 Seed = seed,
