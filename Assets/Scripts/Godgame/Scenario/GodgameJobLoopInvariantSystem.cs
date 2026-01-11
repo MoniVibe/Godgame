@@ -314,12 +314,15 @@ namespace Godgame.Scenario
 
             if (string.IsNullOrWhiteSpace(candidate))
             {
-                if (!SystemAPI.TryGetSingleton<ScenarioOptions>(out var options))
+                var em = state.EntityManager;
+                using var query = em.CreateEntityQuery(ComponentType.ReadOnly<ScenarioOptions>());
+                if (query.IsEmptyIgnoreFilter)
                 {
                     resolvedPath = string.Empty;
                     return false;
                 }
 
+                var options = query.GetSingleton<ScenarioOptions>();
                 candidate = options.ScenarioPath.ToString();
             }
 
