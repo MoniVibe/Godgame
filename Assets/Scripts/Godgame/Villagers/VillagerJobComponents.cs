@@ -79,8 +79,12 @@ namespace Godgame.Villagers
         public Entity LastTarget;
         public VillagerJobFailCode LastFailCode;
         public byte RepeatCount;
+        public byte FailureCount;
         public uint LastFailTick;
         public uint NextEligibleTick;
+        public uint CommitUntilTick;
+        public uint NextAllowedDecisionTick;
+        public uint FailureBackoffTicks;
     }
 
     public struct VillagerJob : IComponentData

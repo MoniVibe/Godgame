@@ -107,6 +107,12 @@ namespace Godgame.Villagers
                     continue;
                 }
 
+                if ((job.ValueRO.CommitUntilTick != 0 && job.ValueRO.CommitUntilTick > timeState.Tick)
+                    || (job.ValueRO.NextAllowedDecisionTick != 0 && job.ValueRO.NextAllowedDecisionTick > timeState.Tick))
+                {
+                    continue;
+                }
+
                 if (_cooldownLookup.HasComponent(entity) && _cooldownLookup[entity].EndTick > timeState.Tick)
                 {
                     continue;
