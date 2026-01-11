@@ -221,7 +221,7 @@ namespace Godgame.Scenario
             return value.ToString("0.###", CultureInfo.InvariantCulture);
         }
 
-        private static float SumStored(ref SystemState state)
+        private float SumStored(ref SystemState state)
         {
             var total = 0f;
             foreach (var inventory in SystemAPI.Query<RefRO<StorehouseInventory>>())
@@ -232,7 +232,7 @@ namespace Godgame.Scenario
             return total;
         }
 
-        private static bool TryFindNegativeInventory(ref SystemState state, out int negativeCount, out float minValue)
+        private bool TryFindNegativeInventory(ref SystemState state, out int negativeCount, out float minValue)
         {
             negativeCount = 0;
             minValue = 0f;
@@ -263,7 +263,7 @@ namespace Godgame.Scenario
             return negativeCount > 0;
         }
 
-        private static bool TryResolveTick(ref SystemState state, out uint tick, out float fixedDt)
+        private bool TryResolveTick(ref SystemState state, out uint tick, out float fixedDt)
         {
             tick = 0u;
             fixedDt = 0f;
