@@ -1,0 +1,20 @@
+{
+  "scenarioId": "scenario.godgame.scale_50k",
+  "seed": 42,
+  "runTicks": 600,
+  "entityCounts": [
+    {
+      "registryId": "godgame.villager",
+      "count": 50000
+    },
+    {
+      "registryId": "godgame.storehouse",
+      "count": 4
+    },
+    {
+      "registryId": "godgame.resource_node",
+      "count": 200
+    }
+  ],
+  "inputCommands": []
+}
