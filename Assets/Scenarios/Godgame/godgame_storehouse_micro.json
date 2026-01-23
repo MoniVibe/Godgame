@@ -1,0 +1,55 @@
+{
+  "name": "Godgame Storehouse Micro",
+  "description": "Micro loop for storehouse hauling with a small village cluster.",
+  "duration_s": 40,
+  "entities": [
+    {
+      "prefab": "Villager",
+      "count": 12,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 25
+    },
+    {
+      "prefab": "Villager",
+      "count": 8,
+      "position": { "x": 40, "y": 0, "z": 20 },
+      "radius": 20
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 1,
+      "position": { "x": 5, "y": 0, "z": -5 },
+      "radius": 4
+    },
+    {
+      "prefab": "VillageCenter",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": -2 },
+      "radius": 3
+    },
+    {
+      "prefab": "Housing",
+      "count": 1,
+      "position": { "x": 8, "y": 0, "z": 4 },
+      "radius": 4
+    },
+    {
+      "prefab": "Worship",
+      "count": 1,
+      "position": { "x": -6, "y": 0, "z": 6 },
+      "radius": 3
+    },
+    {
+      "prefab": "Tree",
+      "count": 30,
+      "position": { "x": 20, "y": 0, "z": 10 },
+      "radius": 30
+    },
+    {
+      "prefab": "ResourceNode",
+      "count": 8,
+      "position": { "x": 15, "y": 0, "z": 25 },
+      "radius": 20
+    }
+  ]
+}
