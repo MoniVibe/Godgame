@@ -28,6 +28,7 @@ namespace Godgame.Headless
         private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
         private const string SmokeScenarioFile = "godgame_smoke.json";
         private const string LoopScenarioFile = "villager_loop_small.json";
+        private const string ScaleScenarioFile = "godgame_scale_50k.json";
         private const uint DefaultTimeoutTicks = 900; // ~15 seconds at 60hz
 
         private byte _enabled;
@@ -293,6 +294,10 @@ namespace Godgame.Headless
             else if (scenarioPath.EndsWith(LoopScenarioFile, StringComparison.OrdinalIgnoreCase))
             {
                 _bankTestId = new FixedString64Bytes("G1.VILLAGER_LOOP_SMALL");
+            }
+            else if (scenarioPath.EndsWith(ScaleScenarioFile, StringComparison.OrdinalIgnoreCase))
+            {
+                _bankTestId = new FixedString64Bytes("G1.GODGAME_SCALE_SMOKE");
             }
 
             return _bankTestId;

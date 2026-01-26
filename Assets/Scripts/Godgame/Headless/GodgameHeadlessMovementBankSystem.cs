@@ -21,12 +21,14 @@ namespace Godgame.Headless
         private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
         private const string DiagnosticsScenarioFile = "villager_movement_diagnostics.json";
         private const string ExitOnResultEnv = "GODGAME_HEADLESS_MOVEMENT_DIAGNOSTICS_EXIT";
+        private const string WindowTicksEnv = "GODGAME_HEADLESS_MOVEMENT_WINDOW_TICKS";
         private const uint DefaultWindowTicks = 7200; // 120 seconds at 60hz.
 
         private byte _bankResolved;
         private bool _bankActive;
         private bool _bankReported;
         private uint _startTick;
+        private uint _windowTicks;
 
         public void OnCreate(ref SystemState state)
         {
@@ -37,6 +39,7 @@ namespace Godgame.Headless
             }
 
             state.RequireForUpdate<TimeState>();
+            _windowTicks = ReadEnvUInt(WindowTicksEnv, DefaultWindowTicks);
         }
 
         public void OnUpdate(ref SystemState state)
@@ -69,7 +72,7 @@ namespace Godgame.Headless
                 return;
             }
 
-            if (timeState.Tick >= _startTick + DefaultWindowTicks)
+            if (timeState.Tick >= _startTick + _windowTicks)
             {
                 var tickTime = timeState.Tick;
                 if (SystemAPI.TryGetSingleton<TickTimeState>(out var tickTimeState))
@@ -130,6 +133,12 @@ namespace Godgame.Headless
             }
 
             GodgameHeadlessExitSystem.Request(ref state, tick, exitCode);
+        }
+
+        private static uint ReadEnvUInt(string key, uint defaultValue)
+        {
+            var raw = SystemEnv.GetEnvironmentVariable(key);
+            return uint.TryParse(raw, out var value) ? value : defaultValue;
         }
 
         private static void LogBankResult(bool pass, string reason, uint tickTime, uint scenarioTick)

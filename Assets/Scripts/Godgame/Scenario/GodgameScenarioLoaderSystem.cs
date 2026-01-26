@@ -137,6 +137,7 @@ namespace Godgame.Scenario
                 SpawnRadius = 20f,
                 Seed = 12345
             };
+            Debug.Log($"[GodgameScenarioLoaderSystem] SettlementConfig prefabs villager={settlementConfig.VillagerPrefab} storehouse={settlementConfig.StorehousePrefab} center={settlementConfig.VillageCenterPrefab} world={World.Name}");
 
             // Parse entities from JSON
             int resourceNodeCount = 0;

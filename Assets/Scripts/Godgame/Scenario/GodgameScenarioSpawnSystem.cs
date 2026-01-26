@@ -12,6 +12,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
 using PureDOTS.Rendering;
 using static Godgame.Rendering.GodgamePresentationUtility;
 using Pickable = PureDOTS.Runtime.Interaction.Pickable;
@@ -78,6 +79,8 @@ namespace Godgame.Scenario
                 var random = new Unity.Mathematics.Random(configValue.Seed != 0 ? configValue.Seed : (uint)entity.Index + 1u);
                 var prefabHasSettlementState = configValue.VillagerPrefab != Entity.Null &&
                                                entityManager.HasComponent<SettlementVillagerState>(configValue.VillagerPrefab);
+                var prefabHasVillagerId = configValue.VillagerPrefab != Entity.Null &&
+                                          entityManager.HasComponent<Godgame.Villagers.VillagerId>(configValue.VillagerPrefab);
                 var hasOverrides = entityManager.HasBuffer<GodgameScenarioSpawnOverride>(entity);
                 var overrides = hasOverrides ? entityManager.GetBuffer<GodgameScenarioSpawnOverride>(entity) : default;
                 hasOverrides = hasOverrides && overrides.Length > 0;
@@ -143,10 +146,11 @@ namespace Godgame.Scenario
                 var primaryWorship = Entity.Null;
                 var primaryStorehouse = Entity.Null;
 
+                var overrideVillagerCount = 0;
                 if (hasOverrides)
                 {
-                    SpawnOverrides(ref ecb, entityManager, overrides, configValue, villagerPresentation, storePresentation, centerPresentation,
-                        housingPresentation, worshipPresentation, buildingScale, villagerScale, prefabHasSettlementState, settlementEntity,
+                    overrideVillagerCount = SpawnOverrides(ref ecb, entityManager, overrides, configValue, villagerPresentation, storePresentation, centerPresentation,
+                        housingPresentation, worshipPresentation, buildingScale, villagerScale, prefabHasSettlementState, prefabHasVillagerId, settlementEntity,
                         pickableDefaults, centerHasPickable, centerHasHandPickable, housingHasPickable, housingHasHandPickable,
                         worshipHasPickable, worshipHasHandPickable, storehouseHasPickable, storehouseHasHandPickable, ref random,
                         ref primaryVillageCenter, ref primaryHousing, ref primaryWorship, ref primaryStorehouse);
@@ -237,95 +241,38 @@ namespace Godgame.Scenario
                 }
 
                 // Spawn villagers from scenario data
-                if (!hasOverrides && configValue.VillagerPrefab != Entity.Null && configValue.VillagerCount > 0)
+                if (!hasOverrides && configValue.VillagerCount > 0)
                 {
                     for (int i = 0; i < configValue.VillagerCount; i++)
                     {
-                        var villager = ecb.Instantiate(configValue.VillagerPrefab);
                         var spawnAngle = random.NextFloat(0f, math.PI * 2f);
                         var spawnRadius = random.NextFloat(2f, configValue.SpawnRadius);
                         var spawnPos = center + new float3(
                             math.cos(spawnAngle) * spawnRadius,
                             0f,
                             math.sin(spawnAngle) * spawnRadius);
-
-                        ecb.SetComponent(villager, LocalTransform.FromPositionRotationScale(spawnPos, quaternion.identity, villagerScale));
-                        ecb.AddComponent<LocalToWorld>(villager);
-
-                        // Initialize villager components
-                        ecb.AddComponent(villager, new Godgame.Villagers.VillagerNeeds
-                        {
-                            Health = 100f,
-                            MaxHealth = 100f,
-                            Energy = 800f,
-                            Morale = 700f
-                        });
-
-                        var role = VillagerRenderKeyUtility.GetDefaultRoleForIndex(i);
-                        ecb.AddComponent(villager, new VillagerRenderRole { Value = role });
-                        var roleAssignment = GodgameAIRoleDefinitions.ResolveForVillager(role);
-                        ecb.AddComponent(villager, new AIRole { RoleId = roleAssignment.RoleId });
-                        ecb.AddComponent(villager, new AIDoctrine { DoctrineId = roleAssignment.DoctrineId });
-                        ecb.AddComponent(villager, new AIBehaviorProfile
-                        {
-                            ProfileId = roleAssignment.ProfileId,
-                            ProfileHash = roleAssignment.ProfileHash,
-                            ProfileEntity = Entity.Null,
-                            SourceId = GodgameAIRoleDefinitions.SourceScenario
-                        });
-                        var renderKeyId = VillagerRenderKeyUtility.GetRenderKeyForRole(role);
-                        var dotsJobType = VillagerRenderKeyUtility.GetDefaultPureDotsJobForRole(role);
-
-                        ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerJob
-                        {
-                            Type = dotsJobType,
-                            Phase = PureDOTS.Runtime.Components.VillagerJob.JobPhase.Idle,
-                            Productivity = 1f,
-                            LastStateChangeTick = 0
-                        });
-
-                        ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerAIState
-                        {
-                            CurrentState = PureDOTS.Runtime.Components.VillagerAIState.State.Idle,
-                            CurrentGoal = PureDOTS.Runtime.Components.VillagerAIState.Goal.None,
-                            StateTimer = 0f,
-                            StateStartTick = 0
-                        });
-
-                        ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerFlags
-                        {
-                            IsIdle = true,
-                            IsWorking = false
-                        });
-
-                        ecb.AddComponent(villager, new PureDOTS.Runtime.Components.VillagerAvailability
-                        {
-                            IsAvailable = 1,
-                            LastChangeTick = 0
-                        });
-                        ecb.AddComponent(villager, Godgame.Villagers.VillagerBehavior.Neutral);
-
-                        if (settlementEntity != Entity.Null)
-                        {
-                            var villagerState = new SettlementVillagerState
-                            {
-                                Settlement = settlementEntity,
-                                Phase = SettlementVillagerPhase.Idle,
-                                RandomState = random.NextUInt(1, uint.MaxValue)
-                            };
-
-                            if (prefabHasSettlementState)
-                            {
-                                ecb.SetComponent(villager, villagerState);
-                            }
-                            else
-                            {
-                                ecb.AddComponent(villager, villagerState);
-                            }
-                        }
-
-                        ApplyScenarioRenderContract(ref ecb, villager, renderKeyId, villagerPresentation);
+                        SpawnVillager(ref ecb, entityManager, configValue.VillagerPrefab, spawnPos, villagerScale, ref random,
+                            prefabHasSettlementState, prefabHasVillagerId, settlementEntity, i, villagerPresentation);
                     }
+                }
+                else if (hasOverrides && resolvedVillagerCount > 0 && overrideVillagerCount == 0)
+                {
+                    for (int i = 0; i < resolvedVillagerCount; i++)
+                    {
+                        var spawnAngle = random.NextFloat(0f, math.PI * 2f);
+                        var spawnRadius = random.NextFloat(2f, configValue.SpawnRadius);
+                        var spawnPos = center + new float3(
+                            math.cos(spawnAngle) * spawnRadius,
+                            0f,
+                            math.sin(spawnAngle) * spawnRadius);
+                        SpawnVillager(ref ecb, entityManager, configValue.VillagerPrefab, spawnPos, villagerScale, ref random,
+                            prefabHasSettlementState, prefabHasVillagerId, settlementEntity, i, villagerPresentation);
+                    }
+                }
+
+                if (Application.isBatchMode)
+                {
+                    Debug.Log($"[GodgameScenarioSpawnSystem] Spawn summary requested={configValue.VillagerCount} resolved={resolvedVillagerCount} overridesSpawned={overrideVillagerCount} prefabNull={configValue.VillagerPrefab == Entity.Null} hasOverrides={hasOverrides} prefabHasVillagerId={prefabHasVillagerId} world={state.WorldUnmanaged.Name}");
                 }
 
                 // Spawn storehouses from scenario data
@@ -492,7 +439,7 @@ namespace Godgame.Scenario
             }
         }
 
-        private static void SpawnOverrides(
+        private static int SpawnOverrides(
             ref EntityCommandBuffer ecb,
             EntityManager entityManager,
             DynamicBuffer<GodgameScenarioSpawnOverride> overrides,
@@ -505,6 +452,7 @@ namespace Godgame.Scenario
             float buildingScale,
             float villagerScale,
             bool prefabHasSettlementState,
+            bool prefabHasVillagerId,
             Entity settlementEntity,
             HandPickableDefaults pickableDefaults,
             bool centerHasPickable,
@@ -523,10 +471,11 @@ namespace Godgame.Scenario
         {
             if (!overrides.IsCreated || overrides.Length == 0)
             {
-                return;
+                return 0;
             }
 
             var villagerIndex = 0;
+            var spawnedVillagers = 0;
             for (int i = 0; i < overrides.Length; i++)
             {
                 var entry = overrides[i];
@@ -542,8 +491,9 @@ namespace Godgame.Scenario
                     switch (entry.Kind)
                     {
                         case GodgameScenarioSpawnKind.Villager:
-                            SpawnVillager(ref ecb, entityManager, configValue.VillagerPrefab, pos, villagerScale, ref random, prefabHasSettlementState, settlementEntity, villagerIndex, villagerPresentation);
+                            SpawnVillager(ref ecb, entityManager, configValue.VillagerPrefab, pos, villagerScale, ref random, prefabHasSettlementState, prefabHasVillagerId, settlementEntity, villagerIndex, villagerPresentation);
                             villagerIndex++;
+                            spawnedVillagers++;
                             break;
                         case GodgameScenarioSpawnKind.VillageCenter:
                             SpawnBuilding(ref ecb, configValue.VillageCenterPrefab, pos, buildingScale, GodgameSemanticKeys.VillageCenter, centerPresentation,
@@ -567,6 +517,8 @@ namespace Godgame.Scenario
                     }
                 }
             }
+
+            return spawnedVillagers;
         }
 
         private static float3 ResolveOverridePosition(in float3 basePos, int index, int count)
@@ -589,18 +541,35 @@ namespace Godgame.Scenario
             float scale,
             ref Unity.Mathematics.Random random,
             bool prefabHasSettlementState,
+            bool prefabHasVillagerId,
             Entity settlementEntity,
             int index,
             PrefabPresentationState presentation)
         {
-            if (prefab == Entity.Null)
+            var isFallback = prefab == Entity.Null;
+            var villager = isFallback ? ecb.CreateEntity() : ecb.Instantiate(prefab);
+            if (isFallback)
             {
-                return;
+                ecb.AddComponent(villager, LocalTransform.FromPositionRotationScale(position, quaternion.identity, scale));
             }
-
-            var villager = ecb.Instantiate(prefab);
-            ecb.SetComponent(villager, LocalTransform.FromPositionRotationScale(position, quaternion.identity, scale));
+            else
+            {
+                ecb.SetComponent(villager, LocalTransform.FromPositionRotationScale(position, quaternion.identity, scale));
+            }
             ecb.AddComponent<LocalToWorld>(villager);
+            var villagerId = new Godgame.Villagers.VillagerId
+            {
+                Value = index,
+                FactionId = 0
+            };
+            if (!isFallback && prefabHasVillagerId)
+            {
+                ecb.SetComponent(villager, villagerId);
+            }
+            else
+            {
+                ecb.AddComponent(villager, villagerId);
+            }
 
             ecb.AddComponent(villager, new Godgame.Villagers.VillagerNeeds
             {
@@ -663,7 +632,7 @@ namespace Godgame.Scenario
                     RandomState = random.NextUInt(1, uint.MaxValue)
                 };
 
-                if (prefabHasSettlementState)
+                if (!isFallback && prefabHasSettlementState)
                 {
                     ecb.SetComponent(villager, villagerState);
                 }

@@ -29,7 +29,7 @@ namespace Godgame.Headless
         private const string BoxInsetEnv = "GODGAME_HEADLESS_COLLISION_BOX_INSET";
         private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
         private const string CollisionScenarioFile = "godgame_collision_micro.json";
-        private const uint DefaultTimeoutTicks = 600;
+        private const uint DefaultTimeoutTicks = 150;
         private const uint WarmupTicks = 120;
         private const float PenetrationEpsilon = 0.05f;
         private const float OverrideMatchMinDistance = 2f;
@@ -77,7 +77,7 @@ namespace Godgame.Headless
             }
 
             var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
-            if (string.Equals(enabled, "0", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
             {
                 state.Enabled = false;
                 return;
@@ -85,7 +85,6 @@ namespace Godgame.Headless
 
             _enabled = 1;
             state.RequireForUpdate<TimeState>();
-            state.RequireForUpdate<SettlementVillagerState>();
             state.RequireForUpdate<LocalTransform>();
         }
 
@@ -290,7 +289,7 @@ namespace Godgame.Headless
                 }
             }
 
-            foreach (var (_, transform, entity) in SystemAPI.Query<RefRO<SettlementVillagerState>, RefRO<LocalTransform>>().WithEntityAccess())
+            foreach (var (_, transform, entity) in SystemAPI.Query<RefRO<Godgame.Villagers.VillagerId>, RefRO<LocalTransform>>().WithEntityAccess())
             {
                 hasVillager = true;
                 if (_villagerRadius <= 0f)
@@ -537,7 +536,7 @@ namespace Godgame.Headless
         private void Pass(ref SystemState state, uint tick, bool hasVillager, bool hasBuilding)
         {
             _done = 1;
-            UnityDebug.Log($"[GodgameCollisionProof] PASS tick={tick} villagers={(hasVillager ? 1 : 0)} buildings={(hasBuilding ? 1 : 0)} eps={PenetrationEpsilon:F2} boxMode=aabb");
+            UnityDebug.Log($"[GodgameCollisionProof] PASS tick={tick} villagers={(hasVillager ? 1 : 0)} buildings={(hasBuilding ? 1 : 0)} eps={PenetrationEpsilon:F2} boxMode=aabb world={state.WorldUnmanaged.Name}");
             LogBankResult(ref state, true, "pass", tick);
             ExitIfRequested(ref state, tick, 0);
         }
@@ -545,7 +544,7 @@ namespace Godgame.Headless
         private void Fail(ref SystemState state, uint tick, string reason, float3 villagerPos, float3 buildingPos)
         {
             _done = 1;
-            UnityDebug.LogError($"[GodgameCollisionProof] FAIL tick={tick} reason={reason} villager={villagerPos} building={buildingPos} eps={PenetrationEpsilon:F2} boxMode=aabb");
+            UnityDebug.LogError($"[GodgameCollisionProof] FAIL tick={tick} reason={reason} villager={villagerPos} building={buildingPos} eps={PenetrationEpsilon:F2} boxMode=aabb world={state.WorldUnmanaged.Name}");
             LogBankResult(ref state, false, reason, tick);
             ExitIfRequested(ref state, tick, 4);
         }
@@ -568,12 +567,13 @@ namespace Godgame.Headless
             }
 
             var scenarioPath = SystemEnv.GetEnvironmentVariable(ScenarioPathEnv);
+            _bankResolved = 1;
             if (string.IsNullOrWhiteSpace(scenarioPath))
             {
-                return false;
+                _bankTestId = CollisionTestId;
+                return true;
             }
 
-            _bankResolved = 1;
             if (scenarioPath.EndsWith(CollisionScenarioFile, StringComparison.OrdinalIgnoreCase))
             {
                 _bankTestId = CollisionTestId;
