@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using PureDOTS.Runtime.Core;
+using PureDOTS.Runtime.Components;
 
 namespace Godgame.Scenario
 {
@@ -22,6 +23,7 @@ namespace Godgame.Scenario
         protected override void OnCreate()
         {
             _settlementConfigQuery = GetEntityQuery(ComponentType.ReadOnly<SettlementConfig>());
+            RequireForUpdate<TimeState>();
         }
 
         protected override void OnUpdate()
@@ -66,10 +68,11 @@ namespace Godgame.Scenario
             CleanupDuplicateConfigs();
 
             var settlementConfig = SystemAPI.GetSingleton<SettlementConfig>();
+            var timeState = SystemAPI.GetSingleton<TimeState>();
 
             ClearMissingConfigWarning();
             _loaded = true;
-            LoadScenario(options.ScenarioPath.ToString(), settlementConfig);
+            LoadScenario(options.ScenarioPath.ToString(), settlementConfig, timeState);
         }
 
         private void CleanupDuplicateConfigs()
@@ -111,7 +114,7 @@ namespace Godgame.Scenario
             _didWarnMissingConfig = false;
         }
 
-        private void LoadScenario(string path, SettlementConfig settlementConfig)
+        private void LoadScenario(string path, SettlementConfig settlementConfig, TimeState timeState)
         {
             var fullPath = ResolveScenarioPath(path);
             if (!File.Exists(fullPath))
@@ -199,6 +202,8 @@ namespace Godgame.Scenario
             };
             EntityManager.AddComponentData(configEntity, runtime);
 
+            ScheduleScenarioActions(configEntity, timeState.Tick, timeState.FixedDeltaTime, scenarioData.actions);
+
             if (runtime.RunTicks > 0 && SystemAPI.TryGetSingletonRW<PureDOTS.Runtime.Scenarios.ScenarioInfo>(out var scenarioInfo))
             {
                 scenarioInfo.ValueRW.RunTicks = (int)runtime.RunTicks;
@@ -238,6 +243,87 @@ namespace Godgame.Scenario
             return Path.GetFullPath(combined);
         }
 
+        private void ScheduleScenarioActions(Entity configEntity, uint startTick, float fixedDt, ScenarioActionData[] actions)
+        {
+            if (actions == null || actions.Length == 0)
+            {
+                return;
+            }
+
+            if (EntityManager.HasBuffer<GodgameScenarioAction>(configEntity))
+            {
+                return;
+            }
+
+            var actionsBuffer = EntityManager.AddBuffer<GodgameScenarioAction>(configEntity);
+            var safeDt = math.max(1e-6f, fixedDt);
+
+            foreach (var action in actions)
+            {
+                if (action == null || string.IsNullOrWhiteSpace(action.kind))
+                {
+                    continue;
+                }
+
+                var kind = ParseScenarioActionKind(action.kind);
+                var executeTick = startTick + (uint)math.ceil(math.max(0f, action.time_s) / safeDt);
+
+                actionsBuffer.Add(new GodgameScenarioAction
+                {
+                    ExecuteTick = executeTick,
+                    Kind = kind,
+                    BusinessId = new FixedString64Bytes(action.businessId ?? string.Empty),
+                    ItemId = new FixedString64Bytes(action.itemId ?? string.Empty),
+                    RecipeId = new FixedString64Bytes(action.recipeId ?? string.Empty),
+                    Quantity = action.quantity,
+                    Capacity = action.capacity,
+                    BusinessType = (byte)ParseBusinessType(action.businessType),
+                    Executed = 0
+                });
+            }
+        }
+
+        private static GodgameScenarioActionKind ParseScenarioActionKind(string kind)
+        {
+            return kind switch
+            {
+                "EconomyEnable" => GodgameScenarioActionKind.EconomyEnable,
+                "ProdCreateBusiness" => GodgameScenarioActionKind.ProdCreateBusiness,
+                "ProdAddItem" => GodgameScenarioActionKind.ProdAddItem,
+                "ProdRequest" => GodgameScenarioActionKind.ProdRequest,
+                _ => GodgameScenarioActionKind.EconomyEnable
+            };
+        }
+
+        private static PureDOTS.Runtime.Economy.Production.BusinessType ParseBusinessType(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return PureDOTS.Runtime.Economy.Production.BusinessType.Blacksmith;
+            }
+
+            switch (value.Trim().ToLowerInvariant())
+            {
+                case "sawmill":
+                    return PureDOTS.Runtime.Economy.Production.BusinessType.Sawmill;
+                case "quarry":
+                    return PureDOTS.Runtime.Economy.Production.BusinessType.Quarry;
+                case "mill":
+                    return PureDOTS.Runtime.Economy.Production.BusinessType.Mill;
+                case "herbalist":
+                    return PureDOTS.Runtime.Economy.Production.BusinessType.Herbalist;
+                case "wainwright":
+                    return PureDOTS.Runtime.Economy.Production.BusinessType.Wainwright;
+                case "builder":
+                    return PureDOTS.Runtime.Economy.Production.BusinessType.Builder;
+                case "alchemist":
+                    return PureDOTS.Runtime.Economy.Production.BusinessType.Alchemist;
+                case "blacksmith":
+                default:
+                    return PureDOTS.Runtime.Economy.Production.BusinessType.Blacksmith;
+            }
+        }
+
         private static bool IsScenarioOverrideRequested()
         {
             if (!string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable(ScenarioEnvVar)))
@@ -272,6 +358,7 @@ namespace Godgame.Scenario
             public float duration_s;
             public int runTicks;
             public EntityData[] entities;
+            public ScenarioActionData[] actions;
         }
 
         [System.Serializable]
@@ -281,6 +368,19 @@ namespace Godgame.Scenario
             public Vector3 position;
             public string prefab;
             public float radius;
+        }
+
+        [System.Serializable]
+        private class ScenarioActionData
+        {
+            public float time_s;
+            public string kind;
+            public string businessId;
+            public string businessType;
+            public string itemId;
+            public string recipeId;
+            public float quantity;
+            public float capacity;
         }
     }
 }
