@@ -172,7 +172,7 @@ namespace Godgame.Runtime
 
             var catalogComponent = new ProductionRecipeCatalog { Catalog = s_CatalogBlob };
             using var query = state.EntityManager.CreateEntityQuery(ComponentType.ReadOnly<ProductionRecipeCatalog>());
-            if (query.TryGetSingletonEntity(out var entity))
+            if (query.TryGetSingletonEntity<ProductionRecipeCatalog>(out var entity))
             {
                 state.EntityManager.SetComponentData(entity, catalogComponent);
             }
