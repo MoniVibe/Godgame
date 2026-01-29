@@ -80,23 +80,22 @@
       "time_s": 0.25,
       "kind": "ProdAddItem",
       "businessId": "gg_smith_1",
-      "itemId": "iron_ore",
-      "quantity": 200
+      "itemId": "gg_ore",
+      "quantity": 180
     },
     {
       "time_s": 0.25,
       "kind": "ProdAddItem",
       "businessId": "gg_smith_1",
-      "itemId": "wood",
-      "quantity": 50
+      "itemId": "gg_wood",
+      "quantity": 120
     },
     {
       "time_s": 0.3,
       "kind": "ProdRequest",
       "businessId": "gg_smith_1",
-      "recipeId": "iron_ore_to_ingot"
+      "recipeId": "gg_ore_to_ingot"
     }
   ]
 }
-
 

@@ -113,6 +113,12 @@ namespace Godgame.Scenario
                 LastUpdateTick = tick
             });
 
+            var worker = state.EntityManager.CreateEntity();
+            state.EntityManager.AddComponentData(business, new GodgameScenarioBusinessWorker
+            {
+                Worker = worker
+            });
+
             var inventoryEntity = state.EntityManager.CreateEntity();
             state.EntityManager.AddComponentData(inventoryEntity, new Inventory
             {
@@ -201,7 +207,7 @@ namespace Godgame.Scenario
             var request = new ProductionJobRequest
             {
                 RecipeId = action.RecipeId,
-                Worker = Entity.Null
+                Worker = ResolveWorker(ref state, business)
             };
 
             if (state.EntityManager.HasComponent<ProductionJobRequest>(business))
@@ -244,6 +250,20 @@ namespace Godgame.Scenario
 
             entity = Entity.Null;
             return false;
+        }
+
+        private Entity ResolveWorker(ref SystemState state, Entity business)
+        {
+            if (business != Entity.Null && state.EntityManager.HasComponent<GodgameScenarioBusinessWorker>(business))
+            {
+                var worker = state.EntityManager.GetComponentData<GodgameScenarioBusinessWorker>(business).Worker;
+                if (worker != Entity.Null)
+                {
+                    return worker;
+                }
+            }
+
+            return Entity.Null;
         }
     }
 }

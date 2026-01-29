@@ -28,4 +28,9 @@ namespace Godgame.Scenario
     {
         public FixedString64Bytes Value;
     }
+
+    public struct GodgameScenarioBusinessWorker : IComponentData
+    {
+        public Entity Worker;
+    }
 }
