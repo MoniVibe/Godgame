@@ -57,7 +57,9 @@ namespace Godgame.Runtime
             plankOutputs.Add(new RecipeOutputBlob
             {
                 ItemId = new FixedString64Bytes("gg_plank"),
-                Quantity = 35f
+                Quantity = 35f,
+                OutputTags = ItemTags.None,
+                UseTagOutput = 0
             });
             recipeData.Add((new ProductionRecipeBlob
             {
@@ -85,7 +87,9 @@ namespace Godgame.Runtime
             ingotOutputs.Add(new RecipeOutputBlob
             {
                 ItemId = new FixedString64Bytes("gg_ingot"),
-                Quantity = 40f
+                Quantity = 40f,
+                OutputTags = ItemTags.None,
+                UseTagOutput = 0
             });
             recipeData.Add((new ProductionRecipeBlob
             {
@@ -122,7 +126,9 @@ namespace Godgame.Runtime
             toolOutputs.Add(new RecipeOutputBlob
             {
                 ItemId = new FixedString64Bytes("gg_tools"),
-                Quantity = 2f
+                Quantity = 2f,
+                OutputTags = ItemTags.None,
+                UseTagOutput = 0
             });
             recipeData.Add((new ProductionRecipeBlob
             {
