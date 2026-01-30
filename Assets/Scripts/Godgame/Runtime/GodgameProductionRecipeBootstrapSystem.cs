@@ -1,7 +1,8 @@
+using PureDOTS.Runtime.Economy.Production;
+using PureDOTS.Runtime.Economy.Resources;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using PureDOTS.Runtime.Economy.Production;
 
 namespace Godgame.Runtime
 {
@@ -48,7 +49,9 @@ namespace Godgame.Runtime
                 ItemId = new FixedString64Bytes("gg_wood"),
                 Quantity = 50f,
                 MinPurity = 0f,
-                MinQuality = 0f
+                MinQuality = 0f,
+                RequiredTags = ItemTags.None,
+                UseTagMatch = 0
             });
             var plankOutputs = new NativeList<RecipeOutputBlob>(Allocator.Temp);
             plankOutputs.Add(new RecipeOutputBlob
@@ -74,7 +77,9 @@ namespace Godgame.Runtime
                 ItemId = new FixedString64Bytes("gg_ore"),
                 Quantity = 60f,
                 MinPurity = 0f,
-                MinQuality = 0f
+                MinQuality = 0f,
+                RequiredTags = ItemTags.None,
+                UseTagMatch = 0
             });
             var ingotOutputs = new NativeList<RecipeOutputBlob>(Allocator.Temp);
             ingotOutputs.Add(new RecipeOutputBlob
@@ -100,14 +105,18 @@ namespace Godgame.Runtime
                 ItemId = new FixedString64Bytes("gg_plank"),
                 Quantity = 10f,
                 MinPurity = 0f,
-                MinQuality = 0f
+                MinQuality = 0f,
+                RequiredTags = ItemTags.None,
+                UseTagMatch = 0
             });
             toolInputs.Add(new RecipeInputBlob
             {
                 ItemId = new FixedString64Bytes("gg_ingot"),
                 Quantity = 5f,
                 MinPurity = 0f,
-                MinQuality = 0f
+                MinQuality = 0f,
+                RequiredTags = ItemTags.None,
+                UseTagMatch = 0
             });
             var toolOutputs = new NativeList<RecipeOutputBlob>(Allocator.Temp);
             toolOutputs.Add(new RecipeOutputBlob
