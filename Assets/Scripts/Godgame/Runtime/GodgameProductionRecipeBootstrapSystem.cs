@@ -1,5 +1,4 @@
 using PureDOTS.Runtime.Economy.Production;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 
@@ -14,7 +13,6 @@ namespace Godgame.Runtime
     {
         private static BlobAssetReference<ProductionRecipeCatalogBlob> s_CatalogBlob;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             EnsureCatalog(ref state);
