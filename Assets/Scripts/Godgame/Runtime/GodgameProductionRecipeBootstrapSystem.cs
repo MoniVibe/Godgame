@@ -1,5 +1,4 @@
 using PureDOTS.Runtime.Economy.Production;
-using PureDOTS.Runtime.Economy.Resources;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -49,17 +48,13 @@ namespace Godgame.Runtime
                 ItemId = new FixedString64Bytes("gg_wood"),
                 Quantity = 50f,
                 MinPurity = 0f,
-                MinQuality = 0f,
-                RequiredTags = ItemTags.None,
-                UseTagMatch = 0
+                MinQuality = 0f
             });
             var plankOutputs = new NativeList<RecipeOutputBlob>(Allocator.Temp);
             plankOutputs.Add(new RecipeOutputBlob
             {
                 ItemId = new FixedString64Bytes("gg_plank"),
-                Quantity = 35f,
-                OutputTags = ItemTags.None,
-                UseTagOutput = 0
+                Quantity = 35f
             });
             recipeData.Add((new ProductionRecipeBlob
             {
@@ -79,17 +74,13 @@ namespace Godgame.Runtime
                 ItemId = new FixedString64Bytes("gg_ore"),
                 Quantity = 60f,
                 MinPurity = 0f,
-                MinQuality = 0f,
-                RequiredTags = ItemTags.None,
-                UseTagMatch = 0
+                MinQuality = 0f
             });
             var ingotOutputs = new NativeList<RecipeOutputBlob>(Allocator.Temp);
             ingotOutputs.Add(new RecipeOutputBlob
             {
                 ItemId = new FixedString64Bytes("gg_ingot"),
-                Quantity = 40f,
-                OutputTags = ItemTags.None,
-                UseTagOutput = 0
+                Quantity = 40f
             });
             recipeData.Add((new ProductionRecipeBlob
             {
@@ -109,26 +100,20 @@ namespace Godgame.Runtime
                 ItemId = new FixedString64Bytes("gg_plank"),
                 Quantity = 10f,
                 MinPurity = 0f,
-                MinQuality = 0f,
-                RequiredTags = ItemTags.None,
-                UseTagMatch = 0
+                MinQuality = 0f
             });
             toolInputs.Add(new RecipeInputBlob
             {
                 ItemId = new FixedString64Bytes("gg_ingot"),
                 Quantity = 5f,
                 MinPurity = 0f,
-                MinQuality = 0f,
-                RequiredTags = ItemTags.None,
-                UseTagMatch = 0
+                MinQuality = 0f
             });
             var toolOutputs = new NativeList<RecipeOutputBlob>(Allocator.Temp);
             toolOutputs.Add(new RecipeOutputBlob
             {
                 ItemId = new FixedString64Bytes("gg_tools"),
-                Quantity = 2f,
-                OutputTags = ItemTags.None,
-                UseTagOutput = 0
+                Quantity = 2f
             });
             recipeData.Add((new ProductionRecipeBlob
             {
