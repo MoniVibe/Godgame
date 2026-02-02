@@ -4,6 +4,7 @@ using Godgame.Villagers;
 using Godgame.Logistics;
 using GodgameVillagerAttributes = Godgame.Villagers.VillagerAttributes;
 using GodgameVillagerCombatStats = Godgame.Villagers.VillagerCombatStats;
+using PureDOTS.Environment;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Combat;
@@ -244,6 +245,15 @@ namespace Godgame.Villagers
                 pileMinSpawnAmount = math.max(0f, pileConfig.MinSpawnAmount);
             }
 
+            var hasTerrainQueue = SystemAPI.TryGetSingletonEntity<TerrainModificationQueue>(out var terrainQueueEntity);
+            if (hasTerrainQueue && !state.EntityManager.HasBuffer<TerrainModificationRequest>(terrainQueueEntity))
+            {
+                state.EntityManager.AddBuffer<TerrainModificationRequest>(terrainQueueEntity);
+            }
+            var miningDigRadiusMin = 0.35f;
+            var miningDigRadiusMax = 1.0f;
+            var miningDigStrideMask = 3u;
+
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter();
 
@@ -353,6 +363,11 @@ namespace Godgame.Villagers
                 PilePickupMinUnits = pilePickupMinUnits,
                 PileSearchRadiusSq = pileSearchRadiusSq,
                 PileMinSpawnAmount = pileMinSpawnAmount,
+                HasTerrainModificationQueue = hasTerrainQueue ? (byte)1 : (byte)0,
+                TerrainModificationQueueEntity = hasTerrainQueue ? terrainQueueEntity : Entity.Null,
+                MiningDigRadiusMin = miningDigRadiusMin,
+                MiningDigRadiusMax = miningDigRadiusMax,
+                MiningDigStrideMask = miningDigStrideMask,
                 WorkSatisfactionPerDelivery = math.max(0f, scheduleConfig.WorkSatisfactionPerDelivery),
                 WorkCompletionWorkDrop = math.max(0f, scheduleConfig.WorkCompletionWorkDrop),
                 WorkCompletionRestBoost = math.max(0f, scheduleConfig.WorkCompletionRestBoost),
@@ -494,6 +509,11 @@ namespace Godgame.Villagers
             public float PilePickupMinUnits;
             public float PileSearchRadiusSq;
             public float PileMinSpawnAmount;
+            public byte HasTerrainModificationQueue;
+            public Entity TerrainModificationQueueEntity;
+            public float MiningDigRadiusMin;
+            public float MiningDigRadiusMax;
+            public uint MiningDigStrideMask;
             public float WorkSatisfactionPerDelivery;
             public float WorkCompletionWorkDrop;
             public float WorkCompletionRestBoost;
@@ -1088,6 +1108,11 @@ namespace Godgame.Villagers
                                     {
                                         telemetry.MinedAmountMilliInterval += BehaviorTelemetryMath.ToMilli(gatherAmount);
                                         telemetry.CarrierCargoMilliSnapshot = BehaviorTelemetryMath.ToMilli(job.CarryCount);
+                                        if (!isTree)
+                                        {
+                                            var digPosition = ResourceNodeTransforms[nodeIndex].Position;
+                                            EmitMiningDig(ciq, e, digPosition, gatherAmount, carryCapacity);
+                                        }
                                         if (ticket.WorkAmount > 0f && ticket.Assignee == e)
                                         {
                                             ticket.WorkAmount = math.max(0f, ticket.WorkAmount - gatherAmount);
@@ -2022,6 +2047,48 @@ namespace Godgame.Villagers
                 int shift = repeatCount > 5 ? 5 : repeatCount;
                 var scaled = baseTicks * (uint)(1 << shift);
                 return math.min(maxTicks, scaled);
+            }
+
+            private void EmitMiningDig(int ciq, Entity worker, in float3 position, float gatherAmount, float carryCapacity)
+            {
+                if (HasTerrainModificationQueue == 0 || TerrainModificationQueueEntity == Entity.Null)
+                {
+                    return;
+                }
+
+                if (((CurrentTick + (uint)worker.Index) & MiningDigStrideMask) != 0u)
+                {
+                    return;
+                }
+
+                var ratio = math.saturate(gatherAmount / math.max(1f, carryCapacity));
+                var radius = math.lerp(MiningDigRadiusMin, MiningDigRadiusMax, ratio);
+                if (radius <= 0f)
+                {
+                    return;
+                }
+
+                Ecb.AppendToBuffer(ciq, TerrainModificationQueueEntity, new TerrainModificationRequest
+                {
+                    Kind = TerrainModificationKind.Dig,
+                    Shape = TerrainModificationShape.Brush,
+                    ToolKind = TerrainModificationToolKind.Drill,
+                    Start = position,
+                    End = position,
+                    Radius = radius,
+                    Depth = 0f,
+                    MaterialId = 0,
+                    DamageDelta = 0,
+                    DamageThreshold = 0,
+                    YieldMultiplier = 1f,
+                    HeatDelta = 0f,
+                    InstabilityDelta = 0f,
+                    Flags = TerrainModificationFlags.AffectsSurface,
+                    RequestedTick = CurrentTick,
+                    Actor = worker,
+                    VolumeEntity = Entity.Null,
+                    Space = TerrainModificationSpace.World
+                });
             }
 
             private void ResetJob(ref VillagerJobState job, Entity entity, float patienceScore, float3 position)
