@@ -2,7 +2,7 @@
     "dependencies":  {
                          "com.coplaydev.unity-mcp":  "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity",
                          "com.moni.bakings.presentation":  "file:Packages/com.moni.bakings.presentation",
-                         "com.moni.puredots":  "file:../../puredots/Packages/com.moni.puredots",
+                         "com.moni.puredots":  "file:../puredots/Packages/com.moni.puredots",
                          "com.unity.ai.navigation":  "2.0.9",
                          "com.unity.entities":  "1.4.4",
                          "com.unity.entities.graphics":  "1.4.16",
