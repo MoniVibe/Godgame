@@ -63,7 +63,8 @@ namespace Godgame.Presentation
                     ApplyGhost(ref ecb, entity, ref tint.ValueRW);
                 }
 
-                foreach (var (tint, entity) in SystemAPI.Query<RefRW<RenderTint>, RefRO<HeldByPlayer>>()
+                foreach (var (tint, entity) in SystemAPI.Query<RefRW<RenderTint>>()
+                             .WithAll<HeldByPlayer>()
                              .WithEntityAccess())
                 {
                     if (!_heldByPlayerLookup.IsComponentEnabled(entity))
