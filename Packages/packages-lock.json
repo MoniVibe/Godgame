@@ -24,8 +24,8 @@
       "depth": 0,
       "source": "embedded",
       "dependencies": {
-        "com.unity.entities": "1.4.x",
-        "com.unity.entities.graphics": "1.4.x"
+        "com.unity.entities": "1.4.4",
+        "com.unity.entities.graphics": "1.4.16"
       }
     },
     "com.moni.puredots": {
