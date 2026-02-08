@@ -1274,7 +1274,7 @@ namespace Godgame.Villagers
                             var inventory = InventoryLookup[job.Target];
                             var capacities = CapacityLookup[job.Target];
 
-                            float capacity = 1000f;
+                            var typeAllowed = false;
                             var outputResourceIndex = ResolveOutputIndex(job);
                             if (outputResourceIndex == ushort.MaxValue)
                             {
@@ -1287,22 +1287,30 @@ namespace Godgame.Villagers
                                 {
                                     if (capacities[i].ResourceTypeId.Equals(resourceId))
                                     {
-                                        capacity = capacities[i].MaxCapacity;
+                                        typeAllowed = true;
                                         break;
                                     }
                                 }
 
-                                var depositAmount = job.CarryCount;
-                                var deposited = Godgame.Resources.StorehouseApi.TryDeposit(ref inventory, Catalog, outputResourceIndex, depositAmount, capacity);
-                                if (deposited && depositAmount > 0f)
-                                {
-                                    telemetry.DepositedAmountMilliInterval += BehaviorTelemetryMath.ToMilli(depositAmount);
-                                    job.CarryCount = 0f;
-                                }
-                                else if (!deposited && depositAmount > 0f)
+                                if (!typeAllowed)
                                 {
                                     var preconditionMask = SetMask(0, PreconditionStorehouse, true);
                                     RecordFailure(ref job, e, VillagerJobFailCode.StorehouseFull, job.Target, preconditionMask);
+                                }
+                                else
+                                {
+                                    var depositAmount = job.CarryCount;
+                                    var accepted = Godgame.Economy.StorehouseAPI.Add(ref inventory, in capacities, resourceId, depositAmount);
+                                    if (accepted > 0f)
+                                    {
+                                        telemetry.DepositedAmountMilliInterval += BehaviorTelemetryMath.ToMilli(accepted);
+                                        job.CarryCount = math.max(0f, job.CarryCount - accepted);
+                                    }
+                                    else if (depositAmount > 0f)
+                                    {
+                                        var preconditionMask = SetMask(0, PreconditionStorehouse, true);
+                                        RecordFailure(ref job, e, VillagerJobFailCode.StorehouseFull, job.Target, preconditionMask);
+                                    }
                                 }
                             }
                         }
