@@ -360,39 +360,6 @@ namespace Godgame.Headless
 
                 var resourceId = CreateWoodResourceId();
                 var added = StorehouseAPI.Add(ref items, in capacities, resourceId, _depositAmount);
-                if (added <= 0f && _depositAmount > 0f)
-                {
-                    // Fallback: keep the proof advancing when capacity metadata is missing.
-                    var updated = false;
-                    for (var i = 0; i < items.Length; i++)
-                    {
-                        if (!items[i].ResourceTypeId.Equals(resourceId))
-                        {
-                            continue;
-                        }
-
-                        var item = items[i];
-                        item.Amount += _depositAmount;
-                        items[i] = item;
-                        updated = true;
-                        break;
-                    }
-
-                    if (!updated)
-                    {
-                        items.Add(new StorehouseInventoryItem
-                        {
-                            ResourceTypeId = resourceId,
-                            Amount = _depositAmount,
-                            Reserved = 0f,
-                            TierId = (byte)ResourceQualityTier.Common,
-                            AverageQuality = 50
-                        });
-                    }
-
-                    added = _depositAmount;
-                }
-
                 accepted = added;
             }
 

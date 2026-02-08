@@ -19,6 +19,7 @@ namespace Godgame.Scenario
     {
         private const float ToResourceTimeoutSeconds = 8f;
         private const float ToDepotTimeoutSeconds = 8f;
+        private const float DefaultResourceCapacity = 250f;
         private uint _lastTick;
         private byte _tickInitialized;
         private ComponentLookup<SettlementRuntime> _settlementLookup;
@@ -416,38 +417,6 @@ namespace Godgame.Scenario
             var resourceId = CreateWoodResourceId();
             var depositAmount = 5f;
             var accepted = StorehouseAPI.Add(ref items, in capacities, resourceId, depositAmount);
-            if (accepted <= 0f && depositAmount > 0f)
-            {
-                // Fallback: keep the scenario loop progressing if capacity metadata is missing.
-                var updated = false;
-                for (var i = 0; i < items.Length; i++)
-                {
-                    if (!items[i].ResourceTypeId.Equals(resourceId))
-                    {
-                        continue;
-                    }
-
-                    var item = items[i];
-                    item.Amount += depositAmount;
-                    items[i] = item;
-                    updated = true;
-                    break;
-                }
-
-                if (!updated)
-                {
-                    items.Add(new StorehouseInventoryItem
-                    {
-                        ResourceTypeId = resourceId,
-                        Amount = depositAmount,
-                        Reserved = 0f,
-                        TierId = (byte)ResourceQualityTier.Common,
-                        AverageQuality = 50
-                    });
-                }
-
-                accepted = depositAmount;
-            }
 
             if (accepted > 0f)
             {
@@ -460,6 +429,9 @@ namespace Godgame.Scenario
         private bool EnsureStorehouseBuffers(ref SystemState state, Entity depot, uint tick, ref EntityCommandBuffer ecb, ref bool hadStructuralChanges)
         {
             var ready = true;
+            var woodId = CreateWoodResourceId();
+            var oreId = CreateIronOreResourceId();
+            var ingotId = CreateIronIngotResourceId();
 
             if (!_storehouseInventoryLookup.HasComponent(depot))
             {
@@ -468,7 +440,7 @@ namespace Godgame.Scenario
                 ecb.AddComponent(depot, new StorehouseInventory
                 {
                     TotalStored = 5f,
-                    TotalCapacity = 250f,
+                    TotalCapacity = DefaultResourceCapacity * 3f,
                     ItemTypeCount = 0,
                     IsShredding = 0,
                     LastUpdateTick = tick
@@ -487,36 +459,46 @@ namespace Godgame.Scenario
             if (!_storehouseCapacityLookup.HasBuffer(depot))
             {
                 var capacityBuffer = ecb.AddBuffer<StorehouseCapacityElement>(depot);
-                var resourceId = CreateWoodResourceId();
                 capacityBuffer.Add(new StorehouseCapacityElement
                 {
-                    ResourceTypeId = resourceId,
-                    MaxCapacity = 250f
+                    ResourceTypeId = woodId,
+                    MaxCapacity = DefaultResourceCapacity
+                });
+                capacityBuffer.Add(new StorehouseCapacityElement
+                {
+                    ResourceTypeId = oreId,
+                    MaxCapacity = DefaultResourceCapacity
+                });
+                capacityBuffer.Add(new StorehouseCapacityElement
+                {
+                    ResourceTypeId = ingotId,
+                    MaxCapacity = DefaultResourceCapacity
                 });
                 ready = false;
                 hadStructuralChanges = true;
             }
             else
             {
-                var resourceId = CreateWoodResourceId();
                 var capacityBuffer = state.EntityManager.GetBuffer<StorehouseCapacityElement>(depot);
-                var hasWood = false;
-                for (var i = 0; i < capacityBuffer.Length; i++)
+                var addedCapacity = 0f;
+                if (EnsureCapacityEntry(ref capacityBuffer, woodId, DefaultResourceCapacity))
                 {
-                    if (capacityBuffer[i].ResourceTypeId.Equals(resourceId))
-                    {
-                        hasWood = true;
-                        break;
-                    }
+                    addedCapacity += DefaultResourceCapacity;
+                }
+                if (EnsureCapacityEntry(ref capacityBuffer, oreId, DefaultResourceCapacity))
+                {
+                    addedCapacity += DefaultResourceCapacity;
+                }
+                if (EnsureCapacityEntry(ref capacityBuffer, ingotId, DefaultResourceCapacity))
+                {
+                    addedCapacity += DefaultResourceCapacity;
                 }
 
-                if (!hasWood)
+                if (addedCapacity > 0f && _storehouseInventoryLookup.HasComponent(depot))
                 {
-                    capacityBuffer.Add(new StorehouseCapacityElement
-                    {
-                        ResourceTypeId = resourceId,
-                        MaxCapacity = 250f
-                    });
+                    var storehouse = _storehouseInventoryLookup[depot];
+                    storehouse.TotalCapacity = math.max(0f, storehouse.TotalCapacity) + addedCapacity;
+                    _storehouseInventoryLookup[depot] = storehouse;
                 }
             }
 
@@ -531,6 +513,34 @@ namespace Godgame.Scenario
             id.Append('o');
             id.Append('d');
             return id;
+        }
+
+        private static FixedString64Bytes CreateIronOreResourceId()
+        {
+            return new FixedString64Bytes("iron_ore");
+        }
+
+        private static FixedString64Bytes CreateIronIngotResourceId()
+        {
+            return new FixedString64Bytes("iron_ingot");
+        }
+
+        private static bool EnsureCapacityEntry(ref DynamicBuffer<StorehouseCapacityElement> buffer, FixedString64Bytes resourceId, float capacity)
+        {
+            for (var i = 0; i < buffer.Length; i++)
+            {
+                if (buffer[i].ResourceTypeId.Equals(resourceId))
+                {
+                    return false;
+                }
+            }
+
+            buffer.Add(new StorehouseCapacityElement
+            {
+                ResourceTypeId = resourceId,
+                MaxCapacity = capacity
+            });
+            return true;
         }
 
         private static void BeginWork(ref SettlementVillagerState stateData,

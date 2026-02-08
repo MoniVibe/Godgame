@@ -38,6 +38,7 @@ namespace Godgame.Villagers
             state.Dependency = noGrudgeJob.ScheduleParallel(state.Dependency);
         }
 
+        [BurstCompile]
         public partial struct ProcessPersonalityWithGrudgeJob : IJobEntity
         {
             public uint Tick;
@@ -83,6 +84,7 @@ namespace Godgame.Villagers
             }
         }
 
+        [BurstCompile]
         [WithNone(typeof(VillagerGrudge))]
         public partial struct ProcessPersonalityNoGrudgeJob : IJobEntity
         {

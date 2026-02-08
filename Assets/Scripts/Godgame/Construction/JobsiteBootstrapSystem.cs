@@ -2,7 +2,6 @@ using Godgame.Construction;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Presentation;
 using PureDOTS.Runtime.Registry;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -42,7 +41,6 @@ namespace Godgame.Construction
             SystemAPI.SetSingleton(resourceIndex);
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
         }

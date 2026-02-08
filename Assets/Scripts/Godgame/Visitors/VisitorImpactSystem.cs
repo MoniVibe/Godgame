@@ -1,7 +1,6 @@
 using Godgame.Visitors;
 using PureDOTS.Environment;
 using PureDOTS.Runtime.Components;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -41,7 +40,6 @@ namespace Godgame.Visitors
             state.RequireForUpdate<VisitorTag>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var timeState = SystemAPI.GetSingleton<TimeState>();
@@ -159,7 +157,6 @@ namespace Godgame.Visitors
             impactEvents.Clear();
         }
 
-        [BurstCompile]
         private void ProcessImpactEvents(ref SystemState state, DynamicBuffer<VisitorImpactEvent> events)
         {
             // Apply climate/environment effects based on impact events

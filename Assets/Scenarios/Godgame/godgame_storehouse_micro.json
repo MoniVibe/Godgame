@@ -1,0 +1,31 @@
+{
+  "name": "Godgame Storehouse Micro",
+  "description": "Micro scenario focused on storehouse intake + villager hauling.",
+  "duration_s": 30,
+  "entities": [
+    {
+      "prefab": "Villager",
+      "count": 16,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 30
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 1,
+      "position": { "x": 8, "y": 0, "z": -6 },
+      "radius": 4
+    },
+    {
+      "prefab": "ResourceNode",
+      "count": 12,
+      "position": { "x": 25, "y": 0, "z": 10 },
+      "radius": 35
+    }
+  ],
+  "actions": [
+    {
+      "time_s": 0.1,
+      "kind": "EconomyEnable"
+    }
+  ]
+}

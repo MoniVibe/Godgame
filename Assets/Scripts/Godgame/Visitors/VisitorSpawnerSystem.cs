@@ -27,7 +27,6 @@ namespace Godgame.Visitors
             _lastSpawnTime = -SPAWN_INTERVAL_SECONDS; // Allow immediate spawn
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             if (!SystemAPI.TryGetSingleton<TickTimeState>(out var tickTime))
@@ -105,4 +104,3 @@ namespace Godgame.Visitors
         }
     }
 }
-

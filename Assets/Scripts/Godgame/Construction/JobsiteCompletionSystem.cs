@@ -27,7 +27,6 @@ namespace Godgame.Construction
             state.RequireForUpdate<RewindState>();
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var timeState = SystemAPI.GetSingleton<TimeState>();
@@ -55,57 +54,106 @@ namespace Godgame.Construction
                 effectBuffer = state.EntityManager.GetBuffer<PlayEffectRequest>(effectEntity);
             }
 
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-            bool telemetryUpdated = false;
+            var query = SystemAPI.QueryBuilder()
+                .WithAll<LocalTransform, JobsiteGhost, ConstructionSiteFlags, JobsiteCompletionTag>()
+                .Build();
 
-            foreach (var (transform, ghost, flags, entity) in SystemAPI
-                         .Query<RefRO<LocalTransform>, RefRW<JobsiteGhost>, RefRO<ConstructionSiteFlags>>()
-                         .WithAll<JobsiteCompletionTag>()
-                         .WithEntityAccess())
+            var capacity = math.max(1, query.CalculateEntityCount());
+            var completions = new NativeList<CompletionPayload>(capacity, Allocator.TempJob);
+            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+
+            var job = new CollectJobsiteCompletionsJob
             {
-                if ((flags.ValueRO.Value & ConstructionSiteFlags.Completed) == 0)
-                {
-                    ecb.RemoveComponent<JobsiteCompletionTag>(entity);
-                    continue;
-                }
+                CompletionEffectId = config.CompletionEffectId,
+                CompletionEffectDuration = config.CompletionEffectDuration,
+                Completions = completions.AsParallelWriter(),
+                Ecb = ecb.AsParallelWriter()
+            };
 
+            state.Dependency = job.ScheduleParallel(query, state.Dependency);
+            state.Dependency.Complete();
+
+            if (completions.Length > 0)
+            {
                 if (effectBuffer.IsCreated)
                 {
-                    effectBuffer.Add(new PlayEffectRequest
+                    for (int i = 0; i < completions.Length; i++)
                     {
-                        EffectId = config.CompletionEffectId,
-                        Target = entity,
-                        Position = transform.ValueRO.Position,
-                        Rotation = transform.ValueRO.Rotation,
-                        DurationSeconds = math.max(0f, config.CompletionEffectDuration),
-                        StyleOverride = default
-                    });
+                        var payload = completions[i];
+                        effectBuffer.Add(new PlayEffectRequest
+                        {
+                            EffectId = payload.EffectId,
+                            Target = payload.Target,
+                            Position = payload.Position,
+                            Rotation = payload.Rotation,
+                            DurationSeconds = payload.DurationSeconds,
+                            StyleOverride = default
+                        });
+                    }
                 }
 
-                metrics.CompletedCount++;
-                ghost.ValueRW.CompletionRequested = 1;
+                metrics.CompletedCount += completions.Length;
 
                 if (telemetryBuffer.IsCreated)
                 {
                     UpsertMetric(ref telemetryBuffer, config.TelemetryKey, metrics.CompletedCount);
-                    telemetryUpdated = true;
+                    var telemetry = SystemAPI.GetComponentRW<TelemetryStream>(telemetryEntity);
+                    telemetry.ValueRW.Version++;
+                    telemetry.ValueRW.LastTick = timeState.Tick;
                 }
-
-                ecb.RemoveComponent<JobsiteGhost>(entity);
-                ecb.RemoveComponent<JobsiteCompletionTag>(entity);
-            }
-
-            if (telemetryUpdated)
-            {
-                var telemetry = SystemAPI.GetComponentRW<TelemetryStream>(telemetryEntity);
-                telemetry.ValueRW.Version++;
-                telemetry.ValueRW.LastTick = timeState.Tick;
             }
 
             state.EntityManager.SetComponentData(metricsEntity, metrics);
 
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
+            completions.Dispose();
+        }
+
+        private struct CompletionPayload
+        {
+            public Entity Target;
+            public float3 Position;
+            public quaternion Rotation;
+            public int EffectId;
+            public float DurationSeconds;
+        }
+
+        [BurstCompile]
+        [WithAll(typeof(JobsiteCompletionTag))]
+        private partial struct CollectJobsiteCompletionsJob : IJobEntity
+        {
+            public int CompletionEffectId;
+            public float CompletionEffectDuration;
+            public NativeList<CompletionPayload>.ParallelWriter Completions;
+            public EntityCommandBuffer.ParallelWriter Ecb;
+
+            public void Execute([EntityIndexInQuery] int sortKey,
+                Entity entity,
+                ref JobsiteGhost ghost,
+                in ConstructionSiteFlags flags,
+                in LocalTransform transform)
+            {
+                if ((flags.Value & ConstructionSiteFlags.Completed) == 0)
+                {
+                    Ecb.RemoveComponent<JobsiteCompletionTag>(sortKey, entity);
+                    return;
+                }
+
+                ghost.CompletionRequested = 1;
+
+                Completions.AddNoResize(new CompletionPayload
+                {
+                    EffectId = CompletionEffectId,
+                    Target = entity,
+                    Position = transform.Position,
+                    Rotation = transform.Rotation,
+                    DurationSeconds = math.max(0f, CompletionEffectDuration)
+                });
+
+                Ecb.RemoveComponent<JobsiteGhost>(sortKey, entity);
+                Ecb.RemoveComponent<JobsiteCompletionTag>(sortKey, entity);
+            }
         }
 
         private static void UpsertMetric(ref DynamicBuffer<TelemetryMetric> buffer, in FixedString64Bytes key, int value)

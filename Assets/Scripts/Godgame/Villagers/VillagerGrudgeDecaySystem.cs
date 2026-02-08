@@ -43,6 +43,7 @@ namespace Godgame.Villagers
             }.ScheduleParallel();
         }
 
+        [BurstCompile]
         partial struct GrudgeDecayJob : IJobEntity
         {
             public float DayFraction;
