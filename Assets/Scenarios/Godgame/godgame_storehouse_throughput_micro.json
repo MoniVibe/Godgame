@@ -1,0 +1,25 @@
+{
+  "name": "Godgame Storehouse Throughput",
+  "description": "Villager gather/deliver loop to measure storehouse throughput.",
+  "duration_s": 90,
+  "entities": [
+    {
+      "prefab": "VillageCenter",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 2
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 1,
+      "position": { "x": 10, "y": 0, "z": 0 },
+      "radius": 2
+    },
+    {
+      "prefab": "Villager",
+      "count": 12,
+      "position": { "x": -2, "y": 0, "z": 0 },
+      "radius": 8
+    }
+  ]
+}
