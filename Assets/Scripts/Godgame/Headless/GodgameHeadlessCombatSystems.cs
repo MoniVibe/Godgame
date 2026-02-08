@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.IO;
 using Godgame.Villagers;
 using PureDOTS.Runtime.AI;
 using PureDOTS.Runtime.Components;
@@ -26,6 +27,8 @@ namespace Godgame.Headless
     public partial struct GodgameHeadlessCombatLoopSystem : ISystem
     {
         private const string EnabledEnv = "GODGAME_HEADLESS_COMBAT_PROOF";
+        private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
+        private const string CombatScenarioFile = "godgame_combat_micro.json";
         private byte _enabled;
         private byte _tickInitialized;
         private uint _lastTick;
@@ -44,7 +47,9 @@ namespace Godgame.Headless
         public void OnCreate(ref SystemState state)
         {
             var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
-            if (!RuntimeMode.IsHeadless || !string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
+            var autoEnable = string.IsNullOrWhiteSpace(enabled) && IsCombatScenario();
+            var resolvedEnabled = autoEnable || IsTruthy(enabled);
+            if (!RuntimeMode.IsHeadless || !Application.isBatchMode || !resolvedEnabled)
             {
                 state.Enabled = false;
                 return;
@@ -290,6 +295,38 @@ namespace Godgame.Headless
 
             return defaultValue;
         }
+
+        private static bool IsCombatScenario()
+        {
+            var scenarioPath = SystemEnv.GetEnvironmentVariable(ScenarioPathEnv);
+            if (string.IsNullOrWhiteSpace(scenarioPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                var fileName = Path.GetFileName(scenarioPath);
+                if (!string.IsNullOrWhiteSpace(fileName))
+                {
+                    return fileName.Equals(CombatScenarioFile, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (ArgumentException)
+            {
+            }
+
+            return scenarioPath.EndsWith(CombatScenarioFile, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsTruthy(string value)
+        {
+            return string.Equals(value, "1", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     /// <summary>
@@ -301,6 +338,8 @@ namespace Godgame.Headless
     {
         private const string EnabledEnv = "GODGAME_HEADLESS_COMBAT_PROOF";
         private const string ExitOnResultEnv = "GODGAME_HEADLESS_COMBAT_PROOF_EXIT";
+        private const string ScenarioPathEnv = "GODGAME_SCENARIO_PATH";
+        private const string CombatScenarioFile = "godgame_combat_micro.json";
         private const uint DefaultTimeoutTicks = 1200; // ~20 seconds at 60hz
 
         private byte _enabled;
@@ -328,7 +367,8 @@ namespace Godgame.Headless
             }
 
             var enabled = SystemEnv.GetEnvironmentVariable(EnabledEnv);
-            if (!string.Equals(enabled, "1", StringComparison.OrdinalIgnoreCase))
+            var autoEnable = string.IsNullOrWhiteSpace(enabled) && IsCombatScenario();
+            if (!autoEnable && !IsTruthy(enabled))
             {
                 state.Enabled = false;
                 return;
@@ -452,6 +492,38 @@ namespace Godgame.Headless
             }
 
             GodgameHeadlessExitSystem.Request(ref state, tick, exitCode);
+        }
+
+        private static bool IsCombatScenario()
+        {
+            var scenarioPath = SystemEnv.GetEnvironmentVariable(ScenarioPathEnv);
+            if (string.IsNullOrWhiteSpace(scenarioPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                var fileName = Path.GetFileName(scenarioPath);
+                if (!string.IsNullOrWhiteSpace(fileName))
+                {
+                    return fileName.Equals(CombatScenarioFile, StringComparison.OrdinalIgnoreCase);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (ArgumentException)
+            {
+            }
+
+            return scenarioPath.EndsWith(CombatScenarioFile, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsTruthy(string value)
+        {
+            return string.Equals(value, "1", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

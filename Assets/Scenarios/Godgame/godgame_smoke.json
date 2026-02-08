@@ -63,8 +63,39 @@
       "position": { "x": 60, "y": 0, "z": 35 },
       "radius": 45
     }
+  ],
+  "actions": [
+    {
+      "time_s": 0.1,
+      "kind": "EconomyEnable"
+    },
+    {
+      "time_s": 0.2,
+      "kind": "ProdCreateBusiness",
+      "businessId": "gg_smith_1",
+      "businessType": "blacksmith",
+      "capacity": 500
+    },
+    {
+      "time_s": 0.25,
+      "kind": "ProdAddItem",
+      "businessId": "gg_smith_1",
+      "itemId": "gg_ore",
+      "quantity": 180
+    },
+    {
+      "time_s": 0.25,
+      "kind": "ProdAddItem",
+      "businessId": "gg_smith_1",
+      "itemId": "gg_wood",
+      "quantity": 120
+    },
+    {
+      "time_s": 0.3,
+      "kind": "ProdRequest",
+      "businessId": "gg_smith_1",
+      "recipeId": "gg_ore_to_ingot"
+    }
   ]
 }
-
-
 

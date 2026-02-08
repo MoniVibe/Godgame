@@ -1,0 +1,31 @@
+{
+  "name": "Godgame Combat Micro",
+  "description": "Headless micro scenario for villager combat engagement and resolution.",
+  "duration_s": 25,
+  "entities": [
+    {
+      "prefab": "Villager",
+      "count": 8,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 12
+    },
+    {
+      "prefab": "VillageCenter",
+      "count": 1,
+      "position": { "x": 6, "y": 0, "z": 0 },
+      "radius": 4
+    },
+    {
+      "prefab": "Storehouse",
+      "count": 1,
+      "position": { "x": -6, "y": 0, "z": 0 },
+      "radius": 4
+    },
+    {
+      "prefab": "Housing",
+      "count": 2,
+      "position": { "x": 0, "y": 0, "z": 6 },
+      "radius": 6
+    }
+  ]
+}
