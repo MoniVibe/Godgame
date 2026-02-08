@@ -1,0 +1,19 @@
+{
+  "name": "Godgame Master vs Apprentices",
+  "description": "Focus and deflection drill: master mage vs apprentices projectile practice.",
+  "duration_s": 60,
+  "entities": [
+    {
+      "prefab": "MasterMage",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 1
+    },
+    {
+      "prefab": "ApprenticeMage",
+      "count": 8,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 12
+    }
+  ]
+}
