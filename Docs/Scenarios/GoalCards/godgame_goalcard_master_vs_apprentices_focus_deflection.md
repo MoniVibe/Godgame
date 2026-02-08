@@ -53,7 +53,7 @@ Duration: 60 seconds
 - Mage prefabs for master/apprentice roles
 
 ## Risks/Notes
-- If Focus or deflection is stubbed, outcomes will be flat; note stub behavior in results.
+- Focus/deflection are currently stubbed; outcomes will be flat until spell + projectile systems land. Keep this as a design target.
 
 ## Scenario JSON
 Path: Assets/Scenarios/Godgame/godgame_master_vs_apprentices_micro.json
