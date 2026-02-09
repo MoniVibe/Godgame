@@ -45,6 +45,9 @@
           }
         ]
       },
+      "entitySchedules": {
+        "<entity_id>": "<profile_name>"
+      },
       "sessions": {
         "training_session": {
           "mentorRole": "<mentor_role>",
