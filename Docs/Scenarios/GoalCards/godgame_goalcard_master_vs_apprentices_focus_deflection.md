@@ -15,6 +15,13 @@ Demonstrate that a master mage using Focus and projectile deflection outperforms
 ## Scenario Frame
 Theme: Training drill to validate mastery vs apprentice skill gaps.
 Why this scenario matters: It anchors spell combat pacing, focus mechanics, and experience scaling in a readable, measurable micro.
+Cross-domain mapping: “master mage” equals apex operator/ship; this drill is a skill-expression testbed that ports to gunnery/archery/piloting with PureDOTS timing/accuracy primitives.
+
+## Relations and Social Context
+Role map: master (mentor), apprentices (cohort trainees).
+Relations: high cohesion expected; coordination improves with cohesion, panic is suppressed.
+Spectators: optional observers at edge (no interaction unless variant enabled).
+Safety rule: non-lethal training; disable/interrupt instead of lethal outcomes.
 
 ## Setup
 Map/Scene: Training arena (flat, unobstructed)
@@ -36,6 +43,12 @@ Target sharing: apprentices broadcast the master target; master retargets appren
 Discipline: apprentices hold fire if master is already deflecting; master prioritizes uninterrupted disable loops.
 Failure modes: focus thrash, target lock oscillation, deflect timing drift.
 
+## Spell Arsenal and Projectiles
+Master kit: focus stance, deflect window, disable beam, optional barrier pulse.
+Apprentice kit: basic projectile bolt, minor disrupt (low damage, low control).
+Projectile tags: kinetic, magic, disruptive, homing (optional variant).
+Projectile diversity: some bolts are harder to dodge but easier to deflect; others invert this.
+
 ## Schedule Regime
 Time base: scenario (60s training window).
 Profiles:
@@ -54,11 +67,21 @@ Firing solution: straight-line projectiles; no lead required in stationary phase
 Deflection model: windowed deflect (coarse, low-overhead); resolve per volley window, not per projectile.
 PureDOTS note: timing/accuracy/deflection logic is shared; this scenario only tunes parameters.
 
+## Mana and Focus Economy
+Master: focus uptime prioritized; deflect and disable consume focus; barrier consumes mana.
+Apprentices: small mana pool; consistent cadence over burst.
+Costs: proportional to projectile threat and action type.
+
 ## Movement and Orientation
 Formation: apprentices in ring at fixed radius, equal spacing.
 Rotation limits: master yaw/pitch constrained by focus stance; apprentices minimal torso rotation.
 Facing rules: remain facing target; no backcasting.
 Speed profile: stationary by default; optional dodge variant later.
+
+## Damage and Safety Rules
+Damage model: training-safe; disable/interrupt > lethal.
+Injury thresholds: when exceeded, apprentice is sidelined and stops casting.
+Sidelined students: move to safe edge; telemetry marks removal reason.
 
 ## Weapons and Arcs
 Weapon types: projectile bolts (deflectable), disable beam (focus-only).
@@ -95,6 +118,10 @@ Notes: Longform combat nuance and deflection timing details.
 - lock.reacquire_time_ms: average time to reacquire after disable or deflect
 - master.deflect_timing_error_ms: mean absolute error between deflect window and impact
 - apprentice.volley_cadence_variance: variance of inter-volley spacing
+- master.mana_spent_per_deflect: mana_spent / deflects
+- apprentice.mana_spent_rate: mana_spent / minute
+- apprentice.sidelined_count: count of apprentices removed due to injury
+- learning.delta_skill: aggregate skill delta across participants
 
 ## Scoring
 - Score = (deflect_rate * 0.5) + (disable_rate * 0.3) + ((1 - master.hit_rate) * 0.2)
@@ -129,6 +156,8 @@ Owner/Reviewer: shonh / TBD
 - Increase apprentices to 12
 - Increase projectile speed by 25 percent
 - Enable apprentice dodge behavior
+- Add spectators with morale signal only
+- Enable barrier pulse (master only)
 
 ## Telemetry/Outputs
 - godgame.q.focus.deflection.master_score
@@ -139,6 +168,8 @@ Owner/Reviewer: shonh / TBD
 - Projectile deflection and collision
 - Disable status effects
 - Mage prefabs for master/apprentice roles
+- Mana/focus resource tracking
+- Injury/sideline handling
 
 ## Risks/Notes
 - Focus/deflection are currently stubbed; outcomes will be flat until spell + projectile systems land. Keep this as a design target.
