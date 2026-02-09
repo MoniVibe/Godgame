@@ -52,6 +52,7 @@ Lock time: apprentices have longer lock time; master near-instant with Focus.
 Track loss: lock drops on deflect or disable; apprentices reacquire with delay.
 Firing solution: straight-line projectiles; no lead required in stationary phase.
 Deflection model: windowed deflect (coarse, low-overhead); resolve per volley window, not per projectile.
+PureDOTS note: timing/accuracy/deflection logic is shared; this scenario only tunes parameters.
 
 ## Movement and Orientation
 Formation: apprentices in ring at fixed radius, equal spacing.

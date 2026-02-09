@@ -32,6 +32,7 @@ Capture master/apprentice combat nuances (focus, deflection, disable cadence) wi
 - Disable timing: disable locks out apprentice casting for a short window; avoid overlap with deflect window.
 
 ## Deflection Model (Coarse, Low-Overhead)
+- Ownership: PureDOTS shared deflection/timing/accuracy model; Godgame only tunes values.
 - Use windowed deflection, not per-projectile physics.
 - Threat slots: evaluate top 3-5 incoming projectiles per tick (10-20Hz).
 - Precompute impact windows per volley; deflect resolves once per window.
