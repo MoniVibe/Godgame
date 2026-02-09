@@ -100,8 +100,8 @@
         "Match assignments to entities.id/idPrefix (Godgame) or spawn entityId (Space4x)."
       ]
     },
-    "profileConflict": {
-      "conflicts": [
+    "profileInterplay": {
+      "interactions": [
         {
           "sideA": {
             "label": "<group_a_label>",
@@ -115,13 +115,17 @@
           }
         }
       ],
+      "mode": "<negotiation|cooperation|rivalry|conflict|environment>",
       "expectedOutcomes": [
-        "<who escalates, who converts, surrender/mercy tendencies>",
+        "<how profiles express themselves against other profiles or the simulation>",
         "<secondary outcomes or edge cases>"
       ],
       "reporting": [
         "<metric_name_by_profile>",
         "<conversion_rate_by_profile>"
+      ],
+      "notes": [
+        "Interplay does not have to be conflict; use this to capture dynamic profile expression."
       ]
     },
     "targeting": {

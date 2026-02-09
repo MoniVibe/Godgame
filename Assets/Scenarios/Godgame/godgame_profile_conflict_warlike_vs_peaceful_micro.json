@@ -54,8 +54,8 @@
         "Use pool refs for consistency; avoid random assignment in scenario definitions."
       ]
     },
-    "profileConflict": {
-      "conflicts": [
+    "profileInterplay": {
+      "interactions": [
         {
           "sideA": {
             "label": "warlike_raiders",
@@ -69,6 +69,7 @@
           }
         }
       ],
+      "mode": "conflict",
       "expectedOutcomes": [
         "Warlikes escalate, accept few surrenders, minimal prisoners.",
         "Peacefuls attempt parley and conversion; success depends on charisma vs resistance."
@@ -78,6 +79,9 @@
         "conflict.surrenders_by_profile",
         "social.conversions_by_profile",
         "social.parley_acceptance_by_profile"
+      ],
+      "notes": [
+        "Interplay does not have to be conflict; this scenario is conflict-heavy by design."
       ]
     },
     "telemetry": {

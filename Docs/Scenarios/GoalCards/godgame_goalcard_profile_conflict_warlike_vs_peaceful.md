@@ -37,7 +37,8 @@ Override rules: soft finish current action; hard immediate interrupt.
 Profile nuance: warlikes ignore soft hunger during conflict; peacefuls treat injury as hard break.
 Examples: warlike fanatics eat during shift; corrupts flee if advantage drops.
 
-## Profile Conflicts and Outcomes
+## Profile Interplay and Outcomes
+Interplay focus: conflict (this is a conflict-heavy variant; other scenarios can use negotiation or cooperation).
 Conflicting profiles:
 - Warlike raiders: pure + evil + warlike + authoritarian (ruthless escalation).
 - Peaceful mediators: pure + good + peaceful + cooperative (parley-first posture).
@@ -47,6 +48,7 @@ Expected outcomes:
 Outcome reporting:
 - Track kills, surrenders, and conversions split by profile tags (warlike vs peaceful, pure vs corrupt).
 - Report parley attempts and acceptance rate by profile group.
+Notes: Interplay does not have to be conflict; the intent is dynamic profile expression with or against other profiles or the simulation itself.
 
 ## Script
 1. Both groups move to meeting space.
