@@ -174,12 +174,14 @@
   },
   "entities": [
     {
+      "id": "master_mage",
       "prefab": "MasterMage",
       "count": 1,
       "position": { "x": 0, "y": 0, "z": 0 },
       "radius": 1
     },
     {
+      "idPrefix": "student_",
       "prefab": "ApprenticeMage",
       "count": 8,
       "position": { "x": 0, "y": 0, "z": 0 },

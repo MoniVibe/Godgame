@@ -70,8 +70,8 @@
     ]
   },
   "entities": [
-    { "prefab": "Villager", "count": 8, "position": { "x": -6, "y": 0, "z": 0 }, "radius": 2 },
-    { "prefab": "Villager", "count": 8, "position": { "x": 6, "y": 0, "z": 0 }, "radius": 2 }
+    { "idPrefix": "raider_", "prefab": "Villager", "count": 8, "position": { "x": -6, "y": 0, "z": 0 }, "radius": 2 },
+    { "idPrefix": "mediator_", "prefab": "Villager", "count": 8, "position": { "x": 6, "y": 0, "z": 0 }, "radius": 2 }
   ],
   "actions": []
 }
