@@ -18,6 +18,13 @@ Equipment/Loadouts: default villager settings
 Rules/Constraints: continuous roaming within hub radius
 Duration: 60 seconds
 
+## Schedule Regime
+Time base: scenario.
+Profiles: villager_roam active throughout.
+Training windows: none; continuous roaming is the test.
+Attendance rules: all villagers must remain assigned to roam behavior.
+Reuse notes: use for plaza crowd tests and market congestion variants.
+
 ## Script
 1. Spawn villagers around VillageCenter, Storehouse, and Housing.
 2. Allow roaming/movement behavior to proceed without intervention.

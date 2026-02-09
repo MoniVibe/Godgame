@@ -18,6 +18,13 @@ Equipment/Loadouts: default villager settings
 Rules/Constraints: use existing job_loop_01 scenario
 Duration: 120 seconds
 
+## Schedule Regime
+Time base: scenario (120s).
+Profiles: job_loop_01 schedule active throughout.
+Training windows: warm-up (0-20s), stable loop (20-120s).
+Attendance rules: villagers remain in loop; mark invalid if scheduler drops to idle.
+Reuse notes: apply to other job loop stress and schedule stability checks.
+
 ## Script
 1. Run job_loop_01.
 2. Record job assignment changes and completion events.
