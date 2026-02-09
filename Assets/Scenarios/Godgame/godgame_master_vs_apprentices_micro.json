@@ -2,7 +2,6 @@
   "name": "Godgame Master vs Apprentices",
   "description": "Focus and deflection drill: master mage vs apprentices projectile practice.",
   "duration_s": 60,
-  "runTicks": 0,
   "scenarioConfig": {
     "goalId": "combat_focus_master_vs_apprentices_v0",
     "roles": [

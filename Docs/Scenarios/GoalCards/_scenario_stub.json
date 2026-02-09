@@ -2,7 +2,6 @@
   "name": "<Scenario Name>",
   "description": "<Short summary>",
   "duration_s": 120,
-  "runTicks": 0,
   "scenarioConfig": {
     "goalId": "<goal_id>",
     "roles": [
