@@ -152,14 +152,24 @@
         {
           "id": "godgame.q.focus.deflection.disable_rate",
           "required": false
+        },
+        {
+          "id": "godgame.q.focus.deflection.deflect_timing_error",
+          "required": false
+        },
+        {
+          "id": "godgame.q.focus.deflection.volley_cadence_variance",
+          "required": false
         }
       ],
       "metrics": [
         "master.deflect_rate",
         "master.hit_rate",
         "master.disable_rate",
+        "master.deflect_timing_error_ms",
         "focus.uptime",
-        "lock.reacquire_time_ms"
+        "lock.reacquire_time_ms",
+        "apprentice.volley_cadence_variance"
       ],
       "acceptance": {
         "master.deflect_rate_min": 0.7,

@@ -78,9 +78,9 @@ Path: Docs/Scenarios/GoalCards/Addenda/godgame_master_vs_apprentices_notes.md
 Notes: Longform combat nuance and deflection timing details.
 
 ## Script
-1. Apprentices begin a staggered firing pattern toward the master.
-2. Master cycles Focus between apprentices, casting disable and deflection spells.
-3. Continue for duration; capture projectile outcomes and disable events.
+1. Warmup (0-5s): apprentices acquire targets, no scoring.
+2. Live fire (5-55s): apprentices begin staggered volleys; master cycles Focus, deflects, and disables.
+3. Cooldown (55-60s): stop casting; capture late telemetry and resolve lingering projectiles.
 
 ## Metrics
 - master.deflect_rate: deflected_projectiles / incoming_projectiles
@@ -89,6 +89,8 @@ Notes: Longform combat nuance and deflection timing details.
 - apprentice.hit_rate: total_hits_on_master / total_projectiles
 - focus.uptime: focused_time / duration
 - lock.reacquire_time_ms: average time to reacquire after disable or deflect
+- master.deflect_timing_error_ms: mean absolute error between deflect window and impact
+- apprentice.volley_cadence_variance: variance of inter-volley spacing
 
 ## Scoring
 - Score = (deflect_rate * 0.5) + (disable_rate * 0.3) + ((1 - master.hit_rate) * 0.2)
@@ -97,6 +99,7 @@ Notes: Longform combat nuance and deflection timing details.
 - master.deflect_rate >= 0.70
 - master.hit_rate <= 0.20
 - master.disable_rate >= 6 per minute
+- Secondary (non-gating): deflect_timing_error_ms <= 80ms; volley_cadence_variance <= 0.20
 
 ## Regression Guardrails
 - Determinism preserved across identical seeds.
@@ -111,7 +114,7 @@ Priority work:
 - Implement deflect timing with focus bonus
 - Add disable spell with cooldown + duration
 - Wire projectile telemetry for deflect/hit
-Telemetry IDs: godgame.q.focus.deflection.master_score
+Telemetry IDs: godgame.q.focus.deflection.master_score, godgame.q.focus.deflection.deflect_rate, godgame.q.focus.deflection.disable_rate
 
 ## Branch Plan
 Branch name: scenarios/godgame/master-vs-apprentices
