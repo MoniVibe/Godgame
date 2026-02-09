@@ -31,6 +31,25 @@ Capture master/apprentice combat nuances (focus, deflection, disable cadence) wi
 - Deflection timing: deflect should trigger during incoming projectile windows; mis-timed deflect causes self-hit.
 - Disable timing: disable locks out apprentice casting for a short window; avoid overlap with deflect window.
 
+## Deflection Model (Coarse, Low-Overhead)
+- Use windowed deflection, not per-projectile physics.
+- Threat slots: evaluate top 3-5 incoming projectiles per tick (10-20Hz).
+- Precompute impact windows per volley; deflect resolves once per window.
+- Outcomes: success (redirect/nullify), partial (redirect + reduced damage), fail (no change).
+- Arc rules: only within forward arc; out-of-arc attempts fail or are skipped.
+
+## Deflection Timing Parameters (Targets)
+- windup_ms: 120 (elite), 200 (rookie)
+- deflect_window_ms: 160 (elite), 120 (rookie)
+- recovery_ms: 250 base
+- prequeue_ms: 80 (elite), 0 (rookie)
+- arc_deg: 180 base (elite may widen +20)
+
+## Overhead Controls
+- Cap deflection checks per tick; no per-projectile collision tests.
+- Cache arc checks unless facing changes.
+- If budget exceeded, collapse to volley-level deflect only.
+
 ## Formation and Timing
 - Ring formation is fixed; no movement in base run.
 - Volley staggering: apprentices stagger shots to avoid continuous saturation; aim for readable cadence.

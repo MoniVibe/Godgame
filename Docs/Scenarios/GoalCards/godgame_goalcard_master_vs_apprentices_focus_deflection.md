@@ -51,6 +51,7 @@ Target selection: apprentices always target master; master targets highest threa
 Lock time: apprentices have longer lock time; master near-instant with Focus.
 Track loss: lock drops on deflect or disable; apprentices reacquire with delay.
 Firing solution: straight-line projectiles; no lead required in stationary phase.
+Deflection model: windowed deflect (coarse, low-overhead); resolve per volley window, not per projectile.
 
 ## Movement and Orientation
 Formation: apprentices in ring at fixed radius, equal spacing.
@@ -62,6 +63,7 @@ Speed profile: stationary by default; optional dodge variant later.
 Weapon types: projectile bolts (deflectable), disable beam (focus-only).
 Firing arcs: 180 deg forward arc; projectiles blocked if out of arc.
 Ammo and heat: infinite for test; heat disabled unless variant enabled.
+Deflect rules: deflect only inside arc; successful deflect redirects or nullifies.
 
 ## Nuance Prompts (fill what applies)
 Perception: LOS only; no occlusion in base scenario.
@@ -72,6 +74,7 @@ Morale/discipline: apprentices do not panic; master never flees.
 Environment/interference: none.
 Failure cases: deflect mistimes cause self-hit; disable over-focus causes missed deflects.
 Determinism cues: fixed seed, fixed ring placement, fixed volley cadence.
+Overhead control: cap deflect checks per tick; fallback to volley-level deflect if budget exceeded.
 
 ## Addendum (Optional)
 Path: Docs/Scenarios/GoalCards/Addenda/godgame_master_vs_apprentices_notes.md

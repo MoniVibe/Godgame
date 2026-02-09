@@ -106,6 +106,26 @@
       "trackLoss": "on_deflect_or_disable",
       "firingSolution": "straight_line"
     },
+    "deflection": {
+      "model": "windowed",
+      "threat_window_hz": 12,
+      "max_threats": 4,
+      "arc_deg": 180,
+      "windup_ms": {
+        "master_focus": 120,
+        "apprentice_caster": 200
+      },
+      "window_ms": {
+        "master_focus": 160,
+        "apprentice_caster": 120
+      },
+      "recovery_ms": 250,
+      "prequeue_ms": {
+        "master_focus": 80,
+        "apprentice_caster": 0
+      },
+      "outcomes": ["redirect", "nullify", "fail"]
+    },
     "formation": {
       "type": "ring",
       "radius": 12,
@@ -179,6 +199,7 @@
     },
     "notes": [
       "ScenarioConfig fields are advisory; Godgame scenario loader ignores unknown keys.",
+      "Deflection model uses coarse volley windows to reduce overhead; avoid per-projectile checks.",
       "Spells/deflection may be stubbed until combat systems land."
     ]
   },
