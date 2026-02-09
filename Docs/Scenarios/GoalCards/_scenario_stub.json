@@ -100,6 +100,30 @@
         "Match assignments to entities.id/idPrefix (Godgame) or spawn entityId (Space4x)."
       ]
     },
+    "profileConflict": {
+      "conflicts": [
+        {
+          "sideA": {
+            "label": "<group_a_label>",
+            "profiles": ["<profile_tag>", "<profile_tag>"],
+            "entityIdPrefix": "<entity_id_prefix>"
+          },
+          "sideB": {
+            "label": "<group_b_label>",
+            "profiles": ["<profile_tag>", "<profile_tag>"],
+            "entityIdPrefix": "<entity_id_prefix>"
+          }
+        }
+      ],
+      "expectedOutcomes": [
+        "<who escalates, who converts, surrender/mercy tendencies>",
+        "<secondary outcomes or edge cases>"
+      ],
+      "reporting": [
+        "<metric_name_by_profile>",
+        "<conversion_rate_by_profile>"
+      ]
+    },
     "targeting": {
       "detection": "<LOS|sensor>",
       "lockTimeMs": {

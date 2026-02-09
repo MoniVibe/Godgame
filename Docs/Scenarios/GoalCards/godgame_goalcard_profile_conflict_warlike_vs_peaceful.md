@@ -37,6 +37,17 @@ Override rules: soft finish current action; hard immediate interrupt.
 Profile nuance: warlikes ignore soft hunger during conflict; peacefuls treat injury as hard break.
 Examples: warlike fanatics eat during shift; corrupts flee if advantage drops.
 
+## Profile Conflicts and Outcomes
+Conflicting profiles:
+- Warlike raiders: pure + evil + warlike + authoritarian (ruthless escalation).
+- Peaceful mediators: pure + good + peaceful + cooperative (parley-first posture).
+Expected outcomes:
+- Warlikes prefer lethal outcomes, low surrender acceptance, minimal prisoners.
+- Peacefuls attempt conversion in parley window; conversion success 5-20 percent depending on charisma vs target resistance.
+Outcome reporting:
+- Track kills, surrenders, and conversions split by profile tags (warlike vs peaceful, pure vs corrupt).
+- Report parley attempts and acceptance rate by profile group.
+
 ## Script
 1. Both groups move to meeting space.
 2. Peacefuls attempt persuasion/conversion during parley window.

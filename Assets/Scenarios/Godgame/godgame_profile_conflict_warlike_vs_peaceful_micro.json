@@ -45,13 +45,39 @@
     "profileAssignments": {
       "assignmentMode": "explicit",
       "entities": {
-        "raider_01": ["warlike", "evil", "authoritarian"],
-        "raider_02": ["warlike", "evil", "stoic"],
+        "raider_01": ["pure", "evil", "warlike", "authoritarian"],
+        "raider_02": ["pure", "evil", "warlike", "stoic"],
         "mediator_01": ["pure", "good", "peaceful", "cooperative"],
         "mediator_02": ["pure", "good", "egalitarian", "cooperative"]
       },
       "notes": [
         "Use pool refs for consistency; avoid random assignment in scenario definitions."
+      ]
+    },
+    "profileConflict": {
+      "conflicts": [
+        {
+          "sideA": {
+            "label": "warlike_raiders",
+            "profiles": ["pure", "evil", "warlike", "authoritarian"],
+            "entityIdPrefix": "raider_"
+          },
+          "sideB": {
+            "label": "peaceful_mediators",
+            "profiles": ["pure", "good", "peaceful", "cooperative"],
+            "entityIdPrefix": "mediator_"
+          }
+        }
+      ],
+      "expectedOutcomes": [
+        "Warlikes escalate, accept few surrenders, minimal prisoners.",
+        "Peacefuls attempt parley and conversion; success depends on charisma vs resistance."
+      ],
+      "reporting": [
+        "conflict.kills_by_profile",
+        "conflict.surrenders_by_profile",
+        "social.conversions_by_profile",
+        "social.parley_acceptance_by_profile"
       ]
     },
     "telemetry": {
