@@ -73,6 +73,10 @@ Environment/interference: none.
 Failure cases: deflect mistimes cause self-hit; disable over-focus causes missed deflects.
 Determinism cues: fixed seed, fixed ring placement, fixed volley cadence.
 
+## Addendum (Optional)
+Path: Docs/Scenarios/GoalCards/Addenda/godgame_master_vs_apprentices_notes.md
+Notes: Longform combat nuance and deflection timing details.
+
 ## Script
 1. Apprentices begin a staggered firing pattern toward the master.
 2. Master cycles Focus between apprentices, casting disable and deflection spells.
