@@ -21,6 +21,11 @@ Capture master/apprentice combat nuances (focus, deflection, disable cadence) wi
 - Interplay focus: environment-driven (training drill) rather than profile-vs-profile.
 - Expected expressions: master stays calm and efficient; apprentices follow discipline rules and do not panic.
 
+## Schedule and Regimen Nuances
+- Lawful/stoic apprentices follow drill blocks; chaotic/corrupt may drift or fire outside cadence.
+- Master (warlike + pure) keeps the session on schedule; allows brief breaks only for injury.
+- Needs overrides (hunger/fatigue/injury) can preempt training; interruptions should be recorded.
+
 ## Spell/Combat Nuances
 - Focus cadence: master cycles focus between apprentices with minimal idle.
 - Deflection timing: deflect should trigger during incoming projectile windows; mis-timed deflect causes self-hit.
