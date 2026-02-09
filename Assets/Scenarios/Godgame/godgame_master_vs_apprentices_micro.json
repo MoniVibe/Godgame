@@ -2,6 +2,126 @@
   "name": "Godgame Master vs Apprentices",
   "description": "Focus and deflection drill: master mage vs apprentices projectile practice.",
   "duration_s": 60,
+  "runTicks": 0,
+  "scenarioConfig": {
+    "goalId": "combat_focus_master_vs_apprentices_v0",
+    "roles": [
+      {
+        "role": "master_focus",
+        "experienceTier": "elite",
+        "statEffects": {
+          "reaction_time_ms": -150,
+          "deflect_accuracy_bonus": 0.25,
+          "disable_success_bonus": 0.2,
+          "focus_gain_bonus": 0.3
+        }
+      },
+      {
+        "role": "apprentice_caster",
+        "experienceTier": "rookie|experienced",
+        "statEffects": {
+          "aim_spread_deg": 2.0,
+          "lock_time_ms": 450,
+          "fire_rate_variance": 0.15
+        }
+      }
+    ],
+    "roleDistribution": {
+      "apprentice_caster": {
+        "rookie": 4,
+        "experienced": 4,
+        "veteran": 0,
+        "elite": 0
+      }
+    },
+    "behaviorProfile": {
+      "coordination": "staggered_volleys",
+      "targetSharing": "broadcast_master",
+      "discipline": "hold_fire_when_deflecting",
+      "failureModes": [
+        "focus_thrash",
+        "lock_churn",
+        "deflect_timing_drift"
+      ]
+    },
+    "targeting": {
+      "detection": "LOS",
+      "lockTimeMs": {
+        "master_focus": 50,
+        "apprentice_caster": 450
+      },
+      "reacquireDelayMs": {
+        "apprentice_caster": 300
+      },
+      "trackLoss": "on_deflect_or_disable",
+      "firingSolution": "straight_line"
+    },
+    "formation": {
+      "type": "ring",
+      "radius": 12,
+      "spacing": "even",
+      "allowMovement": false
+    },
+    "movement": {
+      "stationary": true,
+      "rotation": {
+        "master_focus": {
+          "yaw_deg_s": 90,
+          "pitch_deg_s": 60
+        },
+        "apprentice_caster": {
+          "yaw_deg_s": 45,
+          "pitch_deg_s": 30
+        }
+      },
+      "facing": "maintain_target"
+    },
+    "weapons": {
+      "projectile": {
+        "type": "bolt",
+        "deflectable": true,
+        "arc_deg": 180
+      },
+      "disable": {
+        "type": "beam",
+        "cooldown_s": 4,
+        "requires_focus": true
+      },
+      "ammo": "infinite"
+    },
+    "telemetry": {
+      "questions": [
+        {
+          "id": "godgame.q.focus.deflection.master_score",
+          "required": true
+        },
+        {
+          "id": "godgame.q.focus.deflection.deflect_rate",
+          "required": true
+        },
+        {
+          "id": "godgame.q.focus.deflection.disable_rate",
+          "required": false
+        }
+      ],
+      "metrics": [
+        "master.deflect_rate",
+        "master.hit_rate",
+        "master.disable_rate",
+        "focus.uptime",
+        "lock.reacquire_time_ms"
+      ],
+      "acceptance": {
+        "master.deflect_rate_min": 0.7,
+        "master.hit_rate_max": 0.2,
+        "master.disable_rate_min_per_min": 6
+      }
+    },
+    "notes": [
+      "ScenarioConfig fields are advisory; Godgame scenario loader ignores unknown keys.",
+      "Spells/deflection may be stubbed until combat systems land."
+    ]
+  },
   "entities": [
     {
       "prefab": "MasterMage",
@@ -15,5 +135,6 @@
       "position": { "x": 0, "y": 0, "z": 0 },
       "radius": 12
     }
-  ]
+  ],
+  "actions": []
 }

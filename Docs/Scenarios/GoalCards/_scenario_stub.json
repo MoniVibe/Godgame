@@ -1,25 +1,103 @@
 {
-  "scenarioId": "space4x_slice_name_micro",
-  "seed": 1,
+  "name": "<Scenario Name>",
+  "description": "<Short summary>",
   "duration_s": 120,
+  "runTicks": 0,
   "scenarioConfig": {
-    "applyDefaultModuleLoadouts": true,
-    "applyReferenceFrames": true,
-    "renderFrame": {
-      "enabled": 1,
-      "useBandScale": 1
-    },
-    "orbitalBand": {
-      "enabled": 1,
-      "presentationScale": 0.75
-    },
-    "headlessQuestions": [
+    "goalId": "<goal_id>",
+    "roles": [
       {
-        "id": "space4x.q.slice.metric",
-        "required": true
+        "role": "<role_name>",
+        "experienceTier": "<rookie|experienced|veteran|elite>",
+        "statEffects": {
+          "reaction_time_ms": 0,
+          "accuracy_bonus": 0.0,
+          "lock_time_ms": 0
+        }
       }
+    ],
+    "roleDistribution": {
+      "<role_name>": {
+        "rookie": 0,
+        "experienced": 0,
+        "veteran": 0,
+        "elite": 0
+      }
+    },
+    "behaviorProfile": {
+      "coordination": "<solo|staggered|focus_fire>",
+      "targetSharing": "<broadcast|local|none>",
+      "discipline": "<hold_fire|free_fire>",
+      "failureModes": [
+        "<lock_churn>",
+        "<thrash>"
+      ]
+    },
+    "targeting": {
+      "detection": "<LOS|sensor>",
+      "lockTimeMs": {
+        "<role_name>": 0
+      },
+      "reacquireDelayMs": {
+        "<role_name>": 0
+      },
+      "trackLoss": "<on_deflect_or_disable>",
+      "firingSolution": "<straight_line|lead_required>"
+    },
+    "formation": {
+      "type": "<ring|line|grid>",
+      "radius": 0,
+      "spacing": "<even>",
+      "allowMovement": false
+    },
+    "movement": {
+      "stationary": true,
+      "rotation": {
+        "<role_name>": {
+          "yaw_deg_s": 0,
+          "pitch_deg_s": 0
+        }
+      },
+      "facing": "<maintain_target>"
+    },
+    "weapons": {
+      "projectile": {
+        "type": "<bolt|beam>",
+        "deflectable": true,
+        "arc_deg": 180
+      },
+      "disable": {
+        "type": "<beam|pulse>",
+        "cooldown_s": 0,
+        "requires_focus": true
+      },
+      "ammo": "<infinite|limited>"
+    },
+    "telemetry": {
+      "questions": [
+        {
+          "id": "<telemetry_id>",
+          "required": true
+        }
+      ],
+      "metrics": [
+        "<metric_name>"
+      ],
+      "acceptance": {
+        "<metric_name>": "<threshold>"
+      }
+    },
+    "notes": [
+      "ScenarioConfig fields are advisory; Godgame scenario loader ignores unknown keys."
     ]
   },
-  "spawn": [],
+  "entities": [
+    {
+      "prefab": "<PrefabName>",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 1
+    }
+  ],
   "actions": []
 }
