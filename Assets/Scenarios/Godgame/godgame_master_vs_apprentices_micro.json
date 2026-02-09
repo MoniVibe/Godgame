@@ -43,6 +43,41 @@
         "deflect_timing_drift"
       ]
     },
+    "schedule": {
+      "timeBase": "scenario",
+      "profiles": {
+        "master_focus": [
+          {
+            "label": "Training",
+            "start_s": 0,
+            "duration_s": 60,
+            "activity": "train",
+            "sessionId": "focus_drill"
+          }
+        ],
+        "apprentice_caster": [
+          {
+            "label": "Training",
+            "start_s": 0,
+            "duration_s": 60,
+            "activity": "train",
+            "sessionId": "focus_drill"
+          }
+        ]
+      },
+      "sessions": {
+        "focus_drill": {
+          "mentorRole": "master_focus",
+          "traineeRole": "apprentice_caster",
+          "focus": "deflect_disable",
+          "constraints": {
+            "formation": "ring",
+            "allowMovement": false
+          }
+        }
+      },
+      "fallbackActivity": "idle"
+    },
     "targeting": {
       "detection": "LOS",
       "lockTimeMs": {

@@ -36,6 +36,15 @@ Target sharing: apprentices broadcast the master target; master retargets appren
 Discipline: apprentices hold fire if master is already deflecting; master prioritizes uninterrupted disable loops.
 Failure modes: focus thrash, target lock oscillation, deflect timing drift.
 
+## Schedule Regime
+Time base: scenario (60s training window).
+Profiles:
+- master_focus: training block (0-60s), session focus_drill.
+- apprentice_caster: training block (0-60s), session focus_drill.
+Training windows: focus_drill pairs mentor master_focus with apprentice_caster trainees.
+Attendance rules: require overlap during training; fallback to idle if session missing.
+Reuse notes: same regime can drive other mage drills or trainee vs mentor variants.
+
 ## Targeting and Fire Control
 Detection: direct LOS only, no stealth.
 Target selection: apprentices always target master; master targets highest threat apprentice.
