@@ -34,7 +34,9 @@ namespace Godgame.Bands
             using var missingDisciplineStates = new NativeList<Entity>(Allocator.Temp);
             using var missingOrderClimate = new NativeList<Entity>(Allocator.Temp);
             using var missingResourceMorality = new NativeList<Entity>(Allocator.Temp);
+            using var missingGovernancePulse = new NativeList<Entity>(Allocator.Temp);
             using var missingOrderEvents = new NativeList<Entity>(Allocator.Temp);
+            using var missingJusticeEvents = new NativeList<Entity>(Allocator.Temp);
             using var missingIntelReports = new NativeList<Entity>(Allocator.Temp);
             using var missingMemoryEvents = new NativeList<Entity>(Allocator.Temp);
             using var missingDisciplineEvents = new NativeList<Entity>(Allocator.Temp);
@@ -114,9 +116,19 @@ namespace Godgame.Bands
                 missingResourceMorality.Add(entity);
             }
 
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandGovernancePulse>().WithEntityAccess())
+            {
+                missingGovernancePulse.Add(entity);
+            }
+
             foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandOrderEvent>().WithEntityAccess())
             {
                 missingOrderEvents.Add(entity);
+            }
+
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandJusticeEvent>().WithEntityAccess())
+            {
+                missingJusticeEvents.Add(entity);
             }
 
             foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandIntelReport>().WithEntityAccess())
@@ -210,9 +222,19 @@ namespace Godgame.Bands
                 entityManager.AddComponentData(missingResourceMorality[i], BandResourceMorality.Default);
             }
 
+            for (var i = 0; i < missingGovernancePulse.Length; i++)
+            {
+                entityManager.AddComponentData(missingGovernancePulse[i], BandGovernancePulse.Default);
+            }
+
             for (var i = 0; i < missingOrderEvents.Length; i++)
             {
                 entityManager.AddBuffer<BandOrderEvent>(missingOrderEvents[i]);
+            }
+
+            for (var i = 0; i < missingJusticeEvents.Length; i++)
+            {
+                entityManager.AddBuffer<BandJusticeEvent>(missingJusticeEvents[i]);
             }
 
             for (var i = 0; i < missingIntelReports.Length; i++)

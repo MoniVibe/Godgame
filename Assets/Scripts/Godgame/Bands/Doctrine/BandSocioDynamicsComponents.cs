@@ -22,6 +22,21 @@ namespace Godgame.Bands
         Reward = 5
     }
 
+    public enum BandJusticeOutcome : byte
+    {
+        Fine = 0,
+        Demotion = 1,
+        Confinement = 2,
+        Execution = 3
+    }
+
+    public enum BandJusticeTargetClass : byte
+    {
+        Crew = 0,
+        Officer = 1,
+        Elite = 2
+    }
+
     public enum BandIntelQuality : byte
     {
         Verified = 0,
@@ -137,6 +152,28 @@ namespace Godgame.Bands
         };
     }
 
+    public struct BandGovernancePulse : IComponentData
+    {
+        public float NepotismBias;
+        public float RankMeritBias;
+        public float ScapegoatBias;
+        public float JusticeCredibility;
+        public float InternalEliteSupport;
+        public float ExternalLegitimacy;
+        public float PublicFear;
+
+        public static BandGovernancePulse Default => new BandGovernancePulse
+        {
+            NepotismBias = 0f,
+            RankMeritBias = 0.5f,
+            ScapegoatBias = 0f,
+            JusticeCredibility = 0.5f,
+            InternalEliteSupport = 0.5f,
+            ExternalLegitimacy = 0.5f,
+            PublicFear = 0.2f
+        };
+    }
+
     [InternalBufferCapacity(8)]
     public struct BandOrderEvent : IBufferElementData
     {
@@ -145,6 +182,18 @@ namespace Godgame.Bands
         public float Severity;
         public byte IsPublic;
         public byte BypassChain;
+        public uint Tick;
+    }
+
+    [InternalBufferCapacity(8)]
+    public struct BandJusticeEvent : IBufferElementData
+    {
+        public BandJusticeOutcome Outcome;
+        public BandJusticeTargetClass TargetClass;
+        public float Severity;
+        public float EvidenceStrength;
+        public float TargetAffinity;
+        public byte IsPublic;
         public uint Tick;
     }
 

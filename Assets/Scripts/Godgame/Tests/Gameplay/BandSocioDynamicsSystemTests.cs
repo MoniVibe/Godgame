@@ -180,6 +180,141 @@ namespace Godgame.Tests.Gameplay
             Assert.AreEqual(0, grievanceCount);
         }
 
+        [Test]
+        public void LowEvidenceCrewExecution_RaisesScapegoatBiasAndRadicalization()
+        {
+            var band = CreateBand(0.58f);
+            BootstrapOnly(band);
+
+            var doctrine = _entityManager.GetComponentData<BandDoctrineProfile>(band);
+            doctrine.AuthoritarianBias = 0.82f;
+            doctrine.EgalitarianBias = 0.18f;
+            doctrine.CorruptionBias = 0.78f;
+            _entityManager.SetComponentData(band, doctrine);
+
+            var socio = _entityManager.GetComponentData<BandSocioProfile>(band);
+            socio.ChaosAxis = 0.82f;
+            socio.DueProcessPreference = 0.12f;
+            socio.NepotismTolerance = 0.72f;
+            _entityManager.SetComponentData(band, socio);
+
+            AddJusticeEvent(
+                band,
+                BandJusticeOutcome.Execution,
+                BandJusticeTargetClass.Crew,
+                severity: 0.92f,
+                evidence: 0.1f,
+                affinity: 0.08f,
+                isPublic: true);
+
+            RunSocioDynamics();
+
+            var governance = _entityManager.GetComponentData<BandGovernancePulse>(band);
+            var discipline = _entityManager.GetComponentData<BandDisciplineState>(band);
+            var moraleAfter = _entityManager.GetComponentData<Band>(band).Morale;
+
+            Assert.Greater(governance.ScapegoatBias, 0.05f);
+            Assert.Greater(discipline.Radicalization, 0.02f);
+            Assert.Less(moraleAfter, 0.58f);
+        }
+
+        [Test]
+        public void HighEvidenceDueProcess_ImprovesJusticeCredibilityAndTrust()
+        {
+            var band = CreateBand(0.5f);
+            BootstrapOnly(band);
+
+            var doctrine = _entityManager.GetComponentData<BandDoctrineProfile>(band);
+            doctrine.AuthoritarianBias = 0.22f;
+            doctrine.EgalitarianBias = 0.75f;
+            doctrine.CorruptionBias = 0.08f;
+            _entityManager.SetComponentData(band, doctrine);
+
+            var socio = _entityManager.GetComponentData<BandSocioProfile>(band);
+            socio.ChaosAxis = 0.08f;
+            socio.DueProcessPreference = 0.95f;
+            socio.NepotismTolerance = 0.08f;
+            socio.InstitutionLoyalty = 0.85f;
+            _entityManager.SetComponentData(band, socio);
+
+            AddJusticeEvent(
+                band,
+                BandJusticeOutcome.Demotion,
+                BandJusticeTargetClass.Officer,
+                severity: 0.7f,
+                evidence: 0.93f,
+                affinity: 0.2f,
+                isPublic: true);
+
+            RunSocioDynamics();
+
+            var governance = _entityManager.GetComponentData<BandGovernancePulse>(band);
+            var social = _entityManager.GetComponentData<BandSocialState>(band);
+            Assert.Greater(governance.JusticeCredibility, 0.5f);
+            Assert.Greater(governance.ExternalLegitimacy, 0.5f);
+            Assert.Greater(social.CommandTrust, 0.5f);
+        }
+
+        [Test]
+        public void ConnectedLeniency_HurtsEgalitarianBandsMoreThanAuthoritarianBands()
+        {
+            var authoritarianBand = CreateBand(0.6f);
+            var egalitarianBand = CreateBand(0.6f);
+            BootstrapOnly(authoritarianBand);
+            BootstrapOnly(egalitarianBand);
+
+            var doctrineAuth = _entityManager.GetComponentData<BandDoctrineProfile>(authoritarianBand);
+            doctrineAuth.AuthoritarianBias = 0.9f;
+            doctrineAuth.EgalitarianBias = 0.1f;
+            doctrineAuth.CorruptionBias = 0.62f;
+            _entityManager.SetComponentData(authoritarianBand, doctrineAuth);
+
+            var doctrineEgal = _entityManager.GetComponentData<BandDoctrineProfile>(egalitarianBand);
+            doctrineEgal.AuthoritarianBias = 0.1f;
+            doctrineEgal.EgalitarianBias = 0.9f;
+            doctrineEgal.CorruptionBias = 0.62f;
+            _entityManager.SetComponentData(egalitarianBand, doctrineEgal);
+
+            var socioAuth = _entityManager.GetComponentData<BandSocioProfile>(authoritarianBand);
+            socioAuth.NepotismTolerance = 0.85f;
+            socioAuth.ChaosAxis = 0.25f;
+            socioAuth.DueProcessPreference = 0.3f;
+            _entityManager.SetComponentData(authoritarianBand, socioAuth);
+
+            var socioEgal = _entityManager.GetComponentData<BandSocioProfile>(egalitarianBand);
+            socioEgal.NepotismTolerance = 0.1f;
+            socioEgal.ChaosAxis = 0.85f;
+            socioEgal.DueProcessPreference = 0.65f;
+            _entityManager.SetComponentData(egalitarianBand, socioEgal);
+
+            AddJusticeEvent(
+                authoritarianBand,
+                BandJusticeOutcome.Fine,
+                BandJusticeTargetClass.Elite,
+                severity: 0.3f,
+                evidence: 0.88f,
+                affinity: 0.95f,
+                isPublic: true);
+            AddJusticeEvent(
+                egalitarianBand,
+                BandJusticeOutcome.Fine,
+                BandJusticeTargetClass.Elite,
+                severity: 0.3f,
+                evidence: 0.88f,
+                affinity: 0.95f,
+                isPublic: true);
+
+            RunSocioDynamics();
+
+            var authGov = _entityManager.GetComponentData<BandGovernancePulse>(authoritarianBand);
+            var egalGov = _entityManager.GetComponentData<BandGovernancePulse>(egalitarianBand);
+            var authDiscipline = _entityManager.GetComponentData<BandDisciplineState>(authoritarianBand);
+            var egalDiscipline = _entityManager.GetComponentData<BandDisciplineState>(egalitarianBand);
+            Assert.Greater(authGov.InternalEliteSupport, 0.5f);
+            Assert.Less(egalGov.ExternalLegitimacy, authGov.ExternalLegitimacy);
+            Assert.Greater(egalDiscipline.Radicalization, authDiscipline.Radicalization);
+        }
+
         private Entity CreateBand(float morale)
         {
             var entity = _entityManager.CreateEntity(typeof(Band));
@@ -216,6 +351,27 @@ namespace Godgame.Tests.Gameplay
                 DeceptionIntent = 0.9f,
                 BeneficiaryBias = 0.8f,
                 EvidenceStrength = 0.05f
+            });
+        }
+
+        private void AddJusticeEvent(
+            Entity band,
+            BandJusticeOutcome outcome,
+            BandJusticeTargetClass targetClass,
+            float severity,
+            float evidence,
+            float affinity,
+            bool isPublic)
+        {
+            var justiceEvents = _entityManager.GetBuffer<BandJusticeEvent>(band);
+            justiceEvents.Add(new BandJusticeEvent
+            {
+                Outcome = outcome,
+                TargetClass = targetClass,
+                Severity = severity,
+                EvidenceStrength = evidence,
+                TargetAffinity = affinity,
+                IsPublic = isPublic ? (byte)1 : (byte)0
             });
         }
 

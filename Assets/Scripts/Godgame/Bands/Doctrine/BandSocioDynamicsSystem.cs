@@ -28,7 +28,7 @@ namespace Godgame.Bands
         {
             var tick = SystemAPI.GetSingleton<TimeState>().Tick;
 
-            foreach (var (band, doctrineProfile, doctrineContext, social, socioProfile, discipline, climate, resourceMorality, orderEvents, intelReports, memoryEvents, disciplineEvents) in SystemAPI
+            foreach (var (band, doctrineProfile, doctrineContext, social, socioProfile, discipline, climate, resourceMorality, governancePulse, orderEvents, justiceEvents, intelReports, memoryEvents, disciplineEvents) in SystemAPI
                          .Query<
                              RefRW<Band>,
                              RefRO<BandDoctrineProfile>,
@@ -38,13 +38,25 @@ namespace Godgame.Bands
                              RefRW<BandDisciplineState>,
                              RefRO<BandOrderClimate>,
                              RefRO<BandResourceMorality>,
+                             RefRW<BandGovernancePulse>,
                              DynamicBuffer<BandOrderEvent>,
+                             DynamicBuffer<BandJusticeEvent>,
                              DynamicBuffer<BandIntelReport>,
                              DynamicBuffer<BandMemoryEvent>,
                              DynamicBuffer<BandDisciplineEvent>>())
             {
                 ProcessIntelReports(ref doctrineContext.ValueRW, socioProfile.ValueRO, intelReports, ref discipline.ValueRW);
                 ApplyHardshipAndCaptainEffects(ref band.ValueRW, climate.ValueRO, resourceMorality.ValueRO, doctrineProfile.ValueRO);
+                ProcessJusticeEvents(
+                    tick,
+                    ref band.ValueRW,
+                    ref social.ValueRW,
+                    doctrineProfile.ValueRO,
+                    socioProfile.ValueRO,
+                    ref discipline.ValueRW,
+                    ref governancePulse.ValueRW,
+                    justiceEvents,
+                    memoryEvents);
                 ProcessOrderEvents(
                     tick,
                     ref band.ValueRW,
@@ -58,7 +70,13 @@ namespace Godgame.Bands
                     memoryEvents);
                 EvaluateCompliance(tick, band.ValueRW.Morale, climate.ValueRO, socioProfile.ValueRO, ref discipline.ValueRW, disciplineEvents);
                 AdvanceMemory(ref memoryEvents, socioProfile.ValueRO);
-                ApplyDriftAndPressure(ref discipline.ValueRW, band.ValueRW.Morale, socioProfile.ValueRO, climate.ValueRO);
+                ApplyDriftAndPressure(
+                    ref discipline.ValueRW,
+                    band.ValueRW.Morale,
+                    socioProfile.ValueRO,
+                    doctrineProfile.ValueRO,
+                    climate.ValueRO,
+                    governancePulse.ValueRO);
             }
         }
 
@@ -184,6 +202,143 @@ namespace Godgame.Bands
             orderEvents.Clear();
         }
 
+        private static void ProcessJusticeEvents(
+            uint tick,
+            ref Band band,
+            ref BandSocialState social,
+            in BandDoctrineProfile doctrineProfile,
+            in BandSocioProfile socioProfile,
+            ref BandDisciplineState discipline,
+            ref BandGovernancePulse governance,
+            DynamicBuffer<BandJusticeEvent> justiceEvents,
+            DynamicBuffer<BandMemoryEvent> memoryEvents)
+        {
+            if (justiceEvents.Length == 0)
+            {
+                return;
+            }
+
+            var corruption = math.saturate(doctrineProfile.CorruptionBias);
+            var authoritarian = math.saturate(doctrineProfile.AuthoritarianBias);
+            var egalitarian = math.saturate(doctrineProfile.EgalitarianBias);
+            var chaos = math.saturate(socioProfile.ChaosAxis);
+            var dueProcess = math.saturate(socioProfile.DueProcessPreference) * (1f - chaos * 0.35f);
+            var societalNepotismAcceptance = math.saturate(authoritarian * 0.55f + socioProfile.NepotismTolerance * 0.45f);
+
+            for (var i = 0; i < justiceEvents.Length; i++)
+            {
+                var justice = justiceEvents[i];
+                var evidence = math.saturate(justice.EvidenceStrength);
+                var severity = math.saturate(justice.Severity);
+                var affinity = math.saturate(justice.TargetAffinity);
+                var harshness = GetJusticeHarshness(justice.Outcome) * severity;
+                var isPublic = justice.IsPublic != 0;
+
+                var connectedLeniency = math.max(0f, affinity - 0.55f) * math.max(0f, 0.45f - harshness);
+                var scapegoatSignal = math.max(0f, 0.45f - evidence) * math.max(0f, harshness - 0.45f) * math.max(0f, 0.5f - affinity);
+
+                if (justice.TargetClass == BandJusticeTargetClass.Crew)
+                {
+                    scapegoatSignal = math.saturate(scapegoatSignal + 0.08f);
+                }
+                else if (justice.TargetClass == BandJusticeTargetClass.Elite)
+                {
+                    connectedLeniency = math.saturate(connectedLeniency + 0.05f);
+                }
+
+                var nepotismBacklashMultiplier =
+                    math.lerp(1.2f, 0.65f, societalNepotismAcceptance) *
+                    math.lerp(0.9f, 1.25f, egalitarian);
+                var scapegoatBacklashMultiplier = 0.85f + chaos * 0.45f + egalitarian * 0.2f;
+                if (isPublic)
+                {
+                    nepotismBacklashMultiplier += 0.2f;
+                    scapegoatBacklashMultiplier += 0.15f;
+                }
+
+                var nepotismBacklash = connectedLeniency * nepotismBacklashMultiplier;
+                var scapegoatBacklash = scapegoatSignal * scapegoatBacklashMultiplier;
+                var unrest = nepotismBacklash + scapegoatBacklash;
+
+                governance.NepotismBias = math.saturate(
+                    governance.NepotismBias +
+                    connectedLeniency * (0.14f + corruption * 0.08f) -
+                    evidence * dueProcess * 0.03f);
+
+                governance.ScapegoatBias = math.saturate(
+                    governance.ScapegoatBias +
+                    scapegoatSignal * (0.16f + authoritarian * 0.05f + corruption * 0.05f) -
+                    dueProcess * 0.04f);
+
+                var rankMeritPulse =
+                    math.saturate(socioProfile.InstitutionLoyalty) * 0.45f +
+                    egalitarian * 0.25f +
+                    dueProcess * 0.25f -
+                    governance.NepotismBias * 0.2f;
+                governance.RankMeritBias = math.saturate(math.lerp(governance.RankMeritBias, rankMeritPulse, 0.14f));
+
+                var eliteShielding = connectedLeniency * (0.06f + authoritarian * 0.04f + corruption * 0.05f);
+                var eliteCrackdown = math.max(0f, affinity - 0.6f) * math.max(0f, harshness - 0.55f) * 0.1f;
+                governance.InternalEliteSupport = math.saturate(governance.InternalEliteSupport + eliteShielding - eliteCrackdown);
+                governance.ExternalLegitimacy = math.saturate(
+                    governance.ExternalLegitimacy +
+                    evidence * dueProcess * 0.07f -
+                    unrest * 0.12f -
+                    corruption * connectedLeniency * 0.05f);
+                governance.JusticeCredibility = math.saturate(
+                    governance.JusticeCredibility +
+                    evidence * dueProcess * 0.08f -
+                    (connectedLeniency + scapegoatSignal) * 0.11f);
+                governance.PublicFear = math.saturate(
+                    governance.PublicFear +
+                    harshness * 0.07f +
+                    authoritarian * 0.02f -
+                    evidence * dueProcess * 0.05f);
+
+                social.CrewResentment = math.saturate(social.CrewResentment + unrest * 0.2f);
+                social.CommandTrust = math.saturate(
+                    social.CommandTrust +
+                    evidence * dueProcess * 0.07f -
+                    unrest * 0.18f -
+                    corruption * connectedLeniency * 0.03f);
+                social.LoyaltyDrift = math.clamp(
+                    social.LoyaltyDrift +
+                    governance.RankMeritBias * 0.02f -
+                    governance.NepotismBias * 0.03f -
+                    governance.ScapegoatBias * 0.02f,
+                    -1f,
+                    1f);
+
+                discipline.Radicalization = math.saturate(
+                    discipline.Radicalization +
+                    unrest * 0.16f +
+                    governance.ScapegoatBias * 0.02f -
+                    evidence * dueProcess * 0.04f);
+                discipline.SplinterPressure = math.saturate(
+                    discipline.SplinterPressure +
+                    math.max(0f, governance.ScapegoatBias - 0.4f) * 0.04f +
+                    math.max(0f, governance.NepotismBias - 0.45f) * 0.03f);
+
+                band.Morale = math.saturate(
+                    band.Morale -
+                    unrest * 0.06f +
+                    evidence * dueProcess * 0.02f -
+                    governance.PublicFear * 0.005f);
+
+                if (connectedLeniency > 0.1f)
+                {
+                    AddMemory(memoryEvents, BandMemoryType.Betrayal, connectedLeniency * 1.1f, 0f, BandMemoryFlags.Permanent, tick);
+                }
+
+                if (scapegoatSignal > 0.08f && justice.Outcome == BandJusticeOutcome.Execution)
+                {
+                    AddMemory(memoryEvents, BandMemoryType.Atrocity, scapegoatSignal * 1.2f, 0f, BandMemoryFlags.Permanent | BandMemoryFlags.Hardened, tick);
+                }
+            }
+
+            justiceEvents.Clear();
+        }
+
         private static float ComputeExecutionSympathy(
             in BandDoctrineProfile doctrineProfile,
             in BandSocioProfile socioProfile,
@@ -266,22 +421,36 @@ namespace Godgame.Bands
             ref BandDisciplineState discipline,
             float morale,
             in BandSocioProfile profile,
-            in BandOrderClimate climate)
+            in BandDoctrineProfile doctrineProfile,
+            in BandOrderClimate climate,
+            in BandGovernancePulse governance)
         {
             var lowMorale = math.max(0f, MoraleObedienceThreshold - morale) * 6f;
             var divergence = math.saturate(climate.CurrentOrderDivergence + climate.AggregateGrievance * 0.4f);
             var driftPulse = lowMorale * 0.02f + divergence * 0.015f + discipline.Radicalization * 0.01f;
+            var rankPreference =
+                math.saturate(profile.InstitutionLoyalty) * 0.55f +
+                math.saturate(profile.DueProcessPreference) * 0.2f +
+                math.saturate(doctrineProfile.EgalitarianBias) * 0.25f;
+            var familyPreference =
+                math.saturate(profile.FamilyLoyalty) * 0.5f +
+                math.saturate(profile.NepotismTolerance) * 0.3f +
+                governance.NepotismBias * 0.2f;
+            var rankVsFamilyDrift = rankPreference - familyPreference;
 
             discipline.OrderDrift = math.clamp(
-                discipline.OrderDrift - driftPulse + math.saturate(profile.InstitutionLoyalty) * 0.01f,
+                discipline.OrderDrift - driftPulse + rankVsFamilyDrift * 0.02f,
                 -1f,
                 1f);
 
             discipline.CorruptionDrift = math.saturate(
                 discipline.CorruptionDrift +
                 driftPulse * 0.6f +
+                governance.NepotismBias * 0.015f +
+                governance.ScapegoatBias * 0.012f +
                 math.max(0f, profile.NepotismTolerance - 0.4f) * 0.01f -
-                math.saturate(profile.DueProcessPreference) * 0.008f);
+                math.saturate(profile.DueProcessPreference) * 0.008f -
+                governance.JusticeCredibility * 0.006f);
         }
 
         private static void AdvanceMemory(
@@ -348,6 +517,23 @@ namespace Godgame.Bands
                     return true;
                 default:
                     return false;
+            }
+        }
+
+        private static float GetJusticeHarshness(BandJusticeOutcome outcome)
+        {
+            switch (outcome)
+            {
+                case BandJusticeOutcome.Fine:
+                    return 0.2f;
+                case BandJusticeOutcome.Demotion:
+                    return 0.45f;
+                case BandJusticeOutcome.Confinement:
+                    return 0.7f;
+                case BandJusticeOutcome.Execution:
+                    return 1f;
+                default:
+                    return 0.4f;
             }
         }
     }
