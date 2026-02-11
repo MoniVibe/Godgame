@@ -18,6 +18,13 @@ Equipment/Loadouts: default villager settings
 Rules/Constraints: continuous gather/deliver loop
 Duration: 90 seconds
 
+## Schedule Regime
+Time base: scenario (90s).
+Profiles: gatherer and hauler roles active throughout.
+Training windows: warm-up (0-10s), steady-state throughput (10-90s).
+Attendance rules: villagers remain in gather/deliver loop; fallback to idle if jobs missing.
+Reuse notes: reuse for warehouse and logistics throughput variants.
+
 ## Script
 1. Spawn villagers near VillageCenter and Storehouse.
 2. Enable gather/deliver jobs to Storehouse.

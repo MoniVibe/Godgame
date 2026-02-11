@@ -1,25 +1,200 @@
 {
-  "scenarioId": "space4x_slice_name_micro",
-  "seed": 1,
+  "name": "<Scenario Name>",
+  "description": "<Short summary>",
   "duration_s": 120,
   "scenarioConfig": {
-    "applyDefaultModuleLoadouts": true,
-    "applyReferenceFrames": true,
-    "renderFrame": {
-      "enabled": 1,
-      "useBandScale": 1
-    },
-    "orbitalBand": {
-      "enabled": 1,
-      "presentationScale": 0.75
-    },
-    "headlessQuestions": [
+    "goalId": "<goal_id>",
+    "roles": [
       {
-        "id": "space4x.q.slice.metric",
-        "required": true
+        "role": "<role_name>",
+        "experienceTier": "<rookie|experienced|veteran|elite>",
+        "statEffects": {
+          "reaction_time_ms": 0,
+          "accuracy_bonus": 0.0,
+          "lock_time_ms": 0
+        }
       }
+    ],
+    "roleDistribution": {
+      "<role_name>": {
+        "rookie": 0,
+        "experienced": 0,
+        "veteran": 0,
+        "elite": 0
+      }
+    },
+    "behaviorProfile": {
+      "coordination": "<solo|staggered|focus_fire>",
+      "targetSharing": "<broadcast|local|none>",
+      "discipline": "<hold_fire|free_fire>",
+      "failureModes": [
+        "<lock_churn>",
+        "<thrash>"
+      ]
+    },
+    "schedule": {
+      "timeBase": "scenario",
+      "profiles": {
+        "<role_name>": [
+          {
+            "label": "Training",
+            "start_s": 0,
+            "duration_s": 60,
+            "activity": "train",
+            "sessionId": "training_session"
+          }
+        ]
+      },
+      "entitySchedules": {
+        "<entity_id>": "<profile_name>"
+      },
+      "sessions": {
+        "training_session": {
+          "mentorRole": "<mentor_role>",
+          "traineeRole": "<trainee_role>",
+          "focus": "<skill_slice>",
+          "constraints": {
+            "formation": "ring",
+            "allowMovement": false
+          }
+        }
+      },
+      "needsOverrides": {
+        "needs": {
+          "hunger": { "soft": 0.6, "hard": 0.85, "action": "eat" },
+          "fatigue": { "soft": 0.6, "hard": 0.85, "action": "rest" },
+          "injury": { "soft": 0.3, "hard": 0.6, "action": "medic" }
+        },
+        "interruptPolicy": {
+          "soft": "finish_current_action",
+          "hard": "immediate_interrupt"
+        },
+        "shiftRules": {
+          "allowEatOnShift": true,
+          "allowRestOnShift": false,
+          "sidelinedOnInjury": true
+        }
+      },
+      "profileNuance": {
+        "lawful": { "shiftBreakBias": "low", "dutyBias": "high" },
+        "pure": { "shiftBreakBias": "low", "dutyBias": "medium" },
+        "chaotic": { "shiftBreakBias": "high", "unpredictable": true },
+        "corrupt": { "shiftBreakBias": "selfish", "dutyBias": "low" },
+        "warlike": { "shiftBreakBias": "very_low", "dutyBias": "very_high" },
+        "warlike_fanatic": { "shiftBreakBias": "minimal", "eatOnShift": true }
+      },
+      "fallbackActivity": "idle"
+    },
+    "profilePools": {
+      "outlook_pool_ref": "puredots.outlook_pool"
+    },
+    "profileAssignments": {
+      "assignmentMode": "explicit",
+      "entities": {
+        "master_mage": ["pure", "chaotic", "good", "cooperative", "magic", "warlike", "egalitarian"],
+        "student_01": ["outlook_pool:lawful_good_cooperative"],
+        "student_02": ["outlook_pool:chaotic_neutral_independent"]
+      },
+      "notes": [
+        "Use pool refs for consistency; avoid random assignment in scenario definitions.",
+        "Match assignments to entities.id/idPrefix (Godgame) or spawn entityId (Space4x)."
+      ]
+    },
+    "profileInterplay": {
+      "interactions": [
+        {
+          "sideA": {
+            "label": "<group_a_label>",
+            "profiles": ["<profile_tag>", "<profile_tag>"],
+            "entityIdPrefix": "<entity_id_prefix>"
+          },
+          "sideB": {
+            "label": "<group_b_label>",
+            "profiles": ["<profile_tag>", "<profile_tag>"],
+            "entityIdPrefix": "<entity_id_prefix>"
+          }
+        }
+      ],
+      "mode": "<negotiation|cooperation|rivalry|conflict|environment>",
+      "expectedOutcomes": [
+        "<how profiles express themselves against other profiles or the simulation>",
+        "<secondary outcomes or edge cases>"
+      ],
+      "reporting": [
+        "<metric_name_by_profile>",
+        "<conversion_rate_by_profile>"
+      ],
+      "notes": [
+        "Interplay does not have to be conflict; use this to capture dynamic profile expression."
+      ]
+    },
+    "targeting": {
+      "detection": "<LOS|sensor>",
+      "lockTimeMs": {
+        "<role_name>": 0
+      },
+      "reacquireDelayMs": {
+        "<role_name>": 0
+      },
+      "trackLoss": "<on_deflect_or_disable>",
+      "firingSolution": "<straight_line|lead_required>"
+    },
+    "formation": {
+      "type": "<ring|line|grid>",
+      "radius": 0,
+      "spacing": "<even>",
+      "allowMovement": false
+    },
+    "movement": {
+      "stationary": true,
+      "rotation": {
+        "<role_name>": {
+          "yaw_deg_s": 0,
+          "pitch_deg_s": 0
+        }
+      },
+      "facing": "<maintain_target>"
+    },
+    "weapons": {
+      "projectile": {
+        "type": "<bolt|beam>",
+        "deflectable": true,
+        "arc_deg": 180
+      },
+      "disable": {
+        "type": "<beam|pulse>",
+        "cooldown_s": 0,
+        "requires_focus": true
+      },
+      "ammo": "<infinite|limited>"
+    },
+    "telemetry": {
+      "questions": [
+        {
+          "id": "<telemetry_id>",
+          "required": true
+        }
+      ],
+      "metrics": [
+        "<metric_name>"
+      ],
+      "acceptance": {
+        "<metric_name>": "<threshold>"
+      }
+    },
+    "notes": [
+      "ScenarioConfig fields are advisory; Godgame scenario loader ignores unknown keys."
     ]
   },
-  "spawn": [],
+  "entities": [
+    {
+      "id": "<entity_id>",
+      "idPrefix": "<entity_id_prefix>",
+      "prefab": "<PrefabName>",
+      "count": 1,
+      "position": { "x": 0, "y": 0, "z": 0 },
+      "radius": 1
+    }
+  ],
   "actions": []
 }

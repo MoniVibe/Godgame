@@ -1,0 +1,107 @@
+{
+  "name": "Godgame Profile Conflict (Warlike vs Peaceful)",
+  "description": "Outlook-driven conflict: warlikes escalate, peacefuls attempt conversion.",
+  "duration_s": 90,
+  "scenarioConfig": {
+    "goalId": "social_profile_conflict_warlike_vs_peaceful_v0",
+    "roles": [
+      { "role": "warlike_raider", "experienceTier": "veteran" },
+      { "role": "peaceful_mediator", "experienceTier": "experienced" }
+    ],
+    "roleDistribution": {
+      "warlike_raider": { "veteran": 8 },
+      "peaceful_mediator": { "experienced": 8 }
+    },
+    "schedule": {
+      "timeBase": "scenario",
+      "profiles": {
+        "warlike_raider": [
+          { "label": "Parley", "start_s": 0, "duration_s": 20, "activity": "parley" },
+          { "label": "Conflict", "start_s": 20, "duration_s": 70, "activity": "conflict" }
+        ],
+        "peaceful_mediator": [
+          { "label": "Parley", "start_s": 0, "duration_s": 20, "activity": "parley" },
+          { "label": "Conflict", "start_s": 20, "duration_s": 70, "activity": "defend_or_convert" }
+        ]
+      },
+      "needsOverrides": {
+        "needs": {
+          "hunger": { "soft": 0.6, "hard": 0.85, "action": "eat" },
+          "fatigue": { "soft": 0.6, "hard": 0.85, "action": "rest" },
+          "injury": { "soft": 0.3, "hard": 0.6, "action": "medic" }
+        },
+        "interruptPolicy": { "soft": "finish_current_action", "hard": "immediate_interrupt" },
+        "shiftRules": { "allowEatOnShift": true, "allowRestOnShift": false, "sidelinedOnInjury": true }
+      },
+      "profileNuance": {
+        "warlike": { "shiftBreakBias": "very_low", "dutyBias": "very_high" },
+        "peaceful": { "shiftBreakBias": "medium", "dutyBias": "medium" }
+      },
+      "fallbackActivity": "idle"
+    },
+    "profilePools": {
+      "outlook_pool_ref": "puredots.outlook_pool"
+    },
+    "profileAssignments": {
+      "assignmentMode": "explicit",
+      "entities": {
+        "raider_01": ["pure", "evil", "warlike", "authoritarian"],
+        "raider_02": ["pure", "evil", "warlike", "stoic"],
+        "mediator_01": ["pure", "good", "peaceful", "cooperative"],
+        "mediator_02": ["pure", "good", "egalitarian", "cooperative"]
+      },
+      "notes": [
+        "Use pool refs for consistency; avoid random assignment in scenario definitions."
+      ]
+    },
+    "profileInterplay": {
+      "interactions": [
+        {
+          "sideA": {
+            "label": "warlike_raiders",
+            "profiles": ["pure", "evil", "warlike", "authoritarian"],
+            "entityIdPrefix": "raider_"
+          },
+          "sideB": {
+            "label": "peaceful_mediators",
+            "profiles": ["pure", "good", "peaceful", "cooperative"],
+            "entityIdPrefix": "mediator_"
+          }
+        }
+      ],
+      "mode": "conflict",
+      "expectedOutcomes": [
+        "Warlikes escalate, accept few surrenders, minimal prisoners.",
+        "Peacefuls attempt parley and conversion; success depends on charisma vs resistance."
+      ],
+      "reporting": [
+        "conflict.kills_by_profile",
+        "conflict.surrenders_by_profile",
+        "social.conversions_by_profile",
+        "social.parley_acceptance_by_profile"
+      ],
+      "notes": [
+        "Interplay does not have to be conflict; this scenario is conflict-heavy by design."
+      ]
+    },
+    "telemetry": {
+      "questions": [
+        { "id": "godgame.q.social.profile_conflict_score", "required": true }
+      ],
+      "metrics": [
+        "conflict.kills",
+        "conflict.surrenders",
+        "social.conversions",
+        "social.parley_success_rate"
+      ]
+    },
+    "notes": [
+      "ScenarioConfig fields are advisory; Godgame scenario loader ignores unknown keys."
+    ]
+  },
+  "entities": [
+    { "idPrefix": "raider_", "prefab": "Villager", "count": 8, "position": { "x": -6, "y": 0, "z": 0 }, "radius": 2 },
+    { "idPrefix": "mediator_", "prefab": "Villager", "count": 8, "position": { "x": 6, "y": 0, "z": 0 }, "radius": 2 }
+  ],
+  "actions": []
+}
