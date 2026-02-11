@@ -100,8 +100,9 @@ namespace Godgame.Physics
         {
             return layer switch
             {
-                // GroundUnit collides with: Building, Terrain, GroundUnit (soft), Projectile, Decoration (soft), Resource (trigger)
-                GodgamePhysicsLayer.GroundUnit => (1u << Building) | (1u << Terrain) | (1u << GroundUnit) | (1u << Projectile) | (1u << Decoration) | (1u << Resource) | (1u << TriggerZone),
+                // GroundUnit collides with: Building, Terrain, Projectile, Decoration (soft), Resource (trigger).
+                // GroundUnit-to-GroundUnit is intentionally disabled: crowd flow is handled by steering, not hard physics contacts.
+                GodgamePhysicsLayer.GroundUnit => (1u << Building) | (1u << Terrain) | (1u << Projectile) | (1u << Decoration) | (1u << Resource) | (1u << TriggerZone),
 
                 // FlyingUnit collides with: Building, Terrain (altitude), Projectile, TriggerZone
                 GodgamePhysicsLayer.FlyingUnit => (1u << Building) | (1u << Terrain) | (1u << Projectile) | (1u << TriggerZone),
@@ -200,4 +201,3 @@ namespace Godgame.Physics
         }
     }
 }
-

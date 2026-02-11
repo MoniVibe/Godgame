@@ -108,6 +108,10 @@ namespace Godgame.Villagers
             var separationWeight = math.max(0f, movementTuning.SeparationWeight);
             var separationMaxPush = math.max(0f, movementTuning.SeparationMaxPush);
             var separationCellSize = math.max(0.1f, movementTuning.SeparationCellSize);
+            var crowdingForwardBias = math.max(0f, movementTuning.CrowdingForwardBias);
+            var crowdingSpeedBoost = math.max(0f, movementTuning.CrowdingSpeedBoost);
+            var stuckEscapeRadiusMultiplier = math.max(1f, movementTuning.StuckEscapeRadiusMultiplier);
+            var stuckEscapeSeparationDamp = math.saturate(movementTuning.StuckEscapeSeparationDamp);
             var arriveSlowdownRadius = math.max(0f, movementTuning.ArriveSlowdownRadius);
             var arriveStopRadius = math.max(0f, movementTuning.ArriveStopRadius);
             var arriveMinMultiplier = math.clamp(movementTuning.ArriveMinSpeedMultiplier, 0.1f, 1f);
@@ -302,9 +306,12 @@ namespace Godgame.Villagers
                 var crowdingNeighborCap = baseCrowdingNeighborCap
                                           * ResolveOutlookCrowdingNeighborCapScale(entity, hasOutlookRules, outlookRules, _outlookLookup)
                                           * ResolveArchetypeCrowdingNeighborCapScale(entity, hasArchetypeRules, archetypeRules, _archetypeLookup);
-                crowding.ValueRW.Pressure = ResolveCrowdingPressure(neighborCount, crowdingNeighborCap);
+                var crowdingPressure = ResolveCrowdingPressure(neighborCount, crowdingNeighborCap);
+                crowding.ValueRW.Pressure = crowdingPressure;
                 crowding.ValueRW.LastSampleTick = tick;
                 dir = math.normalizesafe(dir + separation);
+                var forwardBias = math.saturate(crowdingPressure * crowdingForwardBias);
+                dir = math.normalizesafe(math.lerp(dir, math.normalizesafe(toTarget), forwardBias), dir);
                 var currentVelocity = nav.ValueRO.Velocity;
                 currentVelocity.y = 0f;
                 if (math.lengthsq(currentVelocity) > 1e-4f)
@@ -315,6 +322,7 @@ namespace Godgame.Villagers
                 }
                 var arriveSpeed = ApplyArriveSlowdown(moveSpeed, distance, arrivalDistance, arriveSlowdownRadius,
                     arriveStopRadius, arriveMinMultiplier, useSmoothing);
+                arriveSpeed *= 1f + crowdingSpeedBoost * crowdingPressure;
                 var desiredVelocity = dir * arriveSpeed;
                 var currentSpeed = math.length(currentVelocity);
                 var acceleration = math.max(0.1f, moveSpeed * accelMultiplier);
@@ -376,10 +384,12 @@ namespace Godgame.Villagers
                          tick > movementState.ValueRO.LastProgressTick &&
                          (tick - movementState.ValueRO.LastProgressTick) >= stuckTimeoutTicks)
                 {
-                    movementState.ValueRW.AnchorOffset = BuildWanderOffset(entity, tick + 97u, math.max(0.5f, radius));
+                    var escapeRadius = math.max(0.5f, radius * math.lerp(1f, stuckEscapeRadiusMultiplier, crowdingPressure));
+                    movementState.ValueRW.AnchorOffset = BuildWanderOffset(entity, tick + 97u, escapeRadius);
                     movementState.ValueRW.NextRepathTick = tick;
                     movementState.ValueRW.LastProgressPosition = latestPosition;
                     movementState.ValueRW.LastProgressTick = tick;
+                    crowding.ValueRW.Pressure = math.max(0f, crowdingPressure - stuckEscapeSeparationDamp);
                     nav.ValueRW.Velocity = float3.zero;
                 }
 

@@ -17,6 +17,33 @@ namespace Godgame.Bands
     }
 
     /// <summary>
+    /// High-level command presets used to quickly shape doctrine behavior.
+    /// </summary>
+    public enum BandDoctrinePreset : byte
+    {
+        HoldLine = 0,
+        Opportunist = 1,
+        Zealot = 2
+    }
+
+    /// <summary>
+    /// Current doctrine preset assignment for a band.
+    /// </summary>
+    public struct BandDoctrinePresetState : IComponentData
+    {
+        public BandDoctrinePreset Value;
+        public BandDoctrinePreset AppliedValue;
+        public uint LastAppliedTick;
+
+        public static BandDoctrinePresetState Default => new BandDoctrinePresetState
+        {
+            Value = BandDoctrinePreset.HoldLine,
+            AppliedValue = (BandDoctrinePreset)byte.MaxValue,
+            LastAppliedTick = 0
+        };
+    }
+
+    /// <summary>
     /// Command profile used to arbitrate doctrine requests.
     /// Higher authoritarian/corruption/cruelty values increase harsh policy choices.
     /// </summary>

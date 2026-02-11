@@ -23,6 +23,7 @@ namespace Godgame.Bands
             using var missingContexts = new NativeList<Entity>(Allocator.Temp);
             using var missingSelections = new NativeList<Entity>(Allocator.Temp);
             using var missingProjections = new NativeList<Entity>(Allocator.Temp);
+            using var missingPresetStates = new NativeList<Entity>(Allocator.Temp);
             using var missingWeights = new NativeList<Entity>(Allocator.Temp);
             using var missingHierarchy = new NativeList<Entity>(Allocator.Temp);
             using var missingSocial = new NativeList<Entity>(Allocator.Temp);
@@ -62,6 +63,11 @@ namespace Godgame.Bands
             foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandDoctrineProjection>().WithEntityAccess())
             {
                 missingProjections.Add(entity);
+            }
+
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandDoctrinePresetState>().WithEntityAccess())
+            {
+                missingPresetStates.Add(entity);
             }
 
             foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandDoctrineWeight>().WithEntityAccess())
@@ -182,6 +188,11 @@ namespace Godgame.Bands
             for (var i = 0; i < missingProjections.Length; i++)
             {
                 entityManager.AddComponentData(missingProjections[i], default(BandDoctrineProjection));
+            }
+
+            for (var i = 0; i < missingPresetStates.Length; i++)
+            {
+                entityManager.AddComponentData(missingPresetStates[i], BandDoctrinePresetState.Default);
             }
 
             for (var i = 0; i < missingWeights.Length; i++)

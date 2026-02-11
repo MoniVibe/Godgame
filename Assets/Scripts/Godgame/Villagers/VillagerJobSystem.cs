@@ -198,6 +198,9 @@ namespace Godgame.Villagers
             var separationWeight = math.max(0f, movementTuning.SeparationWeight);
             var separationMaxPush = math.max(0f, movementTuning.SeparationMaxPush);
             var separationCellSize = math.max(0.1f, movementTuning.SeparationCellSize);
+            var crowdingForwardBias = math.max(0f, movementTuning.CrowdingForwardBias);
+            var crowdingSpeedBoost = math.max(0f, movementTuning.CrowdingSpeedBoost);
+            var stuckEscapeSeparationDamp = math.saturate(movementTuning.StuckEscapeSeparationDamp);
 
             var scheduleConfig = SystemAPI.HasSingleton<VillagerScheduleConfig>()
                 ? SystemAPI.GetSingleton<VillagerScheduleConfig>()
@@ -376,7 +379,10 @@ namespace Godgame.Villagers
                 SeparationRadius = separationRadius,
                 SeparationWeight = separationWeight,
                 SeparationMaxPush = separationMaxPush,
-                SeparationCellSize = separationCellSize
+                SeparationCellSize = separationCellSize,
+                CrowdingForwardBias = crowdingForwardBias,
+                CrowdingSpeedBoost = crowdingSpeedBoost,
+                StuckEscapeSeparationDamp = stuckEscapeSeparationDamp
             }.Schedule(state.Dependency);
 
             state.Dependency = targetPositions.Dispose(state.Dependency);
@@ -520,6 +526,9 @@ namespace Godgame.Villagers
             public float SeparationWeight;
             public float SeparationMaxPush;
             public float SeparationCellSize;
+            public float CrowdingForwardBias;
+            public float CrowdingSpeedBoost;
+            public float StuckEscapeSeparationDamp;
 
             [BurstCompile]
             void Execute([ChunkIndexInQuery] int ciq, Entity e, ref VillagerJobState job, ref VillagerWorkCooldown workCooldown, ref JobAssignment assignment,
@@ -953,9 +962,11 @@ namespace Godgame.Villagers
                         if (distance > arrivalDistance)
                         {
                             var moveDir = VillagerSteeringMath.BlendDirection(direction, hazardVector, hazardUrgency);
-                            var separation = ResolveSeparation(e, tx.Position);
-                            moveDir = math.normalizesafe(moveDir + separation);
+                            var separation = ResolveSeparation(e, tx.Position, out var neighborCount);
+                            var crowdingPressure = ResolveCrowdingPressure(neighborCount);
+                            moveDir = ApplyCrowdingGhostBias(moveDir, direction, separation, crowdingPressure);
                             var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance, arrivalDistance, useSmoothing);
+                            travelSpeed *= 1f + CrowdingSpeedBoost * crowdingPressure;
                             var currentVelocity = nav.Velocity;
                             currentVelocity.y = 0f;
                             if (math.lengthsq(currentVelocity) > 1e-4f)
@@ -1331,9 +1342,11 @@ namespace Godgame.Villagers
                         if (distance > deliverDistance)
                         {
                             var moveDir = VillagerSteeringMath.BlendDirection(direction, hazardVector, hazardUrgency);
-                            var separation = ResolveSeparation(e, tx.Position);
-                            moveDir = math.normalizesafe(moveDir + separation);
+                            var separation = ResolveSeparation(e, tx.Position, out var neighborCount);
+                            var crowdingPressure = ResolveCrowdingPressure(neighborCount);
+                            moveDir = ApplyCrowdingGhostBias(moveDir, direction, separation, crowdingPressure);
                             var travelSpeed = ApplyArriveSlowdown(nav.Speed, distance, deliverDistance, useSmoothing);
+                            travelSpeed *= 1f + CrowdingSpeedBoost * crowdingPressure;
                             var currentVelocity = nav.Velocity;
                             currentVelocity.y = 0f;
                             if (math.lengthsq(currentVelocity) > 1e-4f)
@@ -2720,8 +2733,9 @@ namespace Godgame.Villagers
                 return baseSpeed * math.max(0.1f, variance);
             }
 
-            private float3 ResolveSeparation(Entity self, float3 position)
+            private float3 ResolveSeparation(Entity self, float3 position, out int neighborCount)
             {
+                neighborCount = 0;
                 if (SeparationRadius <= 0f || SeparationWeight <= 0f || VillagerEntities.Length == 0)
                 {
                     return float3.zero;
@@ -2761,6 +2775,7 @@ namespace Godgame.Villagers
                             var dist = math.sqrt(distSq);
                             var push = (SeparationRadius - dist) / SeparationRadius;
                             separation += diff / math.max(dist, 1e-4f) * push;
+                            neighborCount++;
                         } while (VillagerSpatialMap.TryGetNextValue(out index, ref iterator));
                     }
                 }
@@ -2773,6 +2788,26 @@ namespace Godgame.Villagers
 
                 var scaled = math.min(SeparationMaxPush, magnitude * SeparationWeight);
                 return separation / magnitude * scaled;
+            }
+
+            private float ResolveCrowdingPressure(int neighborCount)
+            {
+                if (neighborCount <= 0)
+                {
+                    return 0f;
+                }
+
+                var softCap = math.max(2f, SeparationRadius * 4f);
+                return math.saturate(neighborCount / softCap);
+            }
+
+            private float3 ApplyCrowdingGhostBias(float3 desiredDirection, float3 toTarget, float3 separation, float crowdingPressure)
+            {
+                var forward = math.normalizesafe(toTarget, desiredDirection);
+                var damp = math.lerp(1f, math.max(0f, 1f - StuckEscapeSeparationDamp), crowdingPressure);
+                var merged = math.normalizesafe(desiredDirection + separation * damp, desiredDirection);
+                var forwardBias = math.saturate(crowdingPressure * CrowdingForwardBias);
+                return math.normalizesafe(math.lerp(merged, forward, forwardBias), forward);
             }
 
             private static int2 CellCoord(float3 position, float cellSize)

@@ -53,10 +53,59 @@ namespace Godgame.Tests.Gameplay
             Assert.IsTrue(_entityManager.HasComponent<BandDoctrineContext>(bandEntity));
             Assert.IsTrue(_entityManager.HasComponent<BandDoctrineSelection>(bandEntity));
             Assert.IsTrue(_entityManager.HasComponent<BandDoctrineProjection>(bandEntity));
+            Assert.IsTrue(_entityManager.HasComponent<BandDoctrinePresetState>(bandEntity));
             Assert.IsTrue(_entityManager.HasBuffer<BandDoctrineWeight>(bandEntity));
 
             var weights = _entityManager.GetBuffer<BandDoctrineWeight>(bandEntity);
             Assert.GreaterOrEqual(weights.Length, 6);
+
+            var preset = _entityManager.GetComponentData<BandDoctrinePresetState>(bandEntity);
+            Assert.AreEqual(BandDoctrinePreset.HoldLine, preset.Value);
+            Assert.AreEqual((BandDoctrinePreset)byte.MaxValue, preset.AppliedValue);
+        }
+
+        [Test]
+        public void DoctrinePresetSystem_AppliesPresetOnce_ThenLeavesManualTweaksUntouched()
+        {
+            var bandEntity = _entityManager.CreateEntity(typeof(Band));
+            _entityManager.SetComponentData(bandEntity, new Band
+            {
+                Status = BandStatus.Idle,
+                Cohesion = 0.65f,
+                Morale = 0.7f,
+                Fatigue = 0.15f
+            });
+
+            var bootstrap = _world.GetOrCreateSystem<BandDoctrineBootstrapSystem>();
+            UpdateInitSystem(bootstrap);
+
+            var preset = _entityManager.GetComponentData<BandDoctrinePresetState>(bandEntity);
+            preset.Value = BandDoctrinePreset.Zealot;
+            _entityManager.SetComponentData(bandEntity, preset);
+
+            var timeEntity = _entityManager.CreateEntityQuery(ComponentType.ReadOnly<TimeState>()).GetSingletonEntity();
+            var expectedTick = _entityManager.GetComponentData<TimeState>(timeEntity).Tick;
+
+            var presetSystem = _world.GetOrCreateSystem<BandDoctrinePresetSystem>();
+            UpdateSimSystem(presetSystem);
+
+            var updatedPreset = _entityManager.GetComponentData<BandDoctrinePresetState>(bandEntity);
+            Assert.AreEqual(BandDoctrinePreset.Zealot, updatedPreset.AppliedValue);
+            Assert.AreEqual(expectedTick, updatedPreset.LastAppliedTick);
+
+            var profile = _entityManager.GetComponentData<BandDoctrineProfile>(bandEntity);
+            var autonomy = _entityManager.GetComponentData<BandCommandAutonomy>(bandEntity);
+            var hierarchy = _entityManager.GetComponentData<BandCommandHierarchy>(bandEntity);
+            Assert.AreEqual(0.88f, profile.AuthoritarianBias, 0.0001f);
+            Assert.AreEqual(0.1f, autonomy.CaptainEmpathy, 0.0001f);
+            Assert.AreEqual(8, hierarchy.MinTicksBetweenRequests);
+
+            profile.AuthoritarianBias = 0.99f;
+            _entityManager.SetComponentData(bandEntity, profile);
+            UpdateSimSystem(presetSystem);
+
+            var preservedProfile = _entityManager.GetComponentData<BandDoctrineProfile>(bandEntity);
+            Assert.AreEqual(0.99f, preservedProfile.AuthoritarianBias, 0.0001f);
         }
 
         [Test]

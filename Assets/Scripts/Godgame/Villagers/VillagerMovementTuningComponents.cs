@@ -30,6 +30,10 @@ namespace Godgame.Villagers
         public float SeparationWeight;
         public float SeparationMaxPush;
         public float SeparationCellSize;
+        public float CrowdingForwardBias;
+        public float CrowdingSpeedBoost;
+        public float StuckEscapeRadiusMultiplier;
+        public float StuckEscapeSeparationDamp;
 
         public static VillagerMovementTuning Default => new VillagerMovementTuning
         {
@@ -55,7 +59,11 @@ namespace Godgame.Villagers
             SeparationRadius = 1.2f,
             SeparationWeight = 0.65f,
             SeparationMaxPush = 0.7f,
-            SeparationCellSize = 1.8f
+            SeparationCellSize = 1.8f,
+            CrowdingForwardBias = 0.45f,
+            CrowdingSpeedBoost = 0.18f,
+            StuckEscapeRadiusMultiplier = 1.6f,
+            StuckEscapeSeparationDamp = 0.35f
         };
     }
 }
