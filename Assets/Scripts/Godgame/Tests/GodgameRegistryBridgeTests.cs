@@ -1,6 +1,9 @@
 using Godgame.Registry;
+using Godgame.Bands;
+using Godgame.Villagers;
 using NUnit.Framework;
 using PureDOTS.Runtime.Bands;
+using PureDOTS.Runtime.Combat;
 using PureDOTS.Runtime.Components;
 using PureDOTS.Runtime.Registry;
 using PureDOTS.Runtime.Transport;
@@ -8,6 +11,11 @@ using PureDOTS.Systems;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
+using GodgameBandFormation = Godgame.Bands.BandFormation;
+using GodgameBandFormationType = Godgame.Bands.BandFormationType;
+using GodgameBandMember = Godgame.Bands.BandMember;
+using GodgameBandRole = Godgame.Bands.BandRole;
 
 namespace Godgame.Tests.Registry
 {
@@ -26,6 +34,7 @@ namespace Godgame.Tests.Registry
             _world = new World("GodgameRegistryBridgeTests");
             _entityManager = _world.EntityManager;
             CoreSingletonBootstrapSystem.EnsureSingletons(_entityManager);
+            _world.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
             _world.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
             _simGroup = _world.GetOrCreateSystemManaged<SimulationSystemGroup>();
         }
@@ -144,6 +153,68 @@ namespace Godgame.Tests.Registry
             Assert.AreEqual(5f, entry.AssignedUnits, 0.001f);
             Assert.AreEqual(LogisticsRequestPriority.High, entry.Priority);
             Assert.AreEqual(LogisticsRequestFlags.Urgent, entry.Flags);
+        }
+
+        [Test]
+        public void FormationBridge_AggregatesBandCombatStats_AndSyncsCombatStats()
+        {
+            var villagerA = _entityManager.CreateEntity(typeof(VillagerCombatStats));
+            _entityManager.SetComponentData(villagerA, new VillagerCombatStats
+            {
+                AttackDamage = 8f,
+                AttackSpeed = 40f
+            });
+
+            var villagerB = _entityManager.CreateEntity(typeof(VillagerCombatStats));
+            _entityManager.SetComponentData(villagerB, new VillagerCombatStats
+            {
+                AttackDamage = 12f,
+                AttackSpeed = 60f
+            });
+
+            var band = _entityManager.CreateEntity(
+                typeof(LocalTransform),
+                typeof(GodgameBandFormation),
+                typeof(BandStats),
+                typeof(CombatStats));
+
+            _entityManager.SetComponentData(band, LocalTransform.FromPosition(float3.zero));
+            _entityManager.SetComponentData(band, new GodgameBandFormation
+            {
+                Formation = GodgameBandFormationType.Line,
+                Spacing = 2f,
+                Facing = new float3(0f, 0f, 1f),
+                Anchor = float3.zero
+            });
+            _entityManager.SetComponentData(band, new BandStats
+            {
+                Morale = 0.82f
+            });
+            _entityManager.SetComponentData(band, new CombatStats
+            {
+                AttackDamage = 1,
+                AttackSpeed = 1,
+                Morale = 1
+            });
+
+            var members = _entityManager.AddBuffer<GodgameBandMember>(band);
+            members.Add(new GodgameBandMember { Villager = villagerA, Role = GodgameBandRole.Regular });
+            members.Add(new GodgameBandMember { Villager = villagerB, Role = GodgameBandRole.Regular });
+
+            var bridgeSystem = _world.GetOrCreateSystem<GodgameFormationCombatBridgeSystem>();
+            UpdateSystem(bridgeSystem);
+
+            Assert.IsTrue(_entityManager.HasComponent<BandCombatStats>(band));
+
+            var aggregate = _entityManager.GetComponentData<BandCombatStats>(band);
+            Assert.AreEqual(2, aggregate.SampleCount);
+            Assert.AreEqual(10f, aggregate.AverageAttackDamage, 0.001f);
+            Assert.AreEqual(50f, aggregate.AverageAttackSpeed, 0.001f);
+
+            var combat = _entityManager.GetComponentData<CombatStats>(band);
+            Assert.AreEqual(10, combat.AttackDamage);
+            Assert.AreEqual(50, combat.AttackSpeed);
+            Assert.AreEqual(82, combat.Morale);
         }
     }
 }

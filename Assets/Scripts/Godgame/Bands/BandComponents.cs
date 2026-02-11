@@ -318,4 +318,26 @@ namespace Godgame.Bands
         /// </summary>
         public int VengeanceTargetFaction;
     }
+
+    /// <summary>
+    /// Aggregated combat profile for a band, derived from current member combat stats.
+    /// Used by bridge systems that need stable per-band combat defaults.
+    /// </summary>
+    public struct BandCombatStats : IComponentData
+    {
+        /// <summary>
+        /// Mean attack damage across sampled members.
+        /// </summary>
+        public float AverageAttackDamage;
+
+        /// <summary>
+        /// Mean attack speed across sampled members.
+        /// </summary>
+        public float AverageAttackSpeed;
+
+        /// <summary>
+        /// Number of members that contributed to this aggregate.
+        /// </summary>
+        public byte SampleCount;
+    }
 }

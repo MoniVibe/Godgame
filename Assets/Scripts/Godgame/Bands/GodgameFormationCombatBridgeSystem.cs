@@ -9,6 +9,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using GodgameVillagerCombatStats = Godgame.Villagers.VillagerCombatStats;
 
 namespace Godgame.Bands
 {
@@ -23,12 +24,14 @@ namespace Godgame.Bands
     {
         private ComponentLookup<LocalTransform> _transformLookup;
         private ComponentLookup<BandCombatStats> _bandCombatLookup;
+        private ComponentLookup<GodgameVillagerCombatStats> _villagerCombatLookup;
 
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
-            _bandCombatLookup = state.GetComponentLookup<BandCombatStats>(true);
+            _bandCombatLookup = state.GetComponentLookup<BandCombatStats>(false);
+            _villagerCombatLookup = state.GetComponentLookup<GodgameVillagerCombatStats>(true);
         }
 
         [BurstCompile]
@@ -43,6 +46,9 @@ namespace Godgame.Bands
 
             _transformLookup.Update(ref state);
             _bandCombatLookup.Update(ref state);
+            _villagerCombatLookup.Update(ref state);
+
+            SyncBandCombatStats(ref state);
 
             // Phase A: Add components and buffers via ECB
             // 1. PROJECT: Query bands with BandFormation but no FormationState
@@ -143,6 +149,91 @@ namespace Godgame.Bands
                 updated.Morale = ClampStatByte(bandStats.ValueRO.Morale * 100f, updated.Morale);
                 combatStats.ValueRW = updated;
             }
+        }
+
+        private void SyncBandCombatStats(ref SystemState state)
+        {
+            using var missing = new NativeList<PendingBandCombatStat>(Allocator.Temp);
+            foreach (var (bandMembers, entity) in SystemAPI.Query<DynamicBuffer<BandMember>>().WithEntityAccess())
+            {
+                var next = ComputeBandCombatStats(bandMembers);
+                if (_bandCombatLookup.HasComponent(entity))
+                {
+                    var current = _bandCombatLookup[entity];
+                    if (!ApproximatelyEqual(current, next))
+                    {
+                        _bandCombatLookup[entity] = next;
+                    }
+                }
+                else
+                {
+                    missing.Add(new PendingBandCombatStat
+                    {
+                        Entity = entity,
+                        Stats = next
+                    });
+                }
+            }
+
+            for (var i = 0; i < missing.Length; i++)
+            {
+                state.EntityManager.AddComponentData(missing[i].Entity, missing[i].Stats);
+            }
+        }
+
+        private BandCombatStats ComputeBandCombatStats(DynamicBuffer<BandMember> members)
+        {
+            var sumAttackDamage = 0f;
+            var sumAttackSpeed = 0f;
+            var sampleCount = 0;
+
+            for (var i = 0; i < members.Length; i++)
+            {
+                var villager = members[i].Villager;
+                if (!_villagerCombatLookup.HasComponent(villager))
+                {
+                    continue;
+                }
+
+                var villagerCombat = _villagerCombatLookup[villager];
+                if (villagerCombat.AttackDamage <= 0f && villagerCombat.AttackSpeed <= 0f)
+                {
+                    continue;
+                }
+
+                sumAttackDamage += math.max(0f, villagerCombat.AttackDamage);
+                sumAttackSpeed += math.max(0f, villagerCombat.AttackSpeed);
+                sampleCount++;
+            }
+
+            if (sampleCount <= 0)
+            {
+                return default;
+            }
+
+            return new BandCombatStats
+            {
+                AverageAttackDamage = sumAttackDamage / sampleCount,
+                AverageAttackSpeed = sumAttackSpeed / sampleCount,
+                SampleCount = (byte)math.min(sampleCount, 255)
+            };
+        }
+
+        private static bool ApproximatelyEqual(in BandCombatStats left, in BandCombatStats right)
+        {
+            if (left.SampleCount != right.SampleCount)
+            {
+                return false;
+            }
+
+            return math.abs(left.AverageAttackDamage - right.AverageAttackDamage) < 0.001f
+                && math.abs(left.AverageAttackSpeed - right.AverageAttackSpeed) < 0.001f;
+        }
+
+        private struct PendingBandCombatStat
+        {
+            public Entity Entity;
+            public BandCombatStats Stats;
         }
 
         private static void CreateFormationState(
