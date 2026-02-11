@@ -22,11 +22,13 @@ namespace Godgame.Bands
     public partial struct GodgameFormationCombatBridgeSystem : ISystem
     {
         private ComponentLookup<LocalTransform> _transformLookup;
+        private ComponentLookup<BandCombatStats> _bandCombatLookup;
 
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
             _transformLookup = state.GetComponentLookup<LocalTransform>(true);
+            _bandCombatLookup = state.GetComponentLookup<BandCombatStats>(true);
         }
 
         [BurstCompile]
@@ -40,6 +42,7 @@ namespace Godgame.Bands
                 .CreateCommandBuffer(state.WorldUnmanaged);
 
             _transformLookup.Update(ref state);
+            _bandCombatLookup.Update(ref state);
 
             // Phase A: Add components and buffers via ECB
             // 1. PROJECT: Query bands with BandFormation but no FormationState
@@ -55,7 +58,9 @@ namespace Godgame.Bands
                     bandFormation.ValueRO.Formation == BandFormationType.Skirmish ||
                     bandFormation.ValueRO.Formation == BandFormationType.ShieldWall)
                 {
-                    CreateFormationState(entity, bandFormation.ValueRO, transform.ValueRO, currentTick, ref state, ref ecb);
+                    var hasBandCombat = _bandCombatLookup.HasComponent(entity);
+                    var bandCombat = hasBandCombat ? _bandCombatLookup[entity] : default;
+                    CreateFormationState(entity, bandFormation.ValueRO, transform.ValueRO, currentTick, hasBandCombat, bandCombat, ref state, ref ecb);
                 }
             }
 
@@ -118,6 +123,26 @@ namespace Godgame.Bands
                     }
                 }
             }
+
+            // 5. UPDATE: Sync CombatStats from BandCombatStats changes
+            foreach (var (bandCombat, combatStats) in SystemAPI
+                     .Query<RefRO<BandCombatStats>, RefRW<CombatStats>>()
+                     .WithChangeFilter<BandCombatStats>())
+            {
+                var updated = combatStats.ValueRW;
+                ApplyBandCombatStats(ref updated, bandCombat.ValueRO);
+                combatStats.ValueRW = updated;
+            }
+
+            // 6. UPDATE: Sync morale from BandStats changes
+            foreach (var (bandStats, combatStats) in SystemAPI
+                     .Query<RefRO<BandStats>, RefRW<CombatStats>>()
+                     .WithChangeFilter<BandStats>())
+            {
+                var updated = combatStats.ValueRW;
+                updated.Morale = ClampStatByte(bandStats.ValueRO.Morale * 100f, updated.Morale);
+                combatStats.ValueRW = updated;
+            }
         }
 
         private static void CreateFormationState(
@@ -125,6 +150,8 @@ namespace Godgame.Bands
             BandFormation bandFormation,
             LocalTransform transform,
             uint currentTick,
+            bool hasBandCombat,
+            BandCombatStats bandCombatStats,
             ref SystemState state,
             ref EntityCommandBuffer ecb)
         {
@@ -175,13 +202,21 @@ namespace Godgame.Bands
                     morale = (byte)math.clamp((int)(bandStats.Morale * 100f), 0, 100);
                 }
 
+                byte attackDamage = 10;
+                byte attackSpeed = 50;
+                if (hasBandCombat && bandCombatStats.SampleCount > 0)
+                {
+                    attackDamage = ClampStatByte(bandCombatStats.AverageAttackDamage, attackDamage);
+                    attackSpeed = ClampStatByte(bandCombatStats.AverageAttackSpeed, attackSpeed);
+                }
+
                 ecb.AddComponent(entity, new CombatStats
                 {
                     Attack = 50, // Placeholder - TODO: Aggregate from band members
                     Defense = 50, // Placeholder - TODO: Aggregate from band members
                     Morale = morale, // Derived from BandStats.Morale if available
-                    AttackSpeed = 50, // Placeholder - TODO: Aggregate from band members
-                    AttackDamage = 10, // Placeholder - TODO: Aggregate from band members
+                    AttackSpeed = attackSpeed,
+                    AttackDamage = attackDamage,
                     Accuracy = 50, // Placeholder - TODO: Aggregate from band members
                     CriticalChance = 5, // Placeholder - TODO: Aggregate from band members
                     Health = 100, // Placeholder - TODO: Aggregate from band members
@@ -201,6 +236,28 @@ namespace Godgame.Bands
             }
 
             // FormationSlot buffer will be populated in Phase B after ECB playback
+        }
+
+        private static void ApplyBandCombatStats(ref CombatStats combatStats, BandCombatStats bandCombatStats)
+        {
+            if (bandCombatStats.SampleCount <= 0)
+            {
+                return;
+            }
+
+            combatStats.AttackDamage = ClampStatByte(bandCombatStats.AverageAttackDamage, combatStats.AttackDamage);
+            combatStats.AttackSpeed = ClampStatByte(bandCombatStats.AverageAttackSpeed, combatStats.AttackSpeed);
+        }
+
+        private static byte ClampStatByte(float value, byte fallback)
+        {
+            if (value <= 0f)
+            {
+                return fallback;
+            }
+
+            var rounded = (int)math.round(value);
+            return (byte)math.clamp(rounded, 0, 100);
         }
 
         private static void UpdateFormationSlots(
