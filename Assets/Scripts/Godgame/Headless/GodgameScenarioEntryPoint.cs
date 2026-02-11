@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using PureDOTS.Runtime.Core;
 using PureDOTS.Runtime.Scenarios;
@@ -214,24 +215,23 @@ namespace Godgame.Headless
             }
 
             var trimmed = scenarioArg.Trim();
-            if (Path.HasExtension(trimmed))
-            {
-                return false;
-            }
-
             var normalized = trimmed.Replace('\\', '/').TrimStart('/');
             var idOnly = Path.GetFileNameWithoutExtension(normalized);
-            var candidateRelatives = new[]
+            var candidateRelatives = new List<string>
             {
-                trimmed + ".json",
-                normalized + ".json",
                 Path.Combine("Assets", "Scenarios", "Godgame", idOnly + ".json"),
                 Path.Combine("Assets", "Scenarios", idOnly + ".json"),
                 Path.Combine("Scenarios", "Godgame", idOnly + ".json"),
                 Path.Combine("Scenarios", idOnly + ".json")
             };
 
-            for (int i = 0; i < candidateRelatives.Length; i++)
+            if (!Path.HasExtension(trimmed))
+            {
+                candidateRelatives.Add(trimmed + ".json");
+                candidateRelatives.Add(normalized + ".json");
+            }
+
+            for (int i = 0; i < candidateRelatives.Count; i++)
             {
                 var candidate = ResolvePath(candidateRelatives[i]);
                 if (File.Exists(candidate))
@@ -242,7 +242,150 @@ namespace Godgame.Headless
                 }
             }
 
+            if (TryResolveScenarioPathFromKnownRoots(trimmed, normalized, idOnly, out var rootedPath))
+            {
+                resolvedPath = rootedPath;
+                Debug.Log($"[GodgameScenarioEntryPoint] Resolved scenario '{scenarioArg}' via TRI roots to '{resolvedPath}'.");
+                return true;
+            }
+
             return false;
+        }
+
+        private static bool TryResolveScenarioPathFromKnownRoots(string rawArg, string normalizedArg, string idOnly, out string resolvedPath)
+        {
+            resolvedPath = string.Empty;
+            var roots = new List<string>();
+            AddExistingRoot(roots, SystemEnv.GetEnvironmentVariable("TRI_ROOT"));
+            AddExistingRoot(roots, "/home/oni/Tri");
+            AddExistingRoot(roots, "/mnt/c/dev/Tri");
+            AddExistingRoot(roots, "/mnt/c/dev/tri");
+            AddExistingRoot(roots, "/mnt/c/dev");
+
+            var relCandidates = new List<string>
+            {
+                NormalizeRelativePath(rawArg),
+                NormalizeRelativePath(normalizedArg),
+                NormalizeRelativePath(Path.Combine("Assets", "Scenarios", "Godgame", idOnly + ".json")),
+                NormalizeRelativePath(Path.Combine("Assets", "Scenarios", idOnly + ".json")),
+                NormalizeRelativePath(Path.Combine("godgame", "Assets", "Scenarios", "Godgame", idOnly + ".json")),
+                NormalizeRelativePath(Path.Combine("godgame", "Assets", "Scenarios", idOnly + ".json"))
+            };
+
+            if (!Path.HasExtension(rawArg))
+            {
+                relCandidates.Add(NormalizeRelativePath(rawArg + ".json"));
+                relCandidates.Add(NormalizeRelativePath(normalizedArg + ".json"));
+            }
+
+            var refHints = new List<string>
+            {
+                SystemEnv.GetEnvironmentVariable("GIT_COMMIT"),
+                SystemEnv.GetEnvironmentVariable("GIT_BRANCH")
+            };
+
+            foreach (var root in roots)
+            {
+                for (int i = 0; i < relCandidates.Count; i++)
+                {
+                    var rel = relCandidates[i];
+                    if (string.IsNullOrWhiteSpace(rel))
+                    {
+                        continue;
+                    }
+
+                    var candidate = Path.GetFullPath(Path.Combine(root, rel));
+                    if (File.Exists(candidate))
+                    {
+                        resolvedPath = candidate;
+                        return true;
+                    }
+                }
+
+                for (int i = 0; i < refHints.Count; i++)
+                {
+                    var safeRef = SanitizeRef(refHints[i]);
+                    if (string.IsNullOrWhiteSpace(safeRef))
+                    {
+                        continue;
+                    }
+
+                    var wtCandidate = Path.Combine(root, ".tri", "worktrees", "godgame", safeRef, "Assets", "Scenarios", "Godgame", idOnly + ".json");
+                    if (File.Exists(wtCandidate))
+                    {
+                        resolvedPath = wtCandidate;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static string NormalizeRelativePath(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return string.Empty;
+            }
+
+            return input.Replace('\\', Path.DirectorySeparatorChar)
+                        .Replace('/', Path.DirectorySeparatorChar)
+                        .TrimStart(Path.DirectorySeparatorChar);
+        }
+
+        private static string SanitizeRef(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var chars = value.Trim().ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                var c = chars[i];
+                var keep = char.IsLetterOrDigit(c) || c == '_' || c == '.' || c == '-';
+                if (!keep)
+                {
+                    chars[i] = '_';
+                }
+            }
+
+            return new string(chars);
+        }
+
+        private static void AddExistingRoot(List<string> roots, string root)
+        {
+            if (string.IsNullOrWhiteSpace(root))
+            {
+                return;
+            }
+
+            string fullPath;
+            try
+            {
+                fullPath = Path.GetFullPath(root);
+            }
+            catch
+            {
+                return;
+            }
+
+            if (!Directory.Exists(fullPath))
+            {
+                return;
+            }
+
+            for (int i = 0; i < roots.Count; i++)
+            {
+                if (string.Equals(roots[i], fullPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+
+            roots.Add(fullPath);
         }
 
 	        private static string DeriveTelemetryPath(string reportPath)
