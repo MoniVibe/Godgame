@@ -420,7 +420,7 @@ namespace Godgame.Villagers
             public const float DefaultCooperationStorehouseSpacing = 3.6f;
             public const float DefaultFailureBackoffSeconds = 0.75f;
             public const float DefaultFailureBackoffMaxSeconds = 6f;
-            public const float DefaultStuckTimeoutSeconds = 2.5f;
+            public const float DefaultStuckTimeoutSeconds = 1.5f;
             public const float StuckProgressDistance = 0.04f;
             private const byte PreconditionHasTicket = 1 << 0;
             private const byte PreconditionTargetValid = 1 << 1;
@@ -534,6 +534,17 @@ namespace Godgame.Villagers
                     batch.RemoveAt(0);
                     assignment.Ticket = nextTicket;
                     assignment.CommitTick = CurrentTick;
+                }
+
+                if (assignment.Ticket != Entity.Null && assignment.CommitTick == CurrentTick)
+                {
+                    // Fresh assignment: clear stale failure/backoff state from the previous ticket.
+                    job.RepeatCount = 0;
+                    job.LastFailCode = VillagerJobFailCode.None;
+                    job.LastFailTick = 0;
+                    job.NextEligibleTick = 0;
+                    job.LastChosenJob = JobType.None;
+                    job.LastTarget = Entity.Null;
                 }
 
                 if (GoalLookup.HasComponent(e))
@@ -974,10 +985,15 @@ namespace Godgame.Villagers
 
                             if (HasNavigationStalled(ref job, tx.Position, distance, arrivalDistance))
                             {
+                                var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                                preconditionMask = SetMask(preconditionMask, PreconditionTargetValid, true);
+                                RecordFailure(ref job, e, VillagerJobFailCode.Timeout, ticket.TargetEntity, preconditionMask);
+                                ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                                EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
                                 nav.Velocity = float3.zero;
-                                nav.Destination = liveTargetPosition + BuildCooperationOffset(ticket.TargetEntity, e, DefaultCooperationNodeSpacing * 0.65f) + arrivalOffset;
                                 job.LastMovePosition = tx.Position;
                                 job.LastMoveTick = CurrentTick;
+                                break;
                             }
                         }
                         else if (groupReady)
@@ -1347,9 +1363,15 @@ namespace Godgame.Villagers
 
                             if (HasNavigationStalled(ref job, tx.Position, distance, deliverDistance))
                             {
+                                var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                                preconditionMask = SetMask(preconditionMask, PreconditionStorehouse, true);
+                                RecordFailure(ref job, e, VillagerJobFailCode.Timeout, job.Target, preconditionMask);
+                                ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                                EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
                                 nav.Velocity = float3.zero;
                                 job.LastMovePosition = tx.Position;
                                 job.LastMoveTick = CurrentTick;
+                                break;
                             }
                         }
                         else
