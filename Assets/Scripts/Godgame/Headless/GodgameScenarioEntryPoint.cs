@@ -69,8 +69,7 @@ namespace Godgame.Headless
                 return;
 
             s_executed = true;
-            var scenarioPath = ResolvePath(scenarioArg);
-            if (!File.Exists(scenarioPath))
+            if (!TryResolveScenarioPath(scenarioArg, out var scenarioPath))
             {
                 Debug.LogError($"[GodgameScenarioEntryPoint] Scenario file not found: {scenarioPath}");
                 Quit(1);
@@ -199,6 +198,51 @@ namespace Godgame.Headless
 
             var projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
             return Path.GetFullPath(Path.Combine(projectRoot, path));
+        }
+
+        private static bool TryResolveScenarioPath(string scenarioArg, out string resolvedPath)
+        {
+            resolvedPath = ResolvePath(scenarioArg);
+            if (File.Exists(resolvedPath))
+            {
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(scenarioArg))
+            {
+                return false;
+            }
+
+            var trimmed = scenarioArg.Trim();
+            if (Path.HasExtension(trimmed))
+            {
+                return false;
+            }
+
+            var normalized = trimmed.Replace('\\', '/').TrimStart('/');
+            var idOnly = Path.GetFileNameWithoutExtension(normalized);
+            var candidateRelatives = new[]
+            {
+                trimmed + ".json",
+                normalized + ".json",
+                Path.Combine("Assets", "Scenarios", "Godgame", idOnly + ".json"),
+                Path.Combine("Assets", "Scenarios", idOnly + ".json"),
+                Path.Combine("Scenarios", "Godgame", idOnly + ".json"),
+                Path.Combine("Scenarios", idOnly + ".json")
+            };
+
+            for (int i = 0; i < candidateRelatives.Length; i++)
+            {
+                var candidate = ResolvePath(candidateRelatives[i]);
+                if (File.Exists(candidate))
+                {
+                    resolvedPath = candidate;
+                    Debug.Log($"[GodgameScenarioEntryPoint] Resolved scenario '{scenarioArg}' to '{resolvedPath}'.");
+                    return true;
+                }
+            }
+
+            return false;
         }
 
 	        private static string DeriveTelemetryPath(string reportPath)
