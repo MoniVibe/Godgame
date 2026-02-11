@@ -5,30 +5,30 @@
 ### EditMode Tests
 Run all EditMode tests:
 ```bash
-Unity -projectPath "$(pwd)" -batchmode -quit -runTests -testPlatform editmode -testResults Logs/editmode-tests.xml
+Unity -projectPath "$(pwd)" -batchmode -runTests -runSynchronously -testPlatform editmode -testResults Logs/editmode-tests.xml
 ```
 
 Run specific test filter:
 ```bash
-Unity -projectPath "$(pwd)" -batchmode -quit -runTests -testPlatform editmode -testFilter GodgameRegistryBridgeSystemTests -testResults Logs/editmode-tests.xml
+Unity -projectPath "$(pwd)" -batchmode -runTests -runSynchronously -testPlatform editmode -testFilter GodgameRegistryBridgeSystemTests -testResults Logs/editmode-tests.xml
 ```
 
 ### PlayMode Tests
 Run all PlayMode tests:
 ```bash
-Unity -projectPath "$(pwd)" -batchmode -quit -runTests -testPlatform playmode -testResults Logs/playmode-tests.xml
+Unity -projectPath "$(pwd)" -batchmode -runTests -runSynchronously -testPlatform playmode -testResults Logs/playmode-tests.xml
 ```
 
 Run specific test filter:
 ```bash
-Unity -projectPath "$(pwd)" -batchmode -quit -runTests -testPlatform playmode -testFilter Conservation_VillagerGatherDeliver_Playmode -testResults Logs/playmode-tests.xml
+Unity -projectPath "$(pwd)" -batchmode -runTests -runSynchronously -testPlatform playmode -testFilter Conservation_VillagerGatherDeliver_Playmode -testResults Logs/playmode-tests.xml
 ```
 
 ### All Tests
 Run both EditMode and PlayMode suites:
 ```bash
-Unity -projectPath "$(pwd)" -batchmode -quit -runTests -testPlatform editmode -testResults Logs/editmode-tests.xml
-Unity -projectPath "$(pwd)" -batchmode -quit -runTests -testPlatform playmode -testResults Logs/playmode-tests.xml
+Unity -projectPath "$(pwd)" -batchmode -runTests -runSynchronously -testPlatform editmode -testResults Logs/editmode-tests.xml
+Unity -projectPath "$(pwd)" -batchmode -runTests -runSynchronously -testPlatform playmode -testResults Logs/playmode-tests.xml
 ```
 
 ## Burst Compilation Check
@@ -64,7 +64,8 @@ Unity -projectPath "$(pwd)" -batchmode -quit -executeMethod Godgame.Scenario.God
 
 ## Nightly headless cycle
 
-- Batch tests (EditMode/PlayMode) must use `-runTests -testPlatform editmode|playmode -testResults <xml>` and run in batchmode.
+- Batch tests (EditMode/PlayMode) must use `-runTests -runSynchronously -testPlatform editmode|playmode -testResults <xml>` and run in batchmode.
+- Do not pass `-quit` with command-line tests on UTF 1.6.0; it can skip execution and produce zero-test XML.
 - Scenario runs emit reports/logs; nightly outputs are written under `TRI_STATE_DIR/runs/YYYY-MM-DD/`.
 - Some tests are compiled only when `UNITY_INCLUDE_TESTS` is enabled; ensure the define is set for headless test runs.
 - Burst compilation checks are Editor-only and should run in the Windows/PowerShell lane.
