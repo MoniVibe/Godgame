@@ -18,6 +18,8 @@ namespace Godgame.Logistics
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     public partial struct GodgameLogisticsHaulerSystem : ISystem
     {
+        private const uint StuckTimeoutTicks = 900;
+
         private ComponentLookup<LocalTransform> _transformLookup;
         private BufferLookup<StorehouseInventoryItem> _inventoryLookup;
         private ComponentLookup<ConstructionGhost> _constructionLookup;
@@ -81,6 +83,21 @@ namespace Godgame.Logistics
                 var stateData = haulState.ValueRW;
                 var haulerData = hauler.ValueRO;
                 var interactRangeSq = math.max(0.1f, haulerData.InteractRange * haulerData.InteractRange);
+                var startPosition = transform.ValueRO.Position;
+                var startPhase = stateData.Phase;
+                var startCarrying = stateData.CarryingUnits;
+                var startReservationId = stateData.ReservationId;
+                var startSource = stateData.SourceEntity;
+                var startSite = stateData.SiteEntity;
+
+                if (IsStuck(stateData, timeState.Tick))
+                {
+                    CancelReservation(stateData.BoardEntity, stateData.ReservationId, state.EntityManager);
+                    ResetIfStale(ref stateData);
+                    stateData.Phase = LogisticsHaulPhase.Idle;
+                    nav.ValueRW.Speed = 0f;
+                    nav.ValueRW.Velocity = float3.zero;
+                }
 
                 switch (stateData.Phase)
                 {
@@ -97,7 +114,13 @@ namespace Godgame.Logistics
                             stateData.Phase = LogisticsHaulPhase.Idle;
                             break;
                         }
-                        if (MoveTowards(ref transform.ValueRW, ref nav.ValueRW, stateData.BoardEntity, haulerData.MoveSpeed, deltaTime, interactRangeSq, _transformLookup))
+                        var boardMove = MoveTowards(ref transform.ValueRW, ref nav.ValueRW, stateData.BoardEntity, haulerData.MoveSpeed, deltaTime, interactRangeSq, _transformLookup);
+                        if (boardMove == MoveResult.InvalidTarget)
+                        {
+                            stateData.BoardEntity = Entity.Null;
+                            stateData.Phase = LogisticsHaulPhase.Idle;
+                        }
+                        else if (boardMove == MoveResult.Arrived)
                         {
                             stateData.Phase = LogisticsHaulPhase.Claiming;
                         }
@@ -141,7 +164,14 @@ namespace Godgame.Logistics
                             stateData.Phase = LogisticsHaulPhase.Idle;
                             break;
                         }
-                        if (MoveTowards(ref transform.ValueRW, ref nav.ValueRW, stateData.SourceEntity, haulerData.MoveSpeed, deltaTime, interactRangeSq, _transformLookup))
+                        var sourceMove = MoveTowards(ref transform.ValueRW, ref nav.ValueRW, stateData.SourceEntity, haulerData.MoveSpeed, deltaTime, interactRangeSq, _transformLookup);
+                        if (sourceMove == MoveResult.InvalidTarget)
+                        {
+                            CancelReservation(stateData.BoardEntity, stateData.ReservationId, state.EntityManager);
+                            stateData.SourceEntity = Entity.Null;
+                            stateData.Phase = LogisticsHaulPhase.Idle;
+                        }
+                        else if (sourceMove == MoveResult.Arrived)
                         {
                             stateData.Phase = LogisticsHaulPhase.Pickup;
                         }
@@ -164,7 +194,14 @@ namespace Godgame.Logistics
                             stateData.Phase = LogisticsHaulPhase.Idle;
                             break;
                         }
-                        if (MoveTowards(ref transform.ValueRW, ref nav.ValueRW, stateData.SiteEntity, haulerData.MoveSpeed, deltaTime, interactRangeSq, _transformLookup))
+                        var siteMove = MoveTowards(ref transform.ValueRW, ref nav.ValueRW, stateData.SiteEntity, haulerData.MoveSpeed, deltaTime, interactRangeSq, _transformLookup);
+                        if (siteMove == MoveResult.InvalidTarget)
+                        {
+                            CancelReservation(stateData.BoardEntity, stateData.ReservationId, state.EntityManager);
+                            stateData.SiteEntity = Entity.Null;
+                            stateData.Phase = LogisticsHaulPhase.Idle;
+                        }
+                        else if (siteMove == MoveResult.Arrived)
                         {
                             stateData.Phase = LogisticsHaulPhase.Dropoff;
                         }
@@ -176,9 +213,30 @@ namespace Godgame.Logistics
                         break;
                 }
 
-                stateData.LastProgressTick = timeState.Tick;
+                var movedSq = math.lengthsq(transform.ValueRO.Position - startPosition);
+                var changedCarry = math.abs(stateData.CarryingUnits - startCarrying) > 1e-4f;
+                var progressed = movedSq > 1e-8f
+                                 || stateData.Phase != startPhase
+                                 || changedCarry
+                                 || stateData.ReservationId != startReservationId
+                                 || stateData.SourceEntity != startSource
+                                 || stateData.SiteEntity != startSite;
+                if (progressed || stateData.LastProgressTick == 0)
+                {
+                    stateData.LastProgressTick = timeState.Tick;
+                }
                 haulState.ValueRW = stateData;
             }
+        }
+
+        private static bool IsStuck(in LogisticsHaulState state, uint tick)
+        {
+            if (state.Phase == LogisticsHaulPhase.Idle || state.LastProgressTick == 0 || tick <= state.LastProgressTick)
+            {
+                return false;
+            }
+
+            return tick - state.LastProgressTick > StuckTimeoutTicks;
         }
 
         private static void ResetIfStale(ref LogisticsHaulState state)
@@ -219,7 +277,7 @@ namespace Godgame.Logistics
             return true;
         }
 
-        private static bool MoveTowards(
+        private static MoveResult MoveTowards(
             ref LocalTransform transform,
             ref Navigation nav,
             Entity targetEntity,
@@ -230,28 +288,42 @@ namespace Godgame.Logistics
         {
             if (!lookup.HasComponent(targetEntity))
             {
-                return false;
+                nav.Speed = 0f;
+                nav.Velocity = float3.zero;
+                return MoveResult.InvalidTarget;
             }
 
             var targetPosition = lookup[targetEntity].Position;
-            nav.Destination = targetPosition;
-            nav.Speed = speed;
-
             var current = transform.Position;
             targetPosition.y = current.y;
+            nav.Destination = targetPosition;
+            var moveSpeed = math.max(0f, speed);
+            nav.Speed = moveSpeed;
+
             var toTarget = targetPosition - current;
             toTarget.y = 0f;
             var distSq = math.lengthsq(toTarget);
             if (distSq <= arriveDistanceSq)
             {
-                return true;
+                transform.Position = targetPosition;
+                nav.Velocity = float3.zero;
+                return MoveResult.Arrived;
             }
 
             var dist = math.sqrt(distSq);
-            var step = math.min(speed * deltaTime, dist);
+            var step = math.min(moveSpeed * deltaTime, dist);
             var dir = toTarget / math.max(1e-5f, dist);
-            transform.Position = current + dir * step;
-            return false;
+            var delta = dir * step;
+            transform.Position = current + delta;
+            nav.Velocity = delta / math.max(1e-4f, deltaTime);
+            return MoveResult.InProgress;
+        }
+
+        private enum MoveResult : byte
+        {
+            InvalidTarget = 0,
+            InProgress = 1,
+            Arrived = 2
         }
 
         private static bool TryConsumeReservation(

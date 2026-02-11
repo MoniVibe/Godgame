@@ -171,9 +171,18 @@ namespace Godgame.Adapters.Launch
                         continue;
                     }
 
+                    if (collision.OtherEntity == projectileTag.ValueRO.SourceLauncher || !state.EntityManager.Exists(collision.OtherEntity))
+                    {
+                        continue;
+                    }
+
                     var damage = collision.EventType == PhysicsCollisionEventType.TriggerEnter
                         ? TriggerDamage
                         : math.max(0f, collision.Impulse) * DamagePerImpulse;
+                    if (!math.isfinite(damage) || damage <= 0f)
+                    {
+                        continue;
+                    }
 
                     var damageEvent = new DamageEvent
                     {

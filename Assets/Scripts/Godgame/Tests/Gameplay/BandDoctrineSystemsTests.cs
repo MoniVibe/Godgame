@@ -155,7 +155,7 @@ namespace Godgame.Tests.Gameplay
             Assert.AreEqual(1, selection.IsAbstractedControl);
             Assert.Greater(selection.CommunicationIntentSuppression, 0.1f);
             Assert.Less(projection.CommunicationLoadMultiplier, 1f);
-            Assert.AreNotEqual(2f, formation.Spacing, 0.0001f);
+            Assert.That(formation.Spacing, Is.Not.EqualTo(2f).Within(0.0001f));
         }
 
         [Test]

@@ -16,67 +16,134 @@ namespace Godgame.Bands
         private const float MoraleOpenMutinyThreshold = 0.05f;
         private const uint CovertCoordinationTicksThreshold = 24;
 
+        private ComponentLookup<Band> _bandLookup;
+        private ComponentLookup<BandDoctrineProfile> _doctrineProfileLookup;
+        private ComponentLookup<BandDoctrineContext> _doctrineContextLookup;
+        private ComponentLookup<BandSocialState> _socialLookup;
+        private ComponentLookup<BandSocioProfile> _socioProfileLookup;
+        private ComponentLookup<BandDisciplineState> _disciplineLookup;
+        private ComponentLookup<BandOrderClimate> _climateLookup;
+        private ComponentLookup<BandResourceMorality> _resourceMoralityLookup;
+        private ComponentLookup<BandGovernancePulse> _governanceLookup;
+        private BufferLookup<BandOrderEvent> _orderEventsLookup;
+        private BufferLookup<BandJusticeEvent> _justiceEventsLookup;
+        private BufferLookup<BandIntelReport> _intelReportsLookup;
+        private BufferLookup<BandMemoryEvent> _memoryEventsLookup;
+        private BufferLookup<BandDisciplineEvent> _disciplineEventsLookup;
+
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<TimeState>();
             state.RequireForUpdate<BandSocioProfile>();
+            _bandLookup = state.GetComponentLookup<Band>(false);
+            _doctrineProfileLookup = state.GetComponentLookup<BandDoctrineProfile>(true);
+            _doctrineContextLookup = state.GetComponentLookup<BandDoctrineContext>(false);
+            _socialLookup = state.GetComponentLookup<BandSocialState>(false);
+            _socioProfileLookup = state.GetComponentLookup<BandSocioProfile>(true);
+            _disciplineLookup = state.GetComponentLookup<BandDisciplineState>(false);
+            _climateLookup = state.GetComponentLookup<BandOrderClimate>(true);
+            _resourceMoralityLookup = state.GetComponentLookup<BandResourceMorality>(true);
+            _governanceLookup = state.GetComponentLookup<BandGovernancePulse>(false);
+            _orderEventsLookup = state.GetBufferLookup<BandOrderEvent>(false);
+            _justiceEventsLookup = state.GetBufferLookup<BandJusticeEvent>(false);
+            _intelReportsLookup = state.GetBufferLookup<BandIntelReport>(false);
+            _memoryEventsLookup = state.GetBufferLookup<BandMemoryEvent>(false);
+            _disciplineEventsLookup = state.GetBufferLookup<BandDisciplineEvent>(false);
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var tick = SystemAPI.GetSingleton<TimeState>().Tick;
+            _bandLookup.Update(ref state);
+            _doctrineProfileLookup.Update(ref state);
+            _doctrineContextLookup.Update(ref state);
+            _socialLookup.Update(ref state);
+            _socioProfileLookup.Update(ref state);
+            _disciplineLookup.Update(ref state);
+            _climateLookup.Update(ref state);
+            _resourceMoralityLookup.Update(ref state);
+            _governanceLookup.Update(ref state);
+            _orderEventsLookup.Update(ref state);
+            _justiceEventsLookup.Update(ref state);
+            _intelReportsLookup.Update(ref state);
+            _memoryEventsLookup.Update(ref state);
+            _disciplineEventsLookup.Update(ref state);
 
-            foreach (var (band, doctrineProfile, doctrineContext, social, socioProfile, discipline, climate, resourceMorality, governancePulse, orderEvents, justiceEvents, intelReports, memoryEvents, disciplineEvents) in SystemAPI
-                         .Query<
-                             RefRW<Band>,
-                             RefRO<BandDoctrineProfile>,
-                             RefRW<BandDoctrineContext>,
-                             RefRW<BandSocialState>,
-                             RefRO<BandSocioProfile>,
-                             RefRW<BandDisciplineState>,
-                             RefRO<BandOrderClimate>,
-                             RefRO<BandResourceMorality>,
-                             RefRW<BandGovernancePulse>,
-                             DynamicBuffer<BandOrderEvent>,
-                             DynamicBuffer<BandJusticeEvent>,
-                             DynamicBuffer<BandIntelReport>,
-                             DynamicBuffer<BandMemoryEvent>,
-                             DynamicBuffer<BandDisciplineEvent>>())
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<BandSocioProfile>>().WithEntityAccess())
             {
-                ProcessIntelReports(ref doctrineContext.ValueRW, socioProfile.ValueRO, intelReports, ref discipline.ValueRW);
-                ApplyHardshipAndCaptainEffects(ref band.ValueRW, climate.ValueRO, resourceMorality.ValueRO, doctrineProfile.ValueRO);
+                if (!_bandLookup.HasComponent(entity)
+                    || !_doctrineProfileLookup.HasComponent(entity)
+                    || !_doctrineContextLookup.HasComponent(entity)
+                    || !_socialLookup.HasComponent(entity)
+                    || !_socioProfileLookup.HasComponent(entity)
+                    || !_disciplineLookup.HasComponent(entity)
+                    || !_climateLookup.HasComponent(entity)
+                    || !_resourceMoralityLookup.HasComponent(entity)
+                    || !_governanceLookup.HasComponent(entity)
+                    || !_orderEventsLookup.HasBuffer(entity)
+                    || !_justiceEventsLookup.HasBuffer(entity)
+                    || !_intelReportsLookup.HasBuffer(entity)
+                    || !_memoryEventsLookup.HasBuffer(entity)
+                    || !_disciplineEventsLookup.HasBuffer(entity))
+                {
+                    continue;
+                }
+
+                var band = _bandLookup[entity];
+                var doctrineProfile = _doctrineProfileLookup[entity];
+                var doctrineContext = _doctrineContextLookup[entity];
+                var social = _socialLookup[entity];
+                var socioProfile = _socioProfileLookup[entity];
+                var discipline = _disciplineLookup[entity];
+                var climate = _climateLookup[entity];
+                var resourceMorality = _resourceMoralityLookup[entity];
+                var governancePulse = _governanceLookup[entity];
+                var orderEvents = _orderEventsLookup[entity];
+                var justiceEvents = _justiceEventsLookup[entity];
+                var intelReports = _intelReportsLookup[entity];
+                var memoryEvents = _memoryEventsLookup[entity];
+                var disciplineEvents = _disciplineEventsLookup[entity];
+
+                ProcessIntelReports(ref doctrineContext, socioProfile, intelReports, ref discipline);
+                ApplyHardshipAndCaptainEffects(ref band, climate, resourceMorality, doctrineProfile);
                 ProcessJusticeEvents(
                     tick,
-                    ref band.ValueRW,
-                    ref social.ValueRW,
-                    doctrineProfile.ValueRO,
-                    socioProfile.ValueRO,
-                    ref discipline.ValueRW,
-                    ref governancePulse.ValueRW,
+                    ref band,
+                    ref social,
+                    doctrineProfile,
+                    socioProfile,
+                    ref discipline,
+                    ref governancePulse,
                     justiceEvents,
                     memoryEvents);
                 ProcessOrderEvents(
                     tick,
-                    ref band.ValueRW,
-                    ref doctrineContext.ValueRW,
-                    ref social.ValueRW,
-                    doctrineProfile.ValueRO,
-                    socioProfile.ValueRO,
-                    ref discipline.ValueRW,
-                    climate.ValueRO,
+                    ref band,
+                    ref doctrineContext,
+                    ref social,
+                    doctrineProfile,
+                    socioProfile,
+                    ref discipline,
+                    climate,
                     orderEvents,
                     memoryEvents);
-                EvaluateCompliance(tick, band.ValueRW.Morale, climate.ValueRO, socioProfile.ValueRO, ref discipline.ValueRW, disciplineEvents);
-                AdvanceMemory(ref memoryEvents, socioProfile.ValueRO);
+                EvaluateCompliance(tick, band.Morale, climate, socioProfile, ref discipline, disciplineEvents);
+                AdvanceMemory(ref memoryEvents, socioProfile);
                 ApplyDriftAndPressure(
-                    ref discipline.ValueRW,
-                    band.ValueRW.Morale,
-                    socioProfile.ValueRO,
-                    doctrineProfile.ValueRO,
-                    climate.ValueRO,
-                    governancePulse.ValueRO);
+                    ref discipline,
+                    band.Morale,
+                    socioProfile,
+                    doctrineProfile,
+                    climate,
+                    governancePulse);
+
+                _bandLookup[entity] = band;
+                _doctrineContextLookup[entity] = doctrineContext;
+                _socialLookup[entity] = social;
+                _disciplineLookup[entity] = discipline;
+                _governanceLookup[entity] = governancePulse;
             }
         }
 

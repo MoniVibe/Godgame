@@ -13,6 +13,13 @@ namespace Godgame.Bands
     public partial struct BandDoctrineGovernanceSystem : ISystem
     {
         private BufferLookup<BandMember> _bandMembersLookup;
+        private ComponentLookup<Band> _bandLookup;
+        private ComponentLookup<BandCommandAutonomy> _autonomyLookup;
+        private ComponentLookup<BandSocialState> _socialLookup;
+        private ComponentLookup<BandDoctrineSelection> _selectionLookup;
+        private BufferLookup<BandDoctrineRequest> _requestsLookup;
+        private BufferLookup<BandDoctrineDecisionEvent> _eventsLookup;
+        private BufferLookup<BandCommandEscalationEvent> _escalationLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -21,6 +28,13 @@ namespace Godgame.Bands
             state.RequireForUpdate<BandDoctrineProfile>();
             state.RequireForUpdate<BandDoctrineContext>();
             _bandMembersLookup = state.GetBufferLookup<BandMember>(true);
+            _bandLookup = state.GetComponentLookup<Band>(false);
+            _autonomyLookup = state.GetComponentLookup<BandCommandAutonomy>(false);
+            _socialLookup = state.GetComponentLookup<BandSocialState>(false);
+            _selectionLookup = state.GetComponentLookup<BandDoctrineSelection>(false);
+            _requestsLookup = state.GetBufferLookup<BandDoctrineRequest>(false);
+            _eventsLookup = state.GetBufferLookup<BandDoctrineDecisionEvent>(false);
+            _escalationLookup = state.GetBufferLookup<BandCommandEscalationEvent>(false);
         }
 
         [BurstCompile]
@@ -28,54 +42,74 @@ namespace Godgame.Bands
         {
             var tick = SystemAPI.GetSingleton<TimeState>().Tick;
             _bandMembersLookup.Update(ref state);
+            _bandLookup.Update(ref state);
+            _autonomyLookup.Update(ref state);
+            _socialLookup.Update(ref state);
+            _selectionLookup.Update(ref state);
+            _requestsLookup.Update(ref state);
+            _eventsLookup.Update(ref state);
+            _escalationLookup.Update(ref state);
 
-            foreach (var (band, profile, context, hierarchy, autonomy, social, requests, events, escalationEvents, selection, entity) in SystemAPI
-                         .Query<
-                             RefRW<Band>,
-                             RefRO<BandDoctrineProfile>,
-                             RefRO<BandDoctrineContext>,
-                             RefRO<BandCommandHierarchy>,
-                             RefRW<BandCommandAutonomy>,
-                             RefRW<BandSocialState>,
-                             DynamicBuffer<BandDoctrineRequest>,
-                             DynamicBuffer<BandDoctrineDecisionEvent>,
-                             DynamicBuffer<BandCommandEscalationEvent>,
-                             RefRW<BandDoctrineSelection>>()
+            foreach (var (profile, context, hierarchy, entity) in SystemAPI
+                         .Query<RefRO<BandDoctrineProfile>, RefRO<BandDoctrineContext>, RefRO<BandCommandHierarchy>>()
                          .WithEntityAccess())
             {
+                if (!_bandLookup.HasComponent(entity)
+                    || !_autonomyLookup.HasComponent(entity)
+                    || !_socialLookup.HasComponent(entity)
+                    || !_selectionLookup.HasComponent(entity)
+                    || !_requestsLookup.HasBuffer(entity)
+                    || !_eventsLookup.HasBuffer(entity)
+                    || !_escalationLookup.HasBuffer(entity))
+                {
+                    continue;
+                }
+
+                var band = _bandLookup[entity];
+                var autonomy = _autonomyLookup[entity];
+                var social = _socialLookup[entity];
+                var selection = _selectionLookup[entity];
+                var requests = _requestsLookup[entity];
+                var events = _eventsLookup[entity];
+                var escalationEvents = _escalationLookup[entity];
                 var knownMemberRatio = ComputeKnownMemberRatio(entity, tick);
                 SynthesizeCaptainRotationRequest(
                     tick,
-                    band.ValueRO,
+                    band,
                     profile.ValueRO,
                     context.ValueRO,
                     hierarchy.ValueRO,
                     knownMemberRatio,
-                    ref autonomy.ValueRW,
+                    ref autonomy,
                     requests);
 
                 ProcessRequests(
                     tick,
-                    band,
+                    ref band,
                     profile.ValueRO,
                     context.ValueRO,
                     hierarchy.ValueRO,
                     knownMemberRatio,
-                    social,
+                    ref social,
                     requests,
                     events,
-                    selection);
+                    ref selection);
 
                 EvaluateWhistleblowAttempt(
                     tick,
-                    band,
+                    ref band,
                     context.ValueRO,
                     hierarchy.ValueRO,
-                    ref autonomy.ValueRW,
-                    ref social.ValueRW,
+                    ref autonomy,
+                    ref social,
                     escalationEvents);
 
-                ApplySocialDecay(ref social.ValueRW);
+                ApplySocialDecay(ref social);
+
+                _bandLookup[entity] = band;
+                _autonomyLookup[entity] = autonomy;
+                _socialLookup[entity] = social;
+                _selectionLookup[entity] = selection;
             }
         }
 
@@ -179,15 +213,15 @@ namespace Godgame.Bands
 
         private static void ProcessRequests(
             uint tick,
-            RefRW<Band> band,
+            ref Band band,
             in BandDoctrineProfile profile,
             in BandDoctrineContext context,
             in BandCommandHierarchy hierarchy,
             float knownMemberRatio,
-            RefRW<BandSocialState> social,
+            ref BandSocialState social,
             DynamicBuffer<BandDoctrineRequest> requests,
             DynamicBuffer<BandDoctrineDecisionEvent> events,
-            RefRW<BandDoctrineSelection> selection)
+            ref BandDoctrineSelection selection)
         {
             if (requests.Length == 0)
             {
@@ -214,11 +248,11 @@ namespace Godgame.Bands
                 {
                     trustDelta = math.saturate(0.08f + request.Urgency * 0.1f + request.CasualtyConcern * 0.06f);
                     resentmentDelta = -math.saturate(0.04f + request.Urgency * 0.05f);
-                    selection.ValueRW = UpdateSelectionForApproval(selection.ValueRO, request.RequestedModule, tick);
+                    selection = UpdateSelectionForApproval(selection, request.RequestedModule, tick);
                 }
                 else
                 {
-                    var understanding = ComputeUnderstandingFactor(profile, context, band.ValueRO, social.ValueRO, knownMemberRatio);
+                    var understanding = ComputeUnderstandingFactor(profile, context, band, social, knownMemberRatio);
                     var blatantCorruption = math.saturate(profile.CrueltyBias * 0.5f + profile.CorruptionBias * 0.5f);
                     var grievanceBase = math.saturate(
                         request.Urgency * 0.32f +
@@ -249,8 +283,8 @@ namespace Godgame.Bands
 
                 ApplySocialAndBandEffects(
                     tick,
-                    ref band.ValueRW,
-                    ref social.ValueRW,
+                    ref band,
+                    ref social,
                     resentmentDelta,
                     trustDelta,
                     corruptionEvidenceDelta,
@@ -360,7 +394,7 @@ namespace Godgame.Bands
 
         private static void EvaluateWhistleblowAttempt(
             uint tick,
-            RefRW<Band> band,
+            ref Band band,
             in BandDoctrineContext context,
             in BandCommandHierarchy hierarchy,
             ref BandCommandAutonomy autonomy,
@@ -417,9 +451,9 @@ namespace Godgame.Bands
                 social.CrewResentment = math.max(0f, social.CrewResentment - 0.08f);
                 social.WhistleblowSupport = math.saturate(social.WhistleblowSupport + 0.1f);
                 social.ObservedCorruptionEvidence = math.max(0f, social.ObservedCorruptionEvidence - 0.25f);
-                band.ValueRW.Morale = math.saturate(band.ValueRO.Morale + 0.03f);
-                band.ValueRW.Cohesion = math.saturate(band.ValueRO.Cohesion + 0.02f);
-                band.ValueRW.LastUpdateTick = tick;
+                band.Morale = math.saturate(band.Morale + 0.03f);
+                band.Cohesion = math.saturate(band.Cohesion + 0.02f);
+                band.LastUpdateTick = tick;
             }
             else
             {
