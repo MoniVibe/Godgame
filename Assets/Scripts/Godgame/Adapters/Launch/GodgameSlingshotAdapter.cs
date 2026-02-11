@@ -65,17 +65,32 @@ namespace Godgame.Adapters.Launch
             float speed,
             float arcHeight)
         {
+            if (speed <= 0f)
+            {
+                return;
+            }
+
             // Calculate launch velocity for parabolic arc
             var direction = targetPosition - launcherPosition;
             var horizontalDist = math.length(new float2(direction.x, direction.z));
             var verticalDist = direction.y;
 
-            // Simple parabolic calculation
-            var horizontalDir = math.normalize(new float3(direction.x, 0, direction.z));
-            var launchAngle = math.atan2(verticalDist + arcHeight * horizontalDist, horizontalDist);
+            float3 velocity;
+            if (horizontalDist <= 1e-4f)
+            {
+                // Target is near-vertical relative to launcher; avoid normalizing a zero vector.
+                var verticalSign = verticalDist < 0f ? -1f : 1f;
+                velocity = new float3(0f, speed * verticalSign, 0f);
+            }
+            else
+            {
+                // Simple parabolic calculation
+                var horizontalDir = new float3(direction.x, 0f, direction.z) / horizontalDist;
+                var launchAngle = math.atan2(verticalDist + arcHeight * horizontalDist, horizontalDist);
 
-            var velocity = horizontalDir * speed * math.cos(launchAngle);
-            velocity.y = speed * math.sin(launchAngle);
+                velocity = horizontalDir * speed * math.cos(launchAngle);
+                velocity.y = speed * math.sin(launchAngle);
+            }
 
             requestBuffer.Add(new LaunchRequest
             {

@@ -70,8 +70,19 @@ namespace Godgame.Fauna
                         }
                         else
                         {
-                            var direction = math.normalize(toTarget);
-                            lt.Position += direction * agent.MoveSpeed * deltaTime;
+                            var distance = math.sqrt(distanceSq);
+                            var step = math.min(agent.MoveSpeed * deltaTime, distance);
+                            if (step >= distance - 1e-4f)
+                            {
+                                agent.BehaviourState = FaunaAmbientBehaviour.Idle;
+                                agent.IdleTimer = random.NextFloat(1.5f, 4f);
+                                lt.Position = agent.TargetPosition;
+                            }
+                            else
+                            {
+                                var direction = toTarget / math.max(1e-5f, distance);
+                                lt.Position += direction * step;
+                            }
                         }
 
                         transformRW.ValueRW = lt;
