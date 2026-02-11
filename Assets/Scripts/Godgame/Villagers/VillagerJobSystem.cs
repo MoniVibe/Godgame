@@ -420,6 +420,8 @@ namespace Godgame.Villagers
             public const float DefaultCooperationStorehouseSpacing = 3.6f;
             public const float DefaultFailureBackoffSeconds = 0.75f;
             public const float DefaultFailureBackoffMaxSeconds = 6f;
+            public const float DefaultStuckTimeoutSeconds = 2.5f;
+            public const float StuckProgressDistance = 0.04f;
             private const byte PreconditionHasTicket = 1 << 0;
             private const byte PreconditionTargetValid = 1 << 1;
             private const byte PreconditionGroupReady = 1 << 2;
@@ -588,6 +590,8 @@ namespace Godgame.Villagers
                     job.Target = Entity.Null;
                     assignment.CommitTick = 0;
                     nav.Velocity = float3.zero;
+                    job.LastMovePosition = tx.Position;
+                    job.LastMoveTick = CurrentTick;
                     moveIntent = new MoveIntent
                     {
                         TargetEntity = Entity.Null,
@@ -897,6 +901,8 @@ namespace Godgame.Villagers
                         nav.Destination = ticketTargetPosition + nodeOffset + arrivalOffset;
                         nav.Speed = moveSpeed;
                         job.Phase = JobPhase.NavigateToNode;
+                        job.LastMovePosition = tx.Position;
+                        job.LastMoveTick = CurrentTick;
 
                         var ticketDecisionMask = SetMask(0, PreconditionHasTicket, true);
                         ticketDecisionMask = SetMask(ticketDecisionMask, PreconditionTargetValid, true);
@@ -914,7 +920,24 @@ namespace Godgame.Villagers
                         break;
 
                     case JobPhase.NavigateToNode:
+                        if (!TryResolveTicketTargetPosition(ticket.TargetEntity, out var liveTargetPosition))
+                        {
+                            var preconditionMask = SetMask(0, PreconditionHasTicket, true);
+                            preconditionMask = SetMask(preconditionMask, PreconditionTargetValid, false);
+                            RecordFailure(ref job, e, VillagerJobFailCode.TargetInvalid, ticket.TargetEntity, preconditionMask);
+                            ReleaseTicket(ref assignment, batch, e, JobTicketState.Cancelled);
+                            EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
+                            break;
+                        }
+
+                        job.Target = ticket.TargetEntity;
+                        var liveNodeOffset = useCooperation
+                            ? BuildCooperationOffset(ticket.TargetEntity, e, DefaultCooperationNodeSpacing)
+                            : float3.zero;
+                        nav.Destination = liveTargetPosition + liveNodeOffset + arrivalOffset;
+
                         var direction = nav.Destination - tx.Position;
+                        direction.y = 0f;
                         var distance = math.length(direction);
                         if (distance > arrivalDistance)
                         {
@@ -948,11 +971,31 @@ namespace Godgame.Villagers
                             nav.Velocity = currentVelocity;
                             tx.Position += currentVelocity * Delta;
                             movedThisTick = math.lengthsq(currentVelocity) > 1e-5f;
+
+                            if (HasNavigationStalled(ref job, tx.Position, distance, arrivalDistance))
+                            {
+                                nav.Velocity = float3.zero;
+                                nav.Destination = liveTargetPosition + BuildCooperationOffset(ticket.TargetEntity, e, DefaultCooperationNodeSpacing * 0.65f) + arrivalOffset;
+                                job.LastMovePosition = tx.Position;
+                                job.LastMoveTick = CurrentTick;
+                            }
                         }
                         else if (groupReady)
                         {
+                            var snapped = tx.Position;
+                            snapped.x = nav.Destination.x;
+                            snapped.z = nav.Destination.z;
+                            tx.Position = snapped;
                             nav.Velocity = float3.zero;
+                            job.LastMovePosition = tx.Position;
+                            job.LastMoveTick = CurrentTick;
                             job.Phase = JobPhase.Gather;
+                        }
+                        else
+                        {
+                            nav.Velocity = float3.zero;
+                            job.LastMovePosition = tx.Position;
+                            job.LastMoveTick = CurrentTick;
                         }
                         break;
 
@@ -978,6 +1021,8 @@ namespace Godgame.Villagers
                                 nav.Destination = nearestStorehousePosition + storehouseOffset + arrivalOffset;
                                 nav.Speed = moveSpeed;
                                 job.Phase = JobPhase.NavigateToStorehouse;
+                                job.LastMovePosition = tx.Position;
+                                job.LastMoveTick = CurrentTick;
 
                                 var storehouseDecisionMask = SetMask(0, PreconditionStorehouse, true);
                                 RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, storehouseDecisionMask);
@@ -1033,6 +1078,8 @@ namespace Godgame.Villagers
                                     nav.Destination = nearestStorehousePosition + storehouseOffset + arrivalOffset;
                                     nav.Speed = moveSpeed;
                                     job.Phase = JobPhase.NavigateToStorehouse;
+                                    job.LastMovePosition = tx.Position;
+                                    job.LastMoveTick = CurrentTick;
 
                                     var storehouseDecisionMask = SetMask(0, PreconditionStorehouse, true);
                                     RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, storehouseDecisionMask);
@@ -1208,6 +1255,8 @@ namespace Godgame.Villagers
                                         nav.Destination = nearestStorehousePosition + storehouseOffset + arrivalOffset;
                                         nav.Speed = moveSpeed;
                                         job.Phase = JobPhase.NavigateToStorehouse;
+                                        job.LastMovePosition = tx.Position;
+                                        job.LastMoveTick = CurrentTick;
 
                                         var storehouseDecisionMask = SetMask(0, PreconditionStorehouse, true);
                                         RecordDecision(ref job, e, job.Phase, nearestStorehouse, storehouseCandidates, storehouseDecisionMask);
@@ -1226,7 +1275,42 @@ namespace Godgame.Villagers
                         break;
 
                     case JobPhase.NavigateToStorehouse:
+                        if (!TryResolveStorehousePosition(job.Target, out var liveStorehousePosition))
+                        {
+                            if (TryFindStorehouse(tx.Position, useCooperation, in cooperation, hasAwareness, in awareness, storehouseRadiusSq,
+                                    out var replacementStorehouse, out var replacementStorehousePosition, out var storehouseCandidates))
+                            {
+                                job.Target = replacementStorehouse;
+                                var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
+                                    ? BuildCooperationOffset(replacementStorehouse, e, DefaultCooperationStorehouseSpacing)
+                                    : float3.zero;
+                                nav.Destination = replacementStorehousePosition + storehouseOffset + arrivalOffset;
+                                nav.Speed = moveSpeed;
+                                job.LastMovePosition = tx.Position;
+                                job.LastMoveTick = CurrentTick;
+                                var storehouseDecisionMask = SetMask(0, PreconditionStorehouse, true);
+                                RecordDecision(ref job, e, job.Phase, replacementStorehouse, storehouseCandidates, storehouseDecisionMask);
+                            }
+                            else
+                            {
+                                var preconditionMask = SetMask(0, PreconditionStorehouse, false);
+                                RecordFailure(ref job, e, VillagerJobFailCode.NoStorehouse, Entity.Null, preconditionMask);
+                                job.CarryCount = 0f;
+                                ReleaseTicket(ref assignment, batch, e, JobTicketState.Open);
+                                EnterIdle(ref job, e, patienceScore, 0f, tx.Position);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            var storehouseOffset = useCooperation || (hasCooperation && cooperation.SharedStorehouse != Entity.Null)
+                                ? BuildCooperationOffset(job.Target, e, DefaultCooperationStorehouseSpacing)
+                                : float3.zero;
+                            nav.Destination = liveStorehousePosition + storehouseOffset + arrivalOffset;
+                        }
+
                         direction = nav.Destination - tx.Position;
+                        direction.y = 0f;
                         distance = math.length(direction);
                         if (distance > deliverDistance)
                         {
@@ -1260,10 +1344,23 @@ namespace Godgame.Villagers
                             nav.Velocity = currentVelocity;
                             tx.Position += currentVelocity * Delta;
                             movedThisTick = math.lengthsq(currentVelocity) > 1e-5f;
+
+                            if (HasNavigationStalled(ref job, tx.Position, distance, deliverDistance))
+                            {
+                                nav.Velocity = float3.zero;
+                                job.LastMovePosition = tx.Position;
+                                job.LastMoveTick = CurrentTick;
+                            }
                         }
                         else
                         {
+                            var snapped = tx.Position;
+                            snapped.x = nav.Destination.x;
+                            snapped.z = nav.Destination.z;
+                            tx.Position = snapped;
                             nav.Velocity = float3.zero;
+                            job.LastMovePosition = tx.Position;
+                            job.LastMoveTick = CurrentTick;
                             job.Phase = JobPhase.Deliver;
                         }
                         break;
@@ -1659,6 +1756,60 @@ namespace Godgame.Villagers
                 return false;
             }
 
+            private bool TryResolveStorehousePosition(Entity target, out float3 position)
+            {
+                position = float3.zero;
+                if (target == Entity.Null)
+                {
+                    return false;
+                }
+
+                var storehouseIndex = StorehouseEntities.IndexOf(target);
+                if (storehouseIndex < 0)
+                {
+                    return false;
+                }
+
+                position = StorehouseTransforms[storehouseIndex].Position;
+                return true;
+            }
+
+            private bool HasNavigationStalled(ref VillagerJobState job, float3 currentPosition, float distanceToTarget, float arrivalDistance)
+            {
+                if (distanceToTarget <= math.max(arrivalDistance, 0.25f))
+                {
+                    job.LastMovePosition = currentPosition;
+                    job.LastMoveTick = CurrentTick;
+                    return false;
+                }
+
+                if (job.LastMoveTick == 0u)
+                {
+                    job.LastMovePosition = currentPosition;
+                    job.LastMoveTick = CurrentTick;
+                    return false;
+                }
+
+                var delta = currentPosition - job.LastMovePosition;
+                delta.y = 0f;
+                var progressSq = math.lengthsq(delta);
+                var progressMinSq = StuckProgressDistance * StuckProgressDistance;
+                if (progressSq >= progressMinSq)
+                {
+                    job.LastMovePosition = currentPosition;
+                    job.LastMoveTick = CurrentTick;
+                    return false;
+                }
+
+                if (CurrentTick <= job.LastMoveTick)
+                {
+                    return false;
+                }
+
+                var timeoutTicks = (uint)math.max(6f, math.ceil(DefaultStuckTimeoutSeconds / math.max(1e-4f, FixedDeltaTime)));
+                return (CurrentTick - job.LastMoveTick) >= timeoutTicks;
+            }
+
             private bool DetermineHaulDecision(Entity entity, in VillagerHaulPreference haulPreference)
             {
                 if (haulPreference.ForceHaul != 0)
@@ -2044,6 +2195,8 @@ namespace Godgame.Villagers
                 job.DropoffCooldown = dropoffCooldown > 0f ? dropoffCooldown : 0f;
                 job.DecisionCooldown = ResolveDeliberationSeconds(entity, patienceScore);
                 job.LastDecisionTick = CurrentTick;
+                job.LastMovePosition = position;
+                job.LastMoveTick = CurrentTick;
 
                 if (PonderLookup.HasComponent(entity))
                 {

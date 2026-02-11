@@ -11,5 +11,7 @@ namespace Godgame.Villagers
         public float3 AnchorOffset;
         public float LingerSeconds;
         public uint NextRepathTick;
+        public float3 LastProgressPosition;
+        public uint LastProgressTick;
     }
 }

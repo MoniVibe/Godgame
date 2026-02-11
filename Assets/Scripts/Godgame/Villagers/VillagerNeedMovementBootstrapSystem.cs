@@ -38,7 +38,9 @@ namespace Godgame.Villagers
                 {
                     AnchorOffset = Unity.Mathematics.float3.zero,
                     LingerSeconds = 0f,
-                    NextRepathTick = 0
+                    NextRepathTick = 0,
+                    LastProgressPosition = Unity.Mathematics.float3.zero,
+                    LastProgressTick = 0
                 });
             }
 

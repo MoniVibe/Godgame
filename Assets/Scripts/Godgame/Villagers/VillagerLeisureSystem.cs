@@ -765,6 +765,8 @@ namespace Godgame.Villagers
             movement.AnchorOffset = offset;
             movement.LingerSeconds = 0f;
             movement.NextRepathTick = nextEpisodeTick;
+            movement.LastProgressPosition = float3.zero;
+            movement.LastProgressTick = 0;
             leisureState.Action = action;
             leisureState.ActionTarget = actionTarget;
         }

@@ -126,6 +126,8 @@ namespace Godgame.Villagers
             var archetypeRules = hasArchetypeRules ? _cooldownArchetypeLookup[cooldownProfileEntity] : default;
             var hasPhysicsWorld = SystemAPI.TryGetSingleton<PhysicsWorldSingleton>(out var physicsWorld);
             var sweepSkin = 0.02f;
+            var stuckProgressDistanceSq = 0.02f * 0.02f;
+            var stuckTimeoutTicks = (uint)math.max(10f, math.ceil(2f / math.max(1e-4f, timeState.FixedDeltaTime)));
 
             var villagerQuery = SystemAPI.QueryBuilder()
                 .WithAll<VillagerGoalState, LocalTransform>()
@@ -153,6 +155,8 @@ namespace Godgame.Villagers
                 {
                     movementState.ValueRW.LingerSeconds = math.max(0f, movementState.ValueRW.LingerSeconds - deltaTime);
                     nav.ValueRW.Velocity = float3.zero;
+                    movementState.ValueRW.LastProgressPosition = transform.ValueRO.Position;
+                    movementState.ValueRW.LastProgressTick = tick;
                     movePlan.ValueRW = new MovePlan
                     {
                         Mode = MovePlanMode.Arrive,
@@ -219,6 +223,8 @@ namespace Godgame.Villagers
                             entity, out targetEntity, out targetPosition))
                     {
                         nav.ValueRW.Velocity = float3.zero;
+                        movementState.ValueRW.LastProgressPosition = transform.ValueRO.Position;
+                        movementState.ValueRW.LastProgressTick = tick;
                         movePlan.ValueRW = new MovePlan
                         {
                             Mode = MovePlanMode.Arrive,
@@ -269,11 +275,17 @@ namespace Godgame.Villagers
                 var distance = math.length(toTarget);
                 if (distance <= arrivalDistance)
                 {
+                    var snapped = transform.ValueRO.Position;
+                    snapped.x = destination.x;
+                    snapped.z = destination.z;
+                    transform.ValueRW.Position = snapped;
                     if (currentGoal != VillagerGoal.Flee)
                     {
                         movementState.ValueRW.LingerSeconds = ResolveLingerSeconds(activeLingerMin, activeLingerMax, patience01, currentGoal, entity);
                     }
                     nav.ValueRW.Velocity = float3.zero;
+                    movementState.ValueRW.LastProgressPosition = snapped;
+                    movementState.ValueRW.LastProgressTick = tick;
                     movePlan.ValueRW = new MovePlan
                     {
                         Mode = MovePlanMode.Arrive,
@@ -350,6 +362,27 @@ namespace Godgame.Villagers
                 {
                     nav.ValueRW.Velocity = resolvedDelta / deltaTime;
                 }
+
+                var latestPosition = transform.ValueRO.Position;
+                var progressDelta = latestPosition - movementState.ValueRO.LastProgressPosition;
+                progressDelta.y = 0f;
+                var madeProgress = math.lengthsq(progressDelta) >= stuckProgressDistanceSq;
+                if (madeProgress || movementState.ValueRO.LastProgressTick == 0u)
+                {
+                    movementState.ValueRW.LastProgressPosition = latestPosition;
+                    movementState.ValueRW.LastProgressTick = tick;
+                }
+                else if (currentGoal != VillagerGoal.Flee &&
+                         tick > movementState.ValueRO.LastProgressTick &&
+                         (tick - movementState.ValueRO.LastProgressTick) >= stuckTimeoutTicks)
+                {
+                    movementState.ValueRW.AnchorOffset = BuildWanderOffset(entity, tick + 97u, math.max(0.5f, radius));
+                    movementState.ValueRW.NextRepathTick = tick;
+                    movementState.ValueRW.LastProgressPosition = latestPosition;
+                    movementState.ValueRW.LastProgressTick = tick;
+                    nav.ValueRW.Velocity = float3.zero;
+                }
+
                 movePlan.ValueRW = new MovePlan
                 {
                     Mode = MovePlanMode.Approach,
@@ -364,6 +397,11 @@ namespace Godgame.Villagers
 
         private bool IsNonBlockingHit(Entity hitEntity)
         {
+            if (hitEntity == Entity.Null)
+            {
+                return true;
+            }
+
             if (_colliderSpecLookup.HasComponent(hitEntity))
             {
                 var spec = _colliderSpecLookup[hitEntity];
@@ -376,6 +414,14 @@ namespace Godgame.Villagers
             if (_physicsBodyLookup.HasComponent(hitEntity))
             {
                 var body = _physicsBodyLookup[hitEntity];
+
+                if ((body.Flags & GodgamePhysicsFlags.IsStatic) == 0 &&
+                    body.Layer == GodgamePhysicsLayer.GroundUnit)
+                {
+                    // Ground villagers/entities should ghost through each other by default.
+                    return true;
+                }
+
                 if ((body.Flags & GodgamePhysicsFlags.IsTrigger) != 0 ||
                     (body.Flags & GodgamePhysicsFlags.SoftAvoidance) != 0)
                 {

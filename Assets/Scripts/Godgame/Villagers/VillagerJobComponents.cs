@@ -81,6 +81,8 @@ namespace Godgame.Villagers
         public byte RepeatCount;
         public uint LastFailTick;
         public uint NextEligibleTick;
+        public float3 LastMovePosition;
+        public uint LastMoveTick;
     }
 
     public struct VillagerJob : IComponentData
