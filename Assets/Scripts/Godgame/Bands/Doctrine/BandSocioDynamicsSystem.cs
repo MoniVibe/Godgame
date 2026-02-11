@@ -25,11 +25,14 @@ namespace Godgame.Bands
         private ComponentLookup<BandOrderClimate> _climateLookup;
         private ComponentLookup<BandResourceMorality> _resourceMoralityLookup;
         private ComponentLookup<BandGovernancePulse> _governanceLookup;
+        private ComponentLookup<BandSplinterMeans> _splinterMeansLookup;
+        private ComponentLookup<BandSplinterIntentState> _splinterIntentLookup;
         private BufferLookup<BandOrderEvent> _orderEventsLookup;
         private BufferLookup<BandJusticeEvent> _justiceEventsLookup;
         private BufferLookup<BandIntelReport> _intelReportsLookup;
         private BufferLookup<BandMemoryEvent> _memoryEventsLookup;
         private BufferLookup<BandDisciplineEvent> _disciplineEventsLookup;
+        private BufferLookup<BandSplinterIntentEvent> _splinterIntentEventsLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -45,11 +48,14 @@ namespace Godgame.Bands
             _climateLookup = state.GetComponentLookup<BandOrderClimate>(true);
             _resourceMoralityLookup = state.GetComponentLookup<BandResourceMorality>(true);
             _governanceLookup = state.GetComponentLookup<BandGovernancePulse>(false);
+            _splinterMeansLookup = state.GetComponentLookup<BandSplinterMeans>(true);
+            _splinterIntentLookup = state.GetComponentLookup<BandSplinterIntentState>(false);
             _orderEventsLookup = state.GetBufferLookup<BandOrderEvent>(false);
             _justiceEventsLookup = state.GetBufferLookup<BandJusticeEvent>(false);
             _intelReportsLookup = state.GetBufferLookup<BandIntelReport>(false);
             _memoryEventsLookup = state.GetBufferLookup<BandMemoryEvent>(false);
             _disciplineEventsLookup = state.GetBufferLookup<BandDisciplineEvent>(false);
+            _splinterIntentEventsLookup = state.GetBufferLookup<BandSplinterIntentEvent>(false);
         }
 
         [BurstCompile]
@@ -65,11 +71,14 @@ namespace Godgame.Bands
             _climateLookup.Update(ref state);
             _resourceMoralityLookup.Update(ref state);
             _governanceLookup.Update(ref state);
+            _splinterMeansLookup.Update(ref state);
+            _splinterIntentLookup.Update(ref state);
             _orderEventsLookup.Update(ref state);
             _justiceEventsLookup.Update(ref state);
             _intelReportsLookup.Update(ref state);
             _memoryEventsLookup.Update(ref state);
             _disciplineEventsLookup.Update(ref state);
+            _splinterIntentEventsLookup.Update(ref state);
 
             foreach (var (_, entity) in SystemAPI.Query<RefRO<BandSocioProfile>>().WithEntityAccess())
             {
@@ -82,11 +91,14 @@ namespace Godgame.Bands
                     || !_climateLookup.HasComponent(entity)
                     || !_resourceMoralityLookup.HasComponent(entity)
                     || !_governanceLookup.HasComponent(entity)
+                    || !_splinterMeansLookup.HasComponent(entity)
+                    || !_splinterIntentLookup.HasComponent(entity)
                     || !_orderEventsLookup.HasBuffer(entity)
                     || !_justiceEventsLookup.HasBuffer(entity)
                     || !_intelReportsLookup.HasBuffer(entity)
                     || !_memoryEventsLookup.HasBuffer(entity)
-                    || !_disciplineEventsLookup.HasBuffer(entity))
+                    || !_disciplineEventsLookup.HasBuffer(entity)
+                    || !_splinterIntentEventsLookup.HasBuffer(entity))
                 {
                     continue;
                 }
@@ -100,11 +112,14 @@ namespace Godgame.Bands
                 var climate = _climateLookup[entity];
                 var resourceMorality = _resourceMoralityLookup[entity];
                 var governancePulse = _governanceLookup[entity];
+                var splinterMeans = _splinterMeansLookup[entity];
+                var splinterIntent = _splinterIntentLookup[entity];
                 var orderEvents = _orderEventsLookup[entity];
                 var justiceEvents = _justiceEventsLookup[entity];
                 var intelReports = _intelReportsLookup[entity];
                 var memoryEvents = _memoryEventsLookup[entity];
                 var disciplineEvents = _disciplineEventsLookup[entity];
+                var splinterIntentEvents = _splinterIntentEventsLookup[entity];
 
                 ProcessIntelReports(ref doctrineContext, socioProfile, intelReports, ref discipline);
                 ApplyHardshipAndCaptainEffects(ref band, climate, resourceMorality, doctrineProfile);
@@ -130,6 +145,17 @@ namespace Godgame.Bands
                     orderEvents,
                     memoryEvents);
                 EvaluateCompliance(tick, band.Morale, climate, socioProfile, ref discipline, disciplineEvents);
+                ProcessSplinterIntent(
+                    tick,
+                    band,
+                    socioProfile,
+                    climate,
+                    doctrineContext,
+                    governancePulse,
+                    ref discipline,
+                    splinterMeans,
+                    ref splinterIntent,
+                    splinterIntentEvents);
                 AdvanceMemory(ref memoryEvents, socioProfile);
                 ApplyDriftAndPressure(
                     ref discipline,
@@ -144,7 +170,99 @@ namespace Godgame.Bands
                 _socialLookup[entity] = social;
                 _disciplineLookup[entity] = discipline;
                 _governanceLookup[entity] = governancePulse;
+                _splinterIntentLookup[entity] = splinterIntent;
             }
+        }
+
+        private static void ProcessSplinterIntent(
+            uint tick,
+            in Band band,
+            in BandSocioProfile socioProfile,
+            in BandOrderClimate climate,
+            in BandDoctrineContext context,
+            in BandGovernancePulse governance,
+            ref BandDisciplineState discipline,
+            in BandSplinterMeans means,
+            ref BandSplinterIntentState intentState,
+            DynamicBuffer<BandSplinterIntentEvent> intentEvents)
+        {
+            if (band.Morale > MoraleOpenMutinyThreshold)
+            {
+                intentState.EscapeReadiness = math.max(0f, intentState.EscapeReadiness - 0.03f);
+                intentState.CaptureReadiness = math.max(0f, intentState.CaptureReadiness - 0.03f);
+                intentState.SurvivalReadiness = math.max(0f, intentState.SurvivalReadiness - 0.025f);
+                if (intentState.EscapeReadiness < 0.05f && intentState.CaptureReadiness < 0.05f && intentState.SurvivalReadiness < 0.05f)
+                {
+                    intentState.ActiveIntent = BandSplinterIntentType.None;
+                }
+                return;
+            }
+
+            var meansScore =
+                math.saturate(means.OwnShipAccess) * 0.35f +
+                math.saturate(means.SeizureCapability) * 0.3f +
+                math.saturate(means.ProvisioningReadiness) * 0.2f +
+                math.saturate(means.TravelNetworkAccess) * 0.15f;
+
+            var ideologyDrift =
+                math.saturate(math.abs(climate.CurrentOrderDivergence)) * 0.45f +
+                math.saturate(governance.NepotismBias) * 0.2f +
+                math.saturate(governance.ScapegoatBias) * 0.2f +
+                math.saturate(1f - socioProfile.InstitutionLoyalty) * 0.15f;
+
+            var escapeScore =
+                meansScore * 0.45f +
+                math.saturate(discipline.SplinterPressure) * 0.25f +
+                math.saturate(socioProfile.ChaosAxis) * 0.15f +
+                math.saturate(context.ScrutinyPressure) * 0.05f +
+                math.saturate(1f - band.Cohesion) * 0.1f;
+
+            var captureScore =
+                ideologyDrift * 0.4f +
+                math.saturate(means.SeizureCapability) * 0.3f +
+                math.saturate(discipline.SecretCoordination) * 0.2f +
+                math.saturate(1f - socioProfile.InstitutionLoyalty) * 0.1f;
+
+            var survivalScore =
+                math.saturate(band.Cohesion) * 0.35f +
+                math.saturate(socioProfile.InstitutionLoyalty) * 0.2f +
+                math.saturate(discipline.SecretCoordination) * 0.2f +
+                math.saturate(1f - meansScore) * 0.25f;
+
+            intentState.EscapeReadiness = math.saturate(math.lerp(intentState.EscapeReadiness, escapeScore, 0.35f));
+            intentState.CaptureReadiness = math.saturate(math.lerp(intentState.CaptureReadiness, captureScore, 0.35f));
+            intentState.SurvivalReadiness = math.saturate(math.lerp(intentState.SurvivalReadiness, survivalScore, 0.35f));
+
+            var previousIntent = intentState.ActiveIntent;
+            var nextIntent = BandSplinterIntentType.SurvivalCluster;
+            var nextScore = intentState.SurvivalReadiness;
+            if (intentState.EscapeReadiness > nextScore)
+            {
+                nextIntent = BandSplinterIntentType.Escape;
+                nextScore = intentState.EscapeReadiness;
+            }
+            if (intentState.CaptureReadiness > nextScore)
+            {
+                nextIntent = BandSplinterIntentType.CaptureLeader;
+                nextScore = intentState.CaptureReadiness;
+            }
+
+            intentState.ActiveIntent = nextIntent;
+            if (previousIntent != nextIntent || tick - intentState.LastIntentTick >= 12u)
+            {
+                intentState.LastIntentTick = tick;
+                intentEvents.Add(new BandSplinterIntentEvent
+                {
+                    Intent = nextIntent,
+                    IntentScore = nextScore,
+                    MeansScore = meansScore,
+                    Tick = tick
+                });
+            }
+
+            discipline.SplinterPressure = math.saturate(
+                discipline.SplinterPressure +
+                math.max(0f, nextScore - 0.45f) * 0.03f);
         }
 
         private static void ProcessIntelReports(

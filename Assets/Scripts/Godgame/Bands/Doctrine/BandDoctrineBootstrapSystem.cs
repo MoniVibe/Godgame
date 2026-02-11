@@ -35,11 +35,14 @@ namespace Godgame.Bands
             using var missingOrderClimate = new NativeList<Entity>(Allocator.Temp);
             using var missingResourceMorality = new NativeList<Entity>(Allocator.Temp);
             using var missingGovernancePulse = new NativeList<Entity>(Allocator.Temp);
+            using var missingSplinterMeans = new NativeList<Entity>(Allocator.Temp);
+            using var missingSplinterStates = new NativeList<Entity>(Allocator.Temp);
             using var missingOrderEvents = new NativeList<Entity>(Allocator.Temp);
             using var missingJusticeEvents = new NativeList<Entity>(Allocator.Temp);
             using var missingIntelReports = new NativeList<Entity>(Allocator.Temp);
             using var missingMemoryEvents = new NativeList<Entity>(Allocator.Temp);
             using var missingDisciplineEvents = new NativeList<Entity>(Allocator.Temp);
+            using var missingSplinterEvents = new NativeList<Entity>(Allocator.Temp);
 
             foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandDoctrineProfile>().WithEntityAccess())
             {
@@ -121,6 +124,16 @@ namespace Godgame.Bands
                 missingGovernancePulse.Add(entity);
             }
 
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandSplinterMeans>().WithEntityAccess())
+            {
+                missingSplinterMeans.Add(entity);
+            }
+
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandSplinterIntentState>().WithEntityAccess())
+            {
+                missingSplinterStates.Add(entity);
+            }
+
             foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandOrderEvent>().WithEntityAccess())
             {
                 missingOrderEvents.Add(entity);
@@ -144,6 +157,11 @@ namespace Godgame.Bands
             foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandDisciplineEvent>().WithEntityAccess())
             {
                 missingDisciplineEvents.Add(entity);
+            }
+
+            foreach (var (_, entity) in SystemAPI.Query<RefRO<Band>>().WithNone<BandSplinterIntentEvent>().WithEntityAccess())
+            {
+                missingSplinterEvents.Add(entity);
             }
 
             for (var i = 0; i < missingProfiles.Length; i++)
@@ -227,6 +245,16 @@ namespace Godgame.Bands
                 entityManager.AddComponentData(missingGovernancePulse[i], BandGovernancePulse.Default);
             }
 
+            for (var i = 0; i < missingSplinterMeans.Length; i++)
+            {
+                entityManager.AddComponentData(missingSplinterMeans[i], BandSplinterMeans.Default);
+            }
+
+            for (var i = 0; i < missingSplinterStates.Length; i++)
+            {
+                entityManager.AddComponentData(missingSplinterStates[i], BandSplinterIntentState.Default);
+            }
+
             for (var i = 0; i < missingOrderEvents.Length; i++)
             {
                 entityManager.AddBuffer<BandOrderEvent>(missingOrderEvents[i]);
@@ -250,6 +278,11 @@ namespace Godgame.Bands
             for (var i = 0; i < missingDisciplineEvents.Length; i++)
             {
                 entityManager.AddBuffer<BandDisciplineEvent>(missingDisciplineEvents[i]);
+            }
+
+            for (var i = 0; i < missingSplinterEvents.Length; i++)
+            {
+                entityManager.AddBuffer<BandSplinterIntentEvent>(missingSplinterEvents[i]);
             }
         }
 

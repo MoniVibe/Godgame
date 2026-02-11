@@ -548,6 +548,128 @@ namespace Godgame.Tests.Gameplay
             Assert.Less(updatedSocial.CommandTrust, 0.55f);
         }
 
+        [Test]
+        public void SplitShell_RejoinsWhenRearThreatClears()
+        {
+            var bandEntity = _entityManager.CreateEntity(typeof(Band), typeof(BandFormation), typeof(BandDoctrineSelection));
+            _entityManager.SetComponentData(bandEntity, new Band
+            {
+                Status = BandStatus.Engaged,
+                Cohesion = 0.78f,
+                Morale = 0.62f,
+                Fatigue = 0.2f
+            });
+            _entityManager.SetComponentData(bandEntity, new BandFormation
+            {
+                Formation = BandFormationType.Line,
+                Spacing = 2f,
+                Width = 8f,
+                Depth = 2f,
+                Facing = new float3(0f, 0f, 1f),
+                Anchor = float3.zero
+            });
+            _entityManager.SetComponentData(bandEntity, new BandDoctrineSelection
+            {
+                ActiveModule = BandDoctrineModuleType.SplitShell,
+                PreviousModule = BandDoctrineModuleType.SplitShell
+            });
+
+            var bootstrap = _world.GetOrCreateSystem<BandDoctrineBootstrapSystem>();
+            UpdateInitSystem(bootstrap);
+
+            var context = _entityManager.GetComponentData<BandDoctrineContext>(bandEntity);
+            context.RearThreat = 0f;
+            context.FrontThreat = 0.8f;
+            _entityManager.SetComponentData(bandEntity, context);
+
+            var projectionSystem = _world.GetOrCreateSystem<BandDoctrineProjectionSystem>();
+            UpdateSimSystem(projectionSystem);
+
+            var projection = _entityManager.GetComponentData<BandDoctrineProjection>(bandEntity);
+            Assert.GreaterOrEqual(projection.SplitRejoinProgress, 0.95f);
+            Assert.LessOrEqual(projection.RearGuardCommitment, 0.05f);
+            Assert.GreaterOrEqual(projection.FrontlineCommitment, 0.95f);
+        }
+
+        [Test]
+        public void SplitShell_LingeringThreatShrinksRearGuardAsRearThreatDrops()
+        {
+            var bandEntity = _entityManager.CreateEntity(typeof(Band), typeof(BandFormation), typeof(BandDoctrineSelection));
+            _entityManager.SetComponentData(bandEntity, new Band
+            {
+                Status = BandStatus.Engaged,
+                Cohesion = 0.75f,
+                Morale = 0.64f,
+                Fatigue = 0.2f
+            });
+            _entityManager.SetComponentData(bandEntity, new BandFormation
+            {
+                Formation = BandFormationType.Line,
+                Spacing = 2f,
+                Width = 8f,
+                Depth = 2f
+            });
+            _entityManager.SetComponentData(bandEntity, new BandDoctrineSelection
+            {
+                ActiveModule = BandDoctrineModuleType.SplitShell,
+                PreviousModule = BandDoctrineModuleType.SplitShell
+            });
+
+            var bootstrap = _world.GetOrCreateSystem<BandDoctrineBootstrapSystem>();
+            UpdateInitSystem(bootstrap);
+
+            var projectionSystem = _world.GetOrCreateSystem<BandDoctrineProjectionSystem>();
+            var context = _entityManager.GetComponentData<BandDoctrineContext>(bandEntity);
+            context.FrontThreat = 0.65f;
+            context.RearThreat = 0.85f;
+            _entityManager.SetComponentData(bandEntity, context);
+            UpdateSimSystem(projectionSystem);
+
+            var highRear = _entityManager.GetComponentData<BandDoctrineProjection>(bandEntity);
+
+            context.RearThreat = 0.25f;
+            _entityManager.SetComponentData(bandEntity, context);
+            UpdateSimSystem(projectionSystem);
+
+            var lowRear = _entityManager.GetComponentData<BandDoctrineProjection>(bandEntity);
+            Assert.Less(lowRear.RearGuardCommitment, highRear.RearGuardCommitment);
+            Assert.Greater(lowRear.FrontlineCommitment, highRear.FrontlineCommitment);
+        }
+
+        [Test]
+        public void SortieWindow_HighChaosCanBypassValidation()
+        {
+            var chaoticBand = _entityManager.CreateEntity(typeof(Band), typeof(BandFormation), typeof(BandDoctrineSelection));
+            var disciplinedBand = _entityManager.CreateEntity(typeof(Band), typeof(BandFormation), typeof(BandDoctrineSelection));
+
+            _entityManager.SetComponentData(chaoticBand, new Band { Status = BandStatus.Engaged, Cohesion = 0.7f, Morale = 0.55f });
+            _entityManager.SetComponentData(disciplinedBand, new Band { Status = BandStatus.Engaged, Cohesion = 0.7f, Morale = 0.55f });
+            _entityManager.SetComponentData(chaoticBand, new BandFormation { Formation = BandFormationType.Line, Spacing = 2f, Width = 8f, Depth = 2f });
+            _entityManager.SetComponentData(disciplinedBand, new BandFormation { Formation = BandFormationType.Line, Spacing = 2f, Width = 8f, Depth = 2f });
+            _entityManager.SetComponentData(chaoticBand, new BandDoctrineSelection { ActiveModule = BandDoctrineModuleType.SortieWindow });
+            _entityManager.SetComponentData(disciplinedBand, new BandDoctrineSelection { ActiveModule = BandDoctrineModuleType.SortieWindow });
+
+            var bootstrap = _world.GetOrCreateSystem<BandDoctrineBootstrapSystem>();
+            UpdateInitSystem(bootstrap);
+
+            var chaoticSocio = _entityManager.GetComponentData<BandSocioProfile>(chaoticBand);
+            chaoticSocio.ChaosAxis = 0.95f;
+            _entityManager.SetComponentData(chaoticBand, chaoticSocio);
+
+            var disciplinedSocio = _entityManager.GetComponentData<BandSocioProfile>(disciplinedBand);
+            disciplinedSocio.ChaosAxis = 0.2f;
+            _entityManager.SetComponentData(disciplinedBand, disciplinedSocio);
+
+            var projectionSystem = _world.GetOrCreateSystem<BandDoctrineProjectionSystem>();
+            UpdateSimSystem(projectionSystem);
+
+            var chaoticProjection = _entityManager.GetComponentData<BandDoctrineProjection>(chaoticBand);
+            var disciplinedProjection = _entityManager.GetComponentData<BandDoctrineProjection>(disciplinedBand);
+
+            Assert.LessOrEqual(chaoticProjection.SortieValidationStrength, 0.25f);
+            Assert.Greater(disciplinedProjection.SortieValidationStrength, chaoticProjection.SortieValidationStrength);
+        }
+
         private void ConfigureCorruptProfileAndThreshold(Entity bandEntity)
         {
             var profile = _entityManager.GetComponentData<BandDoctrineProfile>(bandEntity);

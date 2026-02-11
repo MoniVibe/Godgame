@@ -153,6 +153,10 @@ namespace Godgame.Bands
         public float ReserveCommitment;
         public float ExposureBias;
         public float CommunicationLoadMultiplier;
+        public float FrontlineCommitment;
+        public float RearGuardCommitment;
+        public float SplitRejoinProgress;
+        public float SortieValidationStrength;
         public byte BaselineInitialized;
     }
 

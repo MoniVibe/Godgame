@@ -68,6 +68,14 @@ namespace Godgame.Bands
         Grievance = 10
     }
 
+    public enum BandSplinterIntentType : byte
+    {
+        None = 0,
+        Escape = 1,
+        CaptureLeader = 2,
+        SurvivalCluster = 3
+    }
+
     public struct BandSocioProfile : IComponentData
     {
         public float ChaosAxis;
@@ -174,6 +182,40 @@ namespace Godgame.Bands
         };
     }
 
+    public struct BandSplinterMeans : IComponentData
+    {
+        public float OwnShipAccess;
+        public float SeizureCapability;
+        public float ProvisioningReadiness;
+        public float TravelNetworkAccess;
+
+        public static BandSplinterMeans Default => new BandSplinterMeans
+        {
+            OwnShipAccess = 0.2f,
+            SeizureCapability = 0.25f,
+            ProvisioningReadiness = 0.35f,
+            TravelNetworkAccess = 0.3f
+        };
+    }
+
+    public struct BandSplinterIntentState : IComponentData
+    {
+        public BandSplinterIntentType ActiveIntent;
+        public float EscapeReadiness;
+        public float CaptureReadiness;
+        public float SurvivalReadiness;
+        public uint LastIntentTick;
+
+        public static BandSplinterIntentState Default => new BandSplinterIntentState
+        {
+            ActiveIntent = BandSplinterIntentType.None,
+            EscapeReadiness = 0f,
+            CaptureReadiness = 0f,
+            SurvivalReadiness = 0f,
+            LastIntentTick = 0
+        };
+    }
+
     [InternalBufferCapacity(8)]
     public struct BandOrderEvent : IBufferElementData
     {
@@ -226,6 +268,15 @@ namespace Godgame.Bands
         public BandComplianceState State;
         public float TriggerScore;
         public float MoraleAfter;
+        public uint Tick;
+    }
+
+    [InternalBufferCapacity(8)]
+    public struct BandSplinterIntentEvent : IBufferElementData
+    {
+        public BandSplinterIntentType Intent;
+        public float IntentScore;
+        public float MeansScore;
         public uint Tick;
     }
 }

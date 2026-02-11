@@ -315,6 +315,67 @@ namespace Godgame.Tests.Gameplay
             Assert.Greater(egalDiscipline.Radicalization, authDiscipline.Radicalization);
         }
 
+        [Test]
+        public void OpenMutiny_WithStrongMeans_PrefersEscapeIntent()
+        {
+            var band = CreateBand(0.03f);
+            BootstrapOnly(band);
+
+            var means = _entityManager.GetComponentData<BandSplinterMeans>(band);
+            means.OwnShipAccess = 0.9f;
+            means.SeizureCapability = 0.75f;
+            means.ProvisioningReadiness = 0.8f;
+            means.TravelNetworkAccess = 0.7f;
+            _entityManager.SetComponentData(band, means);
+
+            var discipline = _entityManager.GetComponentData<BandDisciplineState>(band);
+            discipline.SplinterPressure = 0.7f;
+            discipline.SecretCoordination = 0.8f;
+            _entityManager.SetComponentData(band, discipline);
+
+            RunSocioDynamics();
+
+            var intent = _entityManager.GetComponentData<BandSplinterIntentState>(band);
+            Assert.AreEqual(BandSplinterIntentType.Escape, intent.ActiveIntent);
+        }
+
+        [Test]
+        public void OpenMutiny_WithHighDriftAndSeizure_PrefersCaptureLeaderIntent()
+        {
+            var band = CreateBand(0.03f);
+            BootstrapOnly(band);
+
+            var means = _entityManager.GetComponentData<BandSplinterMeans>(band);
+            means.OwnShipAccess = 0.1f;
+            means.SeizureCapability = 0.95f;
+            means.ProvisioningReadiness = 0.3f;
+            means.TravelNetworkAccess = 0.2f;
+            _entityManager.SetComponentData(band, means);
+
+            var climate = _entityManager.GetComponentData<BandOrderClimate>(band);
+            climate.CurrentOrderDivergence = 0.95f;
+            _entityManager.SetComponentData(band, climate);
+
+            var governance = _entityManager.GetComponentData<BandGovernancePulse>(band);
+            governance.NepotismBias = 0.85f;
+            governance.ScapegoatBias = 0.85f;
+            _entityManager.SetComponentData(band, governance);
+
+            var socio = _entityManager.GetComponentData<BandSocioProfile>(band);
+            socio.InstitutionLoyalty = 0.1f;
+            _entityManager.SetComponentData(band, socio);
+
+            var discipline = _entityManager.GetComponentData<BandDisciplineState>(band);
+            discipline.SecretCoordination = 0.9f;
+            discipline.SplinterPressure = 0.5f;
+            _entityManager.SetComponentData(band, discipline);
+
+            RunSocioDynamics();
+
+            var intent = _entityManager.GetComponentData<BandSplinterIntentState>(band);
+            Assert.AreEqual(BandSplinterIntentType.CaptureLeader, intent.ActiveIntent);
+        }
+
         private Entity CreateBand(float morale)
         {
             var entity = _entityManager.CreateEntity(typeof(Band));
