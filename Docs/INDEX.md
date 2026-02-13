@@ -1,5 +1,6 @@
 # Documentation Index
 
+- **Canonical direction (shared)**: `../../puredots/Docs/NORTH_STAR.md`, `../../puredots/Docs/DEMO_SLICE.md`, `../../puredots/Docs/ARCHITECTURE.md`, `../../puredots/Docs/PERF_GATES.md`, `../../puredots/Docs/NETPLAY_NOT_NOW.md`, `../../puredots/Docs/PROGRESS_HUB.md`.
 - **Master orientation**: `../TRI_PROJECT_BRIEFING.md` (TRI baseline, canonical).
 - **Agent entry point**: `AGENTS.md` (workflow + commands), `prompts.md` (current agent split).
 - **Headless workflows**: `Docs/Headless/HEADLESS_PROGRESS.md`, `Docs/CI_Commands.md`
