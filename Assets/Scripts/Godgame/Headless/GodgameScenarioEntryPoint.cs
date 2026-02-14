@@ -13,15 +13,18 @@ namespace Godgame.Headless
 {
 	    /// <summary>
 	    /// Handles command-line scenario selection when running in batch/headless mode.
-	    /// Godgame scenarios are loaded by <see cref="Godgame.Scenario.GodgameScenarioLoaderSystem"/> (not ScenarioRunner).
+	    /// Consolidates headless scenario execution around ScenarioRunner first, with an explicit
+	    /// legacy fallback path through <see cref="Godgame.Scenario.GodgameScenarioLoaderSystem"/>.
 	    /// </summary>
 	    static class GodgameScenarioEntryPoint
 	    {
 	        private const string ScenarioArg = "--scenario";
 	        private const string ReportArg = "--report";
+	        private const string LegacyScenarioLoaderArg = "--godgame-legacy-scenario-loader";
 	        private const string PureDotsTelemetryPathEnvVar = "PUREDOTS_TELEMETRY_PATH";
 	        private const string PureDotsTelemetryEnableEnvVar = "PUREDOTS_TELEMETRY_ENABLE";
         private const string ScenarioEnvVar = "GODGAME_SCENARIO_PATH";
+        private const string ScenarioLoaderModeEnvVar = "GODGAME_SCENARIO_LOADER";
         private const string HeadlessPresentationEnv = "PUREDOTS_HEADLESS_PRESENTATION";
         private const string PresentationSceneName = "TRI_Godgame_Smoke";
         private static bool s_executed;
@@ -97,39 +100,14 @@ namespace Godgame.Headless
 
 	            try
 	            {
-	                if (LooksLikeScenarioRunnerJson(scenarioPath))
+	                if (ShouldRunScenarioRunnerFirst(scenarioPath))
 	                {
-	                    DisableGodgameHeadlessProofsForScenarioRunner();
-	                    var runnerTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
-                    if (string.IsNullOrWhiteSpace(runnerTelemetryPath) && !string.IsNullOrEmpty(telemetryPath))
+	                    if (TryRunScenarioRunner(scenarioPath, reportPath, telemetryPath))
                     {
-                        SystemEnv.SetEnvironmentVariable(PureDotsTelemetryPathEnvVar, telemetryPath);
-                        SystemEnv.SetEnvironmentVariable(PureDotsTelemetryEnableEnvVar, "1");
+	                        return;
                     }
 
-                    LogTelemetryOutOnce(SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar) ?? "(unset)");
-                    var result = ScenarioRunnerExecutor.RunFromFile(scenarioPath, reportPath);
-                    Debug.Log($"[GodgameScenarioEntryPoint] ScenarioRunner '{scenarioPath}' completed. ticks={result.RunTicks} snapshots={result.SnapshotLogCount}");
-                    if (result.PerformanceBudgetFailed)
-                    {
-                        var exitPolicy = ScenarioExitUtility.ResolveExitPolicy();
-                        var message = $"[GodgameScenarioEntryPoint] Performance budget failure ({result.PerformanceBudgetMetric}) at tick {result.PerformanceBudgetTick}: value={result.PerformanceBudgetValue:F2}, budget={result.PerformanceBudgetLimit:F2}";
-                        if (exitPolicy == ExitPolicy.Strict)
-                        {
-                            Debug.LogError(message);
-                            Quit(2);
-                        }
-                        else
-                        {
-                            Debug.LogWarning(message);
-                            Quit(0);
-                        }
-                    }
-                    else
-                    {
-                        Quit(0);
-                    }
-	                    return;
+	                    Debug.LogWarning($"[GodgameScenarioEntryPoint] Falling back to legacy scenario loader for '{scenarioPath}'.");
 	                }
 
 	                DisableHeadlessProofsForScenario();
@@ -160,6 +138,104 @@ namespace Godgame.Headless
 	                Quit(1);
 	            }
 	        }
+
+        private static bool ShouldRunScenarioRunnerFirst(string scenarioPath)
+        {
+            if (IsLegacyScenarioLoaderRequested())
+            {
+                return false;
+            }
+
+            if (LooksLikeScenarioRunnerJson(scenarioPath))
+            {
+                return true;
+            }
+
+            // Consolidation default: JSON scenarios should prefer the shared ScenarioRunner path.
+            return string.Equals(Path.GetExtension(scenarioPath), ".json", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsLegacyScenarioLoaderRequested()
+        {
+            if (HasArgument(LegacyScenarioLoaderArg))
+            {
+                return true;
+            }
+
+            var mode = SystemEnv.GetEnvironmentVariable(ScenarioLoaderModeEnvVar);
+            return string.Equals(mode?.Trim(), "legacy", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool HasArgument(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return false;
+            }
+
+            var args = global::System.Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length; i++)
+            {
+                var arg = args[i];
+                if (string.Equals(arg, key, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                var prefix = key + "=";
+                if (arg.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    var value = arg.Substring(prefix.Length).Trim('"').Trim();
+                    return IsTruthy(value);
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryRunScenarioRunner(string scenarioPath, string reportPath, string telemetryPath)
+        {
+            try
+            {
+                DisableGodgameHeadlessProofsForScenarioRunner();
+                var runnerTelemetryPath = SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar);
+                if (string.IsNullOrWhiteSpace(runnerTelemetryPath) && !string.IsNullOrEmpty(telemetryPath))
+                {
+                    SystemEnv.SetEnvironmentVariable(PureDotsTelemetryPathEnvVar, telemetryPath);
+                    SystemEnv.SetEnvironmentVariable(PureDotsTelemetryEnableEnvVar, "1");
+                }
+
+                LogTelemetryOutOnce(SystemEnv.GetEnvironmentVariable(PureDotsTelemetryPathEnvVar) ?? "(unset)");
+                var result = ScenarioRunnerExecutor.RunFromFile(scenarioPath, reportPath);
+                Debug.Log($"[GodgameScenarioEntryPoint] ScenarioRunner '{scenarioPath}' completed. ticks={result.RunTicks} snapshots={result.SnapshotLogCount}");
+                if (result.PerformanceBudgetFailed)
+                {
+                    var exitPolicy = ScenarioExitUtility.ResolveExitPolicy();
+                    var message = $"[GodgameScenarioEntryPoint] Performance budget failure ({result.PerformanceBudgetMetric}) at tick {result.PerformanceBudgetTick}: value={result.PerformanceBudgetValue:F2}, budget={result.PerformanceBudgetLimit:F2}";
+                    if (exitPolicy == ExitPolicy.Strict)
+                    {
+                        Debug.LogError(message);
+                        Quit(2);
+                    }
+                    else
+                    {
+                        Debug.LogWarning(message);
+                        Quit(0);
+                    }
+                }
+                else
+                {
+                    Quit(0);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[GodgameScenarioEntryPoint] ScenarioRunner dispatch failed for '{scenarioPath}': {ex.Message}");
+                return false;
+            }
+        }
 
         private static bool TryGetArgument(string key, out string value)
         {
