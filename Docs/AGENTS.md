@@ -1,5 +1,6 @@
 # Agent Quickstart (Godgame)
 
+- **Role-first workflow:** see root `AGENTS.md` (choose role, claim slot, read canonical docs).
 - Start here: `../TRI_PROJECT_BRIEFING.md` (canonical orientation).
 - Active scene for smoke: `Assets/Scenes/TRI_Godgame_Smoke.unity` (SubScene for world slice).
 - Avoid legacy: anything under `Assets/_Archive/**` is reference-only.
