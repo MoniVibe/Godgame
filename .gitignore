@@ -61,6 +61,11 @@ desktop.ini
 ## Archived assets / large binaries
 Archive/
 
+## Headless manifest swap leftovers (run restore_manifest.sh if present)
+Packages/manifest.json.bak
+Packages/packages-lock.json.bak
+Packages/Coplay.disabled/
+
 ## Project-specific large files to keep local
 Assets/test.data
 Assets/test.data.meta
