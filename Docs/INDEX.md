@@ -1,6 +1,10 @@
 # Documentation Index
 
 - **Canonical direction (shared)**: `../../puredots/Docs/NORTH_STAR.md`, `../../puredots/Docs/DEMO_SLICE.md`, `../../puredots/Docs/ARCHITECTURE.md`, `../../puredots/Docs/PERF_GATES.md`, `../../puredots/Docs/NETPLAY_NOT_NOW.md`, `../../puredots/Docs/PROGRESS_HUB.md`.
+- **Shared content intent scope/rules**: `../../puredots/Docs/ContentIntent/README.md`, `../../puredots/Docs/ContentIntent/PureDOTS_vs_GameSide_Ruleset.md`, `../../puredots/Docs/ContentIntent/MVP_Content_Taxonomy_v0.md`.
+- **Shared canonicity contract/set**: `../../puredots/Docs/Canonicity/README.md`, `../../puredots/Docs/Canonicity/Canonicity_Contract_v0.md`, `../../puredots/Docs/Canonicity/Data_Contract_Canon_Sprint_v0.md`, `../../puredots/Docs/Canonicity/Canonical_Scenario_Set_v0.md`, `../../puredots/Docs/Canonicity/canonical_scenarios.v0.json`, `../../puredots/Docs/Canonicity/canonical_contracts.v0.json`, `../../puredots/Docs/Canonicity/canonical_contract_payloads.v0.json`.
+- **Shared data contracts**: `../../puredots/Docs/Canonicity/Combat_Mining_DataContracts_v0.md`, `../../puredots/Docs/Canonicity/Schemas/contract.mining.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.combat.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.room_profile.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.scenario_envelope.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.mission_objective.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.loot_cache.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.encounter_profile.v0.schema.json`.
+- **Godgame content intent adapter (v0 scaffold)**: `Docs/ContentIntent/ADAPTER_godgame_v0.md`.
 - **Master orientation**: `../TRI_PROJECT_BRIEFING.md` (TRI baseline, canonical).
 - **Agent entry point**: `AGENTS.md` (workflow + commands), `prompts.md` (current agent split).
 - **Headless workflows**: `Docs/Headless/HEADLESS_PROGRESS.md`, `Docs/CI_Commands.md`
