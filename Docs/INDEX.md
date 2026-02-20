@@ -6,7 +6,7 @@
 - **Shared data contracts**: `../../puredots/Docs/Canonicity/Combat_Mining_DataContracts_v0.md`, `../../puredots/Docs/Canonicity/Schemas/contract.mining.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.combat.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.room_profile.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.scenario_envelope.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.mission_objective.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.loot_cache.v0.schema.json`, `../../puredots/Docs/Canonicity/Schemas/contract.encounter_profile.v0.schema.json`.
 - **Godgame content intent adapter (v0 scaffold)**: `Docs/ContentIntent/ADAPTER_godgame_v0.md`.
 - **Master orientation**: `../TRI_PROJECT_BRIEFING.md` (TRI baseline, canonical).
-- **Agent entry point**: `AGENTS.md` (workflow + commands), `prompts.md` (current agent split).
+- **Agent entry point**: Root `AGENTS.md` (role-first: Validator, Builder, Ops, Perf, Sherpa, Docs). Slots: `Docs/Agents/SLOTS.md`. Also `prompts.md` (current agent split).
 - **Headless workflows**: `Docs/Headless/HEADLESS_PROGRESS.md`, `Docs/CI_Commands.md`
 - **Ops bus protocol**: `../../puredots/Docs/Headless/OPS_BUS_PROTOCOL.md`
 - **Active TODOs**: `Docs/TODO/Godgame_PureDOTS_Integration_TODO.md` (main), `Docs/TODO/Phase2_Demo_TODO.md` (legacy checklist).
